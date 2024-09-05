@@ -1,0 +1,66 @@
+{
+	"info": {
+		"_postman_id": "12a6801e-b7b5-4b20-8560-582ad3b568e1",
+		"name": "Web Admin Portal",
+		"description": "The Web Admin Portal API collection offers endpoints for managing the administrative functionalities of the LMS.\n\nThis includes user management, role-based access control, course content management (lectures, quizzes, materials), content metadata, reporting and analytics, and system settings.\n\nThe APIs ensure secure and efficient management of the LMS, leveraging technologies such as OAuth 2.0, JWT, and HTTPS/SSL/TLS for secure communication.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Admin Authentication",
+			"item": [],
+			"id": "7e01e773-4abc-44c9-85ad-b805898b29f7"
+		},
+		{
+			"name": "User Management",
+			"item": [],
+			"id": "e0ce9fae-2ea3-47e9-ac28-65b1b6c8d06a"
+		},
+		{
+			"name": "Content Metadata",
+			"item": [],
+			"id": "4343c36f-f4c5-491c-a415-c12319c2e26d"
+		},
+		{
+			"name": "Course Content Management",
+			"item": [
+				{
+					"name": "Lectures Management",
+					"item": [],
+					"id": "4ea40d87-f98d-4442-ac06-1746ff4e57ef"
+				},
+				{
+					"name": "Quizzes Management",
+					"item": [],
+					"id": "91847aec-ad59-401f-92fc-caecaea41a04"
+				},
+				{
+					"name": "Material Management",
+					"item": [],
+					"id": "d76c7b67-14b8-4527-97c9-5da6b8dbddbb"
+				}
+			],
+			"id": "e2724d46-bb33-4f4f-a72c-c9b9c70f8160"
+		},
+		{
+			"name": "Role-Based Access Control (RBAC)",
+			"item": [],
+			"id": "1e42500c-b9ec-481a-999d-81b18890c72b"
+		},
+		{
+			"name": "Reporting and Analytics",
+			"item": [],
+			"id": "2c663278-6f48-41fd-aa14-17280d3c6424"
+		},
+		{
+			"name": "System Settings",
+			"item": [],
+			"id": "2cd56ba2-6a25-47c3-8648-b26f6846c54d"
+		},
+		{
+			"name": "DRM Management",
+			"item": [],
+			"id": "c8a4e9c5-d878-4fe5-b450-fb8cda14fd45"
+		}
+	]
+}
