@@ -144,6 +144,21 @@ model SystemUser {
   updated_client_tenants     ClientTenant[]         @relation("ClientTenantUpdatedBy")
   deleted_client_tenants     ClientTenant[]         @relation("ClientTenantDeletedBy")
 
+  // Country audit relations
+  created_countries        Country[]         @relation("CountryCreatedBy")
+  updated_countries        Country[]         @relation("CountryUpdatedBy")
+  deleted_countries        Country[]         @relation("CountryDeletedBy")
+
+  // State audit relations
+  created_states           State[]           @relation("StateCreatedBy")
+  updated_states           State[]           @relation("StateUpdatedBy")
+  deleted_states           State[]           @relation("StateDeletedBy")
+
+  // City audit relations
+  created_cities           City[]            @relation("CityCreatedBy")
+  updated_cities           City[]            @relation("CityUpdatedBy")
+  deleted_cities           City[]            @relation("CityDeletedBy")
+
   @@map("system_users")
 }
 
