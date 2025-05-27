@@ -22,6 +22,8 @@ model Country {
 
   // Relationships
   states                  State[]
+  students                Student[]
+  teachers                Teacher[]
   
   // Audit trail relationships with SystemUser
   created_by_user         SystemUser       @relation("CountryCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
@@ -53,6 +55,8 @@ model State {
   // Relationships
   country                 Country   @relation(fields: [country_id], references: [country_id], onDelete: Restrict)
   cities                  City[]
+  students                Student[]
+  teachers                Teacher[]
   
   // Audit trail relationships with SystemUser
   created_by_user         SystemUser       @relation("StateCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
@@ -82,6 +86,8 @@ model City {
 
   // Relationships
   state                   State     @relation(fields: [state_id], references: [state_id], onDelete: Restrict)
+  students                Student[]
+  teachers                Teacher[]
   
   // Audit trail relationships with SystemUser
   created_by_user         SystemUser       @relation("CityCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)

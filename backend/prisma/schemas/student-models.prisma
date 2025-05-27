@@ -1,0 +1,156 @@
+// Student profile and related entities (contact info, devices)
+
+model Student {
+  student_id              Int                    @id @default(autoincrement())
+  tenant_id               Int
+  full_name               String                 @db.VarChar(255)
+  first_name              String                 @db.VarChar(100)
+  middle_name             String?                @db.VarChar(100)
+  last_name               String                 @db.VarChar(100)
+  country_id              Int
+  state_id                Int
+  city_id                 Int
+  address                 String?                @db.Text
+  date_of_birth           DateTime?
+  profile_picture_url     String?                @db.VarChar(500)
+  zip_code                String?                @db.VarChar(20)
+  age                     Int?
+  gender                  Int?                   // 1: MALE, 2: FEMALE
+  username                String                 @db.VarChar(50)
+  password_hash           String                 @db.VarChar(255)
+  last_login_at           DateTime?
+  student_status_id       Int                    // 1-7 enum values
+  referral_type           String?                @db.VarChar(100)
+  
+  // Audit fields
+  is_active               Boolean                @default(true)
+  is_deleted              Boolean                @default(false)
+  created_at              DateTime               @default(now())
+  updated_at              DateTime               @updatedAt
+  created_by              Int
+  updated_by              Int?
+  deleted_at              DateTime?
+  deleted_by_id           Int?
+  created_ip              String?                @db.VarChar(45)
+  updated_ip              String?                @db.VarChar(45)
+
+  // Relationships
+  tenant                  Tenant                 @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  country                 Country                @relation(fields: [country_id], references: [country_id], onDelete: Restrict)
+  state                   State                  @relation(fields: [state_id], references: [state_id], onDelete: Restrict)
+  city                    City                   @relation(fields: [city_id], references: [city_id], onDelete: Restrict)
+  emails                  StudentEmailAddress[]
+  phones                  StudentPhoneNumber[]
+  devices                 StudentDevice[]
+  
+  // Audit trail relationships with SystemUser
+  created_by_user   SystemUser        @relation("StudentCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user   SystemUser?       @relation("StudentUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("StudentDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("students")
+  // Note: Unique constraints and indexes will be implemented via custom SQL in Prisma migrations
+}
+
+model StudentEmailAddress {
+  student_email_address_id Int      @id @default(autoincrement())
+  tenant_id                Int
+  student_id               Int
+  email_address            String   @db.VarChar(255)
+  is_primary               Boolean  @default(false)
+  priority                 Int?
+  
+  // Audit fields
+  is_active                Boolean   @default(true)
+  is_deleted               Boolean   @default(false)
+  created_at               DateTime  @default(now())
+  updated_at               DateTime  @updatedAt
+  created_by               Int
+  updated_by               Int?
+  deleted_at               DateTime?
+  deleted_by_id            Int?
+  created_ip               String?   @db.VarChar(45)
+  updated_ip               String?   @db.VarChar(45)
+
+  // Relationships
+  tenant                   Tenant   @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  student                  Student  @relation(fields: [student_id], references: [student_id], onDelete: Cascade)
+  
+  // Audit trail relationships with SystemUser
+  created_by_user   SystemUser        @relation("StudentEmailAddressCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user   SystemUser?       @relation("StudentEmailAddressUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("StudentEmailAddressDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("student_email_addresses")
+  // Note: Unique constraints and indexes will be implemented via custom SQL in Prisma migrations
+}
+
+model StudentPhoneNumber {
+  student_phone_number_id  Int      @id @default(autoincrement())
+  tenant_id                Int
+  student_id               Int
+  dial_code                String   @db.VarChar(10)
+  phone_number             String   @db.VarChar(20)
+  iso_country_code         String?  @db.VarChar(3)
+  is_primary               Boolean  @default(false)
+  
+  // Audit fields
+  is_active                Boolean   @default(true)
+  is_deleted               Boolean   @default(false)
+  created_at               DateTime  @default(now())
+  updated_at               DateTime  @updatedAt
+  created_by               Int
+  updated_by               Int?
+  deleted_at               DateTime?
+  deleted_by_id            Int?
+  created_ip               String?   @db.VarChar(45)
+  updated_ip               String?   @db.VarChar(45)
+
+  // Relationships
+  tenant                   Tenant   @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  student                  Student  @relation(fields: [student_id], references: [student_id], onDelete: Cascade)
+  
+  // Audit trail relationships with SystemUser
+  created_by_user   SystemUser        @relation("StudentPhoneNumberCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user   SystemUser?       @relation("StudentPhoneNumberUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("StudentPhoneNumberDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("student_phone_numbers")
+  // Note: Unique constraints and indexes will be implemented via custom SQL in Prisma migrations
+}
+
+model StudentDevice {
+  student_device_id        Int       @id @default(autoincrement())
+  tenant_id                Int
+  student_id               Int
+  device_type              Int       // 1: IOS, 2: ANDROID, 3: WEB, 4: DESKTOP
+  device_identifier        String    @db.VarChar(255)
+  device_ip                String?   @db.VarChar(45)
+  mac_address              String?   @db.VarChar(17)
+  is_primary               Boolean   @default(false)
+  last_active_at           DateTime  @default(now())
+  
+  // Audit fields
+  is_active                Boolean   @default(true)
+  is_deleted               Boolean   @default(false)
+  created_at               DateTime  @default(now())
+  updated_at               DateTime  @updatedAt
+  created_by               Int
+  updated_by               Int?
+  deleted_at               DateTime?
+  deleted_by_id            Int?
+  created_ip               String?   @db.VarChar(45)
+  updated_ip               String?   @db.VarChar(45)
+
+  // Relationships
+  tenant                   Tenant   @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  student                  Student  @relation(fields: [student_id], references: [student_id], onDelete: Cascade)
+  
+  // Audit trail relationships with SystemUser
+  created_by_user   SystemUser        @relation("StudentDeviceCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user   SystemUser?       @relation("StudentDeviceUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("StudentDeviceDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("student_devices")
+  // Note: Unique constraints and indexes will be implemented via custom SQL in Prisma migrations
+}

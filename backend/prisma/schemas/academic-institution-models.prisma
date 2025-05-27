@@ -1,0 +1,126 @@
+// Academic and Institutional models for LMS system
+
+// Program model - top-level academic programs within a tenant
+model Program {
+  program_id           Int             @id @default(autoincrement())
+  tenant_id            Int
+  program_name         String          @db.VarChar(255)
+  
+  // Audit fields
+  is_active            Boolean         @default(true)
+  is_deleted           Boolean         @default(false)
+  created_at           DateTime        @default(now())
+  updated_at           DateTime        @updatedAt
+  created_by           Int
+  updated_by           Int?
+  deleted_at           DateTime?
+  deleted_by_id        Int?
+  created_ip           String?         @db.VarChar(45)
+  updated_ip           String?         @db.VarChar(45)
+
+  // Relationships
+  tenant               Tenant          @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  specializations      Specialization[]
+  
+  // Audit trail relationships with SystemUser
+  created_by_user      SystemUser      @relation("ProgramCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user      SystemUser?     @relation("ProgramUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user      SystemUser?     @relation("ProgramDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("programs")
+}
+
+// Specialization model - academic specializations within programs
+model Specialization {
+  specialization_id    Int             @id @default(autoincrement())
+  tenant_id            Int
+  program_id           Int
+  specialization_name  String          @db.VarChar(255)
+  
+  // Audit fields
+  is_active            Boolean         @default(true)
+  is_deleted           Boolean         @default(false)
+  created_at           DateTime        @default(now())
+  updated_at           DateTime        @updatedAt
+  created_by           Int
+  updated_by           Int?
+  deleted_at           DateTime?
+  deleted_by_id        Int?
+  created_ip           String?         @db.VarChar(45)
+  updated_ip           String?         @db.VarChar(45)
+
+  // Relationships
+  tenant               Tenant          @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  program              Program         @relation(fields: [program_id], references: [program_id], onDelete: Cascade)
+  courses              Course[]
+  
+  // Audit trail relationships with SystemUser
+  created_by_user      SystemUser      @relation("SpecializationCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user      SystemUser?     @relation("SpecializationUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user      SystemUser?     @relation("SpecializationDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("specializations")
+}
+
+// Institute model - educational institutions
+model Institute {
+  institute_id         Int             @id @default(autoincrement())
+  tenant_id            Int
+  institute_name       String          @db.VarChar(255)
+  
+  // Audit fields
+  is_active            Boolean         @default(true)
+  is_deleted           Boolean         @default(false)
+  created_at           DateTime        @default(now())
+  updated_at           DateTime        @updatedAt
+  created_by           Int
+  updated_by           Int?
+  deleted_at           DateTime?
+  deleted_by_id        Int?
+  created_ip           String?         @db.VarChar(45)
+  updated_ip           String?         @db.VarChar(45)
+
+  // Relationships
+  tenant               Tenant          @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  student_institutes   StudentInstitute[]
+  enrollments          Enrollment[]
+  
+  // Audit trail relationships with SystemUser
+  created_by_user      SystemUser      @relation("InstituteCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user      SystemUser?     @relation("InstituteUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user      SystemUser?     @relation("InstituteDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("institutes")
+}
+
+// StudentInstitute model - many-to-many relationship between students and institutes
+model StudentInstitute {
+  student_institute_id Int             @id @default(autoincrement())
+  tenant_id            Int
+  student_id           Int
+  institute_id         Int
+  
+  // Audit fields
+  is_active            Boolean         @default(true)
+  is_deleted           Boolean         @default(false)
+  created_at           DateTime        @default(now())
+  updated_at           DateTime        @updatedAt
+  created_by           Int
+  updated_by           Int?
+  deleted_at           DateTime?
+  deleted_by_id        Int?
+  created_ip           String?         @db.VarChar(45)
+  updated_ip           String?         @db.VarChar(45)
+
+  // Relationships
+  tenant               Tenant          @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  student              Student         @relation(fields: [student_id], references: [student_id], onDelete: Cascade)
+  institute            Institute       @relation(fields: [institute_id], references: [institute_id], onDelete: Cascade)
+  
+  // Audit trail relationships with SystemUser
+  created_by_user      SystemUser      @relation("StudentInstituteCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user      SystemUser?     @relation("StudentInstituteUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user      SystemUser?     @relation("StudentInstituteDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("student_institutes")
+}

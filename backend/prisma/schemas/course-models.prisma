@@ -1,0 +1,185 @@
+// Course and content management models for LMS system
+
+// Course model - main course entity
+model Course {
+  course_id            Int       @id @default(autoincrement())
+  tenant_id            Int
+  course_name          String    @db.VarChar(255)
+  main_thumbnail_url   String?   @db.Text
+  course_status_id     Int       // 1-DRAFT, 2-PUBLISHED, 3-ARCHIVED, 4-SUSPENDED
+  course_total_hours   Decimal?  @db.Decimal(6, 2)
+  specialization_id    Int?
+  
+  // Audit fields
+  is_active            Boolean   @default(true)
+  is_deleted           Boolean   @default(false)
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+  created_by           Int
+  updated_by           Int?
+  deleted_at           DateTime?
+  deleted_by_id        Int?
+  created_ip           String?   @db.VarChar(45)
+  updated_ip           String?   @db.VarChar(45)
+
+  // Relationships
+  tenant               Tenant    @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  specialization       Specialization? @relation(fields: [specialization_id], references: [specialization_id], onDelete: SetNull)
+  
+  // Course content relationships
+  modules              CourseModule[]
+  videos               CourseVideo[]
+  documents            CourseDocument[]
+  
+  // Enrollment and progress relationships
+  enrollments          Enrollment[]
+  student_progresses   StudentCourseProgress[]
+  
+  // Audit trail relationships with SystemUser
+  created_by_user      SystemUser   @relation("CourseCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user      SystemUser?  @relation("CourseUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user      SystemUser?  @relation("CourseDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("courses")
+}
+
+// CourseModule model - structural component of a course
+model CourseModule {
+  course_module_id     Int       @id @default(autoincrement())
+  tenant_id            Int
+  course_id            Int
+  course_module_name   String    @db.VarChar(255)
+  position             Int?
+  
+  // Audit fields
+  is_active            Boolean   @default(true)
+  is_deleted           Boolean   @default(false)
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+  created_by           Int
+  updated_by           Int?
+  deleted_at           DateTime?
+  deleted_by_id        Int?
+  created_ip           String?   @db.VarChar(45)
+  updated_ip           String?   @db.VarChar(45)
+
+  // Relationships
+  tenant               Tenant    @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  course               Course    @relation(fields: [course_id], references: [course_id], onDelete: Cascade)
+  topics               CourseTopic[]
+  
+  // Audit trail relationships with SystemUser
+  created_by_user      SystemUser   @relation("CourseModuleCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user      SystemUser?  @relation("CourseModuleUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user      SystemUser?  @relation("CourseModuleDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("course_modules")
+}
+
+// CourseTopic model - content topics within course modules
+model CourseTopic {
+  course_topic_id      Int       @id @default(autoincrement())
+  tenant_id            Int
+  module_id            Int
+  course_topic_name    String    @db.VarChar(255)
+  position             Int?
+  
+  // Audit fields
+  is_active            Boolean   @default(true)
+  is_deleted           Boolean   @default(false)
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+  created_by           Int
+  updated_by           Int?
+  deleted_at           DateTime?
+  deleted_by_id        Int?
+  created_ip           String?   @db.VarChar(45)
+  updated_ip           String?   @db.VarChar(45)
+
+  // Relationships
+  tenant               Tenant    @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  module               CourseModule @relation(fields: [module_id], references: [course_module_id], onDelete: Cascade)
+  videos               CourseVideo[]
+  documents            CourseDocument[]
+  
+  // Audit trail relationships with SystemUser
+  created_by_user      SystemUser   @relation("CourseTopicCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user      SystemUser?  @relation("CourseTopicUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user      SystemUser?  @relation("CourseTopicDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("course_topics")
+}
+
+// CourseVideo model - video content within course topics
+model CourseVideo {
+  course_video_id      Int       @id @default(autoincrement())
+  tenant_id            Int
+  course_id            Int
+  course_topic_id      Int
+  bunny_video_id       String    @db.VarChar(255)
+  video_name           String    @db.VarChar(255)
+  video_url            String    @db.Text
+  thumbnail_url        String?   @db.Text
+  duration_seconds     Int?
+  position             Int?
+  upload_status        Int?      // 1-PENDING, 2-PROCESSING, 3-COMPLETED, 4-FAILED, 5-CANCELLED
+  
+  // Audit fields
+  is_active            Boolean   @default(true)
+  is_deleted           Boolean   @default(false)
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+  created_by           Int
+  updated_by           Int?
+  deleted_at           DateTime?
+  deleted_by_id        Int?
+  created_ip           String?   @db.VarChar(45)
+  updated_ip           String?   @db.VarChar(45)
+
+  // Relationships
+  tenant               Tenant    @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  course               Course    @relation(fields: [course_id], references: [course_id], onDelete: Cascade)
+  topic                CourseTopic @relation(fields: [course_topic_id], references: [course_topic_id], onDelete: Cascade)
+  video_progresses     VideoProgress[]
+  
+  // Audit trail relationships with SystemUser
+  created_by_user      SystemUser   @relation("CourseVideoCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user      SystemUser?  @relation("CourseVideoUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user      SystemUser?  @relation("CourseVideoDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("course_videos")
+}
+
+// CourseDocument model - document resources within course topics
+model CourseDocument {
+  course_document_id   Int       @id @default(autoincrement())
+  tenant_id            Int
+  course_id            Int
+  course_topic_id      Int
+  document_name        String    @db.VarChar(255)
+  document_url         String    @db.Text
+  
+  // Audit fields
+  is_active            Boolean   @default(true)
+  is_deleted           Boolean   @default(false)
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+  created_by           Int
+  updated_by           Int?
+  deleted_at           DateTime?
+  deleted_by_id        Int?
+  created_ip           String?   @db.VarChar(45)
+  updated_ip           String?   @db.VarChar(45)
+
+  // Relationships
+  tenant               Tenant    @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  course               Course    @relation(fields: [course_id], references: [course_id], onDelete: Cascade)
+  topic                CourseTopic @relation(fields: [course_topic_id], references: [course_topic_id], onDelete: Cascade)
+  
+  // Audit trail relationships with SystemUser
+  created_by_user      SystemUser   @relation("CourseDocumentCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user      SystemUser?  @relation("CourseDocumentUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user      SystemUser?  @relation("CourseDocumentDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("course_documents")
+}
