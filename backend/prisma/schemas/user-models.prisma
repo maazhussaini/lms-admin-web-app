@@ -1,0 +1,218 @@
+// Role model - defines system roles for access control
+model Role {
+  role_id           Int               @id @default(autoincrement())
+  role_name         String            @db.VarChar(100)
+  role_description  String?           @db.Text
+  is_system_role    Boolean           @default(false)
+  
+  // Audit fields
+  is_active         Boolean           @default(true)
+  is_deleted        Boolean           @default(false)
+  created_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
+  created_by        Int
+  updated_by        Int?
+  deleted_at        DateTime?
+  deleted_by_id     Int?
+  created_ip        String?           @db.VarChar(45)
+  updated_ip        String?           @db.VarChar(45)
+
+  // Relationships
+  system_users      SystemUser[]
+  role_screens      RoleScreen[]
+  created_by_user   SystemUser        @relation("RoleCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user   SystemUser?       @relation("RoleUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("RoleDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("roles")
+}
+
+// Screen model - defines system screens/modules for permission management
+model Screen {
+  screen_id         Int               @id @default(autoincrement())
+  screen_name       String            @db.VarChar(100)
+  screen_description String?          @db.Text
+  route_path        String?           @db.VarChar(255)
+  parent_screen_id  Int?
+  sort_order        Int?
+  icon_class        String?           @db.VarChar(100)
+  
+  // Audit fields
+  is_active         Boolean           @default(true)
+  is_deleted        Boolean           @default(false)
+  created_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
+  created_by        Int
+  updated_by        Int?
+  deleted_at        DateTime?
+  deleted_by_id     Int?
+  created_ip        String?           @db.VarChar(45)
+  updated_ip        String?           @db.VarChar(45)
+
+  // Relationships
+  parent_screen     Screen?           @relation("ScreenHierarchy", fields: [parent_screen_id], references: [screen_id], onDelete: SetNull)
+  child_screens     Screen[]          @relation("ScreenHierarchy")
+  user_screens      UserScreen[]
+  role_screens      RoleScreen[]
+  created_by_user   SystemUser        @relation("ScreenCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user   SystemUser?       @relation("ScreenUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("ScreenDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("screens")
+}
+
+// SystemUser model - core user entity with conditional tenant isolation
+model SystemUser {
+  system_user_id    Int               @id @default(autoincrement())
+  tenant_id         Int?              // NULL for SuperAdmin
+  role_id           Int
+  username          String            @db.VarChar(50)
+  full_name         String            @db.VarChar(255)
+  email_address     String            @db.VarChar(255)
+  password_hash     String            @db.VarChar(255)
+  last_login_at     DateTime?
+  login_attempts    Int?              @default(0)
+  system_user_status Int              @default(1)
+  
+  // Audit fields
+  is_active         Boolean           @default(true)
+  is_deleted        Boolean           @default(false)
+  created_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
+  created_by        Int
+  updated_by        Int?
+  deleted_at        DateTime?
+  deleted_by_id     Int?
+  created_ip        String?           @db.VarChar(45)
+  updated_ip        String?           @db.VarChar(45)
+
+  // Relationships
+  tenant            Tenant?           @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  role              Role              @relation(fields: [role_id], references: [role_id], onDelete: Restrict)
+  user_screens      UserScreen[]
+
+  // Self-references for audit trails
+  created_by_me_users      SystemUser[]      @relation("UserCreatedBy")
+  created_by_user          SystemUser        @relation("UserCreatedBy", fields: [created_by], references: [system_user_id])
+  updated_by_me_users      SystemUser[]      @relation("UserUpdatedBy")
+  updated_by_user          SystemUser?       @relation("UserUpdatedBy", fields: [updated_by], references: [system_user_id])
+  deleted_by_me_users      SystemUser[]      @relation("UserDeletedBy")
+  deleted_by_user          SystemUser?       @relation("UserDeletedBy", fields: [deleted_by_id], references: [system_user_id])
+
+  // Role audit relations
+  created_roles            Role[]           @relation("RoleCreatedBy")
+  updated_roles            Role[]           @relation("RoleUpdatedBy")
+  deleted_roles            Role[]           @relation("RoleDeletedBy")
+
+  // Screen audit relations
+  created_screens          Screen[]         @relation("ScreenCreatedBy")
+  updated_screens          Screen[]         @relation("ScreenUpdatedBy")
+  deleted_screens          Screen[]         @relation("ScreenDeletedBy")
+
+  // UserScreen audit relations
+  created_user_screens     UserScreen[]     @relation("UserScreenCreatedBy")
+  updated_user_screens     UserScreen[]     @relation("UserScreenUpdatedBy")
+  deleted_user_screens     UserScreen[]     @relation("UserScreenDeletedBy")
+
+  // RoleScreen audit relations
+  created_role_screens     RoleScreen[]     @relation("RoleScreenCreatedBy")
+  updated_role_screens     RoleScreen[]     @relation("RoleScreenUpdatedBy")
+  deleted_role_screens     RoleScreen[]     @relation("RoleScreenDeletedBy")
+
+  // Tenant audit relations
+  created_tenants            Tenant[]               @relation("TenantCreatedBy")
+  updated_tenants            Tenant[]               @relation("TenantUpdatedBy")
+  deleted_tenants            Tenant[]               @relation("TenantDeletedBy")
+  
+  // Client audit relations
+  created_clients            Client[]               @relation("ClientCreatedBy")
+  updated_clients            Client[]               @relation("ClientUpdatedBy")
+  deleted_clients            Client[]               @relation("ClientDeletedBy")
+  
+  // TenantPhoneNumber audit relations
+  created_tenant_phones      TenantPhoneNumber[]    @relation("TenantPhoneNumberCreatedBy")
+  updated_tenant_phones      TenantPhoneNumber[]    @relation("TenantPhoneNumberUpdatedBy")
+  deleted_tenant_phones      TenantPhoneNumber[]    @relation("TenantPhoneNumberDeletedBy")
+  
+  // TenantEmailAddress audit relations
+  created_tenant_emails      TenantEmailAddress[]   @relation("TenantEmailAddressCreatedBy")
+  updated_tenant_emails      TenantEmailAddress[]   @relation("TenantEmailAddressUpdatedBy")
+  deleted_tenant_emails      TenantEmailAddress[]   @relation("TenantEmailAddressDeletedBy")
+  
+  // ClientTenant audit relations
+  created_client_tenants     ClientTenant[]         @relation("ClientTenantCreatedBy")
+  updated_client_tenants     ClientTenant[]         @relation("ClientTenantUpdatedBy")
+  deleted_client_tenants     ClientTenant[]         @relation("ClientTenantDeletedBy")
+
+  @@map("system_users")
+}
+
+// UserScreen model - individual user-specific screen permissions
+model UserScreen {
+  user_screen_id    Int               @id @default(autoincrement())
+  tenant_id         Int
+  system_user_id    Int
+  screen_id         Int
+  can_view          Boolean           @default(false)
+  can_create        Boolean           @default(false)
+  can_edit          Boolean           @default(false)
+  can_delete        Boolean           @default(false)
+  can_export        Boolean           @default(false)
+  
+  // Audit fields
+  is_active         Boolean           @default(true)
+  is_deleted        Boolean           @default(false)
+  created_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
+  created_by        Int
+  updated_by        Int?
+  deleted_at        DateTime?
+  deleted_by_id     Int?
+  created_ip        String?           @db.VarChar(45)
+  updated_ip        String?           @db.VarChar(45)
+
+  // Relationships
+  tenant            Tenant            @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  system_user       SystemUser        @relation(fields: [system_user_id], references: [system_user_id], onDelete: Cascade)
+  screen            Screen            @relation(fields: [screen_id], references: [screen_id], onDelete: Cascade)
+  created_by_user   SystemUser        @relation("UserScreenCreatedBy", fields: [created_by], references: [system_user_id])
+  updated_by_user   SystemUser?       @relation("UserScreenUpdatedBy", fields: [updated_by], references: [system_user_id])
+  deleted_by_user   SystemUser?       @relation("UserScreenDeletedBy", fields: [deleted_by_id], references: [system_user_id])
+
+  @@map("user_screens")
+}
+
+// RoleScreen model - role-based default permissions for screens
+model RoleScreen {
+  role_screen_id    Int               @id @default(autoincrement())
+  tenant_id         Int
+  role_id           Int
+  screen_id         Int
+  can_view          Boolean           @default(false)
+  can_create        Boolean           @default(false)
+  can_edit          Boolean           @default(false)
+  can_delete        Boolean           @default(false)
+  can_export        Boolean           @default(false)
+  
+  // Audit fields
+  is_active         Boolean           @default(true)
+  is_deleted        Boolean           @default(false)
+  created_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
+  created_by        Int
+  updated_by        Int?
+  deleted_at        DateTime?
+  deleted_by_id     Int?
+  created_ip        String?           @db.VarChar(45)
+  updated_ip        String?           @db.VarChar(45)
+
+  // Relationships
+  tenant            Tenant            @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  role              Role              @relation(fields: [role_id], references: [role_id], onDelete: Cascade)
+  screen            Screen            @relation(fields: [screen_id], references: [screen_id], onDelete: Cascade)
+  created_by_user   SystemUser        @relation("RoleScreenCreatedBy", fields: [created_by], references: [system_user_id])
+  updated_by_user   SystemUser?       @relation("RoleScreenUpdatedBy", fields: [updated_by], references: [system_user_id])
+  deleted_by_user   SystemUser?       @relation("RoleScreenDeletedBy", fields: [deleted_by_id], references: [system_user_id])
+
+  @@map("role_screens")
+}

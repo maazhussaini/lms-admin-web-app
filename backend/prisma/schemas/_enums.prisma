@@ -1,0 +1,40 @@
+// System enumerations for the LMS platform
+
+// System user role enumeration
+enum SystemUserRole {
+  SUPERADMIN   @map("1")  // Global system administrator (no tenant)
+  TENANT_ADMIN @map("2")  // Tenant administrator
+}
+
+// System user status enumeration
+enum SystemUserStatus {
+  ACTIVE    @map("1")
+  INACTIVE  @map("2")
+  SUSPENDED @map("3")
+  LOCKED    @map("4")
+}
+
+// Tenant status enumeration
+enum TenantStatus {
+  ACTIVE    @map("1")
+  SUSPENDED @map("2")
+  TRIAL     @map("3")
+  EXPIRED   @map("4")
+  CANCELLED @map("5")
+}
+
+// Client status enumeration
+enum ClientStatus {
+  ACTIVE     @map("1")
+  INACTIVE   @map("2")
+  SUSPENDED  @map("3")
+  TERMINATED @map("4")
+}
+
+// Contact type enumeration
+enum ContactType {
+  PRIMARY   @map("1")
+  SECONDARY @map("2")
+  EMERGENCY @map("3")
+  BILLING   @map("4")
+}

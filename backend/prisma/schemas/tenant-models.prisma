@@ -1,0 +1,168 @@
+// Tenant model - core entity for multi-tenant isolation
+model Tenant {
+  tenant_id      Int     @id @default(autoincrement())
+  tenant_name    String  @unique(map: "uq_tenants_tenant_name") @db.VarChar(100)
+  logo_url_light String? @db.VarChar(500)
+  logo_url_dark  String? @db.VarChar(500)
+  favicon_url    String? @db.VarChar(500)
+  theme          Json?
+  tenant_status  Int     @default(1)
+
+  // Audit fields
+  is_active     Boolean   @default(true)
+  is_deleted    Boolean   @default(false)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  created_by    Int
+  updated_by    Int?
+  deleted_at    DateTime?
+  deleted_by_id Int?
+  created_ip    String?   @db.VarChar(45)
+  updated_ip    String?   @db.VarChar(45)
+
+  // Relations
+  clients                Client[]
+  tenant_phone_numbers   TenantPhoneNumber[]
+  tenant_email_addresses TenantEmailAddress[]
+  client_tenants         ClientTenant[]
+  system_users           SystemUser[]
+
+  // Audit trail relationships with SystemUser
+  created_by_user   SystemUser        @relation("TenantCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user   SystemUser?       @relation("TenantUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("TenantDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  UserScreen UserScreen[]
+  RoleScreen RoleScreen[]
+
+  @@map("tenants")
+}
+
+// Client model - represents organizations or individuals within tenants
+model Client {
+  client_id     Int     @id @default(autoincrement())
+  full_name     String  @db.VarChar(255)
+  email_address String  @db.VarChar(255)
+  dial_code     String? @db.VarChar(20)
+  phone_number  String? @db.VarChar(20)
+  address       String? @db.VarChar(500)
+  client_status Int     @default(1)
+
+  // Multi-tenant audit fields
+  tenant_id     Int
+  is_active     Boolean   @default(true)
+  is_deleted    Boolean   @default(false)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  created_by    Int
+  updated_by    Int?
+  deleted_at    DateTime?
+  deleted_by_id Int?
+  created_ip    String?   @db.VarChar(45)
+  updated_ip    String?   @db.VarChar(45)
+
+  // Relations
+  tenant         Tenant         @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  client_tenants ClientTenant[]
+  
+  // Audit trail relationships with SystemUser
+  created_by_user   SystemUser        @relation("ClientCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user   SystemUser?       @relation("ClientUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("ClientDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("clients")
+}
+
+// Tenant Phone Number model - contact phone numbers for tenants
+model TenantPhoneNumber {
+  tenant_phone_number_id Int     @id @default(autoincrement())
+  tenant_id              Int
+  dial_code              String  @db.VarChar(20)
+  phone_number           String  @db.VarChar(20)
+  iso_country_code       String? @db.Char(2)
+  is_primary             Boolean @default(false)
+  contact_type           Int
+
+  // Audit fields
+  is_active     Boolean   @default(true)
+  is_deleted    Boolean   @default(false)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  created_by    Int
+  updated_by    Int?
+  deleted_at    DateTime?
+  deleted_by_id Int?
+  created_ip    String?   @db.VarChar(45)
+  updated_ip    String?   @db.VarChar(45)
+
+  // Relations
+  tenant Tenant @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade)
+  
+  // Audit trail relationships with SystemUser
+  created_by_user   SystemUser        @relation("TenantPhoneNumberCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user   SystemUser?       @relation("TenantPhoneNumberUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("TenantPhoneNumberDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("tenant_phone_numbers")
+}
+
+// Tenant Email Address model - contact email addresses for tenants
+model TenantEmailAddress {
+  tenant_email_address_id Int     @id @default(autoincrement())
+  tenant_id               Int
+  email_address           String  @db.VarChar(255)
+  is_primary              Boolean @default(false)
+  contact_type            Int
+
+  // Audit fields
+  is_active     Boolean   @default(true)
+  is_deleted    Boolean   @default(false)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  created_by    Int
+  updated_by    Int?
+  deleted_at    DateTime?
+  deleted_by_id Int?
+  created_ip    String?   @db.VarChar(45)
+  updated_ip    String?   @db.VarChar(45)
+
+  // Relations
+  tenant Tenant @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade)
+  
+  // Audit trail relationships with SystemUser
+  created_by_user   SystemUser        @relation("TenantEmailAddressCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user   SystemUser?       @relation("TenantEmailAddressUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("TenantEmailAddressDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("tenant_email_addresses")
+}
+
+// Client-Tenant association model - many-to-many relationship
+model ClientTenant {
+  client_tenant_id Int @id @default(autoincrement())
+  client_id        Int
+  tenant_id        Int
+
+  // Audit fields
+  is_active     Boolean   @default(true)
+  is_deleted    Boolean   @default(false)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  created_by    Int
+  updated_by    Int?
+  deleted_at    DateTime?
+  deleted_by_id Int?
+  created_ip    String?   @db.VarChar(45)
+  updated_ip    String?   @db.VarChar(45)
+
+  // Relations
+  client Client @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade)
+  
+  // Audit trail relationships with SystemUser
+  created_by_user   SystemUser        @relation("ClientTenantCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user   SystemUser?       @relation("ClientTenantUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("ClientTenantDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("client_tenants")
+}
