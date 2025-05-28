@@ -159,63 +159,6 @@ model SystemUser {
   updated_cities           City[]            @relation("CityUpdatedBy")
   deleted_cities           City[]            @relation("CityDeletedBy")
 
-  // Quiz audit relations
-  created_quizzes              Quiz[]                  @relation("QuizCreatedBy")
-  updated_quizzes              Quiz[]                  @relation("QuizUpdatedBy")
-  deleted_quizzes              Quiz[]                  @relation("QuizDeletedBy")
-  
-  // QuizMapping audit relations
-  created_quiz_mappings        QuizMapping[]           @relation("QuizMappingCreatedBy")
-  updated_quiz_mappings        QuizMapping[]           @relation("QuizMappingUpdatedBy")
-  deleted_quiz_mappings        QuizMapping[]           @relation("QuizMappingDeletedBy")
-  
-  // QuizQuestion audit relations
-  created_quiz_questions       QuizQuestion[]          @relation("QuizQuestionCreatedBy")
-  updated_quiz_questions       QuizQuestion[]          @relation("QuizQuestionUpdatedBy")
-  deleted_quiz_questions       QuizQuestion[]          @relation("QuizQuestionDeletedBy")
-  
-  // QuizQuestionOption audit relations
-  created_quiz_options         QuizQuestionOption[]    @relation("QuizQuestionOptionCreatedBy")
-  updated_quiz_options         QuizQuestionOption[]    @relation("QuizQuestionOptionUpdatedBy")
-  deleted_quiz_options         QuizQuestionOption[]    @relation("QuizQuestionOptionDeletedBy")
-  
-  // QuizQuestionAnswer audit relations
-  created_quiz_answers         QuizQuestionAnswer[]    @relation("QuizQuestionAnswerCreatedBy")
-  updated_quiz_answers         QuizQuestionAnswer[]    @relation("QuizQuestionAnswerUpdatedBy") 
-  deleted_quiz_answers         QuizQuestionAnswer[]    @relation("QuizQuestionAnswerDeletedBy")
-  
-  // QuizAttempt audit relations
-  created_quiz_attempts        QuizAttempt[]           @relation("QuizAttemptCreatedBy")
-  updated_quiz_attempts        QuizAttempt[]           @relation("QuizAttemptUpdatedBy")
-  deleted_quiz_attempts        QuizAttempt[]           @relation("QuizAttemptDeletedBy")
-  graded_quiz_attempts         QuizAttempt[]           @relation("QuizAttemptGradedBy")
-  
-  // QuizAttemptAnswer audit relations
-  created_quiz_attempt_answers QuizAttemptAnswer[]     @relation("QuizAttemptAnswerCreatedBy")
-  updated_quiz_attempt_answers QuizAttemptAnswer[]     @relation("QuizAttemptAnswerUpdatedBy")
-  deleted_quiz_attempt_answers QuizAttemptAnswer[]     @relation("QuizAttemptAnswerDeletedBy")
-
-  // Assignment audit relations
-  created_assignments               Assignment[]              @relation("AssignmentCreatedBy")
-  updated_assignments               Assignment[]              @relation("AssignmentUpdatedBy")
-  deleted_assignments               Assignment[]              @relation("AssignmentDeletedBy")
-  
-  // AssignmentMapping audit relations
-  created_assignment_mappings       AssignmentMapping[]       @relation("AssignmentMappingCreatedBy")
-  updated_assignment_mappings       AssignmentMapping[]       @relation("AssignmentMappingUpdatedBy")
-  deleted_assignment_mappings       AssignmentMapping[]       @relation("AssignmentMappingDeletedBy")
-  
-  // StudentAssignment audit relations
-  created_student_assignments       StudentAssignment[]       @relation("StudentAssignmentCreatedBy")
-  updated_student_assignments       StudentAssignment[]       @relation("StudentAssignmentUpdatedBy")
-  deleted_student_assignments       StudentAssignment[]       @relation("StudentAssignmentDeletedBy")
-  graded_student_assignments        StudentAssignment[]       @relation("StudentAssignmentGradedBy")
-  
-  // AssignmentSubmissionFile audit relations
-  created_submission_files          AssignmentSubmissionFile[] @relation("AssignmentSubmissionFileCreatedBy")
-  updated_submission_files          AssignmentSubmissionFile[] @relation("AssignmentSubmissionFileUpdatedBy")
-  deleted_submission_files          AssignmentSubmissionFile[] @relation("AssignmentSubmissionFileDeletedBy")
-
   @@map("system_users")
 }
 
