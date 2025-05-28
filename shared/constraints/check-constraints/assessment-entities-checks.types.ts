@@ -1,5 +1,5 @@
 /**
- * @file quiz-assignment-entities-checks.types.ts
+ * @file assessment-entities-checks.types.ts
  * @description Check constraint definitions for quiz and assignment entities.
  */
 
@@ -8,7 +8,7 @@ import { CheckConstraint } from '../base-constraint.types';
 /**
  * Check constraints for quiz and assignment entities
  */
-export const QUIZ_ASSIGNMENT_ENTITIES_CHECK_CONSTRAINTS: Record<string, CheckConstraint> = {
+export const ASSESSMENT_ENTITIES_CHECK_CONSTRAINTS: Record<string, CheckConstraint> = {
   // Quiz validations
   QUIZ_NAME_LENGTH_CHECK: {
     table: 'quizzes',
@@ -22,6 +22,13 @@ export const QUIZ_ASSIGNMENT_ENTITIES_CHECK_CONSTRAINTS: Record<string, CheckCon
     constraintName: 'quiz_total_marks_valid',
     condition: 'total_marks > 0',
     description: 'Quiz total marks must be positive'
+  },
+
+  QUIZ_PASSING_MARKS_CHECK: {
+    table: 'quizzes',
+    constraintName: 'quiz_passing_marks_valid',
+    condition: 'passing_marks IS NULL OR (passing_marks >= 0 AND passing_marks <= total_marks)',
+    description: 'Quiz passing marks must be between 0 and total marks when provided'
   },
 
   QUIZ_MAX_ATTEMPTS_CHECK: {
@@ -43,6 +50,13 @@ export const QUIZ_ASSIGNMENT_ENTITIES_CHECK_CONSTRAINTS: Record<string, CheckCon
     constraintName: 'quiz_status_enum_valid',
     condition: 'status IN (1, 2, 3, 4, 5)',
     description: 'Quiz status must be valid enum value (1-5)'
+  },
+
+  QUIZ_DUE_DATE_FUTURE_CHECK: {
+    table: 'quizzes',
+    constraintName: 'quiz_due_date_future_valid',
+    condition: 'due_date IS NULL OR due_date > created_at',
+    description: 'Quiz due date must be in the future when provided'
   },
 
   // Quiz question validations
@@ -67,6 +81,36 @@ export const QUIZ_ASSIGNMENT_ENTITIES_CHECK_CONSTRAINTS: Record<string, CheckCon
     description: 'Quiz question type must be valid enum value (1-4)'
   },
 
+  QUIZ_QUESTION_POSITION_CHECK: {
+    table: 'quiz_questions',
+    constraintName: 'quiz_question_position_valid',
+    condition: 'position > 0',
+    description: 'Quiz question position must be positive'
+  },
+
+  // Quiz option validations
+  QUIZ_OPTION_TEXT_LENGTH_CHECK: {
+    table: 'quiz_question_options',
+    constraintName: 'quiz_option_text_length_valid',
+    condition: 'LENGTH(option_text) >= 1',
+    description: 'Quiz option text must not be empty'
+  },
+
+  QUIZ_OPTION_POSITION_CHECK: {
+    table: 'quiz_question_options',
+    constraintName: 'quiz_option_position_valid',
+    condition: 'position > 0',
+    description: 'Quiz option position must be positive'
+  },
+
+  // Quiz answer validations
+  QUIZ_ANSWER_TEXT_LENGTH_CHECK: {
+    table: 'quiz_question_answers',
+    constraintName: 'quiz_answer_text_length_valid',
+    condition: 'LENGTH(answer_text) >= 1',
+    description: 'Quiz answer text must not be empty'
+  },
+
   // Quiz attempt validations
   QUIZ_ATTEMPT_NUMBER_CHECK: {
     table: 'quiz_attempts',
@@ -82,11 +126,40 @@ export const QUIZ_ASSIGNMENT_ENTITIES_CHECK_CONSTRAINTS: Record<string, CheckCon
     description: 'Quiz attempt score must be non-negative when provided'
   },
 
+  QUIZ_ATTEMPT_PERCENTAGE_CHECK: {
+    table: 'quiz_attempts',
+    constraintName: 'quiz_attempt_percentage_valid',
+    condition: 'percentage IS NULL OR (percentage >= 0 AND percentage <= 100)',
+    description: 'Quiz attempt percentage must be between 0 and 100 when provided'
+  },
+
   QUIZ_ATTEMPT_TIME_CONSISTENCY_CHECK: {
     table: 'quiz_attempts',
     constraintName: 'quiz_attempt_time_consistency_valid',
     condition: 'submitted_at IS NULL OR submitted_at >= started_at',
     description: 'Quiz submission time must be after or equal to start time'
+  },
+
+  QUIZ_ATTEMPT_TIME_TAKEN_CHECK: {
+    table: 'quiz_attempts',
+    constraintName: 'quiz_attempt_time_taken_valid',
+    condition: 'time_taken_minutes IS NULL OR time_taken_minutes >= 0',
+    description: 'Quiz time taken must be non-negative when provided'
+  },
+
+  QUIZ_ATTEMPT_STATUS_ENUM_CHECK: {
+    table: 'quiz_attempts',
+    constraintName: 'quiz_attempt_status_enum_valid',
+    condition: 'status IN (1, 2, 3, 4)',
+    description: 'Quiz attempt status must be valid enum value (1-4)'
+  },
+
+  // Quiz attempt answer validations
+  QUIZ_ATTEMPT_ANSWER_MARKS_CHECK: {
+    table: 'quiz_attempt_answers',
+    constraintName: 'quiz_attempt_answer_marks_valid',
+    condition: 'marks_obtained IS NULL OR marks_obtained >= 0',
+    description: 'Quiz attempt answer marks must be non-negative when provided'
   },
 
   // Assignment validations
@@ -102,6 +175,13 @@ export const QUIZ_ASSIGNMENT_ENTITIES_CHECK_CONSTRAINTS: Record<string, CheckCon
     constraintName: 'assignment_total_marks_valid',
     condition: 'total_marks > 0',
     description: 'Assignment total marks must be positive'
+  },
+
+  ASSIGNMENT_PASSING_MARKS_CHECK: {
+    table: 'assignments',
+    constraintName: 'assignment_passing_marks_valid',
+    condition: 'passing_marks IS NULL OR (passing_marks >= 0 AND passing_marks <= total_marks)',
+    description: 'Assignment passing marks must be between 0 and total marks when provided'
   },
 
   ASSIGNMENT_TYPE_ENUM_CHECK: {
@@ -123,6 +203,13 @@ export const QUIZ_ASSIGNMENT_ENTITIES_CHECK_CONSTRAINTS: Record<string, CheckCon
     constraintName: 'assignment_max_file_size_valid',
     condition: 'max_file_size_mb IS NULL OR max_file_size_mb > 0',
     description: 'Assignment max file size must be positive when provided'
+  },
+
+  ASSIGNMENT_MAX_ATTEMPTS_CHECK: {
+    table: 'assignments',
+    constraintName: 'assignment_max_attempts_valid',
+    condition: 'max_attempts IS NULL OR max_attempts > 0',
+    description: 'Assignment max attempts must be positive when provided'
   },
 
   ASSIGNMENT_DUE_DATE_FUTURE_CHECK: {
@@ -147,6 +234,13 @@ export const QUIZ_ASSIGNMENT_ENTITIES_CHECK_CONSTRAINTS: Record<string, CheckCon
     description: 'Student assignment grade must be non-negative when provided'
   },
 
+  STUDENT_ASSIGNMENT_PERCENTAGE_CHECK: {
+    table: 'student_assignments',
+    constraintName: 'student_assignment_percentage_valid',
+    condition: 'percentage IS NULL OR (percentage >= 0 AND percentage <= 100)',
+    description: 'Student assignment percentage must be between 0 and 100 when provided'
+  },
+
   STUDENT_ASSIGNMENT_STATUS_ENUM_CHECK: {
     table: 'student_assignments',
     constraintName: 'student_assignment_status_enum_valid',
@@ -154,7 +248,21 @@ export const QUIZ_ASSIGNMENT_ENTITIES_CHECK_CONSTRAINTS: Record<string, CheckCon
     description: 'Student assignment submission status must be valid enum value (1-5)'
   },
 
+  STUDENT_ASSIGNMENT_GRADING_CONSISTENCY_CHECK: {
+    table: 'student_assignments',
+    constraintName: 'student_assignment_grading_consistency_valid',
+    condition: 'graded_at IS NULL OR (graded_by IS NOT NULL AND grade IS NOT NULL)',
+    description: 'Graded assignments must have both grader and grade'
+  },
+
   // Assignment file validations
+  ASSIGNMENT_FILE_NAME_LENGTH_CHECK: {
+    table: 'assignment_submission_files',
+    constraintName: 'assignment_file_name_length_valid',
+    condition: 'LENGTH(original_file_name) >= 1 AND LENGTH(original_file_name) <= 255',
+    description: 'Assignment file name must be between 1 and 255 characters'
+  },
+
   ASSIGNMENT_FILE_SIZE_CHECK: {
     table: 'assignment_submission_files',
     constraintName: 'assignment_file_size_valid',
@@ -177,10 +285,24 @@ export const QUIZ_ASSIGNMENT_ENTITIES_CHECK_CONSTRAINTS: Record<string, CheckCon
     description: 'Quiz reference type must be valid enum value (1-3)'
   },
 
+  QUIZ_REFERENCE_ID_CHECK: {
+    table: 'quiz_mappings',
+    constraintName: 'quiz_reference_id_valid',
+    condition: 'reference_id > 0',
+    description: 'Quiz reference ID must be positive'
+  },
+
   ASSIGNMENT_REFERENCE_TYPE_ENUM_CHECK: {
     table: 'assignment_mappings',
     constraintName: 'assignment_reference_type_enum_valid',
     condition: 'reference_table_id IN (1, 2, 3)',
     description: 'Assignment reference type must be valid enum value (1-3)'
+  },
+
+  ASSIGNMENT_REFERENCE_ID_CHECK: {
+    table: 'assignment_mappings',
+    constraintName: 'assignment_reference_id_valid',
+    condition: 'reference_id > 0',
+    description: 'Assignment reference ID must be positive'
   },
 };

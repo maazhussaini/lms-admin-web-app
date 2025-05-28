@@ -1,0 +1,285 @@
+// Enrollment & Session Management Models
+
+model Enrollment {
+  enrollment_id             Int       @id @default(autoincrement())
+  tenant_id                 Int
+  course_id                 Int
+  student_id                Int
+  institute_id              Int
+  teacher_id                Int?
+  enrollment_status_id      Int       // 1-8 enum values (see EnrollmentStatus)
+  enrolled_at               DateTime  @default(now())
+  expected_completion_date  DateTime?
+  actual_completion_date    DateTime?
+  status_changed_at         DateTime?
+  status_changed_by         Int?
+  status_change_reason      String?   @db.Text
+  grade                     String?   @db.VarChar(10)
+  final_score               Decimal?  @db.Decimal(5,2)
+
+  // Audit fields
+  is_active                 Boolean   @default(true)
+  is_deleted                Boolean   @default(false)
+  created_at                DateTime  @default(now())
+  created_by                Int
+  created_ip                String    @db.VarChar(45)
+  updated_at                DateTime? @updatedAt
+  updated_by                Int?
+  updated_ip                String?   @db.VarChar(45)
+
+  // Relationships
+  tenant                    Tenant    @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  course                    Course    @relation(fields: [course_id], references: [course_id], onDelete: Restrict)
+  student                   Student   @relation(fields: [student_id], references: [student_id], onDelete: Restrict)
+  institute                 Institute @relation(fields: [institute_id], references: [institute_id], onDelete: Restrict)
+  teacher                   Teacher?  @relation(fields: [teacher_id], references: [teacher_id], onDelete: SetNull)
+  status_history            EnrollmentStatusHistory[]
+
+  @@map("enrollments")
+  // Unique constraints and indexes via custom SQL migrations
+}
+
+model EnrollmentStatusHistory {
+  enrollment_status_history_id Int            @id @default(autoincrement())
+  tenant_id                    Int
+  enrollment_id                Int
+  previous_status_id           Int?
+  new_status_id                Int            // 1-8 enum values (see EnrollmentStatus)
+  status_changed_at            DateTime       @default(now())
+  changed_by                   Int
+  change_reason                String?        @db.Text
+  notes                        String?        @db.Text
+
+  // Audit fields
+  is_active                    Boolean        @default(true)
+  is_deleted                   Boolean        @default(false)
+  created_at                   DateTime       @default(now())
+  created_by                   Int
+  created_ip                   String         @db.VarChar(45)
+  updated_at                   DateTime?      @updatedAt
+  updated_by                   Int?
+  updated_ip                   String?        @db.VarChar(45)
+
+  // Relationships
+  tenant                       Tenant         @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  enrollment                   Enrollment     @relation(fields: [enrollment_id], references: [enrollment_id], onDelete: Cascade)
+  changed_by_user              SystemUser     @relation(fields: [changed_by], references: [system_user_id], onDelete: Restrict)
+
+  @@map("enrollment_status_histories")
+  // Unique constraints and indexes via custom SQL migrations
+}
+
+model StudentCourseProgress {
+  student_course_progress_id    Int       @id @default(autoincrement())
+  tenant_id                     Int
+  student_id                    Int
+  course_id                     Int
+  overall_progress_percentage   Int       @default(0)
+  modules_completed             Int       @default(0)
+  videos_completed              Int       @default(0)
+  quizzes_completed             Int       @default(0)
+  assignments_completed         Int       @default(0)
+  total_time_spent_minutes      Int       @default(0)
+  last_accessed_at              DateTime  @default(now())
+  is_course_completed           Boolean   @default(false)
+  completion_date               DateTime?
+
+  // Audit fields
+  is_active                     Boolean   @default(true)
+  is_deleted                    Boolean   @default(false)
+  created_at                    DateTime  @default(now())
+  created_by                    Int
+  created_ip                    String    @db.VarChar(45)
+  updated_at                    DateTime? @updatedAt
+  updated_by                    Int?
+  updated_ip                    String?   @db.VarChar(45)
+
+  // Relationships
+  tenant                        Tenant    @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  student                       Student   @relation(fields: [student_id], references: [student_id], onDelete: Cascade)
+  course                        Course    @relation(fields: [course_id], references: [course_id], onDelete: Cascade)
+
+  @@map("student_course_progresses")
+  // Unique constraints and indexes via custom SQL migrations
+}
+
+model TeacherCourse {
+  teacher_course_id        Int       @id @default(autoincrement())
+  tenant_id                Int
+  course_id                Int
+  teacher_id               Int
+
+  // Audit fields
+  is_active                Boolean   @default(true)
+  is_deleted               Boolean   @default(false)
+  created_at               DateTime  @default(now())
+  created_by               Int
+  created_ip               String    @db.VarChar(45)
+  updated_at               DateTime? @updatedAt
+  updated_by               Int?
+  updated_ip               String?   @db.VarChar(45)
+
+  // Relationships
+  tenant                   Tenant    @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  course                   Course    @relation(fields: [course_id], references: [course_id], onDelete: Cascade)
+  teacher                  Teacher   @relation(fields: [teacher_id], references: [teacher_id], onDelete: Cascade)
+
+  @@map("teacher_courses")
+  // Unique constraints and indexes via custom SQL migrations
+}
+
+model CourseSessionStatusLookup {
+  course_session_status_id Int     @id @default(autoincrement())
+  status_name              String  @db.VarChar(100)
+  description              String?
+
+  // Minimal audit fields
+  is_active                Boolean @default(true)
+  created_at               DateTime @default(now())
+  created_by               Int
+  updated_at               DateTime? @updatedAt
+  updated_by               Int?
+
+  // Relationships
+  course_sessions          CourseSession[]
+  created_by_user          SystemUser @relation("CourseSessionStatusCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user          SystemUser? @relation("CourseSessionStatusUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+
+  @@map("course_session_status_lookups")
+  // Unique constraints and indexes via custom SQL migrations
+}
+
+model CourseSession {
+  course_session_id        Int      @id @default(autoincrement())
+  tenant_id                Int
+  teacher_id               Int
+  course_id                Int
+  course_session_status_id Int
+  session_name             String   @db.VarChar(255)
+  session_description      String?  @db.Text
+  start_date               DateTime
+  end_date                 DateTime
+  max_students             Int?
+  enrollment_deadline      DateTime?
+  session_timezone         String?  @db.VarChar(50)
+  session_code             String?  @db.VarChar(20)
+  auto_expire_enabled      Boolean  @default(true)
+
+  // Audit fields
+  is_active                Boolean  @default(true)
+  is_deleted               Boolean  @default(false)
+  created_at               DateTime @default(now())
+  created_by               Int
+  created_ip               String   @db.VarChar(45)
+  updated_at               DateTime? @updatedAt
+  updated_by               Int?
+  updated_ip               String?  @db.VarChar(45)
+
+  // Relationships
+  tenant                   Tenant   @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  teacher                  Teacher  @relation(fields: [teacher_id], references: [teacher_id], onDelete: Restrict)
+  course                   Course   @relation(fields: [course_id], references: [course_id], onDelete: Restrict)
+  status                   CourseSessionStatusLookup @relation(fields: [course_session_status_id], references: [course_session_status_id], onDelete: Restrict)
+  enrollments              CourseSessionEnrollment[]
+  announcements            CourseSessionAnnouncement[]
+  settings                 CourseSessionSettings?
+  created_by_user          SystemUser @relation("CourseSessionCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user          SystemUser? @relation("CourseSessionUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+
+  @@map("course_sessions")
+  // Unique constraints and indexes via custom SQL migrations
+}
+
+model CourseSessionEnrollment {
+  course_session_enrollment_id Int      @id @default(autoincrement())
+  tenant_id                    Int
+  course_session_id            Int
+  student_id                   Int
+  enrolled_at                  DateTime @default(now())
+  dropped_at                   DateTime?
+  enrollment_status            Int      @default(1) // 1=ENROLLED, 2=DROPPED, 3=COMPLETED, 4=EXPELLED
+  completion_percentage        Int      @default(0)
+  final_grade                  Int?
+  completion_date              DateTime?
+
+  // Audit fields
+  is_active                    Boolean  @default(true)
+  is_deleted                   Boolean  @default(false)
+  created_at                   DateTime @default(now())
+  created_by                   Int
+  created_ip                   String   @db.VarChar(45)
+  updated_at                   DateTime? @updatedAt
+  updated_by                   Int?
+  updated_ip                   String?  @db.VarChar(45)
+
+  // Relationships
+  tenant                       Tenant           @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  course_session               CourseSession    @relation(fields: [course_session_id], references: [course_session_id], onDelete: Cascade)
+  student                      Student          @relation(fields: [student_id], references: [student_id], onDelete: Cascade)
+  created_by_user              SystemUser       @relation("CourseSessionEnrollmentCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user              SystemUser?      @relation("CourseSessionEnrollmentUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+
+  @@map("course_session_enrollments")
+  // Unique constraints and indexes via custom SQL migrations
+}
+
+model CourseSessionSettings {
+  course_session_settings_id      Int     @id @default(autoincrement())
+  tenant_id                       Int
+  course_session_id               Int     @unique
+  allow_late_enrollment           Boolean @default(false)
+  require_approval_for_enrollment Boolean @default(false)
+  allow_student_discussions       Boolean @default(true)
+  send_reminder_emails            Boolean @default(true)
+  reminder_days_before_expiry     Int     @default(7)
+  grading_scale                   Json?
+  attendance_tracking_enabled     Boolean @default(false)
+
+  // Audit fields
+  is_active                       Boolean  @default(true)
+  is_deleted                      Boolean  @default(false)
+  created_at                      DateTime @default(now())
+  created_by                      Int
+  created_ip                      String   @db.VarChar(45)
+  updated_at                      DateTime? @updatedAt
+  updated_by                      Int?
+  updated_ip                      String?  @db.VarChar(45)
+
+  // Relationships
+  tenant                          Tenant        @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  course_session                  CourseSession @relation(fields: [course_session_id], references: [course_session_id], onDelete: Cascade)
+  created_by_user                 SystemUser    @relation("CourseSessionSettingsCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user                 SystemUser?   @relation("CourseSessionSettingsUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+
+  @@map("course_session_settings")
+  // Indexes via custom SQL migrations
+}
+
+model VideoProgress {
+  video_progress_id       Int             @id @default(autoincrement())
+  tenant_id               Int
+  student_id              Int
+  course_video_id         Int
+  watch_duration_seconds  Int             @default(0)
+  completion_percentage   Int             @default(0)
+  last_watched_at         DateTime        @default(now())
+  is_completed            Boolean         @default(false)
+
+  // Audit fields
+  is_active               Boolean         @default(true)
+  is_deleted              Boolean         @default(false)
+  created_at              DateTime        @default(now())
+  created_by              Int
+  created_ip              String          @db.VarChar(45)
+  updated_at              DateTime?       @updatedAt
+  updated_by              Int?
+  updated_ip              String?         @db.VarChar(45)
+
+  // Relationships
+  tenant                  Tenant          @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  student                 Student         @relation(fields: [student_id], references: [student_id], onDelete: Cascade)
+  video                   CourseVideo     @relation(fields: [course_video_id], references: [course_video_id], onDelete: Cascade)
+
+  @@map("video_progresses")
+  // Unique constraints and indexes via custom SQL migrations
+}

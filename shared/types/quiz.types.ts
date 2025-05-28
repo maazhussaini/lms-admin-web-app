@@ -51,6 +51,7 @@ export enum QuizReferenceTable {
 export interface Quiz extends MultiTenantAuditFields {
   quiz_id: number;
   course_id: number; // Foreign key to Course
+  teacher_id: number; // Teacher who owns the quiz content
   quiz_name: string;
   quiz_description?: string | null;
   total_marks: number;
@@ -73,6 +74,7 @@ export interface QuizMapping extends MultiTenantAuditFields {
   quiz_id: number; // Foreign key to Quiz
   reference_table_id: QuizReferenceTable;
   reference_id: number; // ID of the referenced entity
+  teacher_id: number; // Teacher who created this mapping
 }
 
 /**
@@ -82,6 +84,7 @@ export interface QuizMapping extends MultiTenantAuditFields {
 export interface QuizQuestion extends MultiTenantAuditFields {
   quiz_question_id: number;
   quiz_id: number; // Foreign key to Quiz
+  teacher_id: number; // Teacher who created this question
   question_text: string;
   question_type: QuizQuestionType;
   question_marks: number;
@@ -125,8 +128,9 @@ export interface QuizAttempt extends MultiTenantAuditFields {
   percentage?: number | null;
   status: QuizAttemptStatus;
   time_taken_minutes?: number | null;
-  graded_by?: number | null; // Foreign key to SystemUser
+  graded_by?: number | null; // Reference to either teacher or admin who graded
   graded_at?: Date | string | null;
+  teacher_notes?: string | null; // Notes from teacher for this attempt
 }
 
 /**
@@ -141,6 +145,8 @@ export interface QuizAttemptAnswer extends MultiTenantAuditFields {
   answer_text?: string | null; // For essay/short answer questions
   is_correct?: boolean | null;
   marks_obtained?: number | null;
+  reviewed_by_teacher_id?: number | null; // Teacher who reviewed this specific answer
+  teacher_comment?: string | null; // Teacher comment on this answer
 }
 
 // Type guards for runtime type checking

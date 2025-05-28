@@ -1,0 +1,234 @@
+// Quiz-related models
+
+model Quiz {
+  quiz_id             Int              @id @default(autoincrement())
+  tenant_id           Int
+  course_id           Int
+  teacher_id          Int              // Teacher who owns the quiz content
+  quiz_name           String           @db.VarChar(255)
+  quiz_description    String?          @db.Text
+  total_marks         Decimal          @db.Decimal(6, 2)
+  passing_marks       Decimal?         @db.Decimal(6, 2)
+  time_limit_minutes  Int?
+  max_attempts        Int?
+  allow_retake        Boolean          @default(false)
+  randomize_questions Boolean          @default(false)
+  due_date            DateTime?
+  status              QuizStatus       @default(DRAFT)
+  instructions        String?          @db.Text
+
+  // Standard audit and tenant fields (keep fields, remove relationships)
+  is_active           Boolean          @default(true)
+  is_deleted          Boolean          @default(false)
+  created_at          DateTime         @default(now())
+  updated_at          DateTime         @updatedAt
+  created_by          Int
+  updated_by          Int?
+  deleted_at          DateTime?
+  deleted_by          Int?
+  created_ip          String?          @db.VarChar(45)
+  updated_ip          String?          @db.VarChar(45)
+
+  // Relationships
+  tenant              Tenant           @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  course              Course           @relation(fields: [course_id], references: [course_id], onDelete: Cascade)
+  teacher             Teacher          @relation(fields: [teacher_id], references: [teacher_id], onDelete: Restrict)
+  
+  // Related entities
+  quiz_mappings       QuizMapping[]
+  quiz_questions      QuizQuestion[]
+  quiz_attempts       QuizAttempt[]
+
+  @@map("quizzes")
+}
+
+model QuizMapping {
+  quiz_mapping_id     Int                 @id @default(autoincrement())
+  tenant_id           Int
+  quiz_id             Int
+  reference_table_id  QuizReferenceTable
+  reference_id        Int
+  teacher_id          Int                 // Teacher who created this mapping (may differ from quiz owner)
+
+  // Standard audit and tenant fields (keep fields, remove relationships)
+  is_active           Boolean             @default(true)
+  is_deleted          Boolean             @default(false)
+  created_at          DateTime            @default(now())
+  updated_at          DateTime            @updatedAt
+  created_by          Int
+  updated_by          Int?
+  deleted_at          DateTime?
+  deleted_by          Int?
+  created_ip          String?             @db.VarChar(45)
+  updated_ip          String?             @db.VarChar(45)
+
+  // Relationships
+  tenant              Tenant              @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  quiz                Quiz                @relation(fields: [quiz_id], references: [quiz_id], onDelete: Cascade)
+  teacher             Teacher             @relation(fields: [teacher_id], references: [teacher_id], onDelete: Restrict)
+
+  @@map("quiz_mappings")
+}
+
+model QuizQuestion {
+  quiz_question_id    Int               @id @default(autoincrement())
+  tenant_id           Int
+  quiz_id             Int
+  teacher_id          Int               // Teacher who created this specific question
+  question_text       String            @db.Text
+  question_type       QuizQuestionType
+  question_marks      Decimal           @db.Decimal(6, 2)
+  position            Int
+
+  // Standard audit and tenant fields (keep fields, remove relationships)
+  is_active           Boolean           @default(true)
+  is_deleted          Boolean           @default(false)
+  created_at          DateTime          @default(now())
+  updated_at          DateTime         @updatedAt
+  created_by          Int
+  updated_by          Int?
+  deleted_at          DateTime?
+  deleted_by          Int?
+  created_ip          String?           @db.VarChar(45)
+  updated_ip          String?           @db.VarChar(45)
+
+  // Relationships
+  tenant              Tenant            @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  quiz                Quiz              @relation(fields: [quiz_id], references: [quiz_id], onDelete: Cascade)
+  teacher             Teacher           @relation(fields: [teacher_id], references: [teacher_id], onDelete: Restrict)
+  
+  // Related entities
+  quiz_question_options QuizQuestionOption[]
+  quiz_question_answers QuizQuestionAnswer[]
+  quiz_attempt_answers  QuizAttemptAnswer[]
+
+  @@map("quiz_questions")
+}
+
+model QuizQuestionOption {
+  quiz_question_option_id Int            @id @default(autoincrement())
+  tenant_id               Int
+  quiz_question_id        Int
+  option_text             String         @db.Text
+  position                Int
+  is_correct              Boolean        @default(false)
+
+  // Standard audit and tenant fields (keep fields, remove relationships)
+  is_active               Boolean        @default(true)
+  is_deleted              Boolean        @default(false)
+  created_at              DateTime       @default(now())
+  updated_at              DateTime       @default(now())
+  created_by              Int
+  updated_by              Int?
+  deleted_at              DateTime?
+  deleted_by              Int?
+  created_ip              String?        @db.VarChar(45)
+  updated_ip              String?        @db.VarChar(45)
+
+  // Relationships
+  tenant                  Tenant         @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  quiz_question           QuizQuestion   @relation(fields: [quiz_question_id], references: [quiz_question_id], onDelete: Cascade)
+  
+  // Related entities
+  quiz_attempt_answers    QuizAttemptAnswer[]
+
+  @@map("quiz_question_options")
+}
+
+model QuizQuestionAnswer {
+  quiz_question_answer_id Int            @id @default(autoincrement())
+  tenant_id               Int
+  quiz_question_id        Int
+  answer_text             String         @db.Text
+
+  // Standard audit and tenant fields (keep fields, remove relationships)
+  is_active               Boolean        @default(true)
+  is_deleted              Boolean        @default(false)
+  created_at              DateTime       @default(now())
+  updated_at              DateTime       @default(now())
+  created_by              Int
+  updated_by              Int?
+  deleted_at              DateTime?
+  deleted_by              Int?
+  created_ip              String?        @db.VarChar(45)
+  updated_ip              String?        @db.VarChar(45)
+
+  // Relationships
+  tenant                  Tenant         @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  quiz_question           QuizQuestion   @relation(fields: [quiz_question_id], references: [quiz_question_id], onDelete: Cascade)
+
+  @@map("quiz_question_answers")
+}
+
+model QuizAttempt {
+  quiz_attempt_id     Int                 @id @default(autoincrement())
+  tenant_id           Int
+  quiz_id             Int
+  student_id          Int
+  attempt_number      Int
+  started_at          DateTime
+  submitted_at        DateTime?
+  score               Decimal?            @db.Decimal(6, 2)
+  percentage          Decimal?            @db.Decimal(5, 2)
+  status              QuizAttemptStatus
+  time_taken_minutes  Int?
+  graded_by           Int?                // Reference to either teacher or admin who graded
+  graded_at           DateTime?
+  teacher_notes       String?             @db.Text  // Notes from teacher for this attempt
+
+  // Standard audit and tenant fields (keep fields, remove relationships)
+  is_active           Boolean             @default(true)
+  is_deleted          Boolean             @default(false)
+  created_at          DateTime            @default(now())
+  updated_at          DateTime            @default(now())
+  created_by          Int
+  updated_by          Int?
+  deleted_at          DateTime?
+  deleted_by          Int?
+  created_ip          String?             @db.VarChar(45)
+  updated_ip          String?             @db.VarChar(45)
+
+  // Relationships
+  tenant              Tenant              @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  quiz                Quiz                @relation(fields: [quiz_id], references: [quiz_id], onDelete: Cascade)
+  student             Student             @relation(fields: [student_id], references: [student_id], onDelete: Cascade)
+  
+  // Related entities
+  quiz_attempt_answers QuizAttemptAnswer[]
+
+  @@map("quiz_attempts")
+}
+
+model QuizAttemptAnswer {
+  quiz_attempt_answer_id   Int            @id @default(autoincrement())
+  tenant_id                Int
+  quiz_attempt_id          Int
+  quiz_question_id         Int
+  quiz_question_option_id  Int?
+  answer_text              String?        @db.Text
+  is_correct               Boolean?
+  marks_obtained           Decimal?       @db.Decimal(6, 2)
+  reviewed_by_teacher_id   Int?           // Teacher who reviewed/verified this specific answer
+  teacher_comment          String?        @db.Text
+
+  // Standard audit and tenant fields (keep fields, remove relationships)
+  is_active                Boolean        @default(true)
+  is_deleted               Boolean        @default(false)
+  created_at               DateTime       @default(now())
+  updated_at               DateTime       @default(now())
+  created_by               Int
+  updated_by               Int?
+  deleted_at               DateTime?
+  deleted_by               Int?
+  created_ip               String?        @db.VarChar(45)
+  updated_ip               String?        @db.VarChar(45)
+
+  // Relationships
+  tenant                   Tenant         @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  quiz_attempt             QuizAttempt    @relation(fields: [quiz_attempt_id], references: [quiz_attempt_id], onDelete: Cascade)
+  quiz_question            QuizQuestion   @relation(fields: [quiz_question_id], references: [quiz_question_id])
+  quiz_question_option     QuizQuestionOption? @relation(fields: [quiz_question_option_id], references: [quiz_question_option_id])
+  reviewing_teacher        Teacher?       @relation("QuizAttemptAnswerReviewedByTeacher", fields: [reviewed_by_teacher_id], references: [teacher_id], onDelete: SetNull)
+
+  @@map("quiz_attempt_answers")
+}

@@ -33,6 +33,18 @@ export enum SubmissionStatus {
 }
 
 /**
+ * Upload status enumeration
+ * @description Status of file upload for assignment submissions
+ */
+export enum UploadStatus {
+  PENDING = 1,
+  UPLOADING = 2,
+  COMPLETED = 3,
+  FAILED = 4,
+  CANCELLED = 5,
+}
+
+/**
  * Reference table enumeration for assignment mappings
  * @description Entities that can have assignments mapped to them
  */
@@ -49,6 +61,7 @@ export enum AssignmentReferenceTable {
 export interface Assignment extends MultiTenantAuditFields {
   assignment_id: number;
   course_id: number; // Foreign key to Course
+  teacher_id: number; // Teacher who created/owns the assignment
   assignment_name: string;
   assignment_description?: string | null;
   assignment_type: AssignmentType;
@@ -72,6 +85,7 @@ export interface AssignmentMapping extends MultiTenantAuditFields {
   assignment_id: number; // Foreign key to Assignment
   reference_table_id: AssignmentReferenceTable;
   reference_id: number; // ID of the referenced entity
+  teacher_id: number; // Teacher who created this mapping
 }
 
 /**
@@ -88,8 +102,9 @@ export interface StudentAssignment extends MultiTenantAuditFields {
   grade?: number | null;
   percentage?: number | null;
   feedback?: string | null;
-  graded_by?: number | null; // Foreign key to SystemUser
+  graded_by?: number | null; // System User or Teacher who graded this assignment
   graded_at?: Date | string | null;
+  teacher_notes?: string | null; // Notes from teacher about this submission
   is_late_submission: boolean;
 }
 
@@ -104,7 +119,7 @@ export interface AssignmentSubmissionFile extends MultiTenantAuditFields {
   file_url: string;
   file_size_bytes?: number | null;
   mime_type?: string | null;
-  upload_status?: 'UPLOADING' | 'COMPLETED' | 'FAILED';
+  upload_status_id?: UploadStatus;
 }
 
 // Type guards for runtime type checking
@@ -116,6 +131,9 @@ export const isAssignmentStatus = (value: any): value is AssignmentStatus =>
 
 export const isSubmissionStatus = (value: any): value is SubmissionStatus => 
   Object.values(SubmissionStatus).includes(value);
+
+export const isUploadStatus = (value: any): value is UploadStatus => 
+  Object.values(UploadStatus).includes(value);
 
 export const isAssignmentReferenceTable = (value: any): value is AssignmentReferenceTable => 
   Object.values(AssignmentReferenceTable).includes(value);

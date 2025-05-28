@@ -93,4 +93,14 @@ export const ASSESSMENT_ENUM_CONSTRAINTS: Record<string, EnumConstraint> = {
     enumValues: { NOT_SUBMITTED: 1, SUBMITTED: 2, LATE_SUBMISSION: 3, GRADED: 4, RESUBMITTED: 5 },
     description: 'Assignment submission status enumeration constraint'
   },
+
+  // Upload status enum
+  UPLOAD_STATUS_ENUM: {
+    table: 'assignment_submission_files',
+    constraintName: 'chk_upload_status_valid',
+    column: 'upload_status_id',
+    enumName: 'UploadStatus',
+    enumValues: { PENDING: 1, UPLOADING: 2, COMPLETED: 3, FAILED: 4, CANCELLED: 5 },
+    description: 'File upload status enumeration constraint'
+  },
 };

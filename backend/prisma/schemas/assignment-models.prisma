@@ -1,0 +1,139 @@
+// Assignment-related models
+
+model Assignment {
+  assignment_id          Int                @id @default(autoincrement())
+  tenant_id              Int
+  course_id              Int
+  teacher_id             Int                // Teacher who created/owns the assignment
+  assignment_name        String             @db.VarChar(255)
+  assignment_description String?            @db.Text
+  assignment_type        AssignmentType     @default(FILE_UPLOAD)
+  total_marks            Decimal            @db.Decimal(6, 2)
+  passing_marks          Decimal?           @db.Decimal(6, 2)
+  due_date               DateTime
+  allow_late_submissions Boolean            @default(false)
+  max_file_size_mb       Int?
+  allowed_file_types     String?            @db.Text
+  max_attempts           Int?
+  status                 AssignmentStatus   @default(DRAFT)
+  instructions           String?            @db.Text
+
+  // Standard audit and tenant fields (keep fields, remove relationships)
+  is_active              Boolean            @default(true)
+  is_deleted             Boolean            @default(false)
+  created_at             DateTime           @default(now())
+  updated_at             DateTime           @default(now())
+  created_by             Int
+  updated_by             Int?
+  deleted_at             DateTime?
+  deleted_by             Int?
+  created_ip             String?            @db.VarChar(45)
+  updated_ip             String?            @db.VarChar(45)
+
+  // Relationships
+  tenant                 Tenant             @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  course                 Course             @relation(fields: [course_id], references: [course_id], onDelete: Cascade)
+  teacher                Teacher            @relation(fields: [teacher_id], references: [teacher_id], onDelete: Restrict)
+  
+  // Related entities
+  assignment_mappings    AssignmentMapping[]
+  student_assignments    StudentAssignment[]
+
+  @@map("assignments")
+}
+
+model AssignmentMapping {
+  assignment_mapping_id Int                       @id @default(autoincrement())
+  tenant_id             Int
+  assignment_id         Int
+  reference_table_id    AssignmentReferenceTable
+  reference_id          Int
+  teacher_id            Int                       // Teacher who created this mapping
+
+  // Standard audit and tenant fields (keep fields, remove relationships)
+  is_active             Boolean                   @default(true)
+  is_deleted            Boolean                   @default(false)
+  created_at            DateTime                  @default(now())
+  updated_at            DateTime                  @default(now())
+  created_by            Int
+  updated_by            Int?
+  deleted_at            DateTime?
+  deleted_by            Int?
+  created_ip            String?                   @db.VarChar(45)
+  updated_ip            String?                   @db.VarChar(45)
+
+  // Relationships
+  tenant                Tenant                    @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  assignment            Assignment                @relation(fields: [assignment_id], references: [assignment_id], onDelete: Cascade)
+  teacher               Teacher                   @relation(fields: [teacher_id], references: [teacher_id], onDelete: Restrict)
+
+  @@map("assignment_mappings")
+}
+
+model StudentAssignment {
+  student_assignment_id   Int                @id @default(autoincrement())
+  tenant_id               Int
+  assignment_id           Int
+  student_id              Int
+  attempt_number          Int
+  submission_date         DateTime?
+  submission_status       SubmissionStatus
+  grade                   Decimal?           @db.Decimal(6, 2)
+  percentage              Decimal?           @db.Decimal(5, 2)
+  feedback                String?            @db.Text
+  graded_by               Int?               // Reference to either teacher or admin who graded
+  graded_at               DateTime?
+  teacher_notes           String?            @db.Text  // Notes from teacher about this submission
+  is_late_submission      Boolean            @default(false)
+
+  // Standard audit and tenant fields (keep fields, remove relationships)
+  is_active               Boolean            @default(true)
+  is_deleted              Boolean            @default(false)
+  created_at              DateTime           @default(now())
+  updated_at              DateTime           @default(now())
+  created_by              Int
+  updated_by              Int?
+  deleted_at              DateTime?
+  deleted_by              Int?
+  created_ip              String?            @db.VarChar(45)
+  updated_ip              String?            @db.VarChar(45)
+
+  // Relationships
+  tenant                  Tenant             @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  assignment              Assignment         @relation(fields: [assignment_id], references: [assignment_id], onDelete: Cascade)
+  student                 Student            @relation(fields: [student_id], references: [student_id], onDelete: Cascade)
+
+  // Related entities
+  submission_files        AssignmentSubmissionFile[]
+
+  @@map("student_assignments")
+}
+
+model AssignmentSubmissionFile {
+  assignment_submission_file_id Int              @id @default(autoincrement())
+  tenant_id                     Int
+  student_assignment_id         Int
+  original_file_name            String           @db.VarChar(255)
+  file_url                      String           @db.Text
+  file_size_bytes               Int?
+  mime_type                     String?          @db.VarChar(128)
+  upload_status_id              UploadStatus?    @default(PENDING)
+
+  // Standard audit and tenant fields (keep fields, remove relationships)
+  is_active                     Boolean          @default(true)
+  is_deleted                    Boolean          @default(false)
+  created_at                    DateTime         @default(now())
+  updated_at                    DateTime         @default(now())
+  created_by                    Int
+  updated_by                    Int?
+  deleted_at                    DateTime?
+  deleted_by                    Int?
+  created_ip                    String?          @db.VarChar(45)
+  updated_ip                    String?          @db.VarChar(45)
+
+  // Relationships
+  tenant                        Tenant           @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  student_assignment            StudentAssignment @relation(fields: [student_assignment_id], references: [student_assignment_id], onDelete: Cascade)
+
+  @@map("assignment_submission_files")
+}

@@ -4,32 +4,19 @@ import { ForeignKeyConstraint } from '../base-constraint.types';
  * Foreign key constraints for quiz and assignment entities
  */
 export const ASSESSMENT_FOREIGN_KEY_CONSTRAINTS: Record<string, ForeignKeyConstraint> = {
-  // Generic quiz and assignment constraints
-  QUIZ_CONSTRAINT: {
-    table: '*',
-    constraintName: 'fk_quiz_reference',
-    column: 'quiz_id',
-    referencedTable: 'quizzes',
-    referencedColumn: 'quiz_id',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-    isNullable: false,
-    description: 'Quiz reference'
-  },
-
-  ASSIGNMENT_CONSTRAINT: {
-    table: '*',
-    constraintName: 'fk_assignment_reference',
-    column: 'assignment_id',
-    referencedTable: 'assignments',
-    referencedColumn: 'assignment_id',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-    isNullable: false,
-    description: 'Assignment reference'
-  },
-
   // Quiz-specific constraints
+  QUIZ_TENANT_CONSTRAINT: {
+    table: 'quizzes',
+    constraintName: 'fk_quiz_tenant',
+    column: 'tenant_id',
+    referencedTable: 'tenants',
+    referencedColumn: 'tenant_id',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+    isNullable: false,
+    description: 'Quiz belongs to tenant'
+  },
+
   QUIZ_COURSE_CONSTRAINT: {
     table: 'quizzes',
     constraintName: 'fk_quiz_course',
@@ -40,6 +27,31 @@ export const ASSESSMENT_FOREIGN_KEY_CONSTRAINTS: Record<string, ForeignKeyConstr
     onUpdate: 'CASCADE',
     isNullable: false,
     description: 'Quiz belongs to course (cascade delete)'
+  },
+
+  QUIZ_TEACHER_CONSTRAINT: {
+    table: 'quizzes',
+    constraintName: 'fk_quiz_teacher',
+    column: 'teacher_id',
+    referencedTable: 'teachers',
+    referencedColumn: 'teacher_id',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+    isNullable: false,
+    description: 'Quiz owned by teacher'
+  },
+
+  // Quiz mapping constraints
+  QUIZ_MAPPING_TENANT_CONSTRAINT: {
+    table: 'quiz_mappings',
+    constraintName: 'fk_quiz_mapping_tenant',
+    column: 'tenant_id',
+    referencedTable: 'tenants',
+    referencedColumn: 'tenant_id',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+    isNullable: false,
+    description: 'Quiz mapping belongs to tenant'
   },
 
   QUIZ_MAPPING_QUIZ_CONSTRAINT: {
@@ -54,6 +66,31 @@ export const ASSESSMENT_FOREIGN_KEY_CONSTRAINTS: Record<string, ForeignKeyConstr
     description: 'Quiz mapping belongs to quiz (cascade delete)'
   },
 
+  QUIZ_MAPPING_TEACHER_CONSTRAINT: {
+    table: 'quiz_mappings',
+    constraintName: 'fk_quiz_mapping_teacher',
+    column: 'teacher_id',
+    referencedTable: 'teachers',
+    referencedColumn: 'teacher_id',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+    isNullable: false,
+    description: 'Quiz mapping created by teacher'
+  },
+
+  // Quiz question constraints
+  QUIZ_QUESTION_TENANT_CONSTRAINT: {
+    table: 'quiz_questions',
+    constraintName: 'fk_quiz_question_tenant',
+    column: 'tenant_id',
+    referencedTable: 'tenants',
+    referencedColumn: 'tenant_id',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+    isNullable: false,
+    description: 'Quiz question belongs to tenant'
+  },
+
   QUIZ_QUESTION_QUIZ_CONSTRAINT: {
     table: 'quiz_questions',
     constraintName: 'fk_quiz_question_quiz',
@@ -66,6 +103,31 @@ export const ASSESSMENT_FOREIGN_KEY_CONSTRAINTS: Record<string, ForeignKeyConstr
     description: 'Quiz question belongs to quiz (cascade delete)'
   },
 
+  QUIZ_QUESTION_TEACHER_CONSTRAINT: {
+    table: 'quiz_questions',
+    constraintName: 'fk_quiz_question_teacher',
+    column: 'teacher_id',
+    referencedTable: 'teachers',
+    referencedColumn: 'teacher_id',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+    isNullable: false,
+    description: 'Quiz question created by teacher'
+  },
+
+  // Quiz option constraints
+  QUIZ_OPTION_TENANT_CONSTRAINT: {
+    table: 'quiz_question_options',
+    constraintName: 'fk_quiz_option_tenant',
+    column: 'tenant_id',
+    referencedTable: 'tenants',
+    referencedColumn: 'tenant_id',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+    isNullable: false,
+    description: 'Quiz option belongs to tenant'
+  },
+
   QUIZ_OPTION_QUESTION_CONSTRAINT: {
     table: 'quiz_question_options',
     constraintName: 'fk_quiz_option_question',
@@ -76,6 +138,19 @@ export const ASSESSMENT_FOREIGN_KEY_CONSTRAINTS: Record<string, ForeignKeyConstr
     onUpdate: 'CASCADE',
     isNullable: false,
     description: 'Quiz option belongs to question (cascade delete)'
+  },
+
+  // Quiz answer constraints
+  QUIZ_ANSWER_TENANT_CONSTRAINT: {
+    table: 'quiz_question_answers',
+    constraintName: 'fk_quiz_answer_tenant',
+    column: 'tenant_id',
+    referencedTable: 'tenants',
+    referencedColumn: 'tenant_id',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+    isNullable: false,
+    description: 'Quiz answer belongs to tenant'
   },
 
   QUIZ_ANSWER_QUESTION_CONSTRAINT: {
@@ -91,6 +166,18 @@ export const ASSESSMENT_FOREIGN_KEY_CONSTRAINTS: Record<string, ForeignKeyConstr
   },
 
   // Quiz attempt constraints
+  QUIZ_ATTEMPT_TENANT_CONSTRAINT: {
+    table: 'quiz_attempts',
+    constraintName: 'fk_quiz_attempt_tenant',
+    column: 'tenant_id',
+    referencedTable: 'tenants',
+    referencedColumn: 'tenant_id',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+    isNullable: false,
+    description: 'Quiz attempt belongs to tenant'
+  },
+
   QUIZ_ATTEMPT_QUIZ_CONSTRAINT: {
     table: 'quiz_attempts',
     constraintName: 'fk_quiz_attempt_quiz',
@@ -125,6 +212,19 @@ export const ASSESSMENT_FOREIGN_KEY_CONSTRAINTS: Record<string, ForeignKeyConstr
     onUpdate: 'CASCADE',
     isNullable: true,
     description: 'Quiz attempt graded by system user (optional)'
+  },
+
+  // Quiz attempt answer constraints
+  QUIZ_ATTEMPT_ANSWER_TENANT_CONSTRAINT: {
+    table: 'quiz_attempt_answers',
+    constraintName: 'fk_quiz_attempt_answer_tenant',
+    column: 'tenant_id',
+    referencedTable: 'tenants',
+    referencedColumn: 'tenant_id',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+    isNullable: false,
+    description: 'Quiz attempt answer belongs to tenant'
   },
 
   QUIZ_ATTEMPT_ANSWER_ATTEMPT_CONSTRAINT: {
@@ -163,7 +263,31 @@ export const ASSESSMENT_FOREIGN_KEY_CONSTRAINTS: Record<string, ForeignKeyConstr
     description: 'Quiz attempt answer references option (optional for essay questions)'
   },
 
+  QUIZ_ATTEMPT_ANSWER_REVIEWING_TEACHER_CONSTRAINT: {
+    table: 'quiz_attempt_answers',
+    constraintName: 'fk_quiz_attempt_answer_reviewing_teacher',
+    column: 'reviewed_by_teacher_id',
+    referencedTable: 'teachers',
+    referencedColumn: 'teacher_id',
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
+    isNullable: true,
+    description: 'Quiz attempt answer reviewed by teacher (optional)'
+  },
+
   // Assignment-specific constraints
+  ASSIGNMENT_TENANT_CONSTRAINT: {
+    table: 'assignments',
+    constraintName: 'fk_assignment_tenant',
+    column: 'tenant_id',
+    referencedTable: 'tenants',
+    referencedColumn: 'tenant_id',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+    isNullable: false,
+    description: 'Assignment belongs to tenant'
+  },
+
   ASSIGNMENT_COURSE_CONSTRAINT: {
     table: 'assignments',
     constraintName: 'fk_assignment_course',
@@ -174,6 +298,31 @@ export const ASSESSMENT_FOREIGN_KEY_CONSTRAINTS: Record<string, ForeignKeyConstr
     onUpdate: 'CASCADE',
     isNullable: false,
     description: 'Assignment belongs to course (cascade delete)'
+  },
+
+  ASSIGNMENT_TEACHER_CONSTRAINT: {
+    table: 'assignments',
+    constraintName: 'fk_assignment_teacher',
+    column: 'teacher_id',
+    referencedTable: 'teachers',
+    referencedColumn: 'teacher_id',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+    isNullable: false,
+    description: 'Assignment owned by teacher'
+  },
+
+  // Assignment mapping constraints
+  ASSIGNMENT_MAPPING_TENANT_CONSTRAINT: {
+    table: 'assignment_mappings',
+    constraintName: 'fk_assignment_mapping_tenant',
+    column: 'tenant_id',
+    referencedTable: 'tenants',
+    referencedColumn: 'tenant_id',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+    isNullable: false,
+    description: 'Assignment mapping belongs to tenant'
   },
 
   ASSIGNMENT_MAPPING_ASSIGNMENT_CONSTRAINT: {
@@ -188,7 +337,31 @@ export const ASSESSMENT_FOREIGN_KEY_CONSTRAINTS: Record<string, ForeignKeyConstr
     description: 'Assignment mapping belongs to assignment (cascade delete)'
   },
 
+  ASSIGNMENT_MAPPING_TEACHER_CONSTRAINT: {
+    table: 'assignment_mappings',
+    constraintName: 'fk_assignment_mapping_teacher',
+    column: 'teacher_id',
+    referencedTable: 'teachers',
+    referencedColumn: 'teacher_id',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+    isNullable: false,
+    description: 'Assignment mapping created by teacher'
+  },
+
   // Student assignment constraints
+  STUDENT_ASSIGNMENT_TENANT_CONSTRAINT: {
+    table: 'student_assignments',
+    constraintName: 'fk_student_assignment_tenant',
+    column: 'tenant_id',
+    referencedTable: 'tenants',
+    referencedColumn: 'tenant_id',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+    isNullable: false,
+    description: 'Student assignment belongs to tenant'
+  },
+
   STUDENT_ASSIGNMENT_ASSIGNMENT_CONSTRAINT: {
     table: 'student_assignments',
     constraintName: 'fk_student_assignment_assignment',
@@ -226,6 +399,18 @@ export const ASSESSMENT_FOREIGN_KEY_CONSTRAINTS: Record<string, ForeignKeyConstr
   },
 
   // Assignment file constraints
+  ASSIGNMENT_FILE_TENANT_CONSTRAINT: {
+    table: 'assignment_submission_files',
+    constraintName: 'fk_assignment_file_tenant',
+    column: 'tenant_id',
+    referencedTable: 'tenants',
+    referencedColumn: 'tenant_id',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+    isNullable: false,
+    description: 'Assignment file belongs to tenant'
+  },
+
   ASSIGNMENT_FILE_SUBMISSION_CONSTRAINT: {
     table: 'assignment_submission_files',
     constraintName: 'fk_assignment_file_submission',

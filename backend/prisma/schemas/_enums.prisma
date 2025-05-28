@@ -38,3 +38,70 @@ enum ContactType {
   EMERGENCY @map("3")
   BILLING   @map("4")
 }
+
+// Assessment-related enumerations
+
+// Quiz enums
+enum QuizStatus {
+  DRAFT @map("1")
+  PUBLISHED @map("2")
+  GRADING_IN_PROGRESS @map("3")
+  GRADED @map("4")
+  ARCHIVED @map("5")
+}
+
+enum QuizQuestionType {
+  MULTIPLE_CHOICE_SINGLE_ANSWER @map("1")
+  MULTIPLE_CHOICE_MULTIPLE_ANSWERS @map("2")
+  TRUE_FALSE @map("3")
+  SHORT_ANSWER_ESSAY @map("4")
+}
+
+enum QuizAttemptStatus {
+  NOT_STARTED @map("1")
+  IN_PROGRESS @map("2")
+  SUBMITTED @map("3")
+  GRADED @map("4")
+}
+
+enum QuizReferenceTable {
+  COURSE @map("1")
+  COURSE_MODULE @map("2")
+  COURSE_TOPIC @map("3")
+}
+
+// Assignment enums
+enum AssignmentType {
+  FILE_UPLOAD @map("1")
+}
+
+enum AssignmentStatus {
+  DRAFT @map("1")
+  PUBLISHED @map("2")
+  GRADING_IN_PROGRESS @map("3")
+  GRADED @map("4")
+  ARCHIVED @map("5")
+}
+
+enum SubmissionStatus {
+  NOT_SUBMITTED @map("1")
+  SUBMITTED @map("2")
+  LATE_SUBMISSION @map("3")
+  GRADED @map("4")
+  RESUBMITTED @map("5")
+}
+
+enum AssignmentReferenceTable {
+  COURSE @map("1")
+  COURSE_MODULE @map("2")
+  COURSE_TOPIC @map("3")
+}
+
+// Upload status enumeration
+enum UploadStatus {
+  PENDING @map("1")
+  UPLOADING @map("2")
+  COMPLETED @map("3")
+  FAILED @map("4")
+  CANCELLED @map("5")
+}

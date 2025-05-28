@@ -42,6 +42,7 @@ The assessment system includes the following main entities defined in `@shared/t
 - `AssignmentStatus`: DRAFT, PUBLISHED, GRADING_IN_PROGRESS, GRADED, ARCHIVED
 - `SubmissionStatus`: NOT_SUBMITTED, SUBMITTED, LATE_SUBMISSION, GRADED, RESUBMITTED
 - `AssignmentReferenceTable`: COURSE, COURSE_MODULE, COURSE_TOPIC
+- `UploadStatus`: PENDING, UPLOADING, COMPLETED, FAILED, CANCELLED
 
 ### Multi-Tenant Architecture
 
@@ -49,7 +50,7 @@ All assessment entities extend `MultiTenantAuditFields` from `base.types.ts`, pr
 - Tenant isolation via `tenant_id`
 - Complete audit trail with creation and modification tracking
 - Soft deletion with `is_active` and `is_deleted` flags
-- User tracking with `created_by` and `updated_by` references
+- User tracking with `created_by` and `updated_by` integer fields (no FK relationships)
 
 ## API Endpoints
 
@@ -297,87 +298,125 @@ All assessment entities extend `MultiTenantAuditFields` from `base.types.ts`, pr
 
 ### Assessment Models
 
-The TypeScript interfaces will translate to Prisma models with proper relationships and constraints:
+The TypeScript interfaces translate to Prisma models with proper relationships and constraints:
 
 ```prisma
 model Quiz {
-  quiz_id              Int                   @id @default(autoincrement())
-  tenant_id            Int
-  course_id            Int
-  quiz_name            String                @db.VarChar(255)
-  quiz_description     String?               @db.Text
-  total_marks          Int
-  passing_marks        Int?
-  time_limit_minutes   Int?
-  max_attempts         Int?
-  allow_retake         Boolean               @default(false)
-  randomize_questions  Boolean               @default(false)
-  due_date             DateTime?
-  status               Int                   @default(1)
-  instructions         String?               @db.Text
-  is_active            Boolean               @default(true)
-  is_deleted           Boolean               @default(false)
-  created_at           DateTime              @default(now())
-  created_by           Int
-  created_ip           String                @db.VarChar(45)
-  updated_at           DateTime?             @updatedAt
-  updated_by           Int?
-  updated_ip           String?               @db.VarChar(45)
+  quiz_id             Int              @id @default(autoincrement())
+  tenant_id           Int
+  course_id           Int
+  teacher_id          Int              // Teacher who owns the quiz content
+  quiz_name           String           @db.VarChar(255)
+  quiz_description    String?          @db.Text
+  total_marks         Decimal          @db.Decimal(6, 2)
+  passing_marks       Decimal?         @db.Decimal(6, 2)
+  time_limit_minutes  Int?
+  max_attempts        Int?
+  allow_retake        Boolean          @default(false)
+  randomize_questions Boolean          @default(false)
+  due_date            DateTime?
+  status              QuizStatus       @default(DRAFT)
+  instructions        String?          @db.Text
+
+  // Standard audit and tenant fields
+  is_active           Boolean          @default(true)
+  is_deleted          Boolean          @default(false)
+  created_at          DateTime         @default(now())
+  updated_at          DateTime         @updatedAt
+  created_by          Int
+  updated_by          Int?
+  deleted_at          DateTime?
+  deleted_by          Int?
+  created_ip          String?          @db.VarChar(45)
+  updated_ip          String?          @db.VarChar(45)
 
   // Relationships
-  tenant               Tenant                @relation(fields: [tenant_id], references: [tenant_id])
-  course               Course                @relation(fields: [course_id], references: [course_id], onDelete: Cascade)
-  creator              SystemUser            @relation("QuizCreator", fields: [created_by], references: [system_user_id])
-  updater              SystemUser?           @relation("QuizUpdater", fields: [updated_by], references: [system_user_id])
+  tenant              Tenant           @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  course              Course           @relation(fields: [course_id], references: [course_id], onDelete: Cascade)
+  teacher             Teacher          @relation(fields: [teacher_id], references: [teacher_id], onDelete: Restrict)
   
-  quiz_mappings        QuizMapping[]
-  quiz_questions       QuizQuestion[]
-  quiz_attempts        QuizAttempt[]
+  // Related entities
+  quiz_mappings       QuizMapping[]
+  quiz_questions      QuizQuestion[]
+  quiz_attempts       QuizAttempt[]
 
   @@map("quizzes")
-  @@unique([quiz_name, course_id], name: "uq_quiz_name_course")
-  @@index([course_id, status, tenant_id, is_active], name: "idx_quiz_course_status_tenant")
-  @@index([due_date, tenant_id, status], name: "idx_quiz_due_date_tenant")
 }
 
 model Assignment {
-  assignment_id            Int                     @id @default(autoincrement())
-  tenant_id                Int
-  course_id                Int
-  assignment_name          String                  @db.VarChar(255)
-  assignment_description   String?                 @db.Text
-  assignment_type          Int                     @default(1)
-  total_marks              Int
-  passing_marks            Int?
-  due_date                 DateTime
-  allow_late_submissions   Boolean                 @default(false)
-  max_file_size_mb         Int?
-  allowed_file_types       String?                 @db.Text
-  max_attempts             Int?
-  status                   Int                     @default(1)
-  instructions             String?                 @db.Text
-  is_active                Boolean                 @default(true)
-  is_deleted               Boolean                 @default(false)
-  created_at               DateTime                @default(now())
-  created_by               Int
-  created_ip               String                  @db.VarChar(45)
-  updated_at               DateTime?               @updatedAt
-  updated_by               Int?
-  updated_ip               String?                 @db.VarChar(45)
+  assignment_id          Int                @id @default(autoincrement())
+  tenant_id              Int
+  course_id              Int
+  teacher_id             Int                // Teacher who created/owns the assignment
+  assignment_name        String             @db.VarChar(255)
+  assignment_description String?            @db.Text
+  assignment_type        AssignmentType     @default(FILE_UPLOAD)
+  total_marks            Decimal            @db.Decimal(6, 2)
+  passing_marks          Decimal?           @db.Decimal(6, 2)
+  due_date               DateTime
+  allow_late_submissions Boolean            @default(false)
+  max_file_size_mb       Int?
+  allowed_file_types     String?            @db.Text
+  max_attempts           Int?
+  status                 AssignmentStatus   @default(DRAFT)
+  instructions           String?            @db.Text
+
+  // Standard audit and tenant fields
+  is_active              Boolean            @default(true)
+  is_deleted             Boolean            @default(false)
+  created_at             DateTime           @default(now())
+  updated_at             DateTime           @updatedAt
+  created_by             Int
+  updated_by             Int?
+  deleted_at             DateTime?
+  deleted_by             Int?
+  created_ip             String?            @db.VarChar(45)
+  updated_ip             String?            @db.VarChar(45)
 
   // Relationships
-  tenant                   Tenant                  @relation(fields: [tenant_id], references: [tenant_id])
-  course                   Course                  @relation(fields: [course_id], references: [course_id], onDelete: Cascade)
-  creator                  SystemUser              @relation("AssignmentCreator", fields: [created_by], references: [system_user_id])
-  updater                  SystemUser?             @relation("AssignmentUpdater", fields: [updated_by], references: [system_user_id])
+  tenant                 Tenant             @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  course                 Course             @relation(fields: [course_id], references: [course_id], onDelete: Cascade)
+  teacher                Teacher            @relation(fields: [teacher_id], references: [teacher_id], onDelete: Restrict)
   
-  assignment_mappings      AssignmentMapping[]
-  student_assignments      StudentAssignment[]
+  // Related entities
+  assignment_mappings    AssignmentMapping[]
+  student_assignments    StudentAssignment[]
 
   @@map("assignments")
-  @@unique([assignment_name, course_id], name: "uq_assignment_name_course")
-  @@index([course_id, status, tenant_id, is_active], name: "idx_assignment_course_status_tenant")
-  @@index([due_date, tenant_id, status], name: "idx_assignment_due_date_tenant")
+}
+
+model QuizAttemptAnswer {
+  quiz_attempt_answer_id   Int            @id @default(autoincrement())
+  tenant_id                Int
+  quiz_attempt_id          Int
+  quiz_question_id         Int
+  quiz_question_option_id  Int?
+  answer_text              String?        @db.Text
+  is_correct               Boolean?
+  marks_obtained           Decimal?       @db.Decimal(6, 2)
+  reviewed_by_teacher_id   Int?           // Teacher who reviewed this specific answer
+  teacher_comment          String?        @db.Text
+
+  // Standard audit and tenant fields
+  is_active                Boolean        @default(true)
+  is_deleted               Boolean        @default(false)
+  created_at               DateTime       @default(now())
+  updated_at               DateTime       @default(now())
+  created_by               Int
+  updated_by               Int?
+  deleted_at               DateTime?
+  deleted_by               Int?
+  created_ip               String?        @db.VarChar(45)
+  updated_ip               String?        @db.VarChar(45)
+
+  // Relationships
+  tenant                   Tenant         @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  quiz_attempt             QuizAttempt    @relation(fields: [quiz_attempt_id], references: [quiz_attempt_id], onDelete: Cascade)
+  quiz_question            QuizQuestion   @relation(fields: [quiz_question_id], references: [quiz_question_id])
+  quiz_question_option     QuizQuestionOption? @relation(fields: [quiz_question_option_id], references: [quiz_question_option_id])
+  reviewing_teacher        Teacher?       @relation("QuizAttemptAnswerReviewedByTeacher", fields: [reviewed_by_teacher_id], references: [teacher_id], onDelete: SetNull)
+
+  @@map("quiz_attempt_answers")
 }
 ```
 
@@ -387,7 +426,8 @@ model Assignment {
 2. **One-to-Many**: Assignment → StudentAssignment → AssignmentSubmissionFile
 3. **Many-to-Many**: Quiz ↔ Course/Module/Topic (via QuizMapping)
 4. **Many-to-Many**: Assignment ↔ Course/Module/Topic (via AssignmentMapping)
-5. **Tracking**: All entities reference SystemUser for audit trails
+5. **Teacher Ownership**: All assessments have direct teacher relationships
+6. **Audit Fields**: Created/updated by fields are integers (no FK relationships)
 
 ### Unique Constraints
 
@@ -406,6 +446,7 @@ Critical indexes for query optimization:
 - Student + Assessment for submission lookups
 - Grading status for instructor workflows
 - Analytics queries with date ranges
+- Teacher + Course for ownership queries
 
 ## Error Handling
 
@@ -465,6 +506,7 @@ All errors follow the `TApiErrorResponse` structure from `api.types.ts`:
   - Time limits enforced server-side
   - Attempt tracking to prevent cheating
   - Secure answer validation
+  - Teacher review system for subjective answers
 
 - **File Upload Security**:
   - File type validation using MIME type checking
@@ -473,9 +515,10 @@ All errors follow the `TApiErrorResponse` structure from `api.types.ts`:
   - Secure file storage with access controls
 
 - **Grading Security**:
-  - Only authorized instructors can grade
-  - Grade modification audit trails
+  - Only authorized instructors/teachers can grade
+  - Grade modification audit trails via audit fields
   - Immutable submission records after grading
+  - Teacher-specific review tracking
 
 ### Input Validation
 
@@ -483,13 +526,15 @@ All errors follow the `TApiErrorResponse` structure from `api.types.ts`:
 - **Question Content**: Sanitize HTML content to prevent XSS
 - **File Uploads**: Validate file headers and content
 - **Date Validation**: Ensure due dates are in the future
+- **Teacher Ownership**: Validate teacher has permission for course
 
 ### Data Protection
 
 - **Encryption**: HTTPS for all API communications
-- **Audit Trails**: Complete tracking via `BaseAuditFields`
+- **Audit Trails**: Complete tracking via audit fields (created_by, updated_by, etc.)
 - **Soft Deletion**: Preserve data integrity with `is_deleted` flag
 - **Access Logging**: Log all grading and submission activities
+- **Teacher Isolation**: Teachers can only access their own assessments
 
 ## Naming Conventions
 

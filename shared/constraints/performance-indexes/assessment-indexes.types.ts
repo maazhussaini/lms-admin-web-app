@@ -20,6 +20,16 @@ export const ASSESSMENT_PERFORMANCE_INDEXES: Record<string, IndexConstraint> = {
     description: 'Optimize quiz queries by course and status'
   },
 
+  QUIZ_TEACHER_LOOKUP: {
+    table: 'quizzes',
+    constraintName: 'idx_quiz_teacher_lookup',
+    indexName: 'idx_quiz_teacher_lookup',
+    columns: ['teacher_id', 'course_id', 'status'],
+    indexType: 'BTREE',
+    isUnique: false,
+    description: 'Optimize quiz queries by teacher ownership'
+  },
+
   QUIZ_DUE_DATE_LOOKUP: {
     table: 'quizzes',
     constraintName: 'idx_quiz_due_date_tenant',
@@ -60,6 +70,16 @@ export const ASSESSMENT_PERFORMANCE_INDEXES: Record<string, IndexConstraint> = {
     description: 'Optimize quiz mapping queries by quiz'
   },
 
+  QUIZ_MAPPING_TEACHER_LOOKUP: {
+    table: 'quiz_mappings',
+    constraintName: 'idx_quiz_mapping_teacher',
+    indexName: 'idx_quiz_mapping_teacher',
+    columns: ['teacher_id', 'reference_table_id'],
+    indexType: 'BTREE',
+    isUnique: false,
+    description: 'Optimize quiz mapping queries by teacher'
+  },
+
   QUIZ_QUESTIONS_LOOKUP: {
     table: 'quiz_questions',
     constraintName: 'idx_quiz_questions_quiz_position',
@@ -68,6 +88,16 @@ export const ASSESSMENT_PERFORMANCE_INDEXES: Record<string, IndexConstraint> = {
     indexType: 'BTREE',
     isUnique: false,
     description: 'Optimize quiz question ordering queries'
+  },
+
+  QUIZ_QUESTIONS_TEACHER_LOOKUP: {
+    table: 'quiz_questions',
+    constraintName: 'idx_quiz_questions_teacher',
+    indexName: 'idx_quiz_questions_teacher',
+    columns: ['teacher_id', 'question_type'],
+    indexType: 'BTREE',
+    isUnique: false,
+    description: 'Optimize quiz question queries by teacher'
   },
 
   QUIZ_QUESTIONS_TYPE_LOOKUP: {
@@ -160,6 +190,16 @@ export const ASSESSMENT_PERFORMANCE_INDEXES: Record<string, IndexConstraint> = {
     description: 'Optimize quiz answer validation queries'
   },
 
+  QUIZ_ATTEMPT_ANSWERS_TEACHER_REVIEW_LOOKUP: {
+    table: 'quiz_attempt_answers',
+    constraintName: 'idx_quiz_attempt_answers_teacher_review',
+    indexName: 'idx_quiz_attempt_answers_teacher_review',
+    columns: ['reviewed_by_teacher_id', 'marks_obtained'],
+    indexType: 'BTREE',
+    isUnique: false,
+    description: 'Optimize teacher review queries'
+  },
+
   // Assignment indexes
   ASSIGNMENT_COURSE_STATUS_LOOKUP: {
     table: 'assignments',
@@ -169,6 +209,16 @@ export const ASSESSMENT_PERFORMANCE_INDEXES: Record<string, IndexConstraint> = {
     indexType: 'BTREE',
     isUnique: false,
     description: 'Optimize assignment queries by course and status'
+  },
+
+  ASSIGNMENT_TEACHER_LOOKUP: {
+    table: 'assignments',
+    constraintName: 'idx_assignment_teacher_lookup',
+    indexName: 'idx_assignment_teacher_lookup',
+    columns: ['teacher_id', 'course_id', 'status'],
+    indexType: 'BTREE',
+    isUnique: false,
+    description: 'Optimize assignment queries by teacher ownership'
   },
 
   ASSIGNMENT_DUE_DATE_LOOKUP: {
@@ -219,6 +269,16 @@ export const ASSESSMENT_PERFORMANCE_INDEXES: Record<string, IndexConstraint> = {
     indexType: 'BTREE',
     isUnique: false,
     description: 'Optimize assignment mapping queries by assignment'
+  },
+
+  ASSIGNMENT_MAPPING_TEACHER_LOOKUP: {
+    table: 'assignment_mappings',
+    constraintName: 'idx_assignment_mapping_teacher',
+    indexName: 'idx_assignment_mapping_teacher',
+    columns: ['teacher_id', 'reference_table_id'],
+    indexType: 'BTREE',
+    isUnique: false,
+    description: 'Optimize assignment mapping queries by teacher'
   },
 
   STUDENT_ASSIGNMENT_STUDENT_LOOKUP: {
