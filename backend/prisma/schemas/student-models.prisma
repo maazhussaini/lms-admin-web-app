@@ -42,6 +42,13 @@ model Student {
   emails                  StudentEmailAddress[]
   phones                  StudentPhoneNumber[]
   devices                 StudentDevice[]
+  enrollments             Enrollment[]
+  student_progresses      StudentCourseProgress[]
+  course_session_enrollments CourseSessionEnrollment[]
+  video_progresses        VideoProgress[]
+  student_institutes      StudentInstitute[]
+  student_assignments     StudentAssignment[]
+  quiz_attempts           QuizAttempt[]
   
   // Audit trail relationships with SystemUser
   created_by_user   SystemUser        @relation("StudentCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)

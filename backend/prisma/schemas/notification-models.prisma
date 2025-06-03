@@ -1,0 +1,172 @@
+// Notification-related models for LMS system
+
+// Main notification model for general platform notifications
+model Notification {
+  notification_id            Int                   @id @default(autoincrement())
+  tenant_id                  Int
+  title                      String                @db.VarChar(255)
+  message                    String                @db.Text
+  notification_type          Int                   // Maps to NotificationType enum: 1-ANNOUNCEMENT, 2-ASSIGNMENT_DUE, etc.
+  priority                   Int                   @default(2) // Maps to NotificationPriority enum: 1-LOW, 2-NORMAL, 3-HIGH, 4-URGENT
+  sender_id                  Int?                  // Optional reference to the user who sent the notification
+  category_id                Int?                  // Optional reference to notification category
+  scheduled_at               DateTime?             // When the notification should be delivered
+  expires_at                 DateTime?             // When the notification expires/should be removed
+  metadata                   Json?                 // Additional dynamic content for the notification
+  is_read_receipt_required   Boolean               @default(false)
+  target_audience            String?               @db.Text // JSON array of target criteria
+
+  // Audit fields
+  is_active                  Boolean               @default(true)
+  is_deleted                 Boolean               @default(false)
+  created_at                 DateTime              @default(now())
+  updated_at                 DateTime              @updatedAt
+  created_by                 Int
+  updated_by                 Int?
+  deleted_at                 DateTime?
+  deleted_by_id              Int?
+  created_ip                 String?               @db.VarChar(45)
+  updated_ip                 String?               @db.VarChar(45)
+
+  // Relationships
+  tenant                     Tenant                @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  sender                     SystemUser?           @relation("NotificationSender", fields: [sender_id], references: [system_user_id], onDelete: SetNull)
+  
+  // Delivery related entities
+  notification_deliveries    NotificationDelivery[]
+  email_queues               EmailQueue[]
+  
+  // Audit trail relationships with SystemUser
+  created_by_user            SystemUser            @relation("NotificationCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user            SystemUser?           @relation("NotificationUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user            SystemUser?           @relation("NotificationDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("notifications")
+  // Note: Unique constraints and indexes will be implemented via custom SQL in Prisma migrations
+}
+
+// Course session announcements for course-specific communications
+model CourseSessionAnnouncement {
+  announcement_id            Int                   @id @default(autoincrement())
+  tenant_id                  Int
+  course_session_id          Int                   // Reference to the course session
+  teacher_id                 Int                   // Teacher who created the announcement
+  title                      String                @db.VarChar(255)
+  content                    String                @db.Text
+  announcement_type          Int                   @default(1) // 1-GENERAL, 2-ASSIGNMENT_DUE, 3-DEADLINE, etc.
+  is_pinned                  Boolean               @default(false)
+  is_published               Boolean               @default(true)
+  publish_date               DateTime              @default(now())
+  expiry_date                DateTime?             // Optional expiration date
+  attachment_url             String?               @db.Text
+  attachment_type            String?               @db.VarChar(50)
+  
+  // Audit fields
+  is_active                  Boolean               @default(true)
+  is_deleted                 Boolean               @default(false)
+  created_at                 DateTime              @default(now())
+  updated_at                 DateTime              @updatedAt
+  created_by                 Int
+  updated_by                 Int?
+  deleted_at                 DateTime?
+  deleted_by_id              Int?
+  created_ip                 String?               @db.VarChar(45)
+  updated_ip                 String?               @db.VarChar(45)
+
+  // Relationships
+  tenant                     Tenant                @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  course_session             CourseSession         @relation(fields: [course_session_id], references: [course_session_id], onDelete: Cascade)
+  teacher                    Teacher               @relation(fields: [teacher_id], references: [teacher_id], onDelete: Restrict)
+  
+  // Audit trail relationships with SystemUser
+  created_by_user            SystemUser            @relation("CourseSessionAnnouncementCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user            SystemUser?           @relation("CourseSessionAnnouncementUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user            SystemUser?           @relation("CourseSessionAnnouncementDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("course_session_announcements")
+  // Note: Unique constraints and indexes will be implemented via custom SQL in Prisma migrations
+}
+
+// Related delivery models
+model NotificationDelivery {
+  notification_delivery_id   Int                   @id @default(autoincrement())
+  tenant_id                  Int
+  notification_id            Int
+  recipient_id               Int                   // ID of the recipient (student_id, teacher_id, etc.)
+  recipient_type             Int                   // Maps to RecipientType enum: 1-STUDENT, 2-TEACHER, 3-SYSTEM_USER, etc.
+  delivery_channel           Int                   // Maps to DeliveryChannel enum: 1-IN_APP, 2-EMAIL, 3-PUSH, 4-SMS
+  delivery_status            Int                   @default(1) // Maps to DeliveryStatus enum: 1-PENDING, 2-DELIVERED, 3-FAILED, 4-READ, 5-DISMISSED
+  delivered_at               DateTime?
+  read_at                    DateTime?
+  dismissed_at               DateTime?
+  failure_reason             String?               @db.Text
+  retry_count                Int                   @default(0)
+  delivery_metadata          Json?                 // Channel-specific metadata
+
+  // Audit fields
+  is_active                  Boolean               @default(true)
+  is_deleted                 Boolean               @default(false)
+  created_at                 DateTime              @default(now())
+  updated_at                 DateTime              @updatedAt
+  created_by                 Int
+  updated_by                 Int?
+  deleted_at                 DateTime?
+  deleted_by_id              Int?
+  created_ip                 String?               @db.VarChar(45)
+  updated_ip                 String?               @db.VarChar(45)
+
+  // Relationships
+  tenant                     Tenant                @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  notification               Notification          @relation(fields: [notification_id], references: [notification_id], onDelete: Cascade)
+  
+  // Audit trail relationships with SystemUser
+  created_by_user            SystemUser            @relation("NotificationDeliveryCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user            SystemUser?           @relation("NotificationDeliveryUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user            SystemUser?           @relation("NotificationDeliveryDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("notification_deliveries")
+  // Note: Unique constraints and indexes will be implemented via custom SQL in Prisma migrations
+}
+
+model EmailQueue {
+  email_queue_id             Int                   @id @default(autoincrement())
+  tenant_id                  Int
+  notification_id            Int
+  recipient_email            String                @db.VarChar(255)
+  recipient_name             String?               @db.VarChar(255)
+  subject                    String                @db.VarChar(255)
+  body_html                  String?               @db.Text
+  body_text                  String?               @db.Text
+  send_status                Int                   @default(1) // Maps to EmailSendStatus enum: 1-PENDING, 2-SENT, 3-FAILED, 4-BOUNCED, 5-DELIVERED
+  send_attempts              Int                   @default(0)
+  last_attempt_at            DateTime?
+  sent_at                    DateTime?
+  failure_reason             String?               @db.Text
+  priority                   Int                   @default(5) // 1-10, higher = more priority
+  scheduled_for              DateTime?
+  email_provider_id          String?               @db.VarChar(255)
+
+  // Audit fields
+  is_active                  Boolean               @default(true)
+  is_deleted                 Boolean               @default(false)
+  created_at                 DateTime              @default(now())
+  updated_at                 DateTime              @default(now())
+  created_by                 Int
+  updated_by                 Int?
+  deleted_at                 DateTime?
+  deleted_by_id              Int?
+  created_ip                 String?               @db.VarChar(45)
+  updated_ip                 String?               @db.VarChar(45)
+
+  // Relationships
+  tenant                     Tenant                @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  notification               Notification          @relation(fields: [notification_id], references: [notification_id], onDelete: Cascade)
+  
+  // Audit trail relationships with SystemUser
+  created_by_user            SystemUser            @relation("EmailQueueCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user            SystemUser?           @relation("EmailQueueUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user            SystemUser?           @relation("EmailQueueDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+
+  @@map("email_queues")
+  // Note: Unique constraints and indexes will be implemented via custom SQL in Prisma migrations
+}

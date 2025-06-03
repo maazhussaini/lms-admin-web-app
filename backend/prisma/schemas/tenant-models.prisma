@@ -20,20 +20,70 @@ model Tenant {
   created_ip    String?   @db.VarChar(45)
   updated_ip    String?   @db.VarChar(45)
 
-  // Relations
+  // Core relationships
   clients                Client[]
   tenant_phone_numbers   TenantPhoneNumber[]
   tenant_email_addresses TenantEmailAddress[]
   client_tenants         ClientTenant[]
   system_users           SystemUser[]
+  user_screens           UserScreen[]
+  role_screens           RoleScreen[]
+  
+  // Notification relationships
+  notifications                  Notification[]
+  course_session_announcements   CourseSessionAnnouncement[]
+  notification_deliveries        NotificationDelivery[]
+  email_queues                   EmailQueue[]
+
+  // User relationships
+  teachers                       Teacher[]
+  teacher_email_addresses        TeacherEmailAddress[]
+  teacher_phone_numbers          TeacherPhoneNumber[]
+  students                       Student[]
+  student_email_addresses        StudentEmailAddress[]
+  student_phone_numbers          StudentPhoneNumber[]
+  student_devices                StudentDevice[]
+  
+  // Academic relationships
+  programs                       Program[]
+  specializations                Specialization[]
+  institutes                     Institute[]
+  student_institutes             StudentInstitute[]
+  
+  // Course relationships
+  courses                        Course[]
+  course_modules                 CourseModule[]
+  course_topics                  CourseTopic[]
+  course_videos                  CourseVideo[]
+  course_documents               CourseDocument[]
+  
+  // Session & enrollment relationships
+  enrollments                    Enrollment[]
+  enrollment_status_histories    EnrollmentStatusHistory[]
+  student_course_progresses      StudentCourseProgress[]
+  teacher_courses                TeacherCourse[]
+  course_sessions                CourseSession[]
+  course_session_enrollments     CourseSessionEnrollment[]
+  course_session_settings        CourseSessionSettings[]
+  video_progresses               VideoProgress[]
+  
+  // Assessment relationships
+  assignments                    Assignment[]
+  assignment_mappings            AssignmentMapping[]
+  student_assignments            StudentAssignment[]
+  assignment_submission_files    AssignmentSubmissionFile[]
+  quizzes                        Quiz[]
+  quiz_mappings                  QuizMapping[]
+  quiz_questions                 QuizQuestion[]
+  quiz_question_options          QuizQuestionOption[]
+  quiz_question_answers          QuizQuestionAnswer[]
+  quiz_attempts                  QuizAttempt[]
+  quiz_attempt_answers           QuizAttemptAnswer[]
 
   // Audit trail relationships with SystemUser
   created_by_user   SystemUser        @relation("TenantCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user   SystemUser?       @relation("TenantUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
   deleted_by_user   SystemUser?       @relation("TenantDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
-
-  UserScreen UserScreen[]
-  RoleScreen RoleScreen[]
 
   @@map("tenants")
 }

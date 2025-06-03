@@ -34,6 +34,10 @@ model Course {
   // Enrollment and progress relationships
   enrollments          Enrollment[]
   student_progresses   StudentCourseProgress[]
+  teacher_courses      TeacherCourse[]
+  course_sessions      CourseSession[]
+  assignments          Assignment[]
+  quizzes              Quiz[]
   
   // Audit trail relationships with SystemUser
   created_by_user      SystemUser   @relation("CourseCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)

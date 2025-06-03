@@ -40,6 +40,16 @@ model Teacher {
   city                    City?                  @relation(fields: [city_id], references: [city_id], onDelete: SetNull)
   emails                  TeacherEmailAddress[]
   phones                  TeacherPhoneNumber[]
+  enrollments             Enrollment[]
+  teacher_courses         TeacherCourse[]
+  course_sessions         CourseSession[]
+  course_announcements    CourseSessionAnnouncement[]
+  assignments             Assignment[]
+  assignment_mappings     AssignmentMapping[]
+  quizzes                 Quiz[]
+  quiz_mappings           QuizMapping[]
+  quiz_questions          QuizQuestion[]
+  quiz_attempt_answers    QuizAttemptAnswer[]    @relation("QuizAttemptAnswerReviewedByTeacher")
   
   // Audit trail relationships with SystemUser
   created_by_user   SystemUser        @relation("TeacherCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
