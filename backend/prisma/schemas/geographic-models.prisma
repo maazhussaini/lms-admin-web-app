@@ -16,7 +16,7 @@ model Country {
   created_by              Int
   updated_by              Int?
   deleted_at              DateTime?
-  deleted_by_id           Int?
+  deleted_by              Int?
   created_ip              String?   @db.VarChar(45)
   updated_ip              String?   @db.VarChar(45)
 
@@ -28,7 +28,7 @@ model Country {
   // Audit trail relationships with SystemUser
   created_by_user         SystemUser       @relation("CountryCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user         SystemUser?      @relation("CountryUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user         SystemUser?      @relation("CountryDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user         SystemUser?      @relation("CountryDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("countries")
 }
@@ -48,7 +48,7 @@ model State {
   created_by              Int
   updated_by              Int?
   deleted_at              DateTime?
-  deleted_by_id           Int?
+  deleted_by              Int?
   created_ip              String?   @db.VarChar(45)
   updated_ip              String?   @db.VarChar(45)
 
@@ -61,7 +61,7 @@ model State {
   // Audit trail relationships with SystemUser
   created_by_user         SystemUser       @relation("StateCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user         SystemUser?      @relation("StateUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user         SystemUser?      @relation("StateDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user         SystemUser?      @relation("StateDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("states")
 }
@@ -80,7 +80,7 @@ model City {
   created_by              Int
   updated_by              Int?
   deleted_at              DateTime?
-  deleted_by_id           Int?
+  deleted_by              Int?
   created_ip              String?   @db.VarChar(45)
   updated_ip              String?   @db.VarChar(45)
 
@@ -92,7 +92,7 @@ model City {
   // Audit trail relationships with SystemUser
   created_by_user         SystemUser       @relation("CityCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user         SystemUser?      @relation("CityUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user         SystemUser?      @relation("CityDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user         SystemUser?      @relation("CityDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("cities")
 }

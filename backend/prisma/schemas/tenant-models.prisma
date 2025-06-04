@@ -6,7 +6,7 @@ model Tenant {
   logo_url_dark  String? @db.VarChar(500)
   favicon_url    String? @db.VarChar(500)
   theme          Json?
-  tenant_status  Int     @default(1)
+  tenant_status  TenantStatus @default(ACTIVE)
 
   // Audit fields
   is_active     Boolean   @default(true)
@@ -16,7 +16,7 @@ model Tenant {
   created_by    Int
   updated_by    Int?
   deleted_at    DateTime?
-  deleted_by_id Int?
+  deleted_by    Int?
   created_ip    String?   @db.VarChar(45)
   updated_ip    String?   @db.VarChar(45)
 
@@ -83,7 +83,7 @@ model Tenant {
   // Audit trail relationships with SystemUser
   created_by_user   SystemUser        @relation("TenantCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user   SystemUser?       @relation("TenantUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user   SystemUser?       @relation("TenantDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("TenantDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("tenants")
 }
@@ -96,7 +96,7 @@ model Client {
   dial_code     String? @db.VarChar(20)
   phone_number  String? @db.VarChar(20)
   address       String? @db.VarChar(500)
-  client_status Int     @default(1)
+  client_status ClientStatus @default(ACTIVE)
 
   // Multi-tenant audit fields
   tenant_id     Int
@@ -107,7 +107,7 @@ model Client {
   created_by    Int
   updated_by    Int?
   deleted_at    DateTime?
-  deleted_by_id Int?
+  deleted_by    Int?
   created_ip    String?   @db.VarChar(45)
   updated_ip    String?   @db.VarChar(45)
 
@@ -118,7 +118,7 @@ model Client {
   // Audit trail relationships with SystemUser
   created_by_user   SystemUser        @relation("ClientCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user   SystemUser?       @relation("ClientUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user   SystemUser?       @relation("ClientDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("ClientDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("clients")
 }
@@ -131,7 +131,7 @@ model TenantPhoneNumber {
   phone_number           String  @db.VarChar(20)
   iso_country_code       String? @db.Char(2)
   is_primary             Boolean @default(false)
-  contact_type           Int
+  contact_type           ContactType
 
   // Audit fields
   is_active     Boolean   @default(true)
@@ -141,7 +141,7 @@ model TenantPhoneNumber {
   created_by    Int
   updated_by    Int?
   deleted_at    DateTime?
-  deleted_by_id Int?
+  deleted_by    Int?
   created_ip    String?   @db.VarChar(45)
   updated_ip    String?   @db.VarChar(45)
 
@@ -151,7 +151,7 @@ model TenantPhoneNumber {
   // Audit trail relationships with SystemUser
   created_by_user   SystemUser        @relation("TenantPhoneNumberCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user   SystemUser?       @relation("TenantPhoneNumberUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user   SystemUser?       @relation("TenantPhoneNumberDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("TenantPhoneNumberDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("tenant_phone_numbers")
 }
@@ -162,7 +162,7 @@ model TenantEmailAddress {
   tenant_id               Int
   email_address           String  @db.VarChar(255)
   is_primary              Boolean @default(false)
-  contact_type            Int
+  contact_type            ContactType
 
   // Audit fields
   is_active     Boolean   @default(true)
@@ -172,7 +172,7 @@ model TenantEmailAddress {
   created_by    Int
   updated_by    Int?
   deleted_at    DateTime?
-  deleted_by_id Int?
+  deleted_by    Int?
   created_ip    String?   @db.VarChar(45)
   updated_ip    String?   @db.VarChar(45)
 
@@ -182,7 +182,7 @@ model TenantEmailAddress {
   // Audit trail relationships with SystemUser
   created_by_user   SystemUser        @relation("TenantEmailAddressCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user   SystemUser?       @relation("TenantEmailAddressUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user   SystemUser?       @relation("TenantEmailAddressDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("TenantEmailAddressDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("tenant_email_addresses")
 }
@@ -201,7 +201,7 @@ model ClientTenant {
   created_by    Int
   updated_by    Int?
   deleted_at    DateTime?
-  deleted_by_id Int?
+  deleted_by    Int?
   created_ip    String?   @db.VarChar(45)
   updated_ip    String?   @db.VarChar(45)
 
@@ -212,7 +212,7 @@ model ClientTenant {
   // Audit trail relationships with SystemUser
   created_by_user   SystemUser        @relation("ClientTenantCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user   SystemUser?       @relation("ClientTenantUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user   SystemUser?       @relation("ClientTenantDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("ClientTenantDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("client_tenants")
 }

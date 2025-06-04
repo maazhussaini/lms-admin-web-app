@@ -105,3 +105,204 @@ enum UploadStatus {
   FAILED @map("4")
   CANCELLED @map("5")
 }
+
+// User-related enumerations
+
+// Gender enumeration
+enum Gender {
+  MALE @map("1")
+  FEMALE @map("2")
+}
+
+// Student status enumeration
+enum StudentStatusName {
+  ACTIVE @map("1")
+  ALUMNI @map("2")
+  DROPOUT @map("3")
+  ACCOUNT_FREEZED @map("4")
+  BLACKLISTED @map("5")
+  SUSPENDED @map("6")
+  DEACTIVATED @map("7")
+}
+
+// Device type enumeration
+enum DeviceType {
+  IOS @map("1")
+  ANDROID @map("2")
+  WEB @map("3")
+  DESKTOP @map("4")
+}
+
+// Enrollment status enumeration
+enum EnrollmentStatus {
+  PENDING @map("1")
+  ACTIVE @map("2")
+  COMPLETED @map("3")
+  DROPPED @map("4")
+  SUSPENDED @map("5")
+  EXPELLED @map("6")
+  TRANSFERRED @map("7")
+  DEFERRED @map("8")
+}
+
+// Course-related enumerations
+
+// Course status enumeration
+enum CourseStatus {
+  DRAFT @map("1")
+  PUBLISHED @map("2")
+  ARCHIVED @map("3")
+  SUSPENDED @map("4")
+}
+
+// Video upload status enumeration
+enum VideoUploadStatus {
+  PENDING @map("1")
+  PROCESSING @map("2")
+  COMPLETED @map("3")
+  FAILED @map("4")
+  CANCELLED @map("5")
+}
+
+// Course session enumerations
+
+// Course session status enumeration
+enum CourseSessionStatus {
+  DRAFT @map("1")
+  PUBLISHED @map("2")
+  EXPIRED @map("3")
+}
+
+// Session enrollment status enumeration
+enum SessionEnrollmentStatus {
+  ENROLLED @map("1")
+  DROPPED @map("2")
+  COMPLETED @map("3")
+  EXPELLED @map("4")
+}
+
+// Notification-related enumerations
+
+// Notification type enumeration
+enum NotificationType {
+  ANNOUNCEMENT @map("1")
+  ASSIGNMENT_DUE @map("2")
+  QUIZ_AVAILABLE @map("3")
+  GRADE_POSTED @map("4")
+  COURSE_UPDATE @map("5")
+  SYSTEM_ALERT @map("6")
+  ENROLLMENT_CONFIRMATION @map("7")
+  DEADLINE_REMINDER @map("8")
+}
+
+// Notification priority enumeration
+enum NotificationPriority {
+  LOW @map("1")
+  NORMAL @map("2")
+  HIGH @map("3")
+  URGENT @map("4")
+}
+
+// Delivery status enumeration
+enum DeliveryStatus {
+  PENDING @map("1")
+  DELIVERED @map("2")
+  FAILED @map("3")
+  READ @map("4")
+  DISMISSED @map("5")
+}
+
+// Delivery channel enumeration
+enum DeliveryChannel {
+  IN_APP @map("1")
+  EMAIL @map("2")
+  PUSH @map("3")
+  SMS @map("4")
+}
+
+// Template type enumeration
+enum TemplateType {
+  EMAIL_HTML @map("1")
+  EMAIL_TEXT @map("2")
+  PUSH @map("3")
+  IN_APP @map("4")
+}
+
+// Recipient type enumeration
+enum RecipientType {
+  STUDENT @map("1")
+  TEACHER @map("2")
+  SYSTEM_USER @map("3")
+  ALL_STUDENTS @map("4")
+  ALL_TEACHERS @map("5")
+  COURSE_ENROLLMENTS @map("6")
+}
+
+// Email send status enumeration
+enum EmailSendStatus {
+  PENDING @map("1")
+  SENT @map("2")
+  FAILED @map("3")
+  BOUNCED @map("4")
+  DELIVERED @map("5")
+}
+
+// Analytics-related enumerations
+
+// Report type enumeration
+enum ReportType {
+  COURSE_PERFORMANCE @map("1")
+  USER_ENGAGEMENT @map("2")
+  SYSTEM_USAGE @map("3")
+  ASSESSMENT_SUMMARY @map("4")
+  VIDEO_ANALYTICS @map("5")
+  CUSTOM @map("6")
+}
+
+// Report status enumeration
+enum ReportStatus {
+  DRAFT @map("1")
+  SCHEDULED @map("2")
+  GENERATING @map("3")
+  COMPLETED @map("4")
+  FAILED @map("5")
+  CANCELLED @map("6")
+}
+
+// Metric type enumeration
+enum MetricType {
+  COUNT @map("1")
+  PERCENTAGE @map("2")
+  AVERAGE @map("3")
+  SUM @map("4")
+  RATIO @map("5")
+  TREND @map("6")
+}
+
+// Time granularity enumeration
+enum TimeGranularity {
+  HOURLY @map("1")
+  DAILY @map("2")
+  WEEKLY @map("3")
+  MONTHLY @map("4")
+  QUARTERLY @map("5")
+  YEARLY @map("6")
+}
+
+// Widget type enumeration
+enum WidgetType {
+  CHART @map("1")
+  TABLE @map("2")
+  METRIC_CARD @map("3")
+  PROGRESS_BAR @map("4")
+  MAP @map("5")
+  TIMELINE @map("6")
+}
+
+// Export format enumeration
+enum ExportFormat {
+  PDF @map("1")
+  EXCEL @map("2")
+  CSV @map("3")
+  JSON @map("4")
+}

@@ -74,9 +74,9 @@ export const NOTIFICATION_ENTITIES_CHECK_CONSTRAINTS: Record<string, CheckConstr
     description: 'Delivery channel must be within valid enum range (1-4)'
   },
 
-  // Recipient type enum - fix column reference for multi-table constraint
+  // Recipient type enum
   RECIPIENT_TYPE_ENUM_CHECK: {
-    table: 'notification_deliveries,user_notification_preferences,push_notification_devices',
+    table: 'notification_deliveries,push_notification_devices',
     constraintName: 'chk_recipient_type_range',
     condition: 'recipient_type BETWEEN 1 AND 6 OR user_type BETWEEN 1 AND 6',
     description: 'Recipient/User type must be within valid enum range (1-6)'
@@ -151,57 +151,6 @@ export const NOTIFICATION_ENTITIES_CHECK_CONSTRAINTS: Record<string, CheckConstr
     constraintName: 'chk_email_subject_template',
     condition: '(template_type IN (1, 2) AND subject_template IS NOT NULL) OR (template_type NOT IN (1, 2))',
     description: 'Email templates must have subject template'
-  },
-
-  // User preference validations
-  USER_PREFERENCE_NOTIFICATION_TYPE_CHECK: {
-    table: 'user_notification_preferences',
-    constraintName: 'chk_user_preference_notification_type',
-    condition: 'notification_type BETWEEN 1 AND 8',
-    description: 'Notification type in preferences must be within valid enum range'
-  },
-
-  USER_PREFERENCE_DELIVERY_CHANNEL_CHECK: {
-    table: 'user_notification_preferences',
-    constraintName: 'chk_user_preference_delivery_channel',
-    condition: 'delivery_channel BETWEEN 1 AND 4',
-    description: 'Delivery channel in preferences must be within valid enum range'
-  },
-
-  QUIET_HOURS_FORMAT_CHECK: {
-    table: 'user_notification_preferences',
-    constraintName: 'chk_quiet_hours_format',
-    condition: "quiet_hours_start IS NULL OR quiet_hours_start ~ '^([01]?[0-9]|2[0-3]):[0-5][0-9]$'",
-    description: 'Quiet hours start must be in HH:MM format when provided'
-  },
-
-  QUIET_HOURS_END_FORMAT_CHECK: {
-    table: 'user_notification_preferences',
-    constraintName: 'chk_quiet_hours_end_format',
-    condition: "quiet_hours_end IS NULL OR quiet_hours_end ~ '^([01]?[0-9]|2[0-3]):[0-5][0-9]$'",
-    description: 'Quiet hours end must be in HH:MM format when provided'
-  },
-
-  // Category validations
-  CATEGORY_NAME_LENGTH_CHECK: {
-    table: 'notification_categories',
-    constraintName: 'chk_category_name_length',
-    condition: 'LENGTH(TRIM(category_name)) >= 2 AND LENGTH(TRIM(category_name)) <= 100',
-    description: 'Category name must be between 2-100 characters (trimmed)'
-  },
-
-  CATEGORY_DEFAULT_PRIORITY_CHECK: {
-    table: 'notification_categories',
-    constraintName: 'chk_category_default_priority',
-    condition: 'default_priority BETWEEN 1 AND 4',
-    description: 'Category default priority must be within valid enum range'
-  },
-
-  CATEGORY_HIERARCHY_CHECK: {
-    table: 'notification_categories',
-    constraintName: 'chk_category_hierarchy',
-    condition: 'parent_category_id IS NULL OR parent_category_id != category_id',
-    description: 'Category cannot be its own parent'
   },
 
   // Email queue validations

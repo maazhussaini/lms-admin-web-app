@@ -48,9 +48,9 @@ export const NOTIFICATION_ENUM_CONSTRAINTS: Record<string, EnumConstraint> = {
     description: 'Notification delivery status enumeration constraint'
   },
 
-  // Delivery channel enum - fix column reference for multi-table constraint
+  // Delivery channel enum
   DELIVERY_CHANNEL_ENUM: {
-    table: 'notification_deliveries,user_notification_preferences',
+    table: 'notification_deliveries',
     constraintName: 'chk_delivery_channel_valid',
     column: 'delivery_channel',
     enumName: 'DeliveryChannel',
@@ -68,11 +68,11 @@ export const NOTIFICATION_ENUM_CONSTRAINTS: Record<string, EnumConstraint> = {
     description: 'Notification template type enumeration constraint'
   },
 
-  // Recipient type enum - fix column reference for multi-table constraint
+  // Recipient type enum
   RECIPIENT_TYPE_ENUM: {
-    table: 'notification_deliveries,user_notification_preferences,push_notification_devices',
+    table: 'notification_deliveries,push_notification_devices',
     constraintName: 'chk_recipient_type_valid',
-    column: 'recipient_type,user_type,user_type',
+    column: 'recipient_type,user_type',
     enumName: 'RecipientType',
     enumValues: { STUDENT: 1, TEACHER: 2, SYSTEM_USER: 3, ALL_STUDENTS: 4, ALL_TEACHERS: 5, COURSE_ENROLLMENTS: 6 },
     description: 'Notification recipient type enumeration constraint'
@@ -88,7 +88,7 @@ export const NOTIFICATION_ENUM_CONSTRAINTS: Record<string, EnumConstraint> = {
     description: 'Email send status enumeration constraint'
   },
 
-  // Device type enum - add missing constraint
+  // Device type enum
   DEVICE_TYPE_ENUM: {
     table: 'push_notification_devices',
     constraintName: 'chk_device_type_valid',

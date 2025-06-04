@@ -15,7 +15,7 @@ model Teacher {
   profile_picture_url     String?                @db.VarChar(500)
   zip_code                String?                @db.VarChar(20)
   age                     Int?
-  gender                  Int?                   // 1: MALE, 2: FEMALE
+  gender                  Gender?
   username                String                 @db.VarChar(50)
   password_hash           String                 @db.VarChar(255)
   last_login_at           DateTime?
@@ -29,7 +29,7 @@ model Teacher {
   created_by              Int
   updated_by              Int?
   deleted_at              DateTime?
-  deleted_by_id           Int?
+  deleted_by              Int?
   created_ip              String?                @db.VarChar(45)
   updated_ip              String?                @db.VarChar(45)
 
@@ -54,7 +54,7 @@ model Teacher {
   // Audit trail relationships with SystemUser
   created_by_user   SystemUser        @relation("TeacherCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user   SystemUser?       @relation("TeacherUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user   SystemUser?       @relation("TeacherDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("TeacherDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("teachers")
   // Note: Unique constraints and indexes will be implemented via custom SQL in Prisma migrations
@@ -76,7 +76,7 @@ model TeacherEmailAddress {
   created_by               Int
   updated_by               Int?
   deleted_at               DateTime?
-  deleted_by_id            Int?
+  deleted_by               Int?
   created_ip               String?   @db.VarChar(45)
   updated_ip               String?   @db.VarChar(45)
 
@@ -87,7 +87,7 @@ model TeacherEmailAddress {
   // Audit trail relationships with SystemUser
   created_by_user   SystemUser        @relation("TeacherEmailAddressCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user   SystemUser?       @relation("TeacherEmailAddressUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user   SystemUser?       @relation("TeacherEmailAddressDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("TeacherEmailAddressDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("teacher_email_addresses")
   // Note: Unique constraints and indexes will be implemented via custom SQL in Prisma migrations
@@ -110,7 +110,7 @@ model TeacherPhoneNumber {
   created_by               Int
   updated_by               Int?
   deleted_at               DateTime?
-  deleted_by_id            Int?
+  deleted_by               Int?
   created_ip               String?   @db.VarChar(45)
   updated_ip               String?   @db.VarChar(45)
 
@@ -121,7 +121,7 @@ model TeacherPhoneNumber {
   // Audit trail relationships with SystemUser
   created_by_user   SystemUser        @relation("TeacherPhoneNumberCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user   SystemUser?       @relation("TeacherPhoneNumberUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user   SystemUser?       @relation("TeacherPhoneNumberDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("TeacherPhoneNumberDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("teacher_phone_numbers")
   // Note: Unique constraints and indexes will be implemented via custom SQL in Prisma migrations

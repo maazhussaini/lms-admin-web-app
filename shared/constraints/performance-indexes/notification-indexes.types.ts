@@ -161,7 +161,7 @@ export const NOTIFICATION_PERFORMANCE_INDEXES: Record<string, IndexConstraint> =
     description: 'Optimize device token expiry cleanup'
   },
 
-  // Template and preference indexes
+  // Template indexes
   NOTIFICATION_TEMPLATE_TYPE_LOOKUP: {
     table: 'notification_templates',
     constraintName: 'idx_notification_template_type',
@@ -180,46 +180,5 @@ export const NOTIFICATION_PERFORMANCE_INDEXES: Record<string, IndexConstraint> =
     indexType: 'BTREE',
     isUnique: false,
     description: 'Optimize template name searches'
-  },
-
-  USER_NOTIFICATION_PREFERENCES_LOOKUP: {
-    table: 'user_notification_preferences',
-    constraintName: 'idx_user_notification_preferences',
-    indexName: 'idx_user_notification_preferences',
-    columns: ['user_id', 'user_type', 'notification_type'],
-    indexType: 'BTREE',
-    isUnique: false,
-    description: 'Optimize user preference lookups'
-  },
-
-  USER_NOTIFICATION_PREFERENCES_ENABLED: {
-    table: 'user_notification_preferences',
-    constraintName: 'idx_user_notification_preferences_enabled',
-    indexName: 'idx_user_notification_preferences_enabled',
-    columns: ['user_id', 'user_type', 'delivery_channel', 'is_enabled'],
-    indexType: 'BTREE',
-    isUnique: false,
-    description: 'Optimize enabled preference filtering'
-  },
-
-  // Category indexes
-  NOTIFICATION_CATEGORY_HIERARCHY: {
-    table: 'notification_categories',
-    constraintName: 'idx_notification_category_hierarchy',
-    indexName: 'idx_notification_category_hierarchy',
-    columns: ['parent_category_id', 'is_active'],
-    indexType: 'BTREE',
-    isUnique: false,
-    description: 'Optimize category hierarchy queries'
-  },
-
-  NOTIFICATION_CATEGORY_SYSTEM: {
-    table: 'notification_categories',
-    constraintName: 'idx_notification_category_system',
-    indexName: 'idx_notification_category_system',
-    columns: ['is_system_category', 'tenant_id'],
-    indexType: 'BTREE',
-    isUnique: false,
-    description: 'Optimize system vs tenant category queries'
   },
 };

@@ -7,7 +7,7 @@ model Enrollment {
   student_id                Int
   institute_id              Int
   teacher_id                Int?
-  enrollment_status_id      Int       // 1-8 enum values (see EnrollmentStatus)
+  enrollment_status         EnrollmentStatus // Updated to use enum instead of enrollment_status_id Int
   enrolled_at               DateTime  @default(now())
   expected_completion_date  DateTime?
   actual_completion_date    DateTime?
@@ -27,7 +27,7 @@ model Enrollment {
   updated_by                Int?
   updated_ip                String?   @db.VarChar(45)
   deleted_at                DateTime?
-  deleted_by_id             Int?
+  deleted_by                Int?
 
   // Relationships
   tenant                    Tenant    @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
@@ -41,7 +41,7 @@ model Enrollment {
   // Audit trail relationships with SystemUser
   created_by_user           SystemUser @relation("EnrollmentCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user           SystemUser? @relation("EnrollmentUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user           SystemUser? @relation("EnrollmentDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user           SystemUser? @relation("EnrollmentDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("enrollments")
   // Unique constraints and indexes via custom SQL migrations
@@ -51,8 +51,8 @@ model EnrollmentStatusHistory {
   enrollment_status_history_id Int            @id @default(autoincrement())
   tenant_id                    Int
   enrollment_id                Int
-  previous_status_id           Int?
-  new_status_id                Int            // 1-8 enum values (see EnrollmentStatus)
+  previous_status           EnrollmentStatus? // Updated to use enum instead of previous_status_id Int?
+  new_status                EnrollmentStatus  // Updated to use enum instead of new_status_id Int
   status_changed_at            DateTime       @default(now())
   changed_by                   Int
   change_reason                String?        @db.Text
@@ -68,7 +68,7 @@ model EnrollmentStatusHistory {
   updated_by                   Int?
   updated_ip                   String?        @db.VarChar(45)
   deleted_at                   DateTime?
-  deleted_by_id                Int?
+  deleted_by                   Int?
 
   // Relationships
   tenant                       Tenant         @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
@@ -78,7 +78,7 @@ model EnrollmentStatusHistory {
   // Audit trail relationships with SystemUser
   created_by_user              SystemUser     @relation("EnrollmentStatusHistoryCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user              SystemUser?    @relation("EnrollmentStatusHistoryUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user              SystemUser?    @relation("EnrollmentStatusHistoryDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user              SystemUser?    @relation("EnrollmentStatusHistoryDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("enrollment_status_histories")
   // Unique constraints and indexes via custom SQL migrations
@@ -109,7 +109,7 @@ model StudentCourseProgress {
   updated_by                    Int?
   updated_ip                    String?   @db.VarChar(45)
   deleted_at                    DateTime?
-  deleted_by_id                 Int?
+  deleted_by                    Int?
 
   // Relationships
   tenant                        Tenant    @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
@@ -119,7 +119,7 @@ model StudentCourseProgress {
   // Audit trail relationships with SystemUser
   created_by_user               SystemUser @relation("StudentCourseProgressCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user               SystemUser? @relation("StudentCourseProgressUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user               SystemUser? @relation("StudentCourseProgressDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user               SystemUser? @relation("StudentCourseProgressDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("student_course_progresses")
   // Unique constraints and indexes via custom SQL migrations
@@ -141,7 +141,7 @@ model TeacherCourse {
   updated_by               Int?
   updated_ip               String?   @db.VarChar(45)
   deleted_at               DateTime?
-  deleted_by_id            Int?
+  deleted_by               Int?
 
   // Relationships
   tenant                   Tenant    @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
@@ -151,30 +151,9 @@ model TeacherCourse {
   // Audit trail relationships with SystemUser
   created_by_user          SystemUser @relation("TeacherCourseCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user          SystemUser? @relation("TeacherCourseUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user          SystemUser? @relation("TeacherCourseDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user          SystemUser? @relation("TeacherCourseDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("teacher_courses")
-  // Unique constraints and indexes via custom SQL migrations
-}
-
-model CourseSessionStatusLookup {
-  course_session_status_id Int     @id @default(autoincrement())
-  status_name              String  @db.VarChar(100)
-  description              String?
-
-  // Minimal audit fields
-  is_active                Boolean @default(true)
-  created_at               DateTime @default(now())
-  created_by               Int
-  updated_at               DateTime? @updatedAt
-  updated_by               Int?
-
-  // Relationships
-  course_sessions          CourseSession[]
-  created_by_user          SystemUser @relation("CourseSessionStatusCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
-  updated_by_user          SystemUser? @relation("CourseSessionStatusUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-
-  @@map("course_session_status_lookups")
   // Unique constraints and indexes via custom SQL migrations
 }
 
@@ -183,7 +162,7 @@ model CourseSession {
   tenant_id                Int
   teacher_id               Int
   course_id                Int
-  course_session_status_id Int
+  course_session_status    CourseSessionStatus // Updated to use enum instead of course_session_status_id Int
   session_name             String   @db.VarChar(255)
   session_description      String?  @db.Text
   start_date               DateTime
@@ -204,13 +183,12 @@ model CourseSession {
   updated_by               Int?
   updated_ip               String?  @db.VarChar(45)
   deleted_at               DateTime?
-  deleted_by_id            Int?
+  deleted_by               Int?
 
   // Relationships
   tenant                   Tenant   @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
   teacher                  Teacher  @relation(fields: [teacher_id], references: [teacher_id], onDelete: Restrict)
   course                   Course   @relation(fields: [course_id], references: [course_id], onDelete: Restrict)
-  status                   CourseSessionStatusLookup @relation(fields: [course_session_status_id], references: [course_session_status_id], onDelete: Restrict)
   enrollments              CourseSessionEnrollment[]
   announcements            CourseSessionAnnouncement[] // Keep the relation to the model defined in notification-models.prisma
   settings                 CourseSessionSettings?
@@ -218,7 +196,7 @@ model CourseSession {
   // Audit trail relationships with SystemUser
   created_by_user          SystemUser @relation("CourseSessionCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user          SystemUser? @relation("CourseSessionUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user          SystemUser? @relation("CourseSessionDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user          SystemUser? @relation("CourseSessionDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("course_sessions")
   // Unique constraints and indexes via custom SQL migrations
@@ -231,7 +209,7 @@ model CourseSessionEnrollment {
   student_id                   Int
   enrolled_at                  DateTime @default(now())
   dropped_at                   DateTime?
-  enrollment_status            Int      @default(1) // 1=ENROLLED, 2=DROPPED, 3=COMPLETED, 4=EXPELLED
+  enrollment_status            SessionEnrollmentStatus @default(ENROLLED) // Updated to use enum instead of Int @default(1)
   completion_percentage        Int      @default(0)
   final_grade                  Int?
   completion_date              DateTime?
@@ -246,7 +224,7 @@ model CourseSessionEnrollment {
   updated_by                   Int?
   updated_ip                   String?  @db.VarChar(45)
   deleted_at                   DateTime?
-  deleted_by_id                Int?
+  deleted_by                   Int?
 
   // Relationships
   tenant                       Tenant           @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
@@ -256,7 +234,7 @@ model CourseSessionEnrollment {
   // Audit trail relationships with SystemUser
   created_by_user              SystemUser       @relation("CourseSessionEnrollmentCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user              SystemUser?      @relation("CourseSessionEnrollmentUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user              SystemUser?      @relation("CourseSessionEnrollmentDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user              SystemUser?      @relation("CourseSessionEnrollmentDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("course_session_enrollments")
   // Unique constraints and indexes via custom SQL migrations
@@ -284,7 +262,7 @@ model CourseSessionSettings {
   updated_by                      Int?
   updated_ip                      String?  @db.VarChar(45)
   deleted_at                      DateTime?
-  deleted_by_id                   Int?
+  deleted_by                      Int?
 
   // Relationships
   tenant                          Tenant        @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
@@ -293,7 +271,7 @@ model CourseSessionSettings {
   // Audit trail relationships with SystemUser
   created_by_user                 SystemUser    @relation("CourseSessionSettingsCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user                 SystemUser?   @relation("CourseSessionSettingsUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user                 SystemUser?   @relation("CourseSessionSettingsDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user                 SystemUser?   @relation("CourseSessionSettingsDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("course_session_settings")
   // Indexes via custom SQL migrations
@@ -319,7 +297,7 @@ model VideoProgress {
   updated_by              Int?
   updated_ip              String?         @db.VarChar(45)
   deleted_at              DateTime?
-  deleted_by_id           Int?
+  deleted_by              Int?
 
   // Relationships
   tenant                  Tenant          @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
@@ -329,7 +307,7 @@ model VideoProgress {
   // Audit trail relationships with SystemUser
   created_by_user         SystemUser      @relation("VideoProgressCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user         SystemUser?     @relation("VideoProgressUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user         SystemUser?     @relation("VideoProgressDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user         SystemUser?     @relation("VideoProgressDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("video_progresses")
   // Unique constraints and indexes via custom SQL migrations

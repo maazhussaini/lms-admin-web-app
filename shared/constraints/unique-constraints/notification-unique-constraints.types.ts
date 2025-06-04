@@ -17,13 +17,6 @@ export const NOTIFICATION_UNIQUE_CONSTRAINTS: Record<string, UniqueConstraint> =
     description: 'Unique delivery per recipient per channel per notification'
   },
 
-  USER_NOTIFICATION_PREFERENCE_UNIQUE: {
-    table: 'user_notification_preferences',
-    constraintName: 'uq_user_notification_preference',
-    columns: ['user_id', 'user_type', 'notification_type', 'delivery_channel'],
-    description: 'Unique preference per user per notification type per channel'
-  },
-
   PUSH_DEVICE_TOKEN_UNIQUE: {
     table: 'push_notification_devices',
     constraintName: 'uq_push_device_token',
@@ -44,13 +37,6 @@ export const NOTIFICATION_UNIQUE_CONSTRAINTS: Record<string, UniqueConstraint> =
     constraintName: 'uq_notification_templates_name_tenant',
     columns: ['template_name', 'tenant_id'],
     description: 'Template name must be unique within tenant'
-  },
-
-  NOTIFICATION_CATEGORY_NAME_TENANT_UNIQUE: {
-    table: 'notification_categories',
-    constraintName: 'uq_notification_categories_name_tenant',
-    columns: ['category_name', 'tenant_id'],
-    description: 'Category name must be unique within tenant'
   },
 
   EMAIL_QUEUE_NOTIFICATION_RECIPIENT_UNIQUE: {

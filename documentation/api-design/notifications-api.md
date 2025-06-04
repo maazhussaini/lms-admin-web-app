@@ -1,7 +1,7 @@
 # Notifications API Design
 
 ## 1. Introduction
-The Notifications API is a comprehensive messaging system for the LMS, enabling real-time communication across multiple channels including in-app notifications, email, push notifications, and SMS. It supports multi-tenant isolation, user preferences management, template-based messaging, and delivery tracking with comprehensive analytics.
+The Notifications API is a comprehensive messaging system for the LMS, enabling real-time communication across multiple channels including in-app notifications, email, push notifications, and SMS. It supports multi-tenant isolation, template-based messaging, and delivery tracking with comprehensive analytics.
 
 ## 2. Data Model Overview
 Based on `@shared/types/notification.types.ts` and related constraint files:
@@ -9,19 +9,13 @@ Based on `@shared/types/notification.types.ts` and related constraint files:
 ### 2.1 Core Entities
 
 - **notifications** (`Notification`):  
-  Fields: `notification_id`, `title`, `message`, `notification_type`, `priority`, `sender_id`, `category_id`, `scheduled_at`, `expires_at`, `metadata`, `is_read_receipt_required`, `target_audience` + multi-tenant audit fields.
+  Fields: `notification_id`, `title`, `message`, `notification_type`, `priority`, `sender_id`, `scheduled_at`, `expires_at`, `metadata`, `is_read_receipt_required`, `target_audience` + multi-tenant audit fields.
 
 - **notification_deliveries** (`NotificationDelivery`):  
   Fields: `notification_delivery_id`, `notification_id`, `recipient_id`, `recipient_type`, `delivery_channel`, `delivery_status`, `delivered_at`, `read_at`, `dismissed_at`, `failure_reason`, `retry_count`, `delivery_metadata` + multi-tenant audit fields.
 
 - **notification_templates** (`NotificationTemplate`):  
-  Fields: `notification_template_id`, `template_name`, `template_type`, `subject_template`, `body_template`, `variables`, `is_system_template`, `category_id` + multi-tenant audit fields.
-
-- **user_notification_preferences** (`UserNotificationPreference`):  
-  Fields: `user_notification_preference_id`, `user_id`, `user_type`, `notification_type`, `delivery_channel`, `is_enabled`, `quiet_hours_start`, `quiet_hours_end`, `category_id` + multi-tenant audit fields.
-
-- **notification_categories** (`NotificationCategory`):  
-  Fields: `category_id`, `category_name`, `category_description`, `default_priority`, `is_system_category`, `parent_category_id` + multi-tenant audit fields.
+  Fields: `notification_template_id`, `template_name`, `template_type`, `subject_template`, `body_template`, `variables`, `is_system_template` + multi-tenant audit fields.
 
 - **email_queues** (`EmailQueue`):  
   Fields: `email_queue_id`, `notification_id`, `recipient_email`, `recipient_name`, `subject`, `body_html`, `body_text`, `send_status`, `send_attempts`, `last_attempt_at`, `sent_at`, `failure_reason`, `priority`, `scheduled_for`, `email_provider_id` + multi-tenant audit fields.
@@ -32,13 +26,9 @@ Based on `@shared/types/notification.types.ts` and related constraint files:
 ### 2.2 Entity Relationships
 - **notifications** → belongs to **tenants** via `tenant_id` FK
 - **notifications** → sent by **system_users** via `sender_id` FK (optional)
-- **notifications** → belongs to **notification_categories** via `category_id` FK (optional)
 - **notification_deliveries** → belongs to **notifications** via `notification_id` FK (cascade delete)
 - **notification_deliveries** → targets **system_users** via `recipient_id` FK
-- **notification_templates** → belongs to **notification_categories** via `category_id` FK (optional)
-- **user_notification_preferences** → belongs to **system_users** via `user_id` FK (cascade delete)
-- **user_notification_preferences** → belongs to **notification_categories** via `category_id` FK (optional)
-- **notification_categories** → self-reference via `parent_category_id` for hierarchy
+- **notification_templates** → belongs to **tenants** via `tenant_id` FK
 - **email_queues** → belongs to **notifications** via `notification_id` FK (cascade delete)
 - **push_notification_devices** → belongs to **system_users** via `user_id` FK (cascade delete)
 
@@ -55,10 +45,8 @@ Based on `@shared/types/notification.types.ts` and related constraint files:
 
 #### Unique Constraints
 - `notification_delivery_id + recipient_id + recipient_type + delivery_channel` must be unique per notification
-- `user_id + user_type + notification_type + delivery_channel` must be unique for preferences
 - `device_token` must be globally unique across all push devices
 - `template_name + tenant_id` must be unique within tenant
-- `category_name + tenant_id` must be unique within tenant
 - `notification_id + recipient_email` must be unique in email queue
 
 #### Check Constraints
@@ -82,7 +70,6 @@ Based on `@shared/types/notification.types.ts` and related constraint files:
 - **notification_deliveries** → **notifications** (CASCADE on delete)
 - **email_queues** → **notifications** (CASCADE on delete)
 - **push_notification_devices** → **system_users** (CASCADE on delete)
-- **user_notification_preferences** → **system_users** (CASCADE on delete)
 
 ## 3. API Endpoints
 
@@ -107,14 +94,6 @@ Secured via JWT and RBAC (Admin role required).
 - **DELETE** `/templates/{id}`
 - **POST** `/templates/{id}/preview`
 
-#### Categories Management
-- **POST** `/categories`
-- **GET** `/categories`
-- **GET** `/categories/{id}`
-- **PATCH** `/categories/{id}`
-- **DELETE** `/categories/{id}`
-- **GET** `/categories/hierarchy`
-
 #### System Management
 - **GET** `/deliveries`
 - **GET** `/deliveries/failed`
@@ -134,12 +113,6 @@ Available to authenticated users (Students, Teachers, System Users).
 - **PATCH** `/{id}/read` - Mark as read
 - **PATCH** `/{id}/dismiss` - Dismiss notification
 - **POST** `/mark-all-read` - Mark all as read
-
-#### User Preferences
-- **GET** `/preferences` - Get notification preferences
-- **PATCH** `/preferences` - Update preferences
-- **GET** `/preferences/categories` - Get category preferences
-- **PATCH** `/preferences/categories/{categoryId}` - Update category preference
 
 #### Push Device Management
 - **POST** `/devices` - Register push device
@@ -164,7 +137,6 @@ interface CreateNotificationDto {
   message: string;
   notification_type: NotificationType;
   priority?: NotificationPriority; // Defaults to NORMAL
-  category_id?: number;
   scheduled_at?: Date | string;
   expires_at?: Date | string;
   metadata?: Record<string, any>;
@@ -179,15 +151,6 @@ interface CreateNotificationTemplateDto {
   body_template: string;
   variables?: string[];
   is_system_template?: boolean; // Defaults to false
-  category_id?: number;
-}
-
-interface CreateNotificationCategoryDto {
-  category_name: string;
-  category_description?: string;
-  default_priority?: NotificationPriority; // Defaults to NORMAL
-  is_system_category?: boolean; // Defaults to false
-  parent_category_id?: number;
 }
 
 interface CreatePushDeviceDto {
@@ -197,23 +160,11 @@ interface CreatePushDeviceDto {
   os_version?: string;
   is_production?: boolean; // Defaults to true
 }
-
-interface UpdateUserPreferencesDto {
-  preferences: Array<{
-    notification_type: NotificationType;
-    delivery_channel: DeliveryChannel;
-    is_enabled: boolean;
-    category_id?: number;
-  }>;
-  quiet_hours_start?: string; // HH:MM format
-  quiet_hours_end?: string; // HH:MM format
-}
 ```
 
 ### 4.2 Response DTOs
 ```typescript
 interface NotificationResponse extends Notification {
-  category?: NotificationCategory;
   sender?: { system_user_id: number; full_name: string };
   delivery_stats?: {
     total_recipients: number;
@@ -255,7 +206,6 @@ model Notification {
   notification_type          Int
   priority                   Int                       @default(2)
   sender_id                  Int?
-  category_id                Int?
   scheduled_at               DateTime?
   expires_at                 DateTime?
   metadata                   Json?
@@ -276,7 +226,6 @@ model Notification {
   // Relations
   tenant                     Tenant                    @relation(fields: [tenant_id], references: [tenant_id])
   sender                     SystemUser?               @relation(fields: [sender_id], references: [system_user_id])
-  category                   NotificationCategory?     @relation(fields: [category_id], references: [category_id])
   created_by_user            SystemUser                @relation("NotificationCreatedBy", fields: [created_by], references: [system_user_id])
   updated_by_user            SystemUser?               @relation("NotificationUpdatedBy", fields: [updated_by], references: [system_user_id])
   
@@ -388,7 +337,7 @@ interface TApiErrorResponse {
 - **400 Bad Request**: Invalid input data, constraint violations, invalid enum values, malformed JSON
 - **401 Unauthorized**: Invalid or missing JWT token
 - **403 Forbidden**: Insufficient permissions, cross-tenant access attempts
-- **404 Not Found**: Notification, template, category, or device not found
+- **404 Not Found**: Notification, template, or device not found
 - **409 Conflict**: Unique constraint violations (duplicate device tokens, template names)
 - **422 Unprocessable Entity**: Business rule violations, invalid template variables, delivery failures
 - **429 Too Many Requests**: Rate limiting exceeded
@@ -450,7 +399,6 @@ interface TApiErrorResponse {
 ### 8.1 Caching Strategy
 - User preferences cached for 1 hour
 - Template content cached for 30 minutes
-- Category hierarchy cached for 2 hours
 - Device tokens cached for 15 minutes
 - Redis-based caching with cluster support
 
@@ -499,8 +447,6 @@ import {
   Notification, 
   NotificationDelivery, 
   NotificationTemplate,
-  UserNotificationPreference,
-  NotificationCategory,
   EmailQueue,
   PushNotificationDevice,
   NotificationType,

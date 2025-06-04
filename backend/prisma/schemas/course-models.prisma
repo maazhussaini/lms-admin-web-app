@@ -6,7 +6,7 @@ model Course {
   tenant_id            Int
   course_name          String    @db.VarChar(255)
   main_thumbnail_url   String?   @db.Text
-  course_status_id     Int       // 1-DRAFT, 2-PUBLISHED, 3-ARCHIVED, 4-SUSPENDED
+  course_status        CourseStatus // Updated to use enum instead of course_status_id Int
   course_total_hours   Decimal?  @db.Decimal(6, 2)
   specialization_id    Int?
   
@@ -18,7 +18,7 @@ model Course {
   created_by           Int
   updated_by           Int?
   deleted_at           DateTime?
-  deleted_by_id        Int?
+  deleted_by           Int?
   created_ip           String?   @db.VarChar(45)
   updated_ip           String?   @db.VarChar(45)
 
@@ -42,7 +42,7 @@ model Course {
   // Audit trail relationships with SystemUser
   created_by_user      SystemUser   @relation("CourseCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user      SystemUser?  @relation("CourseUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user      SystemUser?  @relation("CourseDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user      SystemUser?  @relation("CourseDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("courses")
 }
@@ -63,7 +63,7 @@ model CourseModule {
   created_by           Int
   updated_by           Int?
   deleted_at           DateTime?
-  deleted_by_id        Int?
+  deleted_by           Int?
   created_ip           String?   @db.VarChar(45)
   updated_ip           String?   @db.VarChar(45)
 
@@ -75,7 +75,7 @@ model CourseModule {
   // Audit trail relationships with SystemUser
   created_by_user      SystemUser   @relation("CourseModuleCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user      SystemUser?  @relation("CourseModuleUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user      SystemUser?  @relation("CourseModuleDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user      SystemUser?  @relation("CourseModuleDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("course_modules")
 }
@@ -96,7 +96,7 @@ model CourseTopic {
   created_by           Int
   updated_by           Int?
   deleted_at           DateTime?
-  deleted_by_id        Int?
+  deleted_by           Int?
   created_ip           String?   @db.VarChar(45)
   updated_ip           String?   @db.VarChar(45)
 
@@ -109,7 +109,7 @@ model CourseTopic {
   // Audit trail relationships with SystemUser
   created_by_user      SystemUser   @relation("CourseTopicCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user      SystemUser?  @relation("CourseTopicUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user      SystemUser?  @relation("CourseTopicDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user      SystemUser?  @relation("CourseTopicDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("course_topics")
 }
@@ -126,7 +126,7 @@ model CourseVideo {
   thumbnail_url        String?   @db.Text
   duration_seconds     Int?
   position             Int?
-  upload_status        Int?      // 1-PENDING, 2-PROCESSING, 3-COMPLETED, 4-FAILED, 5-CANCELLED
+  upload_status        VideoUploadStatus? // Updated to use enum instead of Int
   
   // Audit fields
   is_active            Boolean   @default(true)
@@ -136,7 +136,7 @@ model CourseVideo {
   created_by           Int
   updated_by           Int?
   deleted_at           DateTime?
-  deleted_by_id        Int?
+  deleted_by           Int?
   created_ip           String?   @db.VarChar(45)
   updated_ip           String?   @db.VarChar(45)
 
@@ -149,7 +149,7 @@ model CourseVideo {
   // Audit trail relationships with SystemUser
   created_by_user      SystemUser   @relation("CourseVideoCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user      SystemUser?  @relation("CourseVideoUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user      SystemUser?  @relation("CourseVideoDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user      SystemUser?  @relation("CourseVideoDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("course_videos")
 }
@@ -171,7 +171,7 @@ model CourseDocument {
   created_by           Int
   updated_by           Int?
   deleted_at           DateTime?
-  deleted_by_id        Int?
+  deleted_by           Int?
   created_ip           String?   @db.VarChar(45)
   updated_ip           String?   @db.VarChar(45)
 
@@ -183,7 +183,7 @@ model CourseDocument {
   // Audit trail relationships with SystemUser
   created_by_user      SystemUser   @relation("CourseDocumentCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user      SystemUser?  @relation("CourseDocumentUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user      SystemUser?  @relation("CourseDocumentDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user      SystemUser?  @relation("CourseDocumentDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("course_documents")
 }

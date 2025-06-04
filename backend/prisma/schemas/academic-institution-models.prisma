@@ -14,7 +14,7 @@ model Program {
   created_by           Int
   updated_by           Int?
   deleted_at           DateTime?
-  deleted_by_id        Int?
+  deleted_by           Int?
   created_ip           String?         @db.VarChar(45)
   updated_ip           String?         @db.VarChar(45)
 
@@ -25,7 +25,7 @@ model Program {
   // Audit trail relationships with SystemUser
   created_by_user      SystemUser      @relation("ProgramCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user      SystemUser?     @relation("ProgramUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user      SystemUser?     @relation("ProgramDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user      SystemUser?     @relation("ProgramDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("programs")
 }
@@ -45,7 +45,7 @@ model Specialization {
   created_by           Int
   updated_by           Int?
   deleted_at           DateTime?
-  deleted_by_id        Int?
+  deleted_by           Int?
   created_ip           String?         @db.VarChar(45)
   updated_ip           String?         @db.VarChar(45)
 
@@ -57,7 +57,7 @@ model Specialization {
   // Audit trail relationships with SystemUser
   created_by_user      SystemUser      @relation("SpecializationCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user      SystemUser?     @relation("SpecializationUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user      SystemUser?     @relation("SpecializationDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user      SystemUser?     @relation("SpecializationDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("specializations")
 }
@@ -76,7 +76,7 @@ model Institute {
   created_by           Int
   updated_by           Int?
   deleted_at           DateTime?
-  deleted_by_id        Int?
+  deleted_by           Int?
   created_ip           String?         @db.VarChar(45)
   updated_ip           String?         @db.VarChar(45)
 
@@ -88,7 +88,7 @@ model Institute {
   // Audit trail relationships with SystemUser
   created_by_user      SystemUser      @relation("InstituteCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user      SystemUser?     @relation("InstituteUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user      SystemUser?     @relation("InstituteDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user      SystemUser?     @relation("InstituteDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("institutes")
 }
@@ -108,7 +108,7 @@ model StudentInstitute {
   created_by           Int
   updated_by           Int?
   deleted_at           DateTime?
-  deleted_by_id        Int?
+  deleted_by           Int?
   created_ip           String?         @db.VarChar(45)
   updated_ip           String?         @db.VarChar(45)
 
@@ -120,7 +120,7 @@ model StudentInstitute {
   // Audit trail relationships with SystemUser
   created_by_user      SystemUser      @relation("StudentInstituteCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user      SystemUser?     @relation("StudentInstituteUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user      SystemUser?     @relation("StudentInstituteDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user      SystemUser?     @relation("StudentInstituteDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("student_institutes")
 }

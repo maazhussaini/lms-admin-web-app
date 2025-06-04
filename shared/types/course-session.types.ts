@@ -1,4 +1,4 @@
-import { MultiTenantAuditFields, MinimalAuditFields } from './base.types';
+import { MultiTenantAuditFields } from './base.types';
 
 /**
  * Course session status enumeration
@@ -11,13 +11,14 @@ export enum CourseSessionStatus {
 }
 
 /**
- * Represents a course session status lookup with minimal audit fields
- * @description Reference data for course session statuses (global)
+ * Session enrollment status enumeration
+ * @description Defines the enrollment status for course session enrollments
  */
-export interface CourseSessionStatusLookup extends MinimalAuditFields {
-  course_session_status_id: number;
-  status_name: string; // e.g., 'Draft', 'Published', 'Expired'
-  description?: string | null;
+export enum SessionEnrollmentStatus {
+  ENROLLED = 1,
+  DROPPED = 2,
+  COMPLETED = 3,
+  EXPELLED = 4,
 }
 
 /**
@@ -30,7 +31,7 @@ export interface CourseSession extends MultiTenantAuditFields {
   session_description?: string | null;
   teacher_id: number; // Foreign key to Teacher
   course_id: number; // Foreign key to Course
-  course_session_status_id: CourseSessionStatus;
+  course_session_status: CourseSessionStatus; // Updated to use enum directly
   start_date: Date | string;
   end_date: Date | string;
   max_students?: number | null;
@@ -50,7 +51,7 @@ export interface CourseSessionEnrollment extends MultiTenantAuditFields {
   student_id: number; // Foreign key to Student
   enrolled_at: Date | string;
   dropped_at?: Date | string | null;
-  enrollment_status: 'ENROLLED' | 'DROPPED' | 'COMPLETED' | 'EXPELLED';
+  enrollment_status: SessionEnrollmentStatus; // Updated to use enum instead of string literals
   completion_percentage: number; // 0-100
   final_grade?: number | null;
   completion_date?: Date | string | null;
@@ -87,5 +88,8 @@ export interface CourseSessionSettings extends MultiTenantAuditFields {
 }
 
 // Type guards for runtime type checking
-export const isCourseSessionStatus = (value: any): value is CourseSessionStatus => 
+export const isCourseSessionStatus = (value: any): value is CourseSessionStatus =>
   Object.values(CourseSessionStatus).includes(value);
+
+export const isSessionEnrollmentStatus = (value: any): value is SessionEnrollmentStatus =>
+  Object.values(SessionEnrollmentStatus).includes(value);

@@ -13,7 +13,7 @@ model Role {
   created_by        Int
   updated_by        Int?
   deleted_at        DateTime?
-  deleted_by_id     Int?
+  deleted_by        Int?
   created_ip        String?           @db.VarChar(45)
   updated_ip        String?           @db.VarChar(45)
 
@@ -22,7 +22,7 @@ model Role {
   role_screens      RoleScreen[]
   created_by_user   SystemUser        @relation("RoleCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user   SystemUser?       @relation("RoleUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user   SystemUser?       @relation("RoleDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("RoleDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("roles")
 }
@@ -45,7 +45,7 @@ model Screen {
   created_by        Int
   updated_by        Int?
   deleted_at        DateTime?
-  deleted_by_id     Int?
+  deleted_by        Int?
   created_ip        String?           @db.VarChar(45)
   updated_ip        String?           @db.VarChar(45)
 
@@ -56,7 +56,7 @@ model Screen {
   role_screens      RoleScreen[]
   created_by_user   SystemUser        @relation("ScreenCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user   SystemUser?       @relation("ScreenUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user   SystemUser?       @relation("ScreenDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user   SystemUser?       @relation("ScreenDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("screens")
 }
@@ -72,7 +72,7 @@ model SystemUser {
   password_hash     String            @db.VarChar(255)
   last_login_at     DateTime?
   login_attempts    Int?              @default(0)
-  system_user_status Int              @default(1)
+  system_user_status SystemUserStatus @default(ACTIVE)
   
   // Audit fields
   is_active         Boolean           @default(true)
@@ -82,7 +82,7 @@ model SystemUser {
   created_by        Int
   updated_by        Int?
   deleted_at        DateTime?
-  deleted_by_id     Int?
+  deleted_by        Int?
   created_ip        String?           @db.VarChar(45)
   updated_ip        String?           @db.VarChar(45)
 
@@ -97,7 +97,7 @@ model SystemUser {
   updated_by_me_users      SystemUser[]      @relation("UserUpdatedBy")
   updated_by_user          SystemUser?       @relation("UserUpdatedBy", fields: [updated_by], references: [system_user_id])
   deleted_by_me_users      SystemUser[]      @relation("UserDeletedBy")
-  deleted_by_user          SystemUser?       @relation("UserDeletedBy", fields: [deleted_by_id], references: [system_user_id])
+  deleted_by_user          SystemUser?       @relation("UserDeletedBy", fields: [deleted_by], references: [system_user_id])
 
   // Role audit relations
   created_roles            Role[]           @relation("RoleCreatedBy")
@@ -158,21 +158,6 @@ model SystemUser {
   created_cities           City[]            @relation("CityCreatedBy")
   updated_cities           City[]            @relation("CityUpdatedBy")
   deleted_cities           City[]            @relation("CityDeletedBy")
-
-  // New notification relationships
-  sent_notifications              Notification[]    @relation("NotificationSender")
-  created_notifications           Notification[]    @relation("NotificationCreatedBy")
-  updated_notifications           Notification[]    @relation("NotificationUpdatedBy")  
-  deleted_notifications           Notification[]    @relation("NotificationDeletedBy")
-  created_notification_deliveries NotificationDelivery[] @relation("NotificationDeliveryCreatedBy")
-  updated_notification_deliveries NotificationDelivery[] @relation("NotificationDeliveryUpdatedBy")
-  deleted_notification_deliveries NotificationDelivery[] @relation("NotificationDeliveryDeletedBy")
-  created_email_queues            EmailQueue[]     @relation("EmailQueueCreatedBy")
-  updated_email_queues            EmailQueue[]     @relation("EmailQueueUpdatedBy")
-  deleted_email_queues            EmailQueue[]     @relation("EmailQueueDeletedBy")
-  created_course_announcements    CourseSessionAnnouncement[] @relation("CourseSessionAnnouncementCreatedBy")
-  updated_course_announcements    CourseSessionAnnouncement[] @relation("CourseSessionAnnouncementUpdatedBy")
-  deleted_course_announcements    CourseSessionAnnouncement[] @relation("CourseSessionAnnouncementDeletedBy")
 
   // Teacher-related relations
   created_teachers           Teacher[]                @relation("TeacherCreatedBy")
@@ -247,8 +232,6 @@ model SystemUser {
   deleted_teacher_courses         TeacherCourse[]          @relation("TeacherCourseDeletedBy")
   
   // Course session related relations
-  created_cs_status         CourseSessionStatusLookup[] @relation("CourseSessionStatusCreatedBy")
-  updated_cs_status         CourseSessionStatusLookup[] @relation("CourseSessionStatusUpdatedBy")
   created_course_sessions   CourseSession[]             @relation("CourseSessionCreatedBy")
   updated_course_sessions   CourseSession[]             @relation("CourseSessionUpdatedBy")
   deleted_course_sessions   CourseSession[]             @relation("CourseSessionDeletedBy")
@@ -287,7 +270,7 @@ model UserScreen {
   created_by        Int
   updated_by        Int?
   deleted_at        DateTime?
-  deleted_by_id     Int?
+  deleted_by        Int?
   created_ip        String?           @db.VarChar(45)
   updated_ip        String?           @db.VarChar(45)
 
@@ -297,7 +280,7 @@ model UserScreen {
   screen            Screen            @relation(fields: [screen_id], references: [screen_id], onDelete: Cascade)
   created_by_user   SystemUser        @relation("UserScreenCreatedBy", fields: [created_by], references: [system_user_id])
   updated_by_user   SystemUser?       @relation("UserScreenUpdatedBy", fields: [updated_by], references: [system_user_id])
-  deleted_by_user   SystemUser?       @relation("UserScreenDeletedBy", fields: [deleted_by_id], references: [system_user_id])
+  deleted_by_user   SystemUser?       @relation("UserScreenDeletedBy", fields: [deleted_by], references: [system_user_id])
 
   @@map("user_screens")
 }
@@ -322,7 +305,7 @@ model RoleScreen {
   created_by        Int
   updated_by        Int?
   deleted_at        DateTime?
-  deleted_by_id     Int?
+  deleted_by        Int?
   created_ip        String?           @db.VarChar(45)
   updated_ip        String?           @db.VarChar(45)
 
@@ -332,7 +315,7 @@ model RoleScreen {
   screen            Screen            @relation(fields: [screen_id], references: [screen_id], onDelete: Cascade)
   created_by_user   SystemUser        @relation("RoleScreenCreatedBy", fields: [created_by], references: [system_user_id])
   updated_by_user   SystemUser?       @relation("RoleScreenUpdatedBy", fields: [updated_by], references: [system_user_id])
-  deleted_by_user   SystemUser?       @relation("RoleScreenDeletedBy", fields: [deleted_by_id], references: [system_user_id])
+  deleted_by_user   SystemUser?       @relation("RoleScreenDeletedBy", fields: [deleted_by], references: [system_user_id])
 
   @@map("role_screens")
 }

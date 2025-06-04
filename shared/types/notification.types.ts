@@ -96,7 +96,6 @@ export interface Notification extends MultiTenantAuditFields {
   notification_type: NotificationType;
   priority: NotificationPriority;
   sender_id?: number | null; // Foreign key to SystemUser
-  category_id?: number | null; // Foreign key to NotificationCategory
   scheduled_at?: Date | string | null;
   expires_at?: Date | string | null;
   metadata?: Record<string, any> | null; // JSON data for dynamic content
@@ -135,36 +134,6 @@ export interface NotificationTemplate extends MultiTenantAuditFields {
   body_template: string;
   variables?: string[] | null; // Available template variables
   is_system_template: boolean; // Whether this is a system-wide template
-  category_id?: number | null; // Foreign key to NotificationCategory
-}
-
-/**
- * Represents user notification preferences with multi-tenant isolation
- * @description User preferences for receiving notifications
- */
-export interface UserNotificationPreference extends MultiTenantAuditFields {
-  user_notification_preference_id: number;
-  user_id: number; // ID of the user (student_id, teacher_id, system_user_id)
-  user_type: RecipientType;
-  notification_type: NotificationType;
-  delivery_channel: DeliveryChannel;
-  is_enabled: boolean;
-  quiet_hours_start?: string | null; // Time in HH:MM format
-  quiet_hours_end?: string | null; // Time in HH:MM format
-  category_id?: number | null; // Foreign key to NotificationCategory
-}
-
-/**
- * Represents notification categories with multi-tenant isolation
- * @description Categories for organizing notifications
- */
-export interface NotificationCategory extends MultiTenantAuditFields {
-  category_id: number;
-  category_name: string;
-  category_description?: string | null;
-  default_priority: NotificationPriority;
-  is_system_category: boolean; // Whether this is a system-wide category
-  parent_category_id?: number | null; // For hierarchical categories
 }
 
 /**

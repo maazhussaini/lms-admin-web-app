@@ -6,8 +6,8 @@ model Notification {
   tenant_id                  Int
   title                      String                @db.VarChar(255)
   message                    String                @db.Text
-  notification_type          Int                   // Maps to NotificationType enum: 1-ANNOUNCEMENT, 2-ASSIGNMENT_DUE, etc.
-  priority                   Int                   @default(2) // Maps to NotificationPriority enum: 1-LOW, 2-NORMAL, 3-HIGH, 4-URGENT
+  notification_type          NotificationType      // Updated to use enum instead of Int
+  priority                   NotificationPriority  @default(NORMAL) // Updated to use enum instead of Int @default(2)
   sender_id                  Int?                  // Optional reference to the user who sent the notification
   category_id                Int?                  // Optional reference to notification category
   scheduled_at               DateTime?             // When the notification should be delivered
@@ -24,23 +24,17 @@ model Notification {
   created_by                 Int
   updated_by                 Int?
   deleted_at                 DateTime?
-  deleted_by_id              Int?
+  deleted_by                 Int?
   created_ip                 String?               @db.VarChar(45)
   updated_ip                 String?               @db.VarChar(45)
 
   // Relationships
   tenant                     Tenant                @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
-  sender                     SystemUser?           @relation("NotificationSender", fields: [sender_id], references: [system_user_id], onDelete: SetNull)
-  
+    
   // Delivery related entities
   notification_deliveries    NotificationDelivery[]
   email_queues               EmailQueue[]
   
-  // Audit trail relationships with SystemUser
-  created_by_user            SystemUser            @relation("NotificationCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
-  updated_by_user            SystemUser?           @relation("NotificationUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user            SystemUser?           @relation("NotificationDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
-
   @@map("notifications")
   // Note: Unique constraints and indexes will be implemented via custom SQL in Prisma migrations
 }
@@ -69,7 +63,7 @@ model CourseSessionAnnouncement {
   created_by                 Int
   updated_by                 Int?
   deleted_at                 DateTime?
-  deleted_by_id              Int?
+  deleted_by                 Int?
   created_ip                 String?               @db.VarChar(45)
   updated_ip                 String?               @db.VarChar(45)
 
@@ -78,11 +72,6 @@ model CourseSessionAnnouncement {
   course_session             CourseSession         @relation(fields: [course_session_id], references: [course_session_id], onDelete: Cascade)
   teacher                    Teacher               @relation(fields: [teacher_id], references: [teacher_id], onDelete: Restrict)
   
-  // Audit trail relationships with SystemUser
-  created_by_user            SystemUser            @relation("CourseSessionAnnouncementCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
-  updated_by_user            SystemUser?           @relation("CourseSessionAnnouncementUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user            SystemUser?           @relation("CourseSessionAnnouncementDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
-
   @@map("course_session_announcements")
   // Note: Unique constraints and indexes will be implemented via custom SQL in Prisma migrations
 }
@@ -93,9 +82,9 @@ model NotificationDelivery {
   tenant_id                  Int
   notification_id            Int
   recipient_id               Int                   // ID of the recipient (student_id, teacher_id, etc.)
-  recipient_type             Int                   // Maps to RecipientType enum: 1-STUDENT, 2-TEACHER, 3-SYSTEM_USER, etc.
-  delivery_channel           Int                   // Maps to DeliveryChannel enum: 1-IN_APP, 2-EMAIL, 3-PUSH, 4-SMS
-  delivery_status            Int                   @default(1) // Maps to DeliveryStatus enum: 1-PENDING, 2-DELIVERED, 3-FAILED, 4-READ, 5-DISMISSED
+  recipient_type             RecipientType         // Updated to use enum instead of Int
+  delivery_channel           DeliveryChannel       // Updated to use enum instead of Int
+  delivery_status            DeliveryStatus        @default(PENDING) // Updated to use enum instead of Int @default(1)
   delivered_at               DateTime?
   read_at                    DateTime?
   dismissed_at               DateTime?
@@ -111,7 +100,7 @@ model NotificationDelivery {
   created_by                 Int
   updated_by                 Int?
   deleted_at                 DateTime?
-  deleted_by_id              Int?
+  deleted_by                 Int?
   created_ip                 String?               @db.VarChar(45)
   updated_ip                 String?               @db.VarChar(45)
 
@@ -119,11 +108,6 @@ model NotificationDelivery {
   tenant                     Tenant                @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
   notification               Notification          @relation(fields: [notification_id], references: [notification_id], onDelete: Cascade)
   
-  // Audit trail relationships with SystemUser
-  created_by_user            SystemUser            @relation("NotificationDeliveryCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
-  updated_by_user            SystemUser?           @relation("NotificationDeliveryUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user            SystemUser?           @relation("NotificationDeliveryDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
-
   @@map("notification_deliveries")
   // Note: Unique constraints and indexes will be implemented via custom SQL in Prisma migrations
 }
@@ -137,7 +121,7 @@ model EmailQueue {
   subject                    String                @db.VarChar(255)
   body_html                  String?               @db.Text
   body_text                  String?               @db.Text
-  send_status                Int                   @default(1) // Maps to EmailSendStatus enum: 1-PENDING, 2-SENT, 3-FAILED, 4-BOUNCED, 5-DELIVERED
+  send_status                EmailSendStatus       @default(PENDING) // Updated to use enum instead of Int @default(1)
   send_attempts              Int                   @default(0)
   last_attempt_at            DateTime?
   sent_at                    DateTime?
@@ -154,7 +138,7 @@ model EmailQueue {
   created_by                 Int
   updated_by                 Int?
   deleted_at                 DateTime?
-  deleted_by_id              Int?
+  deleted_by                 Int?
   created_ip                 String?               @db.VarChar(45)
   updated_ip                 String?               @db.VarChar(45)
 
@@ -162,11 +146,6 @@ model EmailQueue {
   tenant                     Tenant                @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
   notification               Notification          @relation(fields: [notification_id], references: [notification_id], onDelete: Cascade)
   
-  // Audit trail relationships with SystemUser
-  created_by_user            SystemUser            @relation("EmailQueueCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
-  updated_by_user            SystemUser?           @relation("EmailQueueUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
-  deleted_by_user            SystemUser?           @relation("EmailQueueDeletedBy", fields: [deleted_by_id], references: [system_user_id], onDelete: SetNull)
-
   @@map("email_queues")
   // Note: Unique constraints and indexes will be implemented via custom SQL in Prisma migrations
 }
