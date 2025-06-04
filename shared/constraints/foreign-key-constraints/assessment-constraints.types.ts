@@ -386,18 +386,6 @@ export const ASSESSMENT_FOREIGN_KEY_CONSTRAINTS: Record<string, ForeignKeyConstr
     description: 'Student assignment belongs to student (cascade delete)'
   },
 
-  STUDENT_ASSIGNMENT_GRADER_CONSTRAINT: {
-    table: 'student_assignments',
-    constraintName: 'fk_student_assignment_grader',
-    column: 'graded_by',
-    referencedTable: 'system_users',
-    referencedColumn: 'system_user_id',
-    onDelete: 'SET NULL',
-    onUpdate: 'CASCADE',
-    isNullable: true,
-    description: 'Student assignment graded by system user (optional)'
-  },
-
   // Assignment file constraints
   ASSIGNMENT_FILE_TENANT_CONSTRAINT: {
     table: 'assignment_submission_files',

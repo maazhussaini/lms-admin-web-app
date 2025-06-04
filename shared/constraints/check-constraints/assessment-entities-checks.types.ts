@@ -45,20 +45,6 @@ export const ASSESSMENT_ENTITIES_CHECK_CONSTRAINTS: Record<string, CheckConstrai
     description: 'Quiz time limit must be positive when provided'
   },
 
-  QUIZ_STATUS_ENUM_CHECK: {
-    table: 'quizzes',
-    constraintName: 'quiz_status_enum_valid',
-    condition: 'status IN (1, 2, 3, 4, 5)',
-    description: 'Quiz status must be valid enum value (1-5)'
-  },
-
-  QUIZ_DUE_DATE_FUTURE_CHECK: {
-    table: 'quizzes',
-    constraintName: 'quiz_due_date_future_valid',
-    condition: 'due_date IS NULL OR due_date > created_at',
-    description: 'Quiz due date must be in the future when provided'
-  },
-
   // Quiz question validations
   QUIZ_QUESTION_TEXT_LENGTH_CHECK: {
     table: 'quiz_questions',
@@ -72,13 +58,6 @@ export const ASSESSMENT_ENTITIES_CHECK_CONSTRAINTS: Record<string, CheckConstrai
     constraintName: 'quiz_question_marks_valid',
     condition: 'question_marks > 0',
     description: 'Quiz question marks must be positive'
-  },
-
-  QUIZ_QUESTION_TYPE_ENUM_CHECK: {
-    table: 'quiz_questions',
-    constraintName: 'quiz_question_type_enum_valid',
-    condition: 'question_type IN (1, 2, 3, 4)',
-    description: 'Quiz question type must be valid enum value (1-4)'
   },
 
   QUIZ_QUESTION_POSITION_CHECK: {
@@ -147,13 +126,6 @@ export const ASSESSMENT_ENTITIES_CHECK_CONSTRAINTS: Record<string, CheckConstrai
     description: 'Quiz time taken must be non-negative when provided'
   },
 
-  QUIZ_ATTEMPT_STATUS_ENUM_CHECK: {
-    table: 'quiz_attempts',
-    constraintName: 'quiz_attempt_status_enum_valid',
-    condition: 'status IN (1, 2, 3, 4)',
-    description: 'Quiz attempt status must be valid enum value (1-4)'
-  },
-
   // Quiz attempt answer validations
   QUIZ_ATTEMPT_ANSWER_MARKS_CHECK: {
     table: 'quiz_attempt_answers',
@@ -182,20 +154,6 @@ export const ASSESSMENT_ENTITIES_CHECK_CONSTRAINTS: Record<string, CheckConstrai
     constraintName: 'assignment_passing_marks_valid',
     condition: 'passing_marks IS NULL OR (passing_marks >= 0 AND passing_marks <= total_marks)',
     description: 'Assignment passing marks must be between 0 and total marks when provided'
-  },
-
-  ASSIGNMENT_TYPE_ENUM_CHECK: {
-    table: 'assignments',
-    constraintName: 'assignment_type_enum_valid',
-    condition: 'assignment_type IN (1)',
-    description: 'Assignment type must be valid enum value (currently only 1 for FILE_UPLOAD)'
-  },
-
-  ASSIGNMENT_STATUS_ENUM_CHECK: {
-    table: 'assignments',
-    constraintName: 'assignment_status_enum_valid',
-    condition: 'status IN (1, 2, 3, 4, 5)',
-    description: 'Assignment status must be valid enum value (1-5)'
   },
 
   ASSIGNMENT_MAX_FILE_SIZE_CHECK: {
@@ -241,13 +199,6 @@ export const ASSESSMENT_ENTITIES_CHECK_CONSTRAINTS: Record<string, CheckConstrai
     description: 'Student assignment percentage must be between 0 and 100 when provided'
   },
 
-  STUDENT_ASSIGNMENT_STATUS_ENUM_CHECK: {
-    table: 'student_assignments',
-    constraintName: 'student_assignment_status_enum_valid',
-    condition: 'submission_status IN (1, 2, 3, 4, 5)',
-    description: 'Student assignment submission status must be valid enum value (1-5)'
-  },
-
   STUDENT_ASSIGNMENT_GRADING_CONSISTENCY_CHECK: {
     table: 'student_assignments',
     constraintName: 'student_assignment_grading_consistency_valid',
@@ -278,25 +229,11 @@ export const ASSESSMENT_ENTITIES_CHECK_CONSTRAINTS: Record<string, CheckConstrai
   },
 
   // Reference type validations
-  QUIZ_REFERENCE_TYPE_ENUM_CHECK: {
-    table: 'quiz_mappings',
-    constraintName: 'quiz_reference_type_enum_valid',
-    condition: 'reference_table_id IN (1, 2, 3)',
-    description: 'Quiz reference type must be valid enum value (1-3)'
-  },
-
   QUIZ_REFERENCE_ID_CHECK: {
     table: 'quiz_mappings',
     constraintName: 'quiz_reference_id_valid',
     condition: 'reference_id > 0',
     description: 'Quiz reference ID must be positive'
-  },
-
-  ASSIGNMENT_REFERENCE_TYPE_ENUM_CHECK: {
-    table: 'assignment_mappings',
-    constraintName: 'assignment_reference_type_enum_valid',
-    condition: 'reference_table_id IN (1, 2, 3)',
-    description: 'Assignment reference type must be valid enum value (1-3)'
   },
 
   ASSIGNMENT_REFERENCE_ID_CHECK: {

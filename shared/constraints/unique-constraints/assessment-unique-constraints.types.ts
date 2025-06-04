@@ -9,7 +9,7 @@ import { UniqueConstraint } from '../base-constraint.types';
  * Assessment unique constraints
  */
 export const ASSESSMENT_UNIQUE_CONSTRAINTS: Record<string, UniqueConstraint> = {
-  // Assessment unique constraints
+  // Quiz unique constraints
   QUIZ_NAME_COURSE_UNIQUE: {
     table: 'quizzes',
     constraintName: 'uq_quiz_name_course',
@@ -59,6 +59,7 @@ export const ASSESSMENT_UNIQUE_CONSTRAINTS: Record<string, UniqueConstraint> = {
     description: 'Student can have only one answer per question per attempt'
   },
 
+  // Assignment unique constraints
   ASSIGNMENT_NAME_COURSE_UNIQUE: {
     table: 'assignments',
     constraintName: 'uq_assignment_name_course',

@@ -341,86 +341,167 @@ export const ASSESSMENT_PERFORMANCE_INDEXES: Record<string, IndexConstraint> = {
     description: 'Optimize file size and type analytics'
   },
 
-  // Assessment analytics indexes
-  QUIZ_ANALYTICS_COURSE_DATE: {
-    table: 'quiz_attempts',
-    constraintName: 'idx_quiz_analytics_course_date',
-    indexName: 'idx_quiz_analytics_course_date',
-    columns: ['quiz_id', 'submitted_at', 'score'],
+  ASSIGNMENT_FILE_URL_FORMAT_CHECK: {
+    table: 'assignment_submission_files',
+    constraintName: 'idx_assignment_file_url_search',
+    indexName: 'idx_assignment_file_url_search',
+    columns: ['file_url', 'mime_type'],
     indexType: 'BTREE',
     isUnique: false,
-    description: 'Optimize quiz analytics by course and date'
+    description: 'Optimize assignment file URL and type searches'
   },
 
-  QUIZ_ANALYTICS_STUDENT_PERFORMANCE: {
+  // Additional missing indexes for performance optimization
+  QUIZ_GRADED_BY_LOOKUP: {
     table: 'quiz_attempts',
-    constraintName: 'idx_quiz_analytics_student_performance',
-    indexName: 'idx_quiz_analytics_student_performance',
-    columns: ['student_id', 'score', 'submitted_at'],
+    constraintName: 'idx_quiz_graded_by_lookup',
+    indexName: 'idx_quiz_graded_by_lookup',
+    columns: ['graded_by', 'tenant_id', 'status'],
     indexType: 'BTREE',
     isUnique: false,
-    description: 'Optimize student quiz performance analytics'
+    description: 'Optimize queries for grader workload tracking'
   },
 
-  ASSIGNMENT_ANALYTICS_COURSE_DATE: {
+  ASSIGNMENT_GRADED_BY_LOOKUP: {
     table: 'student_assignments',
-    constraintName: 'idx_assignment_analytics_course_date',
-    indexName: 'idx_assignment_analytics_course_date',
-    columns: ['assignment_id', 'submission_date', 'grade'],
+    constraintName: 'idx_assignment_graded_by_lookup',
+    indexName: 'idx_assignment_graded_by_lookup',
+    columns: ['graded_by', 'tenant_id', 'submission_status'],
     indexType: 'BTREE',
     isUnique: false,
-    description: 'Optimize assignment analytics by course and date'
+    description: 'Optimize queries for assignment grader workload tracking'
   },
 
-  ASSIGNMENT_ANALYTICS_STUDENT_PERFORMANCE: {
-    table: 'student_assignments',
-    constraintName: 'idx_assignment_analytics_student_performance',
-    indexName: 'idx_assignment_analytics_student_performance',
-    columns: ['student_id', 'grade', 'submission_date'],
+  QUIZ_TEACHER_REVIEW_WORKLOAD: {
+    table: 'quiz_attempt_answers',
+    constraintName: 'idx_quiz_teacher_review_workload',
+    indexName: 'idx_quiz_teacher_review_workload',
+    columns: ['reviewed_by_teacher_id', 'tenant_id', 'is_correct'],
     indexType: 'BTREE',
     isUnique: false,
-    description: 'Optimize student assignment performance analytics'
+    description: 'Optimize teacher review workload queries'
   },
 
-  // Assessment deadline and time-based indexes
-  QUIZ_TIME_LIMIT_TRACKING: {
-    table: 'quiz_attempts',
-    constraintName: 'idx_quiz_time_limit_tracking',
-    indexName: 'idx_quiz_time_limit_tracking',
-    columns: ['quiz_id', 'started_at', 'status'],
-    indexType: 'BTREE',
-    isUnique: false,
-    description: 'Optimize time limit enforcement queries'
-  },
-
-  ASSIGNMENT_DEADLINE_TRACKING: {
-    table: 'assignments',
-    constraintName: 'idx_assignment_deadline_tracking',
-    indexName: 'idx_assignment_deadline_tracking',
-    columns: ['due_date', 'allow_late_submissions', 'status'],
-    indexType: 'BTREE',
-    isUnique: false,
-    description: 'Optimize deadline enforcement queries'
-  },
-
-  // Assessment content search indexes
-  QUIZ_QUESTION_TEXT_SEARCH: {
+  QUIZ_QUESTIONS_MARKS_SUMMARY: {
     table: 'quiz_questions',
-    constraintName: 'idx_quiz_question_text_search',
-    indexName: 'idx_quiz_question_text_search',
-    columns: ['quiz_id', 'question_type'],
+    constraintName: 'idx_quiz_questions_marks_summary',
+    indexName: 'idx_quiz_questions_marks_summary',
+    columns: ['quiz_id', 'question_marks', 'is_active'],
     indexType: 'BTREE',
     isUnique: false,
-    description: 'Optimize quiz question content searches'
+    description: 'Optimize quiz total marks calculation queries'
   },
 
-  QUIZ_OPTION_TEXT_SEARCH: {
-    table: 'quiz_question_options',
-    constraintName: 'idx_quiz_option_text_search',
-    indexName: 'idx_quiz_option_text_search',
-    columns: ['quiz_question_id', 'is_correct'],
+  ASSIGNMENT_LATE_SUBMISSION_TRACKING: {
+    table: 'student_assignments',
+    constraintName: 'idx_assignment_late_submission_tracking',
+    indexName: 'idx_assignment_late_submission_tracking',
+    columns: ['is_late_submission', 'submission_date', 'tenant_id'],
     indexType: 'BTREE',
     isUnique: false,
-    description: 'Optimize quiz option content searches'
+    description: 'Optimize late submission analytics queries'
+  },
+
+  QUIZ_ATTEMPT_COMPLETION_RATE: {
+    table: 'quiz_attempts',
+    constraintName: 'idx_quiz_attempt_completion_rate',
+    indexName: 'idx_quiz_attempt_completion_rate',
+    columns: ['quiz_id', 'status', 'started_at', 'submitted_at'],
+    indexType: 'BTREE',
+    isUnique: false,
+    description: 'Optimize quiz completion rate analytics'
+  },
+
+  ASSIGNMENT_FILE_SIZE_ANALYTICS: {
+    table: 'assignment_submission_files',
+    constraintName: 'idx_assignment_file_size_analytics',
+    indexName: 'idx_assignment_file_size_analytics',
+    columns: ['tenant_id', 'file_size_bytes', 'upload_status_id'],
+    indexType: 'BTREE',
+    isUnique: false,
+    description: 'Optimize file storage analytics queries'
+  },
+
+  QUIZ_QUESTION_TYPE_DISTRIBUTION: {
+    table: 'quiz_questions',
+    constraintName: 'idx_quiz_question_type_distribution',
+    indexName: 'idx_quiz_question_type_distribution',
+    columns: ['teacher_id', 'question_type', 'tenant_id'],
+    indexType: 'BTREE',
+    isUnique: false,
+    description: 'Optimize question type distribution analytics'
+  },
+
+  ASSIGNMENT_FEEDBACK_TRACKING: {
+    table: 'student_assignments',
+    constraintName: 'idx_assignment_feedback_tracking',
+    indexName: 'idx_assignment_feedback_tracking',
+    columns: ['assignment_id', 'graded_at', 'feedback'],
+    indexType: 'BTREE',
+    isUnique: false,
+    description: 'Optimize feedback completion tracking queries'
+  },
+
+  // Composite indexes for complex queries
+  QUIZ_STUDENT_PERFORMANCE_COMPOSITE: {
+    table: 'quiz_attempts',
+    constraintName: 'idx_quiz_student_performance_composite',
+    indexName: 'idx_quiz_student_performance_composite',
+    columns: ['student_id', 'quiz_id', 'attempt_number', 'score', 'percentage'],
+    indexType: 'BTREE',
+    isUnique: false,
+    description: 'Optimize comprehensive student quiz performance queries'
+  },
+
+  ASSIGNMENT_STUDENT_PERFORMANCE_COMPOSITE: {
+    table: 'student_assignments',
+    constraintName: 'idx_assignment_student_performance_composite',
+    indexName: 'idx_assignment_student_performance_composite',
+    columns: ['student_id', 'assignment_id', 'attempt_number', 'grade', 'percentage'],
+    indexType: 'BTREE',
+    isUnique: false,
+    description: 'Optimize comprehensive student assignment performance queries'
+  },
+
+  // Time-based performance indexes
+  QUIZ_CREATION_DATE_ANALYTICS: {
+    table: 'quizzes',
+    constraintName: 'idx_quiz_creation_date_analytics',
+    indexName: 'idx_quiz_creation_date_analytics',
+    columns: ['created_at', 'teacher_id', 'status', 'tenant_id'],
+    indexType: 'BTREE',
+    isUnique: false,
+    description: 'Optimize quiz creation timeline analytics'
+  },
+
+  ASSIGNMENT_CREATION_DATE_ANALYTICS: {
+    table: 'assignments',
+    constraintName: 'idx_assignment_creation_date_analytics',
+    indexName: 'idx_assignment_creation_date_analytics',
+    columns: ['created_at', 'teacher_id', 'status', 'tenant_id'],
+    indexType: 'BTREE',
+    isUnique: false,
+    description: 'Optimize assignment creation timeline analytics'
+  },
+
+  // Foreign key constraint support indexes
+  QUIZ_FOREIGN_KEY_SUPPORT: {
+    table: 'quizzes',
+    constraintName: 'idx_quiz_foreign_key_support',
+    indexName: 'idx_quiz_foreign_key_support',
+    columns: ['teacher_id', 'course_id', 'tenant_id'],
+    indexType: 'BTREE',
+    isUnique: false,
+    description: 'Support foreign key constraint checks and joins'
+  },
+
+  ASSIGNMENT_FOREIGN_KEY_SUPPORT: {
+    table: 'assignments',
+    constraintName: 'idx_assignment_foreign_key_support',
+    indexName: 'idx_assignment_foreign_key_support',
+    columns: ['teacher_id', 'course_id', 'tenant_id'],
+    indexType: 'BTREE',
+    isUnique: false,
+    description: 'Support foreign key constraint checks and joins'
   },
 };
