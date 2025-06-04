@@ -86,6 +86,16 @@ export enum EmailSendStatus {
 }
 
 /**
+ * Device type enumeration
+ * @description Types of devices for push notifications
+ */
+export enum DeviceType {
+  IOS = 1,
+  ANDROID = 2,
+  WEB = 3,
+}
+
+/**
  * Represents a notification with multi-tenant isolation
  * @description Main notification entity
  */
@@ -167,7 +177,7 @@ export interface PushNotificationDevice extends MultiTenantAuditFields {
   user_id: number; // ID of the user (student_id, teacher_id, system_user_id)
   user_type: RecipientType;
   device_token: string;
-  device_type: 'IOS' | 'ANDROID' | 'WEB';
+  device_type: DeviceType;
   app_version?: string | null;
   os_version?: string | null;
   is_production: boolean; // Whether this is a production or sandbox token
@@ -196,3 +206,6 @@ export const isRecipientType = (value: any): value is RecipientType =>
 
 export const isEmailSendStatus = (value: any): value is EmailSendStatus => 
   Object.values(EmailSendStatus).includes(value);
+
+export const isDeviceType = (value: any): value is DeviceType => 
+  Object.values(DeviceType).includes(value);

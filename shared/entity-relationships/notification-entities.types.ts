@@ -9,8 +9,7 @@ export const NOTIFICATION_ENTITY_RELATIONSHIPS: EntityRelationship[] = [
   {
     entity: 'notifications',
     foreignKeys: [
-      { column: 'tenant_id', referencedEntity: 'tenants', referencedColumn: 'tenant_id', required: true, description: 'Notification belongs to tenant' },
-      { column: 'sender_id', referencedEntity: 'system_users', referencedColumn: 'system_user_id', required: false, description: 'Notification sent by user' }
+      { column: 'tenant_id', referencedEntity: 'tenants', referencedColumn: 'tenant_id', required: true, description: 'Notification belongs to tenant' }
     ]
   },
   {
@@ -36,8 +35,7 @@ export const NOTIFICATION_ENTITY_RELATIONSHIPS: EntityRelationship[] = [
   {
     entity: 'push_notification_devices',
     foreignKeys: [
-      { column: 'tenant_id', referencedEntity: 'tenants', referencedColumn: 'tenant_id', required: true, description: 'Device belongs to tenant' },
-      { column: 'user_id', referencedEntity: 'system_users', referencedColumn: 'system_user_id', required: true, cascadeDelete: true, description: 'Device belongs to user' }
+      { column: 'tenant_id', referencedEntity: 'tenants', referencedColumn: 'tenant_id', required: true, description: 'Device belongs to tenant' }
     ]
   },
 ];

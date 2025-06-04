@@ -149,3 +149,66 @@ model EmailQueue {
   @@map("email_queues")
   // Note: Unique constraints and indexes will be implemented via custom SQL in Prisma migrations
 }
+
+// Notification templates for reusable message formats
+model NotificationTemplate {
+  notification_template_id   Int                   @id @default(autoincrement())
+  tenant_id                  Int
+  template_name              String                @db.VarChar(255)
+  template_type              TemplateType          // Updated to use enum
+  subject_template           String?               @db.Text // For email templates
+  body_template              String                @db.Text
+  variables                  Json?                 // Available template variables as JSON array
+  is_system_template         Boolean               @default(false) // Whether this is a system-wide template
+
+  // Audit fields
+  is_active                  Boolean               @default(true)
+  is_deleted                 Boolean               @default(false)
+  created_at                 DateTime              @default(now())
+  updated_at                 DateTime              @updatedAt
+  created_by                 Int
+  updated_by                 Int?
+  deleted_at                 DateTime?
+  deleted_by                 Int?
+  created_ip                 String?               @db.VarChar(45)
+  updated_ip                 String?               @db.VarChar(45)
+
+  // Relationships
+  tenant                     Tenant                @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  
+  @@map("notification_templates")
+  // Note: Unique constraints and indexes will be implemented via custom SQL in Prisma migrations
+}
+
+// Push notification devices for mobile/web push notifications
+model PushNotificationDevice {
+  push_device_id             Int                   @id @default(autoincrement())
+  tenant_id                  Int
+  user_id                    Int                   // ID of the user (student_id, teacher_id, system_user_id)
+  user_type                  RecipientType         // Updated to use enum
+  device_token               String                @db.VarChar(500)
+  device_type                DeviceType            // Updated to use enum
+  app_version                String?               @db.VarChar(50)
+  os_version                 String?               @db.VarChar(50)
+  is_production              Boolean               @default(true) // Whether this is a production or sandbox token
+  last_used_at               DateTime?
+  expires_at                 DateTime?
+
+  // Audit fields
+  is_active                  Boolean               @default(true)
+  is_deleted                 Boolean               @default(false)
+  created_at                 DateTime              @default(now())
+  updated_at                 DateTime              @updatedAt
+  created_by                 Int
+  updated_by                 Int?
+  deleted_at                 DateTime?
+  deleted_by                 Int?
+  created_ip                 String?               @db.VarChar(45)
+  updated_ip                 String?               @db.VarChar(45)
+
+  // Relationships
+  tenant                     Tenant                @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  
+  @@map("push_notification_devices")
+  // Note: Unique constraints and indexes will be implemented via custom SQL in Prisma migrations
+}

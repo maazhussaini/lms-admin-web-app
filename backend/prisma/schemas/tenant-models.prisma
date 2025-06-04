@@ -34,6 +34,8 @@ model Tenant {
   course_session_announcements   CourseSessionAnnouncement[]
   notification_deliveries        NotificationDelivery[]
   email_queues                   EmailQueue[]
+  notification_templates         NotificationTemplate[]
+  push_notification_devices      PushNotificationDevice[]
 
   // User relationships
   teachers                       Teacher[]
