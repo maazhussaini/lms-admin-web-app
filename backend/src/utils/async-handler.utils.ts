@@ -8,6 +8,7 @@ import { Request, Response, NextFunction } from 'express';
 import { ApiError } from './api-error.utils.js';
 import { createSuccessResponse, createPaginatedResponse, createCreatedResponse } from './api-response.utils.js';
 import { wrapError } from './error-wrapper.utils.js';
+import { PaginationParams, SortOrder } from './pagination.utils.js';
 import { TApiSuccessResponse, TListResponse } from '@shared/types';
 
 /**
@@ -146,13 +147,12 @@ export const createRouteHandler = <T = any>(
 };
 
 /**
- * Type for pagination parameters often used in list endpoints
+ * Extended pagination parameters interface for async handlers
+ * Extends the base PaginationParams with additional sorting and filtering options
  */
-export interface PaginationParams {
-  page?: number;
-  limit?: number;
+export interface ExtendedPaginationParams extends PaginationParams {
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: SortOrder;
   [key: string]: any; // Additional filter parameters
 }
 
@@ -160,7 +160,7 @@ export interface PaginationParams {
  * Type for a function that returns a list of items with total count
  */
 export type ListFunction<T> = (
-  params: PaginationParams,
+  params: ExtendedPaginationParams,
   req: Request
 ) => Promise<{ items: T[]; total: number }>;
 
@@ -194,11 +194,11 @@ export const createListHandler = <T = any>(
       // Get sort parameters
       const sortBy = req.query.sortBy as string;
       const sortOrder = (req.query.sortOrder as 'asc' | 'desc') || 'asc';
-      
-      // Collect all query params for filtering
-      const params: PaginationParams = {
+        // Collect all query params for filtering
+      const params: ExtendedPaginationParams = {
         page: normalizedPage,
         limit: normalizedLimit,
+        skip: (normalizedPage - 1) * normalizedLimit,
         sortBy,
         sortOrder,
         ...req.query
