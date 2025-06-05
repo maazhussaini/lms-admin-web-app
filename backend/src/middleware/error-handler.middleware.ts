@@ -169,15 +169,15 @@ export const errorHandler = (
         req.path
       )
     );
-  }
-  // Handle rate limit errors
+  }  // Handle rate limit errors
   if (err.name === 'RateLimitExceeded' || (err.message && err.message.includes('rate limit'))) {
+    const retryAfter = (err as any).headers?.['retry-after'] || '60';
     return res.status(429).json(
       createErrorResponse(
         'Too many requests',
         429,
         'RATE_LIMIT_EXCEEDED',
-        { retryAfter: (err as any).headers?.['retry-after'] || '60' },
+        { retryAfter: [retryAfter] },
         req.id,
         req.path
       )
@@ -478,9 +478,8 @@ function logError(err: Error, req: Request): void {
     userId: req.user?.id,
     tenantId: req.user?.tenantId,
   };
-
   // Log different levels based on error type
-  if (err instanceof ApiError && err.isOperational) {
+  if (ApiError.isApiError(err) && err.isOperational) {
     // Operational errors are expected in normal operation
     logger.warn(`${err.toString()}`, {
       error: err.toJSON(false),

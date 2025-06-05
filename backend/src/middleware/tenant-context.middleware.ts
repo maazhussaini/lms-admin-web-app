@@ -8,7 +8,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { ForbiddenError, UnauthorizedError } from '@/utils/api-error.utils.js';
+import { ForbiddenError, UnauthorizedError, TenantError } from '@/utils/api-error.utils.js';
 import { TenantStatus } from '@shared/types/tenant.types';
 import logger from '@/config/logger.js';
 
@@ -172,13 +172,12 @@ export const withTenantContext = <T, R>(
   };
 };
 
-/**
- * Verify that the tenant is active before proceeding
+/** * Verify that the tenant is active before proceeding
  * Can be used as middleware or directly in services
  * 
  * @param tenantId The tenant ID to verify
  * @param tenantService The service for tenant operations (injected to avoid circular dependencies)
- * @throws {ForbiddenError} If tenant is not active
+ * @throws {TenantError} If tenant is not active or verification fails
  */
 export const verifyActiveTenant = async (
   tenantId: number,
@@ -186,19 +185,17 @@ export const verifyActiveTenant = async (
 ): Promise<void> => {
   try {
     const status = await tenantService.getTenantStatus(tenantId);
-    
-    if (status !== TenantStatus.ACTIVE && status !== TenantStatus.TRIAL) {
+      if (status !== TenantStatus.ACTIVE && status !== TenantStatus.TRIAL) {
       logger.warn(`Attempt to access inactive tenant: ${tenantId}, status: ${status}`);
-      throw new ForbiddenError('Tenant account is not active');
-    }
-  } catch (error) {
-    // Rethrow if it's already a ForbiddenError
-    if (error instanceof ForbiddenError) {
+      throw new TenantError('Tenant account is not active', 403, 'TENANT_INACTIVE');
+    }  } catch (error) {
+    // Rethrow if it's already a TenantError or ForbiddenError
+    if (error instanceof TenantError || error instanceof ForbiddenError) {
       throw error;
     }
     
-    // Otherwise, log and wrap in a ForbiddenError
+    // Otherwise, log and wrap in a TenantError
     logger.error(`Tenant verification error: ${(error as Error).message}`);
-    throw new ForbiddenError('Unable to verify tenant status');
+    throw new TenantError('Unable to verify tenant status', 500, 'TENANT_VERIFICATION_ERROR');
   }
 };

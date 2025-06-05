@@ -37,9 +37,9 @@ export const authenticate = async (
     
     const authHeader = req.headers.authorization;
     
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      // Extract token from Authorization header
-      token = authHeader.split(' ')[1];
+    if (authHeader) {
+      // Use the utility function to extract token from Authorization header
+      token = extractTokenFromHeader(authHeader);
     } else if (req.query.token && typeof req.query.token === 'string') {
       // Extract token from query parameter (for WebSocket connections)
       token = req.query.token;
@@ -52,11 +52,8 @@ export const authenticate = async (
       throw new UnauthorizedError('Authentication required', 'NO_TOKEN_PROVIDED');
     }
     
-    if (!token) {
-      throw new UnauthorizedError('Authentication required', 'EMPTY_TOKEN');
-    }
-    
     // Verify token and attach user data to request
+    // The verifyAccessToken function now handles all error cases and throws proper UnauthorizedError instances
     const decodedToken = verifyAccessToken(token);
     req.user = decodedToken;
     
@@ -71,33 +68,28 @@ export const authenticate = async (
     
     next();
   } catch (error: any) {
+    // Since verifyAccessToken and extractTokenFromHeader now throw proper UnauthorizedError instances,
+    // we can simplify error handling
     if (error instanceof UnauthorizedError) {
-      // Pass the error directly if it's already an UnauthorizedError
+      // Log the authentication failure with context
+      logger.warn('Authentication failed', { 
+        errorCode: error.errorCode,
+        message: error.message,
+        ip: req.ip, 
+        path: req.path,
+        requestId: req.id
+      });
       next(error);
-    } else if (error.name === 'TokenExpiredError') {
-      logger.warn('Authentication failed: Token expired', { 
-        ip: req.ip, 
-        path: req.path,
-        requestId: req.id
-      });
-      next(new UnauthorizedError('Token expired', 'TOKEN_EXPIRED'));
-    } else if (error.name === 'JsonWebTokenError') {
-      logger.warn('Authentication failed: Invalid token', { 
-        ip: req.ip, 
-        path: req.path,
-        error: error.message,
-        requestId: req.id
-      });
-      next(new UnauthorizedError('Invalid token', 'INVALID_TOKEN'));
     } else {
-      logger.error('Authentication error', { 
+      // Handle unexpected errors
+      logger.error('Unexpected authentication error', { 
         error: error.message, 
         stack: error.stack,
         ip: req.ip,
         path: req.path,
         requestId: req.id
       });
-      next(error);
+      next(new UnauthorizedError('Authentication failed', 'AUTHENTICATION_ERROR'));
     }
   }
 };

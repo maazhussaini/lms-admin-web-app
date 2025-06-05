@@ -9,7 +9,7 @@ import {
   NotificationPayload,
   NotificationStatusPayload,
   SocketEventName
-} from '@shared/types/notification.types';
+} from '@shared/types/notification.types.js';
 import logger from '@/config/logger.js';
 import { AuthenticatedSocket } from './index.js';
 import { checkSocketRoleAuthorization } from './socket.utils.js';

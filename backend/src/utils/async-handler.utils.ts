@@ -8,7 +8,13 @@ import { Request, Response, NextFunction } from 'express';
 import { ApiError } from './api-error.utils.js';
 import { createSuccessResponse, createPaginatedResponse, createCreatedResponse } from './api-response.utils.js';
 import { wrapError } from './error-wrapper.utils.js';
-import { PaginationParams, SortOrder } from './pagination.utils.js';
+import { 
+  PaginationParams, 
+  SortOrder, 
+  getPaginationFromRequest, 
+  getSortParamsFromRequest,
+  createPaginatedApiResponse 
+} from './pagination.utils.js';
 import { TApiSuccessResponse, TListResponse } from '@shared/types';
 
 /**
@@ -24,9 +30,9 @@ export type AsyncRouteHandler<T = any> = (
  * Options for configuring the async handler
  */
 export interface AsyncHandlerOptions {
-  /** Whether to wrap non-ApiError exceptions */
+  /** Whether to wrap non-ApiError exceptions using wrapError utility (default: true) */
   wrapErrors?: boolean;
-  /** Whether to log errors (defaults to true) */
+  /** Whether to log errors before passing to middleware (default: true) */
   logErrors?: boolean;
 }
 
@@ -74,10 +80,12 @@ export const asyncHandler = <T = any>(
  * Options for routes that send success responses
  */
 export interface RouteHandlerOptions extends AsyncHandlerOptions {
-  /** Default success status code */
+  /** Default success status code (default: 200) */
   statusCode?: number;
-  /** Default success message */
+  /** Default success message (varies by handler type) */
   message?: string;
+  /** Use simplified pagination response format (items as data) instead of TListResponse format (default: false) */
+  useSimplePagination?: boolean;
 }
 
 /**
@@ -151,9 +159,14 @@ export const createRouteHandler = <T = any>(
  * Extends the base PaginationParams with additional sorting and filtering options
  */
 export interface ExtendedPaginationParams extends PaginationParams {
+  /** Sort field name from query string */
   sortBy?: string;
+  /** Sort order from query string */
   sortOrder?: SortOrder;
-  [key: string]: any; // Additional filter parameters
+  /** Parsed sorting object for Prisma queries */
+  sorting?: Record<string, SortOrder>;
+  /** Additional filter parameters from query string */
+  [key: string]: any;
 }
 
 /**
@@ -177,46 +190,55 @@ export const createListHandler = <T = any>(
 ): (req: Request, res: Response, next: NextFunction) => void => {
   const { 
     message = 'Items retrieved successfully',
+    useSimplePagination = false,
     wrapErrors = true,
     logErrors = true
   } = options;
   
   return asyncHandler(
     async (req, res, next) => {
-      // Extract pagination parameters from query
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
+      // Extract pagination parameters using utility function
+      const pagination = getPaginationFromRequest(req, 1, 10, 100);
       
-      // Ensure positive values
-      const normalizedPage = Math.max(1, page);
-      const normalizedLimit = Math.max(1, Math.min(100, limit)); // Cap at 100 items per page
+      // Get sort parameters using utility function - default to 'createdAt' desc
+      const sorting = getSortParamsFromRequest(req, 'createdAt', 'desc');
       
-      // Get sort parameters
-      const sortBy = req.query.sortBy as string;
-      const sortOrder = (req.query.sortOrder as 'asc' | 'desc') || 'asc';
-        // Collect all query params for filtering
+      // Collect all query params for filtering and build extended params
       const params: ExtendedPaginationParams = {
-        page: normalizedPage,
-        limit: normalizedLimit,
-        skip: (normalizedPage - 1) * normalizedLimit,
-        sortBy,
-        sortOrder,
+        ...pagination,
+        sortBy: req.query.sortBy as string,
+        sortOrder: (req.query.sortOrder as SortOrder) || 'desc',
+        sorting,
         ...req.query
       };
       
       // Call the list function with parameters
       const { items, total } = await listFn(params, req);
       
-      // Create a paginated response
-      const response = createPaginatedResponse(
-        items,
-        normalizedPage,
-        normalizedLimit,
-        total,
-        message,
-        200,
-        req.id // correlation ID
-      );
+      // Create response using either format based on options
+      const response = useSimplePagination
+        ? createPaginatedApiResponse(
+            items,
+            pagination.page,
+            pagination.limit,
+            total,
+            message,
+            200
+          )
+        : createPaginatedResponse(
+            items,
+            pagination.page,
+            pagination.limit,
+            total,
+            message,
+            200,
+            req.id // correlation ID
+          );
+      
+      // Add correlation ID to simple pagination response if needed
+      if (useSimplePagination && req.id) {
+        (response as any).correlationId = req.id;
+      }
       
       res.status(200).json(response);
     },
@@ -264,3 +286,65 @@ export const createResourceHandler = <T = any>(
 };
 
 export default asyncHandler;
+
+/**
+ * Creates a simple success handler that returns a message without data
+ * Useful for operations like delete, update where only confirmation is needed
+ * 
+ * @param message Success message to return
+ * @param statusCode HTTP status code (default: 200)
+ * @param options Configuration options
+ * @returns Express route handler
+ */
+export const createMessageHandler = (
+  message: string,
+  statusCode = 200,
+  options: AsyncHandlerOptions = {}
+) => {
+  return createRouteHandler(
+    async () => null,
+    { ...options, statusCode, message }
+  );
+};
+
+/**
+ * Creates a handler for update operations that returns the updated resource
+ * 
+ * @param updateFn Function that performs the update and returns the updated resource
+ * @param options Configuration options
+ * @returns Express route handler
+ */
+export const createUpdateHandler = <T = any>(
+  updateFn: (req: Request, res: Response, next: NextFunction) => Promise<T>,
+  options: RouteHandlerOptions = {}
+): (req: Request, res: Response, next: NextFunction) => void => {
+  const { message = 'Resource updated successfully', ...restOptions } = options;
+  
+  return createRouteHandler(updateFn, { 
+    ...restOptions, 
+    message, 
+    statusCode: 200 
+  });
+};
+
+/**
+ * Creates a handler for delete operations that returns a confirmation message
+ * 
+ * @param deleteFn Function that performs the deletion
+ * @param options Configuration options
+ * @returns Express route handler
+ */
+export const createDeleteHandler = (
+  deleteFn: (req: Request, res: Response, next: NextFunction) => Promise<void>,
+  options: RouteHandlerOptions = {}
+): (req: Request, res: Response, next: NextFunction) => void => {
+  const { message = 'Resource deleted successfully', ...restOptions } = options;
+  
+  return createRouteHandler(
+    async (req, res, next) => {
+      await deleteFn(req, res, next);
+      return null; // This will result in 204 No Content
+    },
+    { ...restOptions, message }
+  );
+};
