@@ -7,12 +7,20 @@
 import { Server } from 'socket.io';
 import { 
   NotificationPayload,
-  NotificationStatusPayload,
-  SocketEventName
-} from '@shared/types/notification.types.js';
+  NotificationStatusPayload
+} from '@shared/types/notification.types';
 import logger from '@/config/logger.js';
 import { AuthenticatedSocket } from './index.js';
 import { checkSocketRoleAuthorization } from './socket.utils.js';
+
+// Temporary local enum definition for SocketEventName
+enum SocketEventName {
+  NOTIFICATION_READ = 'notification:read',
+  NOTIFICATION_DISMISSED = 'notification:dismissed',
+  NOTIFICATION_COUNT = 'notification:count',
+  NOTIFICATION_LIST = 'notification:list',
+  NOTIFICATION_NEW = 'notification:new'
+}
 
 /**
  * Register notification related socket event handlers

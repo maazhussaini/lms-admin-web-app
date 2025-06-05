@@ -7,10 +7,15 @@
 import { Server } from 'socket.io';
 import { 
   NotificationPayload,
-  CourseUpdatePayload,
-  SocketEventName
+  CourseUpdatePayload
 } from '@shared/types/notification.types';
 import logger from '@/config/logger.js';
+
+// Temporary local enum definition for SocketEventName
+enum SocketEventName {
+  NOTIFICATION_NEW = 'notification:new',
+  COURSE_UPDATE = 'course:update'
+}
 
 /**
  * Get the global Socket.IO server instance

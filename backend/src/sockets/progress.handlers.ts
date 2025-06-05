@@ -7,11 +7,16 @@
 import { Server } from 'socket.io';
 import { 
   ContentProgressPayload,
-  VideoProgressPayload,
-  SocketEventName
+  VideoProgressPayload
 } from '@shared/types/notification.types';
 import logger from '@/config/logger.js';
 import { AuthenticatedSocket } from './index.js';
+
+// Temporary local enum definition for SocketEventName
+enum SocketEventName {
+  CONTENT_PROGRESS_UPDATE = 'content:progress:update',
+  VIDEO_PROGRESS_UPDATE = 'video:progress:update'
+}
 
 /**
  * Register progress tracking related socket event handlers

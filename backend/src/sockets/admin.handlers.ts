@@ -6,12 +6,18 @@
 
 import { Server } from 'socket.io';
 import { 
-  NotificationPayload,
-  SocketEventName
+  NotificationPayload
 } from '@shared/types/notification.types';
 import logger from '@/config/logger.js';
 import { AuthenticatedSocket } from './index.js';
 import { checkSocketRoleAuthorization } from './socket.utils.js';
+
+// Temporary local enum definition for SocketEventName
+enum SocketEventName {
+  TENANT_BROADCAST = 'tenant:broadcast',
+  SYSTEM_ALERT = 'system:alert',
+  NOTIFICATION_NEW = 'notification:new'
+}
 
 /**
  * Register admin-only socket event handlers

@@ -5,9 +5,10 @@
  * with support for multi-tenancy and role-based access control.
  */
 
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { promisify } from 'util';
 import crypto from 'crypto';
+import type { StringValue } from 'ms';
 import env from '@/config/environment.js';
 import { UnauthorizedError } from './api-error.utils.js';
 import logger from '@/config/logger.js';
@@ -36,8 +37,7 @@ export interface TokenResponse {
 }
 
 // Promisify jwt functions for better async/await support
-const verifyAsync = promisify<string, string, jwt.VerifyOptions, any>(jwt.verify);
-const signAsync = promisify<object, string, jwt.SignOptions, string>(jwt.sign);
+const verifyAsync = promisify(jwt.verify);
 
 /**
  * JWT sign options base configuration
@@ -56,18 +56,16 @@ const JWT_BASE_OPTIONS: jwt.SignOptions = {
  */
 export const generateAccessToken = (
   payload: TokenPayload,
-  expiresIn: string | number = env.JWT_EXPIRES_IN || '15m'
+  expiresIn: StringValue | number = (env.JWT_EXPIRES_IN || '15m') as StringValue
 ): string => {
   // Create payload with issue time and custom claims
   const tokenPayload = {
     ...payload,
     iat: Math.floor(Date.now() / 1000), // Issued at time
     type: 'access' // Token type claim for additional security
-  };
-  
-  const options: jwt.SignOptions = {
+  };  const options: jwt.SignOptions = {
     ...JWT_BASE_OPTIONS,
-    expiresIn: expiresIn as jwt.SignOptions['expiresIn'],
+    expiresIn,
     subject: `user:${payload.id}` // Subject identifies the principal
   };
   
@@ -90,7 +88,7 @@ export const generateAccessToken = (
 export const generateRefreshToken = (
   userId: number,
   tenantId: number,
-  expiresIn: string | number = env.JWT_REFRESH_EXPIRES_IN || '7d',
+  expiresIn: StringValue | number = (env.JWT_REFRESH_EXPIRES_IN || '7d') as StringValue,
   sessionId?: string
 ): string => {
   // Create minimal payload for refresh token (security best practice)
@@ -100,11 +98,9 @@ export const generateRefreshToken = (
     iat: Math.floor(Date.now() / 1000),
     type: 'refresh', // Token type claim for additional security
     ...(sessionId ? { sessionId } : {})
-  };
-  
-  const options: jwt.SignOptions = {
+  };    const options: jwt.SignOptions = {
     ...JWT_BASE_OPTIONS,
-    expiresIn: expiresIn as jwt.SignOptions['expiresIn'],
+    expiresIn,
     subject: `user:${userId}`, // Subject identifies the principal
     jwtid: crypto.randomUUID?.() || Date.now().toString() // Unique token ID for revocation capability
   };
@@ -152,24 +148,23 @@ export const verifyAccessToken = (token: string): TokenPayload => {
     };
     
     const decoded = jwt.verify(token, env.JWT_SECRET, options) as jwt.JwtPayload;
-    
-    // Validate token type to prevent token substitution attacks
-    if (decoded.type !== 'access') {
+      // Validate token type to prevent token substitution attacks
+    if (decoded['type'] !== 'access') {
       logger.warn('Token type verification failed', { 
         expectedType: 'access', 
-        receivedType: decoded.type 
+        receivedType: decoded['type'] 
       });
       throw new UnauthorizedError('Invalid token type', 'INVALID_TOKEN_TYPE');
     }
     
     // Extract and return the payload with the TokenPayload interface
     const payload: TokenPayload = {
-      id: decoded.id,
-      email: decoded.email,
-      tenantId: decoded.tenantId,
-      role: decoded.role,
-      permissions: decoded.permissions,
-      sessionId: decoded.sessionId
+      id: decoded['id'],
+      email: decoded['email'],
+      tenantId: decoded['tenantId'],
+      role: decoded['role'],
+      permissions: decoded['permissions'],
+      sessionId: decoded['sessionId']
     };
     
     return payload;
@@ -194,25 +189,19 @@ export const verifyAccessToken = (token: string): TokenPayload => {
  */
 export const verifyAccessTokenAsync = async (token: string): Promise<TokenPayload> => {
   try {
-    const options: jwt.VerifyOptions = {
-      issuer: JWT_BASE_OPTIONS.issuer,
-      audience: JWT_BASE_OPTIONS.audience,
-      algorithms: [JWT_BASE_OPTIONS.algorithm as jwt.Algorithm]
-    };
+    const decoded = await verifyAsync(token) as jwt.JwtPayload;
     
-    const decoded = await verifyAsync(token, env.JWT_SECRET, options) as jwt.JwtPayload;
-    
-    if (decoded.type !== 'access') {
+    if (decoded['type'] !== 'access') {
       throw new UnauthorizedError('Invalid token type', 'INVALID_TOKEN_TYPE');
     }
     
     return {
-      id: decoded.id,
-      email: decoded.email,
-      tenantId: decoded.tenantId,
-      role: decoded.role,
-      permissions: decoded.permissions,
-      sessionId: decoded.sessionId
+      id: decoded['id'],
+      email: decoded['email'],
+      tenantId: decoded['tenantId'],
+      role: decoded['role'],
+      permissions: decoded['permissions'],
+      sessionId: decoded['sessionId']
     };
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
@@ -243,22 +232,21 @@ export const verifyRefreshToken = (token: string): { id: number; tenantId: numbe
     };
     
     const decoded = jwt.verify(token, env.JWT_REFRESH_SECRET, options) as jwt.JwtPayload;
-    
-    // Validate token type to prevent token substitution attacks
-    if (decoded.type !== 'refresh') {
+      // Validate token type to prevent token substitution attacks
+    if (decoded['type'] !== 'refresh') {
       logger.warn('Token type verification failed', { 
         expectedType: 'refresh', 
-        receivedType: decoded.type 
+        receivedType: decoded['type'] 
       });
       throw new UnauthorizedError('Invalid token type', 'INVALID_TOKEN_TYPE');
     }
     
     // Return minimal payload needed for refresh operation
     return {
-      id: decoded.id,
-      tenantId: decoded.tenantId,
-      sessionId: decoded.sessionId,
-      jti: decoded.jti // JWT ID useful for token revocation
+      id: decoded['id'],
+      tenantId: decoded['tenantId'],
+      sessionId: decoded['sessionId'],
+      ...(decoded['jti'] && { jti: decoded['jti'] }) // JWT ID useful for token revocation
     };
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
@@ -316,12 +304,11 @@ export const refreshAccessToken = (
   // Check if token has been revoked (implementation would depend on your token blacklist mechanism)
   // This would typically involve checking a database or Redis cache
   // e.g. if (await isTokenRevoked(refreshToken)) { throw new UnauthorizedError(...); }
-  
-  // Generate new tokens, passing along the session ID for continuity
+    // Generate new tokens, passing along the session ID for continuity
   return generateTokens({
     id,
     tenantId,
-    sessionId,
+    ...(sessionId && { sessionId }),
     ...userData
   });
 };
@@ -374,22 +361,30 @@ export const getTokenInfo = (token: string): {
 } | null => {
   try {
     const decoded = jwt.decode(token) as jwt.JwtPayload;
-    if (!decoded) return null;
-    
-    // Extract user ID from subject claim (e.g., "user:123" -> 123)
+    if (!decoded) return null;    // Extract user ID from subject claim (e.g., "user:123" -> 123)
     let userId: number | undefined;
     if (decoded.sub && decoded.sub.startsWith('user:')) {
       const idStr = decoded.sub.split(':')[1];
-      userId = parseInt(idStr, 10);
+      if (idStr) {
+        userId = parseInt(idStr, 10);
+      }
     }
     
-    return {
-      subject: decoded.sub,
-      userId: userId || decoded.id,
-      expiresAt: decoded.exp ? new Date(decoded.exp * 1000) : undefined,
-      issuedAt: decoded.iat ? new Date(decoded.iat * 1000) : undefined,
-      type: decoded.type as string
-    };
+    const result: {
+      subject?: string;
+      userId?: number;
+      expiresAt?: Date;
+      issuedAt?: Date;
+      type?: string;
+    } = {};
+    
+    if (decoded.sub) result.subject = decoded.sub;
+    if (userId || decoded['id']) result.userId = userId || decoded['id'];
+    if (decoded.exp) result.expiresAt = new Date(decoded.exp * 1000);
+    if (decoded.iat) result.issuedAt = new Date(decoded.iat * 1000);
+    if (decoded['type']) result.type = decoded['type'] as string;
+    
+    return result;
   } catch (error) {
     logger.error('Error getting token info', { error });
     return null;

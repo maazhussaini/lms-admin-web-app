@@ -6,12 +6,16 @@
 
 import { Server } from 'socket.io';
 import { 
-  CourseUpdatePayload,
-  SocketEventName
+  CourseUpdatePayload
 } from '@shared/types/notification.types';
 import logger from '@/config/logger.js';
 import { AuthenticatedSocket } from './index.js';
 import { checkSocketRoleAuthorization } from './socket.utils.js';
+
+// Temporary local enum definition for SocketEventName
+enum SocketEventName {
+  COURSE_UPDATE = 'course:update'
+}
 
 /**
  * Register course related socket event handlers

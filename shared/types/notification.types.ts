@@ -205,44 +205,6 @@ export const isEmailSendStatus = (value: any): value is EmailSendStatus =>
  */
 
 /**
- * Socket.IO event names enumeration
- * @description Standardized event names for Socket.IO communication
- */
-export enum SocketEventName {
-  // Connection events
-  CONNECT = 'connect',
-  DISCONNECT = 'disconnect',
-  ERROR = 'error',
-  CONNECT_ERROR = 'connect_error',
-
-  // Notification events
-  NOTIFICATION_NEW = 'notification:new',
-  NOTIFICATION_READ = 'notification:read',
-  NOTIFICATION_DISMISSED = 'notification:dismissed',
-  NOTIFICATION_LIST = 'notification:list',
-  NOTIFICATION_COUNT = 'notification:count',
-  
-  // Course activity events
-  COURSE_UPDATE = 'course:update',
-  ASSESSMENT_GRADE_POSTED = 'assessment:grade:posted',
-  ENROLLMENT_STATUS_CHANGED = 'enrollment:status:changed',
-  
-  // Real-time events
-  USER_PRESENCE = 'user:presence',
-  USER_TYPING = 'user:typing',
-  
-  // Admin events
-  TENANT_BROADCAST = 'tenant:broadcast',
-  SYSTEM_ALERT = 'system:alert',
-  
-  // Progress tracking
-  CONTENT_PROGRESS_UPDATE = 'content:progress:update',
-  VIDEO_PROGRESS_UPDATE = 'video:progress:update',
-  QUIZ_SUBMISSION = 'quiz:submission',
-  ASSIGNMENT_SUBMISSION = 'assignment:submission'
-}
-
-/**
  * Base socket payload interface
  * @description Common properties for all socket events
  */
