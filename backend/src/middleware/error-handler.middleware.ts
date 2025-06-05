@@ -30,17 +30,7 @@ export const errorHandler = (
   next: NextFunction
 ): Response<TApiErrorResponse> => {
   // Log the error with structured metadata
-  logger.error('Error occurred:', {
-    message: err.message,
-    stack: env.IS_PRODUCTION ? undefined : err.stack,
-    path: req.path,
-    method: req.method,
-    userId: req.user?.id,
-    tenantId: req.user?.tenantId,
-    correlationId: req.id,
-    errorType: err.constructor.name,
-    errorName: err.name
-  });
+  logError(err, req);
 
   // Handle ApiError instances (application-specific errors)
   if (err instanceof ApiError) {
@@ -443,6 +433,73 @@ function handlePrismaKnownRequestError(
           req.path
         )
       );
+  }
+}
+
+/**
+ * Error logging utility with sanitization for sensitive data
+ * @param err Error to log
+ * @param req Express request
+ */
+function logError(err: Error, req: Request): void {
+  const sensitiveKeys = ['password', 'token', 'secret', 'key', 'credential', 'authorization'];
+  
+  // Sanitize request body, query and params
+  const sanitizeObject = (obj: Record<string, any>): Record<string, any> => {
+    if (!obj) return obj;
+    
+    const sanitized = { ...obj };
+    
+    for (const key of Object.keys(sanitized)) {
+      if (sensitiveKeys.some(sk => key.toLowerCase().includes(sk))) {
+        sanitized[key] = '[REDACTED]';
+      } else if (typeof sanitized[key] === 'object' && sanitized[key] !== null) {
+        sanitized[key] = sanitizeObject(sanitized[key]);
+      }
+    }
+    
+    return sanitized;
+  };
+  
+  const sanitizedReq = {
+    method: req.method,
+    path: req.path,
+    query: sanitizeObject(req.query),
+    body: sanitizeObject(req.body),
+    params: sanitizeObject(req.params),
+    headers: sanitizeObject({
+      'user-agent': req.headers['user-agent'],
+      'content-type': req.headers['content-type'],
+      'accept': req.headers.accept,
+      'origin': req.headers.origin,
+      'referer': req.headers.referer,
+    }),
+    ip: req.ip,
+    userId: req.user?.id,
+    tenantId: req.user?.tenantId,
+  };
+
+  // Log different levels based on error type
+  if (err instanceof ApiError && err.isOperational) {
+    // Operational errors are expected in normal operation
+    logger.warn(`${err.toString()}`, {
+      error: err.toJSON(false),
+      request: sanitizedReq,
+      correlationId: req.id
+    });
+  } else {
+    // Programming errors or unexpected errors
+    logger.error(`${err.toString()}`, {
+      error: ApiError.isApiError(err) 
+        ? err.toJSON(true) 
+        : {
+            name: err.name,
+            message: err.message,
+            stack: err.stack
+          },
+      request: sanitizedReq,
+      correlationId: req.id
+    });
   }
 }
 

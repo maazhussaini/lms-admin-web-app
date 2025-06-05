@@ -1,4 +1,5 @@
 import { MultiTenantAuditFields } from './base.types';
+import { DeviceType } from './student.types';
 
 /**
  * Notification type enumeration
@@ -83,16 +84,6 @@ export enum EmailSendStatus {
   FAILED = 3,
   BOUNCED = 4,
   DELIVERED = 5,
-}
-
-/**
- * Device type enumeration
- * @description Types of devices for push notifications
- */
-export enum DeviceType {
-  IOS = 1,
-  ANDROID = 2,
-  WEB = 3,
 }
 
 /**
@@ -206,6 +197,3 @@ export const isRecipientType = (value: any): value is RecipientType =>
 
 export const isEmailSendStatus = (value: any): value is EmailSendStatus => 
   Object.values(EmailSendStatus).includes(value);
-
-export const isDeviceType = (value: any): value is DeviceType => 
-  Object.values(DeviceType).includes(value);

@@ -17,4 +17,5 @@ export * from './notification.types';
 export * from './analytics.types';
 
 // Integration types
-export * from './bunny.types';
+export * from './bunny.types.js';
+export * from './file.types';

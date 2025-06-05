@@ -1,19 +1,62 @@
 /**
  * @file utils/password.utils.ts
- * @description Password hashing and validation utilities.
+ * @description Password hashing and validation utilities that follow OWASP security guidelines.
+ * @see https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
  */
 
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+
+/**
+ * Password policy constants
+ */
+export const PASSWORD_POLICY = {
+  MIN_LENGTH: 8,
+  MAX_LENGTH: 64,
+  REQUIRE_UPPERCASE: true,
+  REQUIRE_LOWERCASE: true,
+  REQUIRE_NUMBER: true,
+  REQUIRE_SPECIAL: true,
+  SALT_ROUNDS: 12,
+};
+
+/**
+ * Common weak passwords to check against (abbreviated list)
+ * In production, consider using a more comprehensive list or an API
+ */
+const COMMON_PASSWORDS = new Set([
+  'password', 'admin', '123456', 'qwerty', 'welcome', 
+  'letmein', '12345678', 'football', 'iloveyou', 'admin123',
+  'password123', 'qwerty123', 'abc123', '111111', '123123'
+]);
 
 /**
  * Hash a password using bcrypt
  * @param password Plain text password to hash
  * @param saltRounds Number of salt rounds for bcrypt (default: 12)
  * @returns Hashed password string
+ * @throws Error if password is invalid or hashing fails
  */
-export const hashPassword = async (password: string, saltRounds = 12): Promise<string> => {
-  const salt = await bcrypt.genSalt(saltRounds);
-  return bcrypt.hash(password, salt);
+export const hashPassword = async (password: string, saltRounds = PASSWORD_POLICY.SALT_ROUNDS): Promise<string> => {
+  // Validate password before hashing
+  if (!password) {
+    throw new Error('Password is required');
+  }
+  
+  if (password.length < PASSWORD_POLICY.MIN_LENGTH) {
+    throw new Error(`Password must be at least ${PASSWORD_POLICY.MIN_LENGTH} characters`);
+  }
+  
+  if (password.length > PASSWORD_POLICY.MAX_LENGTH) {
+    throw new Error(`Password must be no longer than ${PASSWORD_POLICY.MAX_LENGTH} characters`);
+  }
+  
+  try {
+    const salt = await bcrypt.genSalt(saltRounds);
+    return bcrypt.hash(password, salt);
+  } catch (error) {
+    throw new Error(`Password hashing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 };
 
 /**
@@ -21,34 +64,163 @@ export const hashPassword = async (password: string, saltRounds = 12): Promise<s
  * @param password Plain text password to check
  * @param hashedPassword Hashed password to compare against
  * @returns True if passwords match, false otherwise
+ * @throws Error if inputs are invalid or comparison fails
  */
 export const comparePassword = async (password: string, hashedPassword: string): Promise<boolean> => {
-  return bcrypt.compare(password, hashedPassword);
+  if (!password || !hashedPassword) {
+    throw new Error('Password and hashed password are required');
+  }
+  
+  try {
+    return await bcrypt.compare(password, hashedPassword);
+  } catch (error) {
+    throw new Error(`Password comparison failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 };
 
 /**
- * Generate a random temporary password
- * @param length Length of the password (default: 12)
- * @returns Random password string
+ * Generate a cryptographically secure random temporary password
+ * @param length Length of the password (default: 16)
+ * @returns Random password string that meets password policy requirements
  */
-export const generateTemporaryPassword = (length = 12): string => {
-  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+';
-  let password = '';
-  
-  // Ensure at least one character from each character class
-  password += charset.substring(0, 26).charAt(Math.floor(Math.random() * 26)); // Uppercase
-  password += charset.substring(26, 52).charAt(Math.floor(Math.random() * 26)); // Lowercase
-  password += charset.substring(52, 62).charAt(Math.floor(Math.random() * 10)); // Number
-  password += charset.substring(62).charAt(Math.floor(Math.random() * (charset.length - 62))); // Special
-  
-  // Fill the rest with random characters
-  for (let i = password.length; i < length; i++) {
-    password += charset.charAt(Math.floor(Math.random() * charset.length));
+export const generateTemporaryPassword = (length = 16): string => {
+  if (length < PASSWORD_POLICY.MIN_LENGTH) {
+    length = PASSWORD_POLICY.MIN_LENGTH;
   }
   
-  // Shuffle the password characters
-  return password
-    .split('')
-    .sort(() => Math.random() - 0.5)
-    .join('');
+  if (length > PASSWORD_POLICY.MAX_LENGTH) {
+    length = PASSWORD_POLICY.MAX_LENGTH;
+  }
+  
+  const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const lowercaseChars = 'abcdefghijklmnopqrstuvwxyz';
+  const numberChars = '0123456789';
+  const specialChars = '!@#$%^&*()-_=+[]{}|;:,.<>?';
+  
+  // Ensure at least one character from each required character class
+  let password = '';
+  
+  if (PASSWORD_POLICY.REQUIRE_UPPERCASE) {
+    password += getSecureRandomChar(uppercaseChars);
+  }
+  
+  if (PASSWORD_POLICY.REQUIRE_LOWERCASE) {
+    password += getSecureRandomChar(lowercaseChars);
+  }
+  
+  if (PASSWORD_POLICY.REQUIRE_NUMBER) {
+    password += getSecureRandomChar(numberChars);
+  }
+  
+  if (PASSWORD_POLICY.REQUIRE_SPECIAL) {
+    password += getSecureRandomChar(specialChars);
+  }
+  
+  // Build full character set based on policy
+  let charset = '';
+  if (PASSWORD_POLICY.REQUIRE_UPPERCASE) charset += uppercaseChars;
+  if (PASSWORD_POLICY.REQUIRE_LOWERCASE) charset += lowercaseChars;
+  if (PASSWORD_POLICY.REQUIRE_NUMBER) charset += numberChars;
+  if (PASSWORD_POLICY.REQUIRE_SPECIAL) charset += specialChars;
+  
+  // Fill the rest with random characters from the full charset
+  const remainingLength = length - password.length;
+  for (let i = 0; i < remainingLength; i++) {
+    password += getSecureRandomChar(charset);
+  }
+  
+  // Shuffle the password characters using Fisher-Yates algorithm
+  // to prevent any pattern recognition
+  return secureShuffle(password);
+};
+
+/**
+ * Generate a cryptographically secure random character from the given charset
+ * @param charset String containing possible characters
+ * @returns A single random character from the charset
+ */
+const getSecureRandomChar = (charset: string): string => {
+  const randomBytes = crypto.randomBytes(1);
+  const randomIndex = randomBytes[0] % charset.length;
+  return charset.charAt(randomIndex);
+};
+
+/**
+ * Shuffle a string using the Fisher-Yates algorithm with crypto randomness
+ * @param str String to shuffle
+ * @returns Shuffled string
+ */
+const secureShuffle = (str: string): string => {
+  const array = str.split('');
+  
+  for (let i = array.length - 1; i > 0; i--) {
+    // Generate a random index between 0 and i (inclusive)
+    const randomBytes = crypto.randomBytes(4);
+    const randomIndex = randomBytes.readUInt32BE(0) % (i + 1);
+    
+    // Swap elements at i and randomIndex
+    [array[i], array[randomIndex]] = [array[randomIndex], array[i]];
+  }
+  
+  return array.join('');
+};
+
+/**
+ * Validate password strength according to policy and best practices
+ * @param password Password to validate
+ * @returns Object containing validity status and any issues found
+ */
+export const validatePasswordStrength = (password: string): { 
+  isValid: boolean; 
+  issues: string[];
+} => {
+  const issues: string[] = [];
+  
+  // Check length requirements
+  if (!password || password.length < PASSWORD_POLICY.MIN_LENGTH) {
+    issues.push(`Password must be at least ${PASSWORD_POLICY.MIN_LENGTH} characters`);
+  }
+  
+  if (password && password.length > PASSWORD_POLICY.MAX_LENGTH) {
+    issues.push(`Password must be no longer than ${PASSWORD_POLICY.MAX_LENGTH} characters`);
+  }
+  
+  // Check character class requirements
+  if (PASSWORD_POLICY.REQUIRE_UPPERCASE && !/[A-Z]/.test(password)) {
+    issues.push('Password must contain at least one uppercase letter');
+  }
+  
+  if (PASSWORD_POLICY.REQUIRE_LOWERCASE && !/[a-z]/.test(password)) {
+    issues.push('Password must contain at least one lowercase letter');
+  }
+  
+  if (PASSWORD_POLICY.REQUIRE_NUMBER && !/[0-9]/.test(password)) {
+    issues.push('Password must contain at least one number');
+  }
+  
+  if (PASSWORD_POLICY.REQUIRE_SPECIAL && !/[!@#$%^&*()_\-+=[\]{}|;:,.<>?]/.test(password)) {
+    issues.push('Password must contain at least one special character');
+  }
+  
+  // Check for common passwords
+  const normalizedPassword = password.toLowerCase();
+  if (COMMON_PASSWORDS.has(normalizedPassword)) {
+    issues.push('Password is too common and easily guessable');
+  }
+  
+  // Check for repeated characters (more than 3 in a row)
+  if (/(.)\1\1\1/.test(password)) {
+    issues.push('Password should not contain more than 3 repeated characters in a row');
+  }
+  
+  // Check for sequential characters (like "1234" or "abcd")
+  if (/(?:0(?=1)|1(?=2)|2(?=3)|3(?=4)|4(?=5)|5(?=6)|6(?=7)|7(?=8)|8(?=9)){3,}/.test(password) ||
+      /(?:a(?=b)|b(?=c)|c(?=d)|d(?=e)|e(?=f)|f(?=g)|g(?=h)|h(?=i)|i(?=j)|j(?=k)|k(?=l)|l(?=m)|m(?=n)|n(?=o)|o(?=p)|p(?=q)|q(?=r)|r(?=s)|s(?=t)|t(?=u)|u(?=v)|v(?=w)|w(?=x)|x(?=y)|y(?=z)){3,}/i.test(password)) {
+    issues.push('Password should not contain sequential characters (like "1234" or "abcd")');
+  }
+  
+  return {
+    isValid: issues.length === 0,
+    issues
+  };
 };
