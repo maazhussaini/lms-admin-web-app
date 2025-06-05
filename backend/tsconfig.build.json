@@ -1,0 +1,34 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    /* Production Build Settings */
+    "noEmit": false,                                    /* Enable file emission for production builds */
+    "declaration": true,                                /* Generate .d.ts files for better IDE support */
+    "declarationMap": true,                             /* Create sourcemaps for declaration files */
+    "sourceMap": true,                                  /* Generate source maps for debugging */
+    "rootDir": "./src",                                 /* Root directory of source files */
+    
+    /* Production Optimizations */
+    "removeComments": true,                             /* Remove comments from output */
+    "importHelpers": true,                              /* Import helpers from tslib for smaller bundles */
+    "downlevelIteration": true,                         /* Better iteration support for older targets */
+    
+    /* Stricter Production Checks */
+    "noUnusedLocals": true,                             /* Enforce no unused locals in production */
+    "noUnusedParameters": true                          /* Enforce no unused parameters in production */
+  },
+  "include": [
+    "src/**/*",                                         /* Include only source files for production */
+    "../shared/**/*"                                    /* Include shared types */
+  ],
+  "exclude": [
+    "node_modules",                                     /* Exclude dependencies */
+    "tests",                                            /* Exclude test files */
+    "**/*.test.ts",                                     /* Exclude test files */
+    "**/*.spec.ts",                                     /* Exclude spec files */
+    "coverage",                                         /* Exclude coverage reports */
+    "prisma/migrations",                                /* Exclude Prisma migration files */
+    "src/**/*.test.ts",                                 /* Exclude source test files */
+    "src/**/*.spec.ts"                                  /* Exclude source spec files */
+  ]
+}

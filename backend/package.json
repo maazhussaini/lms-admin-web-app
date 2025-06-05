@@ -4,23 +4,59 @@
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js",
+    "build": "tsc --project tsconfig.build.json",
+    "build:watch": "tsc --project tsconfig.build.json --watch",
+    "build:clean": "npm run clean && npm run build",
+    "clean": "rimraf dist",
+
     "dev": "tsx watch --clear-screen=false src/server.ts",
+    "dev:debug": "tsx watch --inspect --clear-screen=false src/server.ts",
+    "start": "node dist/server.js",
+    "start:prod": "cross-env NODE_ENV=production node dist/server.js",
+
+    "type-check": "tsc --project tsconfig.development.json",
+    "type-check:watch": "tsc --project tsconfig.development.json --watch",
+    "type-check:build": "tsc --project tsconfig.build.json --noEmit",
+    "type-check:strict": "tsc --noEmit --strict",
+
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
+    "lint:check": "eslint . --ext .ts --max-warnings 0",
+
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:unit": "jest --testPathPattern=unit",
+
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:deploy": "prisma migrate deploy",
+    "prisma:migrate:prod": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
-    "prisma:seed": "ts-node prisma/seed.ts",
+    "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:reset": "prisma migrate reset",
     "prisma:generate:schema": "node scripts/generate-prisma-schema.js",
     "prisma:generate:dev": "npm run prisma:generate:schema && prisma generate",
     "prisma:migrate:dev": "npm run prisma:generate:schema && prisma migrate dev",
-    "clean": "rimraf dist"
+
+    "setup": "npm install && npm run prisma:generate:dev && npm run prisma:migrate",
+    "setup:fresh": "npm run clean && npm install && npm run prisma:reset && npm run prisma:seed",
+    "dev:full": "npm run type-check && npm run lint:check && npm run test:unit && npm run dev",
+    "dev:validate": "npm run type-check:build && npm run lint:check",
+
+    "prebuild": "npm run type-check:build && npm run lint:check",
+    "postbuild": "echo 'Build completed successfully'",
+    "deploy:check": "npm run build && npm run test:ci && npm run prisma:migrate:prod",
+    "deploy:validate": "npm run type-check:build && npm run lint:check && npm run test:ci",
+
+    "deps:check": "npm outdated",
+    "deps:update": "npm update",
+    "security:audit": "npm audit",
+    "security:fix": "npm audit fix",
+
+    "dev:type-watch": "concurrently \"npm run type-check:watch\" \"npm run dev\"",
+    "clean:all": "npm run clean && rimraf node_modules && rimraf .tsbuildinfo"
   },
   "keywords": [],
   "author": "",

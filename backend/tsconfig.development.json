@@ -1,0 +1,61 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    /* Development-Specific Overrides */
+    "noEmit": true,                                     /* No file emission for development type checking */
+    "allowImportingTsExtensions": true,                 /* Allow .ts imports in development */
+    "incremental": true,                                /* Enable incremental compilation for faster builds */
+    "tsBuildInfoFile": "./.tsbuildinfo",               /* Cache file for incremental compilation */
+    
+    /* Enhanced Development Experience */
+    "preserveWatchOutput": true,                        /* Keep output clean in watch mode */
+    "pretty": true,                                     /* Enable colored and formatted diagnostic output */
+    
+    /* Relaxed Checks for Development */
+    "noUnusedLocals": false,                           /* Allow unused locals during development */
+    "noUnusedParameters": false,                       /* Allow unused parameters during development */
+    
+    /* Development Source Maps */
+    "sourceMap": true,                                  /* Generate source maps for debugging */
+    "inlineSourceMap": false,                          /* Separate source map files */
+    "inlineSources": false,                            /* Don't inline sources in source maps */
+    
+    /* Type Checking Performance */
+    "skipDefaultLibCheck": true                        /* Skip type checking of default library files */
+  },
+  "include": [
+    "src/**/*",                                         /* Include all TypeScript files in src */
+    "../shared/**/*",                                   /* Include shared types and utilities */
+    "tests/**/*",                                       /* Include test files for development */
+    "**/*.test.ts",                                     /* Include test files */
+    "**/*.spec.ts"                                      /* Include spec files */
+  ],
+  "exclude": [
+    "node_modules",                                     /* Exclude dependencies */
+    "dist",                                             /* Exclude build output */
+    "coverage",                                         /* Exclude coverage reports */
+    "prisma/migrations"                                 /* Exclude Prisma migration files */
+  ],
+  "ts-node": {
+    "esm": true,                                        /* Enable ES modules for ts-node */
+    "experimentalSpecifierResolution": "node",         /* Enable Node.js-style module resolution */
+    "transpileOnly": true,                             /* Skip type checking for faster startup */
+    "files": true,                                     /* Load files from tsconfig */
+    "compilerOptions": {
+      "module": "ESNext",                              /* Use ESNext modules for ts-node */
+      "moduleResolution": "Bundler"                    /* Use bundler resolution for ts-node */
+    }
+  },
+  "watchOptions": {
+    "watchFile": "useFsEvents",                        /* Use file system events for better performance */
+    "watchDirectory": "useFsEvents",                   /* Use file system events for directories */
+    "fallbackPolling": "dynamicPriority",             /* Fallback polling strategy */
+    "synchronousWatchDirectory": true,                 /* Synchronous directory watching */
+    "excludeDirectories": [
+      "**/node_modules",
+      "**/dist",
+      "**/coverage",
+      "**/prisma/migrations"
+    ]
+  }
+}
