@@ -1,6 +1,6 @@
 /**
  * @file server.ts
- * @description HTTP server initialization and database connection.
+ * @description HTTP server initialization, database connection, and Socket.IO setup.
  */
 
 import http from 'http';
@@ -9,12 +9,20 @@ import env from '@/config/environment.js';
 import logger from '@/config/logger.js';
 import prisma from '@/config/database.js';
 import { initializeSocket } from '@/config/socket.js';
+import { Server as SocketServer } from 'socket.io';
 
 // Create HTTP server
 const server = http.createServer(app);
 
 // Initialize Socket.IO
 const io = initializeSocket(server);
+
+// Create global socket reference for use in other modules
+declare global {
+  // eslint-disable-next-line no-var
+  var io: SocketServer | undefined;
+}
+global.io = io;
 
 // Start the server
 const startServer = async () => {  try {

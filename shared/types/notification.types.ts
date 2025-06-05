@@ -197,3 +197,140 @@ export const isRecipientType = (value: any): value is RecipientType =>
 
 export const isEmailSendStatus = (value: any): value is EmailSendStatus => 
   Object.values(EmailSendStatus).includes(value);
+
+/**
+ * Socket.IO Event Types for the LMS notification system
+ * @description Defines shared types for socket.io events to ensure consistent
+ * communication between server and clients
+ */
+
+/**
+ * Socket.IO event names enumeration
+ * @description Standardized event names for Socket.IO communication
+ */
+export enum SocketEventName {
+  // Connection events
+  CONNECT = 'connect',
+  DISCONNECT = 'disconnect',
+  ERROR = 'error',
+  CONNECT_ERROR = 'connect_error',
+
+  // Notification events
+  NOTIFICATION_NEW = 'notification:new',
+  NOTIFICATION_READ = 'notification:read',
+  NOTIFICATION_DISMISSED = 'notification:dismissed',
+  NOTIFICATION_LIST = 'notification:list',
+  NOTIFICATION_COUNT = 'notification:count',
+  
+  // Course activity events
+  COURSE_UPDATE = 'course:update',
+  ASSESSMENT_GRADE_POSTED = 'assessment:grade:posted',
+  ENROLLMENT_STATUS_CHANGED = 'enrollment:status:changed',
+  
+  // Real-time events
+  USER_PRESENCE = 'user:presence',
+  USER_TYPING = 'user:typing',
+  
+  // Admin events
+  TENANT_BROADCAST = 'tenant:broadcast',
+  SYSTEM_ALERT = 'system:alert',
+  
+  // Progress tracking
+  CONTENT_PROGRESS_UPDATE = 'content:progress:update',
+  VIDEO_PROGRESS_UPDATE = 'video:progress:update',
+  QUIZ_SUBMISSION = 'quiz:submission',
+  ASSIGNMENT_SUBMISSION = 'assignment:submission'
+}
+
+/**
+ * Base socket payload interface
+ * @description Common properties for all socket events
+ */
+export interface SocketBasePayload {
+  timestamp: string | Date;
+  correlationId?: string;
+  tenantId: number;
+}
+
+/**
+ * New notification payload
+ * @description Data structure for real-time notification delivery
+ */
+export interface NotificationPayload extends SocketBasePayload {
+  notificationId: number;
+  title: string;
+  message: string;
+  type: NotificationType;
+  priority: NotificationPriority;
+  metadata?: Record<string, any>;
+  senderId?: number;
+  recipientId: number;
+}
+
+/**
+ * Notification status update payload
+ * @description For marking notifications as read or dismissed
+ */
+export interface NotificationStatusPayload extends SocketBasePayload {
+  notificationId: number;
+  status: DeliveryStatus;
+  userId: number;
+}
+
+/**
+ * Notification count payload
+ * @description Unread notification counts for user
+ */
+export interface NotificationCountPayload extends SocketBasePayload {
+  userId: number;
+  unreadCount: number;
+  urgentCount: number;
+}
+
+/**
+ * Course update notification payload
+ * @description For course content or schedule changes
+ */
+export interface CourseUpdatePayload extends SocketBasePayload {
+  courseId: number;
+  updateType: 'CONTENT' | 'SCHEDULE' | 'INSTRUCTOR' | 'STATUS';
+  title: string;
+  message: string;
+  updatedBy: number;
+}
+
+/**
+ * User presence payload
+ * @description For tracking user online status
+ */
+export interface UserPresencePayload extends SocketBasePayload {
+  userId: number;
+  status: 'online' | 'offline' | 'away' | 'busy';
+  lastActivity?: string | Date;
+}
+
+/**
+ * Content progress update payload
+ * @description For tracking student progress through course content
+ */
+export interface ContentProgressPayload extends SocketBasePayload {
+  userId: number;
+  courseId: number;
+  moduleId?: number;
+  topicId?: number;
+  contentId?: number;
+  progressPercentage: number;
+  completedAt?: string | Date;
+  timeSpentSeconds?: number;
+}
+
+/**
+ * Video progress update payload
+ * @description For tracking video viewing progress
+ */
+export interface VideoProgressPayload extends ContentProgressPayload {
+  videoId: string;
+  currentTimeSeconds: number;
+  durationSeconds: number;
+  isCompleted: boolean;
+}

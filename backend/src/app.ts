@@ -11,10 +11,12 @@ import rateLimit from 'express-rate-limit';
 import bodyParser from 'body-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 // Import configuration
 import env from '@/config/environment.js';
 import { requestLogger } from '@/config/logger.js';
+import setupSwagger from '@/config/swagger.js';
 
 // Import middleware
 import requestId from '@/middleware/request-id.middleware.js';
@@ -81,6 +83,24 @@ app.get('/health', (req: Request, res: Response) => {
 
 // API routes
 app.use(env.API_BASE_URL, apiV1Routes);
+
+// Setup Swagger documentation
+setupSwagger(app);
+
+// Add Socket.IO documentation route
+app.get('/socket-docs', (req: Request, res: Response) => {
+  try {
+    const socketDocPath = path.join(__dirname, '../../documentation/socket-io-implementation.md');
+    
+    if (fs.existsSync(socketDocPath)) {
+      res.sendFile(socketDocPath);
+    } else {
+      res.status(404).send('Socket.IO documentation not found');
+    }
+  } catch (error) {
+    res.status(500).send('Error serving Socket.IO documentation');
+  }
+});
 
 // 404 handler for undefined routes
 app.use((req: Request, res: Response) => {

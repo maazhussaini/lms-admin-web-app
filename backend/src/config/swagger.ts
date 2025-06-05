@@ -20,7 +20,7 @@ const swaggerDefinition = {
   info: {
     title: 'Learning Management System API',
     version: '1.0.0',
-    description: 'RESTful API for the Learning Management System',
+    description: 'RESTful API and WebSocket interface for the Learning Management System',
     license: {
       name: 'Private',
       url: 'https://example.com/license',
