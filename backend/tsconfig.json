@@ -71,8 +71,4 @@
     "coverage",                                         /* Exclude coverage reports */
     "prisma/migrations"                                 /* Exclude Prisma migration files */
   ],
-  "ts-node": {
-    "esm": true,                                        /* Enable ES modules for ts-node */
-    "experimentalSpecifierResolution": "node"          /* Enable Node.js-style module resolution for ts-node */
-  }
 }

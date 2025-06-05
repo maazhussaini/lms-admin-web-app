@@ -36,16 +36,6 @@
     "coverage",                                         /* Exclude coverage reports */
     "prisma/migrations"                                 /* Exclude Prisma migration files */
   ],
-  "ts-node": {
-    "esm": true,                                        /* Enable ES modules for ts-node */
-    "experimentalSpecifierResolution": "node",         /* Enable Node.js-style module resolution */
-    "transpileOnly": true,                             /* Skip type checking for faster startup */
-    "files": true,                                     /* Load files from tsconfig */
-    "compilerOptions": {
-      "module": "ESNext",                              /* Use ESNext modules for ts-node */
-      "moduleResolution": "Bundler"                    /* Use bundler resolution for ts-node */
-    }
-  },
   "watchOptions": {
     "watchFile": "useFsEvents",                        /* Use file system events for better performance */
     "watchDirectory": "useFsEvents",                   /* Use file system events for directories */
