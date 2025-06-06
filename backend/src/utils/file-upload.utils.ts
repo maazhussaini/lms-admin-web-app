@@ -7,17 +7,28 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
 import { createHash } from 'crypto';
 import { Request } from 'express';
 import env from '@/config/environment.js';
 import { BadRequestError, InternalServerError } from './api-error.utils.js';
-import { TUploadedFile, TUploadResult } from '@shared/types/file.types.js';
+import { TUploadedFile, TUploadResult, TFileCategory } from '@shared/types/file.types.js';
 
-// Get directory name using ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+/**
+ * Type guard to check if user has required tenant information
+ */
+const isValidUserWithTenant = (user: unknown): user is { tenantId: number; id: number } => {
+  return (
+    typeof user === 'object' &&
+    user !== null &&
+    'tenantId' in user &&
+    'id' in user &&
+    typeof (user as any).tenantId === 'number' &&
+    typeof (user as any).id === 'number' &&
+    (user as any).tenantId > 0 &&
+    (user as any).id > 0
+  );
+};
 
 // Ensure upload directory exists
 const createUploadDir = (dirPath: string): string => {
@@ -94,22 +105,20 @@ const getStorage = (subDir: string) => {
   const uploadDir = createUploadDir(path.join(baseUploadDir, subDir));
   
   return multer.diskStorage({
-    destination: (req, file, cb) => {
+    destination: (req, _file, cb) => {
       // Use tenant ID from request if available
-      const tenantId = req.user?.tenantId;
-      
-      if (!tenantId) {
+      if (!isValidUserWithTenant(req.user)) {
         return cb(new BadRequestError(
           'Tenant ID is required for file uploads',
           'TENANT_ID_MISSING'
         ), '');
       }
       
-      const tenantPath = path.join(uploadDir, tenantId.toString());
+      const tenantPath = path.join(uploadDir, req.user.tenantId.toString());
       createUploadDir(tenantPath);
       cb(null, tenantPath);
     },
-    filename: (req, file, cb) => {
+    filename: (_req, file, cb) => {
       try {
         // Sanitize original filename for secure storage
         const sanitizedName = sanitizeFilename(file.originalname);
@@ -134,7 +143,7 @@ const getStorage = (subDir: string) => {
  * @returns Multer file filter function
  */
 const createFileFilter = (allowedMimeTypes: string[], maxFileSize?: number) => {
-  return (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  return (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     // Validate file type
     if (!allowedMimeTypes.includes(file.mimetype)) {
       return cb(new BadRequestError(
@@ -220,16 +229,20 @@ export const createUploader = (
 ) => {
   const { allowedTypes, maxSize = fileSizeLimits.default, maxFiles = 1, fieldName } = options;
   
-  const multerInstance = multer({
+  const multerConfig: multer.Options = {
     storage: getStorage(subDir),
     limits: { 
       fileSize: maxSize,
       files: maxFiles
     },
-    fileFilter: allowedTypes
-      ? createFileFilter(allowedTypes, maxSize)
-      : undefined,
-  });
+  };
+
+  // Only add fileFilter if allowedTypes is provided
+  if (allowedTypes) {
+    multerConfig.fileFilter = createFileFilter(allowedTypes, maxSize);
+  }
+  
+  const multerInstance = multer(multerConfig);
   
   // Return configured uploader based on field name
   return fieldName 
@@ -247,10 +260,23 @@ export const deleteFile = async (
   filePath: string,
   tenantId?: number
 ): Promise<boolean> => {
-  // Security check: if tenantId is provided, ensure the file belongs to that tenant
-  if (tenantId && !filePath.includes(`/${tenantId}/`)) {
-    console.error(`Security violation: Attempted to delete file ${filePath} from another tenant`);
+  // Input validation
+  if (!filePath || typeof filePath !== 'string') {
+    console.error('Invalid file path provided for deletion');
     return false;
+  }
+
+  // Security check: if tenantId is provided, ensure the file belongs to that tenant
+  if (tenantId !== undefined) {
+    if (typeof tenantId !== 'number' || tenantId <= 0) {
+      console.error('Invalid tenant ID provided for file deletion');
+      return false;
+    }
+    
+    if (!filePath.includes(`/${tenantId}/`)) {
+      console.error(`Security violation: Attempted to delete file ${filePath} from another tenant`);
+      return false;
+    }
   }
 
   return new Promise((resolve) => {
@@ -286,12 +312,60 @@ export const processUploadedFiles = async (
   userId: number,
   userIp: string
 ): Promise<TUploadResult> => {
+  // Input validation
+  if (!files) {
+    return {
+      success: false,
+      files: [],
+      errors: ['No files provided for processing'],
+    };
+  }
+
+  if (typeof tenantId !== 'number' || tenantId <= 0) {
+    return {
+      success: false,
+      files: [],
+      errors: ['Invalid tenant ID provided'],
+    };
+  }
+
+  if (typeof userId !== 'number' || userId <= 0) {
+    return {
+      success: false,
+      files: [],
+      errors: ['Invalid user ID provided'],
+    };
+  }
+
+  if (!userIp || typeof userIp !== 'string' || userIp.trim().length === 0) {
+    return {
+      success: false,
+      files: [],
+      errors: ['Invalid user IP address provided'],
+    };
+  }
+
   const fileArray = Array.isArray(files) ? files : [files];
   const processedFiles: TUploadedFile[] = [];
   const errors: string[] = [];
 
+  // Validate that all files in the array are valid Multer files
   for (const file of fileArray) {
+    if (!file || typeof file !== 'object' || !file.originalname || !file.filename || !file.path) {
+      errors.push('Invalid file object detected in files array');
+      continue;
+    }
+
     try {
+      // Additional file-level validation
+      if (!fs.existsSync(file.path)) {
+        throw new Error('File does not exist at specified path');
+      }
+
+      if (file.size <= 0) {
+        throw new Error('File appears to be empty');
+      }
+
       // Validate file content against its claimed MIME type
       const isValidContent = await validateFileContent(file.path, file.mimetype);
       
@@ -304,7 +378,8 @@ export const processUploadedFiles = async (
       
       // Extract file metadata
       const metadata = await extractFileMetadata(file.path, file.mimetype);
-        processedFiles.push({
+
+      processedFiles.push({
         original_name: file.originalname,
         file_name: file.filename,
         file_path: file.path,
@@ -325,18 +400,20 @@ export const processUploadedFiles = async (
         updated_ip: null,
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       console.error(`Error processing file ${file.originalname}:`, error);
-      errors.push(`Failed to process ${file.originalname}: ${(error as Error).message}`);      // Clean up the file that failed processing
+      errors.push(`Failed to process ${file.originalname}: ${errorMessage}`);
+
+      // Clean up the file that failed processing
       await deleteFile(file.path, tenantId).catch(err => 
         console.error(`Failed to delete file ${file.path} after error:`, err)
       );
     }
   }
-
   return {
     success: errors.length === 0,
     files: processedFiles,
-    errors: errors.length > 0 ? errors : undefined,
+    ...(errors.length > 0 && { errors }),
   };
 };
 
@@ -417,7 +494,7 @@ export const getMimeTypeFromExtension = (extension: string): string | undefined 
  * @param mimeType MIME type of the file
  * @returns File category (image, document, video, audio, other)
  */
-export const getFileCategory = (mimeType: string): 'image' | 'document' | 'video' | 'audio' | 'other' => {
+export const getFileCategory = (mimeType: string): TFileCategory => {
   if (allowedImageTypes.includes(mimeType)) return 'image';
   if (allowedDocumentTypes.includes(mimeType)) return 'document';
   if (allowedVideoTypes.includes(mimeType)) return 'video';
@@ -447,7 +524,7 @@ export const extractFileMetadata = async (
     // For images, we could extract dimensions, etc.
     // This would require additional libraries like sharp
     // Example placeholder:
-    if (metadata.category === 'image') {
+    if (metadata['category'] === 'image') {
       // Placeholder for image-specific metadata
       // With a library like sharp, you could add:
       // const imageInfo = await sharp(filePath).metadata();
@@ -459,7 +536,7 @@ export const extractFileMetadata = async (
     // For videos, we could extract duration, resolution, etc.
     // This would require additional libraries like ffprobe
     // Example placeholder:
-    if (metadata.category === 'video') {
+    if (metadata['category'] === 'video') {
       // Placeholder for video-specific metadata
       // With ffprobe integration, you could add:
       // const videoInfo = await getVideoMetadata(filePath);

@@ -4,7 +4,7 @@
  * Implements secure token generation and video management operations.
  */
 
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 import env from '@/config/environment.js';
 import { 
   ExternalServiceError, 
@@ -26,6 +26,66 @@ import {
   BunnyCdnPurgeRequest,
   BunnyCdnPurgeResponse
 } from '@shared/types/bunny.types';
+
+/**
+ * Type-safe metadata interface for video uploads
+ */
+interface VideoMetadata {
+  readonly title?: string;
+  readonly description?: string;
+  readonly tags?: readonly string[];
+  readonly category?: string;
+  readonly customFields?: Record<string, string | number | boolean>;
+}
+
+/**
+ * Type-safe retry options interface
+ */
+interface RetryOptions {
+  readonly maxRetries?: number;
+  readonly retryDelay?: number;
+}
+
+/**
+ * Type-safe video statistics interface
+ */
+interface VideoStatistics {
+  readonly views: number;
+  readonly bandwidth: number;
+  readonly duration: number;
+  readonly plays: number;
+  readonly finishRate: number;
+  readonly averageWatchTime: number;
+}
+
+/**
+ * Type guard to safely check if response is BunnyApiError
+ */
+function isBunnyApiError(obj: unknown): obj is BunnyApiError {
+  return typeof obj === 'object' && 
+         obj !== null && 
+         ('code' in obj || 'message' in obj);
+}
+
+/**
+ * Safely parses JSON response with type checking
+ */
+async function safeParseBunnyResponse<T>(response: Response): Promise<T> {
+  try {
+    const data = await response.json();
+    return data as T;
+  } catch (error) {
+    throw new ExternalServiceError(
+      'Failed to parse Bunny.net API response',
+      502,
+      'BUNNY_RESPONSE_PARSE_ERROR',
+      { 
+        service: 'Bunny.net',
+        cause: error instanceof Error ? error : new Error(String(error))
+      }
+    );
+  }
+}
 
 /**
  * Generate a secure Bunny.net video token for streaming
@@ -129,8 +189,8 @@ export const uploadVideoToBunny = async (
   filePath: string,
   title: string,
   tenantId: number,
-  metadata: Record<string, any> = {},
-  retryOptions: { maxRetries?: number; retryDelay?: number } = {}
+  metadata: VideoMetadata = {},
+  retryOptions: RetryOptions = {}
 ): Promise<BunnyVideoUploadResponse> => {
   // Input validation
   if (!filePath) {
@@ -233,7 +293,7 @@ export const uploadVideoToBunny = async (
  */
 export const getVideoFromBunny = async (
   videoId: string,
-  retryOptions: { maxRetries?: number; retryDelay?: number } = {}
+  retryOptions: RetryOptions = {}
 ): Promise<BunnyVideoUploadResponse> => {
   // Input validation
   if (!videoId) {
@@ -251,8 +311,7 @@ export const getVideoFromBunny = async (
         videoId,
         retryCount
       });
-      
-      // API endpoint
+        // API endpoint
       const url = `https://video.bunnycdn.com/library/${env.BUNNY_STORAGE_ZONE_NAME}/videos/${videoId}`;
       
       // Make API request
@@ -275,7 +334,10 @@ export const getVideoFromBunny = async (
         // Parse error details if available
         let errorDetails: BunnyApiError | null = null;
         try {
-          errorDetails = await response.json() as BunnyApiError;
+          const errorData = await response.json();
+          if (isBunnyApiError(errorData)) {
+            errorDetails = errorData;
+          }
         } catch (e) {
           // Ignore JSON parsing errors on error responses
         }
@@ -294,9 +356,8 @@ export const getVideoFromBunny = async (
           }
         );
       }
-      
-      // Parse response
-      const data = await response.json();
+        // Parse response
+      const data = await safeParseBunnyResponse<BunnyVideoUploadResponse>(response);
       
       // Log success
       logger.debug(`Successfully retrieved video from Bunny.net`, {
@@ -359,7 +420,7 @@ export const getVideoFromBunny = async (
  */
 export const deleteVideoFromBunny = async (
   videoId: string,
-  retryOptions: { maxRetries?: number; retryDelay?: number } = {}
+  retryOptions: RetryOptions = {}
 ): Promise<BunnyVideoOperationResponse> => {
   // Input validation
   if (!videoId) {
@@ -380,8 +441,7 @@ export const deleteVideoFromBunny = async (
       
       // API endpoint
       const url = `https://video.bunnycdn.com/library/${env.BUNNY_STORAGE_ZONE_NAME}/videos/${videoId}`;
-      
-      // Make API request
+        // Make API request
       const response = await fetch(url, {
         method: 'DELETE',
         headers: {
@@ -401,7 +461,10 @@ export const deleteVideoFromBunny = async (
         // Parse error details if available
         let errorDetails: BunnyApiError | null = null;
         try {
-          errorDetails = await response.json() as BunnyApiError;
+          const errorData = await response.json();
+          if (isBunnyApiError(errorData)) {
+            errorDetails = errorData;
+          }
         } catch (e) {
           // Ignore JSON parsing errors on error responses
         }
@@ -518,11 +581,13 @@ export const searchVideos = async (
         'Content-Type': 'application/json'
       }
     });
-    
-    if (!response.ok) {
+      if (!response.ok) {
       let errorDetails: BunnyApiError | null = null;
       try {
-        errorDetails = await response.json() as BunnyApiError;
+        const errorData = await response.json();
+        if (isBunnyApiError(errorData)) {
+          errorDetails = errorData;
+        }
       } catch (e) {
         // Ignore JSON parsing errors
       }
@@ -540,8 +605,13 @@ export const searchVideos = async (
         }
       );
     }
-    
-    const data = await response.json();
+      const data = await safeParseBunnyResponse<{
+      items: BunnyVideoUploadResponse[];
+      totalItems: number;
+      currentPage: number;
+      totalPages: number;
+      itemsPerPage: number;
+    }>(response);
     
     // Transform response to match BunnyVideoSearchResults
     const result: BunnyVideoSearchResults = {
@@ -647,8 +717,7 @@ export const purgeVideoCdn = async (
         { service: 'Bunny.net' }
       );
     }
-    
-    const result = await response.json();
+      const result = await safeParseBunnyResponse<BunnyCdnPurgeResponse>(response);
     
     logger.info(`Successfully purged video from CDN cache`, {
       videoId,
@@ -739,8 +808,7 @@ export const updateVideoMetadata = async (
         { service: 'Bunny.net' }
       );
     }
-    
-    const updatedVideo = await response.json();
+      const updatedVideo = await safeParseBunnyResponse<BunnyVideoUploadResponse>(response);
     
     logger.info(`Successfully updated video metadata`, {
       videoId,
@@ -866,7 +934,7 @@ export const applyDrmSettings = async (
 export const getVideoStreamStats = async (
   videoId: string,
   dateRange?: { startDate: Date | string; endDate: Date | string }
-): Promise<any> => {
+): Promise<VideoStatistics> => {
   // Input validation
   if (!videoId) {
     throw new BadRequestError('Video ID is required', 'MISSING_VIDEO_ID');
@@ -921,8 +989,7 @@ export const getVideoStreamStats = async (
         { service: 'Bunny.net' }
       );
     }
-    
-    const data = await response.json();
+      const data = await safeParseBunnyResponse<VideoStatistics>(response);
     
     logger.debug(`Successfully retrieved video streaming statistics`, {
       videoId,

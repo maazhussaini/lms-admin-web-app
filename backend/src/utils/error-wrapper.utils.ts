@@ -9,12 +9,10 @@ import {
   ApiError, 
   InternalServerError, 
   BadRequestError,
-  ValidationError,
   ExternalServiceError,
   ServiceUnavailableError,
   ConflictError,
   NotFoundError,
-  ForbiddenError,
   UnauthorizedError
 } from './api-error.utils.js';
 import { 
@@ -25,6 +23,49 @@ import {
   PrismaClientInitializationError
 } from '@prisma/client/runtime/library';
 import logger from '@/config/logger.js';
+
+/**
+ * Type definitions for HTTP client errors
+ */
+interface HttpClientError extends Error {
+  response?: {
+    status?: number;
+    data?: any;
+  };
+  status?: number;
+  data?: any;
+}
+
+/**
+ * Type guard to check if error is an HTTP client error
+ */
+function isHttpClientError(error: unknown): error is HttpClientError {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  
+  const errorAny = error as any;
+  
+  // Check for response object with status (common in axios, fetch wrapper libraries)
+  const hasResponseStatus = errorAny.response && 
+    typeof errorAny.response === 'object' && 
+    typeof errorAny.response.status === 'number';
+    
+  // Check for direct status property (common in some HTTP libraries)
+  const hasDirectStatus = typeof errorAny.status === 'number';
+  
+  return hasResponseStatus || hasDirectStatus;
+}
+
+/**
+ * Type-safe helper to get Prisma meta property
+ */
+function getPrismaMetaProperty(meta: unknown, property: string): unknown {
+  if (typeof meta === 'object' && meta !== null && property in meta) {
+    return (meta as Record<string, unknown>)[property];
+  }
+  return undefined;
+}
 
 /**
  * Options for wrapping errors
@@ -240,21 +281,17 @@ export const wrapError = (
       { cause: error, context, isOperational: true }
     );
   }
-  
-  // HTTP client errors (Fetch API, Axios, etc.)
-  if (
-    (error as any)?.response?.status ||
-    (error as any)?.status
-  ) {
-    const status = (error as any)?.response?.status || (error as any)?.status;
-    const data = (error as any)?.response?.data || (error as any)?.data;
+    // HTTP client errors (Fetch API, Axios, etc.)
+  if (isHttpClientError(error)) {
+    const status = error.response?.status || error.status;
+    const data = error.response?.data || error.data;
     
     return new ExternalServiceError(
       data?.message || `External service returned ${status}`,
-      status >= 400 && status < 600 ? status : 502,
+      status && status >= 400 && status < 600 ? status : 502,
       'EXTERNAL_API_ERROR',
       { 
-        cause: error as Error, 
+        cause: error, 
         context: { 
           ...context,
           responseData: sanitizeObject(data),
@@ -308,6 +345,7 @@ function handlePrismaError(
   switch (error.code) {
     // Constraint violations
     case 'P2002': // Unique constraint violation
+      const target = getPrismaMetaProperty(error.meta, 'target');
       return new ConflictError(
         'Resource already exists',
         'UNIQUE_CONSTRAINT_VIOLATION',
@@ -315,12 +353,12 @@ function handlePrismaError(
           cause: error,
           context: {
             ...errorContext,
-            fields: error.meta?.target
+            fields: target
           },
-          details: error.meta?.target 
-            ? { [Array.isArray(error.meta.target) 
-                ? (error.meta.target as string[]).join(', ') 
-                : error.meta.target as string
+          details: target 
+            ? { [Array.isArray(target) 
+                ? (target as string[]).join(', ') 
+                : target as string
               ]: ['Must be unique'] 
             }
             : undefined
@@ -328,6 +366,7 @@ function handlePrismaError(
       );
       
     case 'P2003': // Foreign key constraint violation
+      const fieldName = getPrismaMetaProperty(error.meta, 'field_name');
       return new BadRequestError(
         'Invalid relationship',
         'FOREIGN_KEY_CONSTRAINT_VIOLATION',
@@ -335,15 +374,16 @@ function handlePrismaError(
           cause: error,
           context: {
             ...errorContext,
-            field: error.meta?.field_name
+            field: fieldName
           },
-          details: error.meta?.field_name
-            ? { [error.meta.field_name as string]: ['Invalid reference'] }
+          details: fieldName
+            ? { [fieldName as string]: ['Invalid reference'] }
             : undefined
         }
       );
       
     case 'P2004': // Constraint violation
+      const constraint = getPrismaMetaProperty(error.meta, 'constraint');
       return new BadRequestError(
         'Constraint violation',
         'CONSTRAINT_VIOLATION',
@@ -351,16 +391,17 @@ function handlePrismaError(
           cause: error,
           context: {
             ...errorContext,
-            constraint: error.meta?.constraint
+            constraint: constraint
           },
-          details: error.meta?.constraint
-            ? { [error.meta.constraint as string]: ['Constraint violated'] }
+          details: constraint
+            ? { [constraint as string]: ['Constraint violated'] }
             : undefined
         }
       );
       
     // Not found errors
     case 'P2025': // Record not found
+      const modelName = getPrismaMetaProperty(error.meta, 'modelName');
       return new NotFoundError(
         'Resource not found',
         'RESOURCE_NOT_FOUND',
@@ -368,12 +409,13 @@ function handlePrismaError(
           cause: error,
           context: {
             ...errorContext,
-            model: error.meta?.modelName
+            model: modelName
           }
         }
       );
       
     case 'P2018': // Required connected record not found
+      const causeValue = getPrismaMetaProperty(error.meta, 'cause');
       return new NotFoundError(
         'Required related record not found',
         'RELATED_RECORD_NOT_FOUND',
@@ -381,13 +423,15 @@ function handlePrismaError(
           cause: error,
           context: {
             ...errorContext,
-            relation: error.meta?.cause
+            relation: causeValue
           }
         }
       );
       
     // Input validation errors
     case 'P2005': // Invalid value for field
+      const fieldName2 = getPrismaMetaProperty(error.meta, 'field_name');
+      const value = getPrismaMetaProperty(error.meta, 'value');
       return new BadRequestError(
         'Invalid value',
         'INVALID_VALUE',
@@ -395,10 +439,10 @@ function handlePrismaError(
           cause: error,
           context: {
             ...errorContext,
-            field: error.meta?.field_name
+            field: fieldName2
           },
-          details: error.meta?.field_name
-            ? { [error.meta.field_name as string]: [`Invalid value: ${error.meta?.value}`] }
+          details: fieldName2
+            ? { [fieldName2 as string]: [`Invalid value: ${value ?? 'undefined'}`] }
             : undefined
         }
       );
@@ -455,6 +499,7 @@ function handlePrismaError(
       );
       
     case 'P2011': // Null constraint violation
+      const constraintField = getPrismaMetaProperty(error.meta, 'constraint');
       return new BadRequestError(
         'Required field cannot be null',
         'NULL_CONSTRAINT_VIOLATION',
@@ -462,15 +507,16 @@ function handlePrismaError(
           cause: error,
           context: {
             ...errorContext,
-            field: error.meta?.constraint
+            field: constraintField
           },
-          details: error.meta?.constraint
-            ? { [error.meta.constraint as string]: ['Cannot be null'] }
+          details: constraintField
+            ? { [constraintField as string]: ['Cannot be null'] }
             : undefined
         }
       );
       
     case 'P2012': // Missing required value
+      const pathField = getPrismaMetaProperty(error.meta, 'path');
       return new BadRequestError(
         'Missing required field',
         'MISSING_REQUIRED_FIELD',
@@ -478,15 +524,17 @@ function handlePrismaError(
           cause: error,
           context: {
             ...errorContext,
-            field: error.meta?.path
+            field: pathField
           },
-          details: error.meta?.path
-            ? { [error.meta.path as string]: ['Required field is missing'] }
+          details: pathField
+            ? { [pathField as string]: ['Required field is missing'] }
             : undefined
         }
       );
       
     case 'P2013': // Missing required argument
+      const argument = getPrismaMetaProperty(error.meta, 'argument');
+      const pathArg = getPrismaMetaProperty(error.meta, 'path');
       return new BadRequestError(
         'Missing required argument',
         'MISSING_REQUIRED_ARGUMENT',
@@ -494,8 +542,8 @@ function handlePrismaError(
           cause: error,
           context: {
             ...errorContext,
-            argument: error.meta?.argument,
-            path: error.meta?.path
+            argument: argument,
+            path: pathArg
           }
         }
       );
@@ -532,24 +580,26 @@ function handlePrismaError(
       );
       
     case 'P2019': // Input error in where condition
+      const causeMessage = getPrismaMetaProperty(error.meta, 'cause');
       return new BadRequestError(
         'Invalid query parameters',
         'INVALID_QUERY_PARAMETERS',
         {
           cause: error,
           context: errorContext,
-          details: { details: [error.meta?.cause as string || 'Invalid query structure'] }
+          details: { details: [causeMessage as string || 'Invalid query structure'] }
         }
       );
       
     case 'P2020': // Value out of range for type
+      const causeRange = getPrismaMetaProperty(error.meta, 'cause');
       return new BadRequestError(
         'Value out of range',
         'VALUE_OUT_OF_RANGE',
         {
           cause: error,
           context: errorContext,
-          details: { details: [error.meta?.cause as string || 'Value exceeds allowed range'] }
+          details: { details: [causeRange as string || 'Value exceeds allowed range'] }
         }
       );
       
@@ -565,6 +615,7 @@ function handlePrismaError(
       );
       
     case 'P2022': // Column/Field does not exist
+      const column = getPrismaMetaProperty(error.meta, 'column');
       logger.error('Prisma field or column not found:', { error: error.message, code: error.code });
       return new InternalServerError(
         'Database schema error',
@@ -573,12 +624,13 @@ function handlePrismaError(
           cause: error,
           context: {
             ...errorContext,
-            field: error.meta?.column
+            field: column
           }
         }
       );
       
     case 'P2023': // Inconsistent column data
+      const columnData = getPrismaMetaProperty(error.meta, 'column');
       return new BadRequestError(
         'Invalid data format',
         'INVALID_DATA_FORMAT',
@@ -586,7 +638,7 @@ function handlePrismaError(
           cause: error,
           context: {
             ...errorContext,
-            field: error.meta?.column
+            field: columnData
           }
         }
       );
@@ -674,9 +726,15 @@ export const tryCatch = async <T>(
   }
 };
 
-// Type for error mapper functions
+// Type for error mapper functions with better type safety
 type ErrorMapper = (error: Error) => ApiError;
-type ErrorMapperValue = ErrorMapper | string | (new (...args: any[]) => ApiError);
+type ErrorConstructor = new (...args: any[]) => ApiError;
+type ErrorMapperValue = ErrorMapper | string | ErrorConstructor;
+
+// Helper function to check if a function is an ApiError constructor
+function isApiErrorConstructor(fn: Function): fn is ErrorConstructor {
+  return fn.prototype && fn.prototype instanceof ApiError;
+}
 
 // Cache for memoized error mappers
 const errorMapperCache = new Map<string, (error: unknown) => ApiError>();
@@ -711,19 +769,18 @@ export const createErrorMapper = (
     
     if (errorType in errorMap) {
       const handler = errorMap[errorType];
-      
-      if (typeof handler === 'function') {
+        if (typeof handler === 'function') {
         // If it's a function, call it with the error
-        if (handler.prototype instanceof ApiError) {
+        if (isApiErrorConstructor(handler)) {
           // It's a constructor for an ApiError class
-          return new (handler as new (...args: any[]) => ApiError)(
+          return new handler(
             error.message,
             undefined,
             { cause: error }
           );
         }
         // It's a custom handler function
-        return (handler as ErrorMapper)(error);
+        return handler(error);
       }
       
       if (typeof handler === 'string') {

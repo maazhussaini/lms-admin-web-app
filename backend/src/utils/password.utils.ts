@@ -4,13 +4,34 @@
  * @see https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
  */
 
-import bcrypt from 'bcryptjs';
-import crypto from 'crypto';
+import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
+
+/**
+ * Password policy configuration interface
+ */
+export interface PasswordPolicyConfig {
+  readonly MIN_LENGTH: number;
+  readonly MAX_LENGTH: number;
+  readonly REQUIRE_UPPERCASE: boolean;
+  readonly REQUIRE_LOWERCASE: boolean;
+  readonly REQUIRE_NUMBER: boolean;
+  readonly REQUIRE_SPECIAL: boolean;
+  readonly SALT_ROUNDS: number;
+}
+
+/**
+ * Password validation result interface
+ */
+export interface PasswordValidationResult {
+  readonly isValid: boolean;
+  readonly issues: readonly string[];
+}
 
 /**
  * Password policy constants
  */
-export const PASSWORD_POLICY = {
+export const PASSWORD_POLICY: PasswordPolicyConfig = {
   MIN_LENGTH: 8,
   MAX_LENGTH: 64,
   REQUIRE_UPPERCASE: true,
@@ -18,13 +39,13 @@ export const PASSWORD_POLICY = {
   REQUIRE_NUMBER: true,
   REQUIRE_SPECIAL: true,
   SALT_ROUNDS: 12,
-};
+} as const;
 
 /**
  * Common weak passwords to check against (abbreviated list)
  * In production, consider using a more comprehensive list or an API
  */
-const COMMON_PASSWORDS = new Set([
+const COMMON_PASSWORDS: ReadonlySet<string> = new Set([
   'password', 'admin', '123456', 'qwerty', 'welcome', 
   'letmein', '12345678', 'football', 'iloveyou', 'admin123',
   'password123', 'qwerty123', 'abc123', '111111', '123123'
@@ -39,6 +60,10 @@ const COMMON_PASSWORDS = new Set([
  */
 export const hashPassword = async (password: string, saltRounds = PASSWORD_POLICY.SALT_ROUNDS): Promise<string> => {
   // Validate password before hashing
+  if (typeof password !== 'string') {
+    throw new Error('Password must be a string');
+  }
+  
   if (!password) {
     throw new Error('Password is required');
   }
@@ -49,6 +74,11 @@ export const hashPassword = async (password: string, saltRounds = PASSWORD_POLIC
   
   if (password.length > PASSWORD_POLICY.MAX_LENGTH) {
     throw new Error(`Password must be no longer than ${PASSWORD_POLICY.MAX_LENGTH} characters`);
+  }
+  
+  // Validate salt rounds
+  if (!Number.isInteger(saltRounds) || saltRounds < 4 || saltRounds > 31) {
+    throw new Error('Salt rounds must be an integer between 4 and 31');
   }
   
   try {
@@ -67,8 +97,18 @@ export const hashPassword = async (password: string, saltRounds = PASSWORD_POLIC
  * @throws Error if inputs are invalid or comparison fails
  */
 export const comparePassword = async (password: string, hashedPassword: string): Promise<boolean> => {
+  // Validate inputs
+  if (typeof password !== 'string' || typeof hashedPassword !== 'string') {
+    throw new Error('Password and hashed password must be strings');
+  }
+  
   if (!password || !hashedPassword) {
     throw new Error('Password and hashed password are required');
+  }
+  
+  // Basic format validation for bcrypt hash
+  if (!hashedPassword.startsWith('$2') || hashedPassword.length < 59) {
+    throw new Error('Invalid bcrypt hash format');
   }
   
   try {
@@ -82,8 +122,14 @@ export const comparePassword = async (password: string, hashedPassword: string):
  * Generate a cryptographically secure random temporary password
  * @param length Length of the password (default: 16)
  * @returns Random password string that meets password policy requirements
+ * @throws Error if length is invalid
  */
 export const generateTemporaryPassword = (length = 16): string => {
+  // Validate input parameters
+  if (!Number.isInteger(length) || length < 1) {
+    throw new Error('Password length must be a positive integer');
+  }
+  
   if (length < PASSWORD_POLICY.MIN_LENGTH) {
     length = PASSWORD_POLICY.MIN_LENGTH;
   }
@@ -123,6 +169,10 @@ export const generateTemporaryPassword = (length = 16): string => {
   if (PASSWORD_POLICY.REQUIRE_NUMBER) charset += numberChars;
   if (PASSWORD_POLICY.REQUIRE_SPECIAL) charset += specialChars;
   
+  if (charset.length === 0) {
+    throw new Error('No character classes are enabled in password policy');
+  }
+  
   // Fill the rest with random characters from the full charset
   const remainingLength = length - password.length;
   for (let i = 0; i < remainingLength; i++) {
@@ -138,10 +188,22 @@ export const generateTemporaryPassword = (length = 16): string => {
  * Generate a cryptographically secure random character from the given charset
  * @param charset String containing possible characters
  * @returns A single random character from the charset
+ * @throws Error if charset is empty
  */
 const getSecureRandomChar = (charset: string): string => {
+  if (!charset || charset.length === 0) {
+    throw new Error('Charset cannot be empty');
+  }
+  
   const randomBytes = crypto.randomBytes(1);
-  const randomIndex = randomBytes[0] % charset.length;
+  const firstByte = randomBytes[0];
+  
+  // TypeScript safety: ensure we have a valid byte
+  if (firstByte === undefined) {
+    throw new Error('Failed to generate random byte');
+  }
+  
+  const randomIndex = firstByte % charset.length;
   return charset.charAt(randomIndex);
 };
 
@@ -149,6 +211,7 @@ const getSecureRandomChar = (charset: string): string => {
  * Shuffle a string using the Fisher-Yates algorithm with crypto randomness
  * @param str String to shuffle
  * @returns Shuffled string
+ * @throws Error if shuffling fails
  */
 const secureShuffle = (str: string): string => {
   const array = str.split('');
@@ -158,8 +221,17 @@ const secureShuffle = (str: string): string => {
     const randomBytes = crypto.randomBytes(4);
     const randomIndex = randomBytes.readUInt32BE(0) % (i + 1);
     
+    // TypeScript safety: ensure array elements exist
+    const currentElement = array[i];
+    const targetElement = array[randomIndex];
+    
+    if (currentElement === undefined || targetElement === undefined) {
+      throw new Error('Array indexing error during shuffle');
+    }
+    
     // Swap elements at i and randomIndex
-    [array[i], array[randomIndex]] = [array[randomIndex], array[i]];
+    array[i] = targetElement;
+    array[randomIndex] = currentElement;
   }
   
   return array.join('');
@@ -170,10 +242,15 @@ const secureShuffle = (str: string): string => {
  * @param password Password to validate
  * @returns Object containing validity status and any issues found
  */
-export const validatePasswordStrength = (password: string): { 
-  isValid: boolean; 
-  issues: string[];
-} => {
+export const validatePasswordStrength = (password: string): PasswordValidationResult => {
+  // Input validation
+  if (typeof password !== 'string') {
+    return {
+      isValid: false,
+      issues: Object.freeze(['Password must be a string'])
+    } as const;
+  }
+  
   const issues: string[] = [];
   
   // Check length requirements
@@ -221,6 +298,6 @@ export const validatePasswordStrength = (password: string): {
   
   return {
     isValid: issues.length === 0,
-    issues
-  };
+    issues: Object.freeze(issues) // Make issues array immutable
+  } as const;
 };

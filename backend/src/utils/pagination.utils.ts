@@ -31,9 +31,17 @@ export const parsePaginationParams = (
   defaultLimit = 10,
   maxLimit = 100
 ): PaginationParams => {
-  // Parse page and limit from query
-  let page = Number.isInteger(query.page) ? query.page : parseInt(query.page as string, 10) || defaultPage;
-  let limit = Number.isInteger(query.limit) ? query.limit : parseInt(query.limit as string, 10) || defaultLimit;
+  // Parse page and limit from query with proper type safety
+  const pageValue = query['page'];
+  const limitValue = query['limit'];
+  
+  let page = Number.isInteger(pageValue) 
+    ? pageValue 
+    : (typeof pageValue === 'string' ? parseInt(pageValue, 10) : NaN) || defaultPage;
+  
+  let limit = Number.isInteger(limitValue) 
+    ? limitValue 
+    : (typeof limitValue === 'string' ? parseInt(limitValue, 10) : NaN) || defaultLimit;
   
   // Validate and normalize
   page = page < 1 ? 1 : page;
@@ -90,16 +98,19 @@ export const parseSortParams = (
   defaultOrder: SortOrder = 'desc',
   allowedFields: string[] = []
 ): Record<string, SortOrder> => {
-  let sortBy = typeof query.sortBy === 'string' ? query.sortBy : defaultSortBy;
-  let orderInput = typeof query.order === 'string' ? query.order.toLowerCase() : defaultOrder;
+  const sortByValue = query['sortBy'];
+  const orderValue = query['order'];
+  
+  let sortBy = typeof sortByValue === 'string' ? sortByValue : defaultSortBy;
+  let orderInput = typeof orderValue === 'string' ? orderValue.toLowerCase() : defaultOrder;
   let order: SortOrder = orderInput === 'asc' ? 'asc' : 'desc';
   
   // Extract field and direction if in format "field:direction"
   if (sortBy.includes(':')) {
     const parts = sortBy.split(':');
-    if (parts.length === 2) {
+    if (parts.length === 2 && parts[0] && parts[1]) {
       sortBy = parts[0];
-      const direction = parts[1]?.toLowerCase();
+      const direction = parts[1].toLowerCase();
       order = direction === 'asc' ? 'asc' : 'desc';
     }
   }
@@ -187,6 +198,18 @@ export const createPaginatedList = <T>(
 };
 
 /**
+ * Standard API response structure for paginated results
+ */
+export interface PaginatedApiResponse<T> {
+  success: true;
+  statusCode: number;
+  message: string;
+  data: T[];
+  pagination: PaginationMetadata;
+  timestamp: string;
+}
+
+/**
  * Create a standardized API success response with pagination metadata
  * Integrates with the project's TApiSuccessResponse type
  * 
@@ -205,7 +228,7 @@ export const createPaginatedApiResponse = <T>(
   total: number,
   message = 'Items retrieved successfully',
   statusCode = 200
-) => {
+): PaginatedApiResponse<T> => {
   return {
     success: true,
     statusCode,
@@ -233,6 +256,15 @@ export const createEmptyPaginationMetadata = (defaultPage = 1): PaginationMetada
 };
 
 /**
+ * Cursor-based pagination parameters interface for type safety
+ */
+export interface CursorPaginationParams {
+  cursor: { id: string } | undefined;
+  take: number;
+  skip: number;
+}
+
+/**
  * Helper to extract cursor-based pagination from query params
  * Useful for very large datasets where offset-based pagination is inefficient
  * 
@@ -245,15 +277,22 @@ export const extractCursorPagination = (
   query: Record<string, any>,
   defaultLimit = 10,
   maxLimit = 100
-) => {
-  let limit = Number.isInteger(query.limit) ? query.limit : parseInt(query.limit as string, 10) || defaultLimit;
+): CursorPaginationParams => {
+  const limitValue = query['limit'];
+  
+  let limit = Number.isInteger(limitValue) 
+    ? limitValue 
+    : (typeof limitValue === 'string' ? parseInt(limitValue, 10) : NaN) || defaultLimit;
+  
   limit = limit < 1 ? defaultLimit : limit;
   limit = limit > maxLimit ? maxLimit : limit;
   
+  const cursorValue = query['cursor'];
+  
   return {
-    cursor: query.cursor ? { id: query.cursor } : undefined,
+    cursor: cursorValue ? { id: cursorValue } : undefined,
     take: limit,
-    skip: query.cursor ? 1 : 0 // Skip the cursor item when using cursor pagination
+    skip: cursorValue ? 1 : 0 // Skip the cursor item when using cursor pagination
   };
 };
 
@@ -275,13 +314,18 @@ export const getPrismaPagination = (pagination: PaginationParams) => {
  * Combine pagination and sorting utilities for Prisma queries
  * @param pagination Pagination parameters
  * @param sorting Sorting parameters
+ * @param extraOptions Additional Prisma query options
  * @returns Combined Prisma query options
  */
 export const getPrismaQueryOptions = <T extends Record<string, any>>(
   pagination: PaginationParams,
   sorting: Record<string, SortOrder>,
   extraOptions: T = {} as T
-) => {
+): {
+  take: number;
+  skip: number;
+  orderBy: Record<string, SortOrder>;
+} & T => {
   return {
     ...getPrismaPagination(pagination),
     orderBy: sorting,
@@ -290,7 +334,70 @@ export const getPrismaQueryOptions = <T extends Record<string, any>>(
 };
 
 /**
- * Advanced filter builder for query parameters
+ * Filter operation types for type safety
+ */
+export type FilterOperation = 
+  | 'gt' | 'gte' | 'lt' | 'lte' 
+  | 'contains' | 'in' | 'equals' 
+  | 'null' | 'not_null'
+  | 'true' | 'false';
+
+/**
+ * Filter value type union for better type safety
+ */
+export type FilterValue = string | number | boolean | Date | null;
+
+/**
+ * Prisma filter condition interface
+ */
+export interface PrismaFilterCondition {
+  [field: string]: 
+    | FilterValue
+    | { gt?: FilterValue }
+    | { gte?: FilterValue }
+    | { lt?: FilterValue }
+    | { lte?: FilterValue }
+    | { contains?: string; mode?: 'insensitive' }
+    | { in?: Array<string | number | Date> }
+    | { not?: FilterValue };
+}
+
+/**
+ * Build filter condition for string values with operation parsing
+ */
+const buildStringFilterCondition = (
+  fieldName: string, 
+  value: string
+): PrismaFilterCondition | null => {
+  if (value.startsWith('gt:')) {
+    return { [fieldName]: { gt: parseFilterValue(value.substring(3)) } };
+  } else if (value.startsWith('gte:')) {
+    return { [fieldName]: { gte: parseFilterValue(value.substring(4)) } };
+  } else if (value.startsWith('lt:')) {
+    return { [fieldName]: { lt: parseFilterValue(value.substring(3)) } };
+  } else if (value.startsWith('lte:')) {
+    return { [fieldName]: { lte: parseFilterValue(value.substring(4)) } };
+  } else if (value.startsWith('contains:')) {
+    return { [fieldName]: { contains: value.substring(9), mode: 'insensitive' } };
+  } else if (value.startsWith('in:')) {
+    const values = value.substring(3).split(',').map(v => parseFilterValue(v.trim()));
+    return { [fieldName]: { in: values } };
+  } else if (value === 'null') {
+    return { [fieldName]: null };
+  } else if (value === 'not_null') {
+    return { [fieldName]: { not: null } };
+  } else if (value === 'true') {
+    return { [fieldName]: true };
+  } else if (value === 'false') {
+    return { [fieldName]: false };
+  } else {
+    // Exact match (or convert to appropriate type)
+    return { [fieldName]: parseFilterValue(value) };
+  }
+};
+
+/**
+ * Type-safe advanced filter builder for query parameters
  * Convert query string parameters to Prisma-compatible filters
  * 
  * @param query Request query object
@@ -298,15 +405,14 @@ export const getPrismaQueryOptions = <T extends Record<string, any>>(
  * @param excludeKeys Keys to exclude from filtering (e.g., pagination params)
  * @returns Prisma-compatible where clause
  */
-export const buildPrismaFilters = (
-  query: Record<string, any>,
+export const buildTypeSafePrismaFilters = (
+  query: Record<string, unknown>,
   filterMap: Record<string, string> = {},
   excludeKeys: string[] = ['page', 'limit', 'sortBy', 'order']
-): Record<string, any> => {
-  const filters: Record<string, any> = {};
-  const whereConditions: Array<Record<string, any>> = [];
+): { AND?: PrismaFilterCondition[] } => {
+  const whereConditions: PrismaFilterCondition[] = [];
   
-  // Process each query parameter
+  // Process each query parameter safely
   Object.entries(query).forEach(([key, value]) => {
     // Skip excluded keys and empty values
     if (excludeKeys.includes(key) || value === undefined || value === null || value === '') {
@@ -318,77 +424,26 @@ export const buildPrismaFilters = (
     
     // Handle different types of filter operations
     if (typeof value === 'string') {
-      if (value.startsWith('gt:')) {
-        // Greater than
-        whereConditions.push({ 
-          [fieldName]: { gt: parseFilterValue(value.substring(3)) } 
-        });
-      } else if (value.startsWith('gte:')) {
-        // Greater than or equal
-        whereConditions.push({ 
-          [fieldName]: { gte: parseFilterValue(value.substring(4)) } 
-        });
-      } else if (value.startsWith('lt:')) {
-        // Less than
-        whereConditions.push({ 
-          [fieldName]: { lt: parseFilterValue(value.substring(3)) } 
-        });
-      } else if (value.startsWith('lte:')) {
-        // Less than or equal
-        whereConditions.push({ 
-          [fieldName]: { lte: parseFilterValue(value.substring(4)) } 
-        });
-      } else if (value.startsWith('contains:')) {
-        // Contains (string)
-        whereConditions.push({ 
-          [fieldName]: { contains: value.substring(9), mode: 'insensitive' } 
-        });
-      } else if (value.startsWith('in:')) {
-        // In array of values
-        const values = value.substring(3).split(',').map(v => parseFilterValue(v.trim()));
-        whereConditions.push({ 
-          [fieldName]: { in: values } 
-        });
-      } else if (value === 'null') {
-        // Is null
-        whereConditions.push({ 
-          [fieldName]: null 
-        });
-      } else if (value === 'true') {
-        // Boolean true
-        whereConditions.push({ 
-          [fieldName]: true 
-        });
-      } else if (value === 'false') {
-        // Boolean false
-        whereConditions.push({ 
-          [fieldName]: false 
-        });
-      } else {
-        // Exact match (or convert to appropriate type)
-        whereConditions.push({ 
-          [fieldName]: parseFilterValue(value) 
-        });
+      const condition = buildStringFilterCondition(fieldName, value);
+      if (condition) {
+        whereConditions.push(condition);
       }
     } else if (Array.isArray(value)) {
       // Handle array values (e.g., multiple status values)
+      const parsedValues = value.map(v => parseFilterValue(String(v)));
       whereConditions.push({ 
-        [fieldName]: { in: value.map(v => parseFilterValue(v)) } 
+        [fieldName]: { in: parsedValues } 
       });
-    } else {
-      // Handle other types (numbers, booleans, etc.)
+    } else if (typeof value === 'number' || typeof value === 'boolean') {
+      // Handle other primitive types
       whereConditions.push({ 
         [fieldName]: value 
       });
     }
   });
   
-  // Combine all conditions with AND logic
-  if (whereConditions.length > 0) {
-    filters.AND = whereConditions;
-  }
-  
-  return filters;
+  // Return proper structure - only include AND if there are conditions
+  return whereConditions.length > 0 ? { AND: whereConditions } : {};
 };
 
 /**
@@ -396,8 +451,8 @@ export const buildPrismaFilters = (
  * @param value String value from query parameter
  * @returns Parsed value in appropriate type
  */
-const parseFilterValue = (value: string): any => {
-  // Try to parse as number
+const parseFilterValue = (value: string): string | number | Date => {
+  // Try to parse as integer
   if (/^-?\d+$/.test(value)) {
     return parseInt(value, 10);
   }
@@ -417,6 +472,135 @@ const parseFilterValue = (value: string): any => {
   
   // Return as string
   return value;
+};
+
+/**
+ * Type guard to check if a value is a valid positive integer
+ */
+export const isValidPositiveInteger = (value: unknown): value is number => {
+  return typeof value === 'number' && Number.isInteger(value) && value > 0;
+};
+
+/**
+ * Type guard to check if a value is a valid sort order
+ */
+export const isValidSortOrder = (value: unknown): value is SortOrder => {
+  return typeof value === 'string' && (value === 'asc' || value === 'desc');
+};
+
+/**
+ * Safe parser for pagination parameters with comprehensive validation
+ */
+export const safeParsePaginationParams = (
+  query: Record<string, unknown>,
+  options: {
+    defaultPage?: number;
+    defaultLimit?: number;
+    maxLimit?: number;
+    minLimit?: number;
+  } = {}
+): PaginationParams => {
+  const {
+    defaultPage = 1,
+    defaultLimit = 10,
+    maxLimit = 100,
+    minLimit = 1
+  } = options;
+
+  // Parse and validate page
+  const pageValue = query['page'];
+  let page = defaultPage;
+  
+  if (typeof pageValue === 'string') {
+    const parsed = parseInt(pageValue, 10);
+    if (!isNaN(parsed) && parsed > 0) {
+      page = parsed;
+    }
+  } else if (isValidPositiveInteger(pageValue)) {
+    page = pageValue;
+  }
+
+  // Parse and validate limit
+  const limitValue = query['limit'];
+  let limit = defaultLimit;
+  
+  if (typeof limitValue === 'string') {
+    const parsed = parseInt(limitValue, 10);
+    if (!isNaN(parsed) && parsed >= minLimit && parsed <= maxLimit) {
+      limit = parsed;
+    }
+  } else if (isValidPositiveInteger(limitValue) && limitValue >= minLimit && limitValue <= maxLimit) {
+    limit = limitValue;
+  }
+
+  // Ensure final validation
+  page = Math.max(1, page);
+  limit = Math.max(minLimit, Math.min(maxLimit, limit));
+
+  return {
+    page,
+    limit,
+    skip: (page - 1) * limit
+  };
+};
+
+/**
+ * Validation options for pagination metadata
+ */
+export interface PaginationValidationOptions {
+  maxTotalItems?: number;
+  requirePositiveTotal?: boolean;
+}
+
+/**
+ * Validate pagination metadata to ensure data integrity
+ */
+export const validatePaginationMetadata = (
+  page: number,
+  limit: number,
+  total: number,
+  options: PaginationValidationOptions = {}
+): void => {
+  const { maxTotalItems = Number.MAX_SAFE_INTEGER, requirePositiveTotal = false } = options;
+
+  if (!Number.isInteger(page) || page < 1) {
+    throw new Error(`Invalid page number: ${page}. Must be a positive integer.`);
+  }
+
+  if (!Number.isInteger(limit) || limit < 1) {
+    throw new Error(`Invalid limit: ${limit}. Must be a positive integer.`);
+  }
+
+  if (!Number.isInteger(total) || total < 0 || (requirePositiveTotal && total === 0)) {
+    throw new Error(`Invalid total: ${total}. Must be a non-negative integer.`);
+  }
+
+  if (total > maxTotalItems) {
+    throw new Error(`Total items ${total} exceeds maximum allowed ${maxTotalItems}.`);
+  }
+};
+
+/**
+ * Create validated pagination metadata with error handling
+ */
+export const createValidatedPaginationMetadata = (
+  page: number,
+  limit: number,
+  total: number,
+  options?: PaginationValidationOptions
+): PaginationMetadata => {
+  validatePaginationMetadata(page, limit, total, options);
+  
+  const totalPages = Math.ceil(total / limit);
+  
+  return {
+    page,
+    limit,
+    total,
+    totalPages,
+    hasNext: page < totalPages,
+    hasPrev: page > 1
+  };
 };
 
 /**
