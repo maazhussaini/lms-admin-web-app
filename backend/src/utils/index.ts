@@ -5,7 +5,22 @@
 
 // Export API-related utilities
 export * from './api-error.utils.js';
-export * from './api-response.utils.js';
+// Export specific items from api-response.utils to avoid conflicts with api-error.utils
+export { 
+  createSuccessResponse,
+  createErrorResponse,
+  createBadRequestResponse,
+  createUnauthorizedResponse,
+  createForbiddenResponse,
+  createNotFoundResponse,
+  createConflictResponse,
+  createValidationErrorResponse,
+  createInternalServerErrorResponse,
+  createCreatedResponse,
+  createPaginatedResponse,
+  HTTP_STATUS_CODES,
+  type HttpStatusCode
+} from './api-response.utils.js';
 export * from './async-handler.utils.js';
 export * from './bunny-video.utils.js';
 export * from './error-wrapper.utils.js';
