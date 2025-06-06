@@ -13,12 +13,47 @@ import {
   VideoProgressPayload,
   NotificationPayload,
   NotificationStatusPayload,
-  CourseUpdatePayload,
-  DeliveryStatus,
-  NotificationType,
-  NotificationPriority
+  CourseUpdatePayload
 } from '@shared/types/notification.types.js';
 import { AuthenticatedSocket, UserRole } from '../sockets/index.js';
+
+/**
+ * Delivery status enumeration
+ * @description Status of notification delivery
+ */
+export enum DeliveryStatus {
+  PENDING = 1,
+  DELIVERED = 2,
+  FAILED = 3,
+  READ = 4,
+  DISMISSED = 5,
+}
+
+/**
+ * Notification priority enumeration
+ * @description Priority levels for notifications
+ */
+export enum NotificationPriority {
+  LOW = 1,
+  NORMAL = 2,
+  HIGH = 3,
+  URGENT = 4,
+}
+
+/**
+ * Notification type enumeration
+ * @description Types of notifications available in the system
+ */
+export enum NotificationType {
+  ANNOUNCEMENT = 1,
+  ASSIGNMENT_DUE = 2,
+  QUIZ_AVAILABLE = 3,
+  GRADE_POSTED = 4,
+  COURSE_UPDATE = 5,
+  SYSTEM_ALERT = 6,
+  ENROLLMENT_CONFIRMATION = 7,
+  DEADLINE_REMINDER = 8,
+}
 
 /**
  * Interface for pagination options
