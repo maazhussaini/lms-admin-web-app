@@ -6,7 +6,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { ApiError, ValidationError as ApiValidationError } from '@/utils/api-error.utils.js';
-import { createErrorResponse } from '@/utils/api-response.utils.js';
+import { createErrorResponse, HTTP_STATUS_CODES, ERROR_CODES, HttpStatusCode, ErrorCode } from '@/utils/api-response.utils.js';
 import logger from '@/config/logger.js';
 import env from '@/config/environment.js';
 import { 
@@ -109,15 +109,13 @@ export const errorHandler = (
   const error = err instanceof Error ? err : new Error(String(err));
   
   // Log the error with structured metadata
-  logError(error, req);
-
-  // Handle ApiError instances (application-specific errors)
+  logError(error, req);  // Handle ApiError instances (application-specific errors)
   if (error instanceof ApiError) {
     return res.status(error.statusCode).json(
       createErrorResponse(
         error.message,
-        error.statusCode,
-        error.errorCode,
+        error.statusCode as HttpStatusCode,
+        error.errorCode as ErrorCode,
         error.details,
         req.id,
         req.path
@@ -128,43 +126,39 @@ export const errorHandler = (
   // Handle Prisma database errors
   if (error instanceof PrismaClientKnownRequestError) {
     return handlePrismaKnownRequestError(error, req, res);
-  }
-
-  if (error instanceof PrismaClientValidationError) {
-    return res.status(400).json(
+  }  if (error instanceof PrismaClientValidationError) {
+    return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json(
       createErrorResponse(
         'Database validation error',
-        400,
-        'VALIDATION_ERROR',
+        HTTP_STATUS_CODES.BAD_REQUEST,
+        ERROR_CODES.VALIDATION_ERROR,
         { _error: [error.message.split('\n').pop() || 'Invalid data format'] },
         req.id,
         req.path
       )
     );
   }
-
   if (error instanceof PrismaClientInitializationError) {
     logger.error('Database initialization error:', error);
-    return res.status(503).json(
+    return res.status(HTTP_STATUS_CODES.SERVICE_UNAVAILABLE).json(
       createErrorResponse(
         'Service temporarily unavailable',
-        503,
-        'DATABASE_UNAVAILABLE',
+        HTTP_STATUS_CODES.SERVICE_UNAVAILABLE,
+        ERROR_CODES.DATABASE_UNAVAILABLE,
         undefined,
         req.id,
         req.path
       )
     );
   }
-
   if (error instanceof PrismaClientRustPanicError || 
       error instanceof PrismaClientUnknownRequestError) {
     logger.error('Critical database error:', error);
-    return res.status(500).json(
+    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json(
       createErrorResponse(
         'Critical database error',
-        500,
-        'DATABASE_ERROR',
+        HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
+        ERROR_CODES.DATABASE_ERROR,
         undefined,
         req.id,
         req.path
@@ -182,41 +176,37 @@ export const errorHandler = (
         validationErrors[key] = [];
       }
       validationErrors[key].push(error.msg);
-    });
-
-    return res.status(422).json(
+    });    return res.status(HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY).json(
       createErrorResponse(
         'Validation failed',
-        422,
-        'VALIDATION_ERROR',
+        HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+        ERROR_CODES.VALIDATION_ERROR,
         validationErrors,
         req.id,
         req.path
       )
     );
   }
-
   // Handle express-validator errors passed from validation middleware
   if (error instanceof ApiValidationError) {
-    return res.status(422).json(
+    return res.status(HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY).json(
       createErrorResponse(
         error.message,
-        422,
-        error.errorCode,
+        HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+        ERROR_CODES.VALIDATION_ERROR,
         error.details,
         req.id,
         req.path
       )
     );
   }
-
   // Handle JWT errors
   if (error.name === 'JsonWebTokenError') {
-    return res.status(401).json(
+    return res.status(HTTP_STATUS_CODES.UNAUTHORIZED).json(
       createErrorResponse(
         'Invalid token',
-        401,
-        'INVALID_TOKEN',
+        HTTP_STATUS_CODES.UNAUTHORIZED,
+        ERROR_CODES.INVALID_TOKEN,
         undefined,
         req.id,
         req.path
@@ -225,25 +215,24 @@ export const errorHandler = (
   }
 
   if (error.name === 'TokenExpiredError') {
-    return res.status(401).json(
+    return res.status(HTTP_STATUS_CODES.UNAUTHORIZED).json(
       createErrorResponse(
         'Token expired',
-        401,
-        'TOKEN_EXPIRED',
+        HTTP_STATUS_CODES.UNAUTHORIZED,
+        ERROR_CODES.TOKEN_EXPIRED,
         undefined,
         req.id,
         req.path
       )
     );
   }
-
   // Handle JSON parsing errors with type safety
   if (isJSONSyntaxError(error)) {
-    return res.status(400).json(
+    return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json(
       createErrorResponse(
         'Invalid JSON in request body',
-        400,
-        'INVALID_JSON',
+        HTTP_STATUS_CODES.BAD_REQUEST,
+        ERROR_CODES.INVALID_JSON,
         undefined,
         req.id,
         req.path
@@ -254,11 +243,11 @@ export const errorHandler = (
   // Handle rate limit errors with type safety
   if (isRateLimitError(error)) {
     const retryAfter = error.headers?.['retry-after'] || '60';
-    return res.status(429).json(
+    return res.status(HTTP_STATUS_CODES.TOO_MANY_REQUESTS).json(
       createErrorResponse(
         'Too many requests',
-        429,
-        'RATE_LIMIT_EXCEEDED',
+        HTTP_STATUS_CODES.TOO_MANY_REQUESTS,
+        ERROR_CODES.RATE_LIMIT_EXCEEDED,
         { retryAfter: [retryAfter] },
         req.id,
         req.path
@@ -268,21 +257,20 @@ export const errorHandler = (
 
   // Handle URI malformed errors
   if (error.name === 'URIError') {
-    return res.status(400).json(
+    return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json(
       createErrorResponse(
         'Invalid URI',
-        400,
-        'INVALID_URI',
+        HTTP_STATUS_CODES.BAD_REQUEST,
+        ERROR_CODES.INVALID_URI,
         undefined,
         req.id,
         req.path
       )
     );
   }
-
   // Default error handler for unhandled errors
-  const statusCode = 500;
-  const errorCode = 'INTERNAL_SERVER_ERROR';
+  const statusCode = HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR;
+  const errorCode = ERROR_CODES.INTERNAL_SERVER_ERROR;
   
   // Provide more detailed error info in non-production environments
   let message = 'Internal server error';
@@ -321,67 +309,68 @@ function handlePrismaKnownRequestError(
   res: Response
 ): Response<TApiErrorResponse> {
   switch (err.code) {    case 'P2002': // Unique constraint violation
-      return res.status(409).json(
+      return res.status(HTTP_STATUS_CODES.CONFLICT).json(
         createErrorResponse(
           'Resource already exists',
-          409,
-          'CONFLICT',
+          HTTP_STATUS_CODES.CONFLICT,
+          ERROR_CODES.CONFLICT,
           { [getPrismaTargetField(err.meta)]: ['Must be unique'] },
           req.id,
           req.path
         )
       );
-      case 'P2025': // Record not found
-      return res.status(404).json(
+      
+    case 'P2025': // Record not found
+      return res.status(HTTP_STATUS_CODES.NOT_FOUND).json(
         createErrorResponse(
           'Resource not found',
-          404,
-          'NOT_FOUND',
+          HTTP_STATUS_CODES.NOT_FOUND,
+          ERROR_CODES.NOT_FOUND,
           { entity: [getPrismaMetaField(err.meta, 'modelName')] },
           req.id,
           req.path
         )
       );
-      case 'P2003': // Foreign key constraint violation
-      return res.status(400).json(
+      
+    case 'P2003': // Foreign key constraint violation
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json(
         createErrorResponse(
           'Invalid relationship',
-          400,
-          'INVALID_RELATIONSHIP',
+          HTTP_STATUS_CODES.BAD_REQUEST,
+          ERROR_CODES.INVALID_RELATIONSHIP,
           { [getPrismaMetaField(err.meta, 'field_name')]: ['Invalid reference'] },
           req.id,
           req.path
         )
-      );
-      case 'P2004': // Constraint violation
-      return res.status(400).json(
+      );      case 'P2004': // Constraint violation
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json(
         createErrorResponse(
           'Constraint violation',
-          400,
-          'CONSTRAINT_VIOLATION',
+          HTTP_STATUS_CODES.BAD_REQUEST,
+          ERROR_CODES.CONSTRAINT_VIOLATION,
           { [getPrismaMetaField(err.meta, 'constraint')]: ['Constraint violated'] },
           req.id,
           req.path
         )
       );
-      case 'P2005': // Invalid value for field
-      return res.status(400).json(
+      
+    case 'P2005': // Invalid value for field
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json(
         createErrorResponse(
           'Invalid value',
-          400,
-          'INVALID_VALUE',
+          HTTP_STATUS_CODES.BAD_REQUEST,
+          ERROR_CODES.INVALID_VALUE,
           { [getPrismaMetaField(err.meta, 'field_name')]: [`Invalid value: ${getPrismaMetaField(err.meta, 'value')}`] },
           req.id,
           req.path
         )
       );
-    
-    case 'P2006': // Invalid value in database
-      return res.status(500).json(
+      case 'P2006': // Invalid value in database
+      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json(
         createErrorResponse(
           'Database data integrity issue',
-          500,
-          'DATA_INTEGRITY_ERROR',
+          HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
+          ERROR_CODES.DATA_INTEGRITY_ERROR,
           undefined,
           req.id,
           req.path
@@ -389,103 +378,105 @@ function handlePrismaKnownRequestError(
       );
     
     case 'P2014': // Violation of required relation
-      return res.status(400).json(
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json(
         createErrorResponse(
           'Invalid relationship configuration',
-          400,
-          'INVALID_RELATION',
+          HTTP_STATUS_CODES.BAD_REQUEST,
+          ERROR_CODES.INVALID_RELATION,
           undefined,
           req.id,
           req.path
         )
       );    case 'P2016': // Query interpretation error
     case 'P2017': // Relation does not exist
-      return res.status(500).json(
+      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json(
         createErrorResponse(
           'Database query error',
-          500,
-          'DATABASE_QUERY_ERROR',
+          HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
+          ERROR_CODES.DATABASE_QUERY_ERROR,
           undefined,
           req.id,
           req.path
         )
       );
-        case 'P2018': // Required connected record not found
-      return res.status(404).json(
+        
+    case 'P2018': // Required connected record not found
+      return res.status(HTTP_STATUS_CODES.NOT_FOUND).json(
         createErrorResponse(
           'Required related record not found',
-          404,
-          'RELATED_RECORD_NOT_FOUND',
+          HTTP_STATUS_CODES.NOT_FOUND,
+          ERROR_CODES.RELATED_RECORD_NOT_FOUND,
           { relationName: [getPrismaMetaField(err.meta, 'cause')] },
           req.id,
           req.path
         )
       );    case 'P2019': // Input error in where condition
-      return res.status(400).json(
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json(
         createErrorResponse(
           'Invalid query parameters',
-          400,
-          'INVALID_QUERY_PARAMETERS',
+          HTTP_STATUS_CODES.BAD_REQUEST,
+          ERROR_CODES.INVALID_QUERY_PARAMETERS,
           { details: [getPrismaMetaField(err.meta, 'cause')] },
           req.id,
           req.path
         )
       );
-      case 'P2020': // Value out of range for type
-      return res.status(400).json(
+      
+    case 'P2020': // Value out of range for type
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json(
         createErrorResponse(
           'Value out of range',
-          400,
-          'VALUE_OUT_OF_RANGE',
+          HTTP_STATUS_CODES.BAD_REQUEST,
+          ERROR_CODES.VALUE_OUT_OF_RANGE,
           { details: [getPrismaMetaField(err.meta, 'cause')] },
           req.id,
           req.path
         )
       );
-    
-    case 'P2021': // Table/Model does not exist
+      case 'P2021': // Table/Model does not exist
       logger.error('Prisma model or table not found:', err.message);
-      return res.status(500).json(
+      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json(
         createErrorResponse(
           'Database schema error',
-          500,
-          'DATABASE_SCHEMA_ERROR',
+          HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
+          ERROR_CODES.DATABASE_SCHEMA_ERROR,
           undefined,
           req.id,
           req.path
         )
       );
-      case 'P2022': // Column/Field does not exist
+      
+    case 'P2022': // Column/Field does not exist
       logger.error('Prisma field or column not found:', err.message);
-      return res.status(500).json(
+      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json(
         createErrorResponse(
           'Database schema error',
-          500,
-          'DATABASE_SCHEMA_ERROR',
-          { field: [getPrismaMetaField(err.meta, 'column')] },
-          req.id,
-          req.path
-        )
-      );
-      case 'P2023': // Inconsistent column data
-      return res.status(400).json(
-        createErrorResponse(
-          'Invalid data format',
-          400,
-          'INVALID_DATA_FORMAT',
+          HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
+          ERROR_CODES.DATABASE_SCHEMA_ERROR,
           { field: [getPrismaMetaField(err.meta, 'column')] },
           req.id,
           req.path
         )
       );
       
-    case 'P2024': // Connection timeout
+    case 'P2023': // Inconsistent column data
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json(
+        createErrorResponse(
+          'Invalid data format',
+          HTTP_STATUS_CODES.BAD_REQUEST,
+          ERROR_CODES.INVALID_DATA_FORMAT,
+          { field: [getPrismaMetaField(err.meta, 'column')] },
+          req.id,
+          req.path
+        )
+      );
+        case 'P2024': // Connection timeout
       logger.error('Database connection timeout:', err);
-      return res.status(503).json(
+      return res.status(HTTP_STATUS_CODES.SERVICE_UNAVAILABLE).json(
         createErrorResponse(
           'Database connection timeout',
-          503,
-          'DATABASE_TIMEOUT',
+          HTTP_STATUS_CODES.SERVICE_UNAVAILABLE,
+          ERROR_CODES.DATABASE_TIMEOUT,
           undefined,
           req.id,
           req.path
@@ -494,11 +485,11 @@ function handlePrismaKnownRequestError(
     
     default:
       logger.warn(`Unhandled Prisma error code: ${err.code}`, { meta: err.meta });
-      return res.status(500).json(
+      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json(
         createErrorResponse(
           'Database error',
-          500,
-          'DATABASE_ERROR',
+          HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
+          ERROR_CODES.DATABASE_ERROR,
           undefined,
           req.id,
           req.path
@@ -515,7 +506,7 @@ function handlePrismaKnownRequestError(
 function logError(err: Error, req: Request): void {
   const sensitiveKeys = ['password', 'token', 'secret', 'key', 'credential', 'authorization'];
     // Sanitize request body, query and params
-  const sanitizeObject = (obj: Record<string, any>): Record<string, any> => {
+  const sanitizeObject = (obj: Record<string, unknown>): Record<string, unknown> => {
     if (!obj || typeof obj !== 'object') return obj;
     
     const sanitized = { ...obj };
@@ -528,9 +519,8 @@ function logError(err: Error, req: Request): void {
         if (Array.isArray(sanitized[key])) {
           sanitized[key] = (sanitized[key] as any[]).map(item => 
             typeof item === 'object' && item !== null ? sanitizeObject(item) : item
-          );
-        } else {
-          sanitized[key] = sanitizeObject(sanitized[key] as Record<string, any>);
+          );        } else {
+          sanitized[key] = sanitizeObject(sanitized[key] as Record<string, unknown>);
         }
       }
     }
