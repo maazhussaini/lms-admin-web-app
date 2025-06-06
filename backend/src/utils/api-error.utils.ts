@@ -6,17 +6,72 @@
  */
 
 /**
+ * HTTP Status Codes as constants for type safety
+ */
+export const HTTP_STATUS = {
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  PAYMENT_REQUIRED: 402,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  CONFLICT: 409,
+  GONE: 410,
+  PAYLOAD_TOO_LARGE: 413,
+  UNPROCESSABLE_ENTITY: 422,
+  LOCKED: 423,
+  TOO_MANY_REQUESTS: 429,
+  LEGAL_RESTRICTION: 451,
+  INTERNAL_SERVER_ERROR: 500,
+  BAD_GATEWAY: 502,
+  SERVICE_UNAVAILABLE: 503,
+  INSUFFICIENT_STORAGE: 507,
+} as const;
+
+/**
+ * Standard error codes as enum for consistency
+ */
+export const ERROR_CODES = {
+  // Client errors (4xx)
+  BAD_REQUEST: 'BAD_REQUEST',
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  PAYMENT_REQUIRED: 'PAYMENT_REQUIRED',
+  FORBIDDEN: 'FORBIDDEN',
+  NOT_FOUND: 'NOT_FOUND',
+  CONFLICT: 'CONFLICT',
+  RESOURCE_GONE: 'RESOURCE_GONE',
+  PAYLOAD_TOO_LARGE: 'PAYLOAD_TOO_LARGE',
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  RESOURCE_LOCKED: 'RESOURCE_LOCKED',
+  RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
+  LEGAL_RESTRICTION: 'LEGAL_RESTRICTION',
+
+  // Server errors (5xx)
+  INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
+  EXTERNAL_SERVICE_ERROR: 'EXTERNAL_SERVICE_ERROR',
+  SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
+  STORAGE_QUOTA_EXCEEDED: 'STORAGE_QUOTA_EXCEEDED',
+
+  // Domain-specific errors
+  TENANT_ERROR: 'TENANT_ERROR',
+  COURSE_ERROR: 'COURSE_ERROR',
+  ENROLLMENT_ERROR: 'ENROLLMENT_ERROR',
+} as const;
+
+export type HttpStatusCode = typeof HTTP_STATUS[keyof typeof HTTP_STATUS];
+export type ErrorCode = typeof ERROR_CODES[keyof typeof ERROR_CODES];
+
+/**
  * Options for creating an API error
  */
 export interface ApiErrorOptions {
   /** Original error that caused this error */
-  cause?: Error;
+  cause?: Error | undefined;
   /** Additional validation error details */
-  details?: Record<string, string[]>;
+  details?: Record<string, string[]> | undefined;
   /** Whether this is an operational error (vs a programming error) */
-  isOperational?: boolean;
+  isOperational?: boolean | undefined;
   /** Additional context for the error */
-  context?: Record<string, any>;
+  context?: Record<string, any> | undefined;
 }
 
 /**
@@ -27,30 +82,28 @@ export class ApiError extends Error {
   /** HTTP status code to be used in the response */
   statusCode: number;
   /** Error code for programmatic client-side handling */
-  errorCode?: string;
+  errorCode?: ErrorCode | string | undefined;
   /** Validation details or additional error context */
-  details?: Record<string, string[]>;
+  details?: Record<string, string[]> | undefined;
   /** Whether this is an operational error (expected in normal operation) vs a programming error */
   isOperational: boolean;
   /** Additional context data for logging/debugging */
-  context?: Record<string, any>;
+  context?: Record<string, any> | undefined;
   /** Original error that caused this error */
-  cause?: Error;
-  
-  /**
+  override cause?: Error | undefined;  /**
    * Create a new API error
    * @param message Human-readable error message
    * @param statusCode HTTP status code (defaults to 500)
    * @param errorCode Optional error code for client handling (for programmatic responses)
    * @param options Additional options like cause, details, operational flag, and context
-   */  constructor(
+   */ constructor(
     message: string,
-    statusCode = 500,
-    errorCode?: string,
+    statusCode: number = HTTP_STATUS.INTERNAL_SERVER_ERROR,
+    errorCode?: ErrorCode | string,
     options?: ApiErrorOptions
   ) {
     super(message);
-    
+
     this.name = this.constructor.name;
     this.statusCode = statusCode;
     this.errorCode = errorCode;
@@ -58,16 +111,16 @@ export class ApiError extends Error {
     this.isOperational = options?.isOperational ?? true; // Default to operational errors
     this.context = options?.context;
     this.cause = options?.cause;
-    
+
     // Ensure proper prototype chain for instanceof checks
     Object.setPrototypeOf(this, ApiError.prototype);
-    
+
     // Capture stack trace (Node.js specific)
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor);
     }
   }
-    /**
+  /**
    * Type guard to check if an error is an ApiError
    * @param error The error to check
    * @returns True if the error is an ApiError
@@ -75,15 +128,14 @@ export class ApiError extends Error {
   static isApiError(error: unknown): error is ApiError {
     return error instanceof ApiError;
   }
-  
   /**
    * Create a standardized string representation of the error
    * @returns String representation of the error
    */
-  toString(): string {
+  override toString(): string {
     return `[${this.constructor.name}] ${this.statusCode} - ${this.message}${this.errorCode ? ` (${this.errorCode})` : ''}`;
   }
-  
+
   /**
    * Convert to plain object for logging or serialization
    * @param includeStack Whether to include the stack trace
@@ -101,14 +153,20 @@ export class ApiError extends Error {
       stack: includeStack ? this.stack : undefined
     };
   }
-  
   /**
    * Create a new error with additional context
    * @param additionalContext Additional context to add
    * @returns New ApiError instance with combined context
    */
   withContext(additionalContext: Record<string, any>): ApiError {
-    const newError = new (this.constructor as any)(
+    const ErrorConstructor = this.constructor as new (
+      message: string,
+      statusCode: number,
+      errorCode?: string,
+      options?: ApiErrorOptions
+    ) => ApiError;
+
+    const newError = new ErrorConstructor(
       this.message,
       this.statusCode,
       this.errorCode,
@@ -119,7 +177,7 @@ export class ApiError extends Error {
         context: { ...this.context, ...additionalContext }
       }
     );
-    
+
     return newError;
   }
 }
@@ -130,10 +188,10 @@ export class ApiError extends Error {
 export class BadRequestError extends ApiError {
   constructor(
     message = 'Bad request',
-    errorCode = 'BAD_REQUEST',
-    options?: Omit<ApiErrorOptions, 'details'> & { details?: Record<string, string[]> }
+    errorCode: ErrorCode | string = ERROR_CODES.BAD_REQUEST,
+    options?: Omit<ApiErrorOptions, 'details'> & { details?: Record<string, string[]> | undefined }
   ) {
-    super(message, 400, errorCode, { ...options, details: options?.details });
+    super(message, HTTP_STATUS.BAD_REQUEST, errorCode, options?.details ? { ...options, details: options.details } : options);
   }
 }
 
@@ -146,7 +204,7 @@ export class UnauthorizedError extends ApiError {
     errorCode = 'UNAUTHORIZED',
     options?: ApiErrorOptions
   ) {
-    super(message, 401, errorCode, options);
+    super(message, HTTP_STATUS.UNAUTHORIZED, errorCode, options);
   }
 }
 
@@ -159,7 +217,7 @@ export class ForbiddenError extends ApiError {
     errorCode = 'FORBIDDEN',
     options?: ApiErrorOptions
   ) {
-    super(message, 403, errorCode, options);
+    super(message, HTTP_STATUS.FORBIDDEN, errorCode, options);
   }
 }
 
@@ -172,7 +230,7 @@ export class NotFoundError extends ApiError {
     errorCode = 'NOT_FOUND',
     options?: ApiErrorOptions
   ) {
-    super(message, 404, errorCode, options);
+    super(message, HTTP_STATUS.NOT_FOUND, errorCode, options);
   }
 }
 
@@ -185,7 +243,7 @@ export class ConflictError extends ApiError {
     errorCode = 'CONFLICT',
     options?: ApiErrorOptions
   ) {
-    super(message, 409, errorCode, options);
+    super(message, HTTP_STATUS.CONFLICT, errorCode, options);
   }
 }
 
@@ -199,7 +257,7 @@ export class ValidationError extends ApiError {
     errorCode = 'VALIDATION_ERROR',
     options?: Omit<ApiErrorOptions, 'details'>
   ) {
-    super(message, 422, errorCode, { ...options, details });
+    super(message, HTTP_STATUS.UNPROCESSABLE_ENTITY, errorCode, details ? { ...options, details } : options);
   }
 }
 
@@ -213,9 +271,9 @@ export class InternalServerError extends ApiError {
     options?: ApiErrorOptions
   ) {
     // Internal server errors are typically not operational
-    super(message, 500, errorCode, { 
-      ...options, 
-      isOperational: options?.isOperational ?? false 
+    super(message, HTTP_STATUS.INTERNAL_SERVER_ERROR, errorCode, {
+      ...options,
+      isOperational: options?.isOperational ?? false
     });
   }
 }
@@ -229,7 +287,7 @@ export class ServiceUnavailableError extends ApiError {
     errorCode = 'SERVICE_UNAVAILABLE',
     options?: ApiErrorOptions
   ) {
-    super(message, 503, errorCode, options);
+    super(message, HTTP_STATUS.SERVICE_UNAVAILABLE, errorCode, options);
   }
 }
 
@@ -242,7 +300,7 @@ export class PaymentRequiredError extends ApiError {
     errorCode = 'PAYMENT_REQUIRED',
     options?: ApiErrorOptions
   ) {
-    super(message, 402, errorCode, options);
+    super(message, HTTP_STATUS.PAYMENT_REQUIRED, errorCode, options);
   }
 }
 
@@ -255,7 +313,7 @@ export class GoneError extends ApiError {
     errorCode = 'RESOURCE_GONE',
     options?: ApiErrorOptions
   ) {
-    super(message, 410, errorCode, options);
+    super(message, HTTP_STATUS.GONE, errorCode, options);
   }
 }
 
@@ -268,7 +326,7 @@ export class PayloadTooLargeError extends ApiError {
     errorCode = 'PAYLOAD_TOO_LARGE',
     options?: ApiErrorOptions
   ) {
-    super(message, 413, errorCode, options);
+    super(message, HTTP_STATUS.PAYLOAD_TOO_LARGE, errorCode, options);
   }
 }
 
@@ -281,7 +339,7 @@ export class LockedError extends ApiError {
     errorCode = 'RESOURCE_LOCKED',
     options?: ApiErrorOptions
   ) {
-    super(message, 423, errorCode, options);
+    super(message, HTTP_STATUS.LOCKED, errorCode, options);
   }
 }
 
@@ -294,8 +352,8 @@ export class TooManyRequestsError extends ApiError {
     errorCode = 'RATE_LIMIT_EXCEEDED',
     options?: ApiErrorOptions & { retryAfter?: number }
   ) {
-    super(message, 429, errorCode, options);
-    
+    super(message, HTTP_STATUS.TOO_MANY_REQUESTS, errorCode, options);
+
     // Add retry-after information to the context if provided
     if (options?.retryAfter) {
       this.context = {
@@ -315,7 +373,7 @@ export class LegalRestrictionError extends ApiError {
     errorCode = 'LEGAL_RESTRICTION',
     options?: ApiErrorOptions
   ) {
-    super(message, 451, errorCode, options);
+    super(message, HTTP_STATUS.LEGAL_RESTRICTION, errorCode, options);
   }
 }
 
@@ -328,7 +386,7 @@ export class InsufficientStorageError extends ApiError {
     errorCode = 'STORAGE_QUOTA_EXCEEDED',
     options?: ApiErrorOptions
   ) {
-    super(message, 507, errorCode, options);
+    super(message, HTTP_STATUS.INSUFFICIENT_STORAGE, errorCode, options);
   }
 }
 
@@ -385,7 +443,7 @@ export class ExternalServiceError extends ApiError {
     options?: ApiErrorOptions & { service?: string }
   ) {
     super(message, statusCode, errorCode, options);
-    
+
     // Add service information to the context if provided
     if (options?.service) {
       this.context = {
