@@ -253,7 +253,7 @@ export const setupSwagger = (app: Express): void => {
   );
 
   // Serve swagger spec as JSON
-  app.get(`${env.API_BASE_URL}/docs.json`, (req, res) => {
+  app.get(`${env.API_BASE_URL}/docs.json`, (_req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.send(swaggerSpec);
   });

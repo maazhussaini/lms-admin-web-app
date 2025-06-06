@@ -5,8 +5,20 @@
  * input validation across the application.
  */
 
-import { body, param, query, ValidationChain, checkSchema, Schema, CustomValidator } from 'express-validator';
-import { ValidationOptions, LocationOptions } from '@shared/types/validation.types.js';
+import { body, param, query, ValidationChain, Schema } from 'express-validator';
+import { LocationOptions } from '@shared/types/validation.types.js';
+import { Socket } from 'socket.io';
+import { 
+  ContentProgressPayload,
+  VideoProgressPayload,
+  NotificationPayload,
+  NotificationStatusPayload,
+  CourseUpdatePayload,
+  DeliveryStatus,
+  NotificationType,
+  NotificationPriority
+} from '@shared/types/notification.types.js';
+import { AuthenticatedSocket, UserRole } from '../sockets/index.js';
 
 /**
  * Interface for pagination options
@@ -54,6 +66,23 @@ interface StringValidationOptions {
   trim?: boolean;
   /** Field location (params, body, query) (default: 'body') */
   location?: LocationOptions;
+}
+
+/**
+ * Socket validation error interface
+ */
+interface SocketValidationError {
+  field: string;
+  value: any;
+  message: string;
+}
+
+/**
+ * Socket validation result interface
+ */
+interface SocketValidationResult {
+  isValid: boolean;
+  errors: SocketValidationError[];
 }
 
 /**
@@ -688,4 +717,596 @@ export const createValidationSchema = <T extends Record<string, any>>(schema: T)
   });
   
   return result;
+};
+
+// =============================================================================
+// SOCKET.IO VALIDATION UTILITIES
+// =============================================================================
+
+/**
+ * Validates a socket base payload structure
+ * @param payload The payload to validate
+ * @returns Validation result
+ */
+const validateSocketBasePayload = (payload: any): SocketValidationResult => {
+  const errors: SocketValidationError[] = [];
+
+  // Validate tenantId
+  if (!payload.tenantId || typeof payload.tenantId !== 'number' || payload.tenantId <= 0) {
+    errors.push({
+      field: 'tenantId',
+      value: payload.tenantId,
+      message: 'tenantId must be a positive integer'
+    });
+  }
+
+  // Validate timestamp (optional but if present must be valid)
+  if (payload.timestamp && !isValidTimestamp(payload.timestamp)) {
+    errors.push({
+      field: 'timestamp',
+      value: payload.timestamp,
+      message: 'timestamp must be a valid ISO 8601 date string or Date object'
+    });
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
+
+/**
+ * Helper function to validate timestamp
+ * @param timestamp The timestamp to validate
+ * @returns True if valid timestamp
+ */
+const isValidTimestamp = (timestamp: any): boolean => {
+  if (timestamp instanceof Date) {
+    return !isNaN(timestamp.getTime());
+  }
+  if (typeof timestamp === 'string') {
+    const date = new Date(timestamp);
+    return !isNaN(date.getTime());
+  }
+  return false;
+};
+
+/**
+ * Validates content progress payload for socket events
+ * @param payload The content progress payload
+ * @returns True if valid, throws error if invalid
+ */
+export const validateContentProgressPayload = (payload: any): payload is ContentProgressPayload => {
+  const baseValidation = validateSocketBasePayload(payload);
+  const errors = [...baseValidation.errors];
+
+  // Validate userId
+  if (!payload.userId || typeof payload.userId !== 'number' || payload.userId <= 0) {
+    errors.push({
+      field: 'userId',
+      value: payload.userId,
+      message: 'userId must be a positive integer'
+    });
+  }
+
+  // Validate courseId
+  if (!payload.courseId || typeof payload.courseId !== 'number' || payload.courseId <= 0) {
+    errors.push({
+      field: 'courseId',
+      value: payload.courseId,
+      message: 'courseId must be a positive integer'
+    });
+  }
+
+  // Validate progressPercentage
+  if (typeof payload.progressPercentage !== 'number' || payload.progressPercentage < 0 || payload.progressPercentage > 100) {
+    errors.push({
+      field: 'progressPercentage',
+      value: payload.progressPercentage,
+      message: 'progressPercentage must be a number between 0 and 100'
+    });
+  }
+
+  // Validate optional fields
+  if (payload.moduleId !== undefined && (typeof payload.moduleId !== 'number' || payload.moduleId <= 0)) {
+    errors.push({
+      field: 'moduleId',
+      value: payload.moduleId,
+      message: 'moduleId must be a positive integer when provided'
+    });
+  }
+
+  if (payload.topicId !== undefined && (typeof payload.topicId !== 'number' || payload.topicId <= 0)) {
+    errors.push({
+      field: 'topicId',
+      value: payload.topicId,
+      message: 'topicId must be a positive integer when provided'
+    });
+  }
+
+  if (payload.contentId !== undefined && (typeof payload.contentId !== 'number' || payload.contentId <= 0)) {
+    errors.push({
+      field: 'contentId',
+      value: payload.contentId,
+      message: 'contentId must be a positive integer when provided'
+    });
+  }
+
+  if (payload.timeSpentSeconds !== undefined && (typeof payload.timeSpentSeconds !== 'number' || payload.timeSpentSeconds < 0)) {
+    errors.push({
+      field: 'timeSpentSeconds',
+      value: payload.timeSpentSeconds,
+      message: 'timeSpentSeconds must be a non-negative number when provided'
+    });
+  }
+
+  if (payload.completedAt !== undefined && !isValidTimestamp(payload.completedAt)) {
+    errors.push({
+      field: 'completedAt',
+      value: payload.completedAt,
+      message: 'completedAt must be a valid timestamp when provided'
+    });
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Content progress validation failed: ${errors.map(e => `${e.field}: ${e.message}`).join(', ')}`);
+  }
+
+  return true;
+};
+
+/**
+ * Validates video progress payload for socket events
+ * @param payload The video progress payload
+ * @returns True if valid, throws error if invalid
+ */
+export const validateVideoProgressPayload = (payload: any): payload is VideoProgressPayload => {
+  // First validate as content progress payload
+  validateContentProgressPayload(payload);
+  
+  const errors: SocketValidationError[] = [];
+
+  // Validate videoId
+  if (!payload.videoId || typeof payload.videoId !== 'string' || payload.videoId.trim().length === 0) {
+    errors.push({
+      field: 'videoId',
+      value: payload.videoId,
+      message: 'videoId must be a non-empty string'
+    });
+  }
+
+  // Validate currentTimeSeconds
+  if (typeof payload.currentTimeSeconds !== 'number' || payload.currentTimeSeconds < 0) {
+    errors.push({
+      field: 'currentTimeSeconds',
+      value: payload.currentTimeSeconds,
+      message: 'currentTimeSeconds must be a non-negative number'
+    });
+  }
+
+  // Validate durationSeconds
+  if (typeof payload.durationSeconds !== 'number' || payload.durationSeconds <= 0) {
+    errors.push({
+      field: 'durationSeconds',
+      value: payload.durationSeconds,
+      message: 'durationSeconds must be a positive number'
+    });
+  }
+
+  // Validate isCompleted
+  if (typeof payload.isCompleted !== 'boolean') {
+    errors.push({
+      field: 'isCompleted',
+      value: payload.isCompleted,
+      message: 'isCompleted must be a boolean'
+    });
+  }
+
+  // Validate that currentTimeSeconds doesn't exceed durationSeconds
+  if (typeof payload.currentTimeSeconds === 'number' && typeof payload.durationSeconds === 'number' && 
+      payload.currentTimeSeconds > payload.durationSeconds) {
+    errors.push({
+      field: 'currentTimeSeconds',
+      value: payload.currentTimeSeconds,
+      message: 'currentTimeSeconds cannot exceed durationSeconds'
+    });
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Video progress validation failed: ${errors.map(e => `${e.field}: ${e.message}`).join(', ')}`);
+  }
+
+  return true;
+};
+
+/**
+ * Validates notification status payload for socket events
+ * @param payload The notification status payload
+ * @returns True if valid, throws error if invalid
+ */
+export const validateNotificationStatusPayload = (payload: any): payload is NotificationStatusPayload => {
+  const baseValidation = validateSocketBasePayload(payload);
+  const errors = [...baseValidation.errors];
+
+  // Validate notificationId
+  if (!payload.notificationId || typeof payload.notificationId !== 'number' || payload.notificationId <= 0) {
+    errors.push({
+      field: 'notificationId',
+      value: payload.notificationId,
+      message: 'notificationId must be a positive integer'
+    });
+  }
+
+  // Validate userId
+  if (!payload.userId || typeof payload.userId !== 'number' || payload.userId <= 0) {
+    errors.push({
+      field: 'userId',
+      value: payload.userId,
+      message: 'userId must be a positive integer'
+    });
+  }
+
+  // Validate status
+  if (!payload.status || !Object.values(DeliveryStatus).includes(payload.status)) {
+    errors.push({
+      field: 'status',
+      value: payload.status,
+      message: `status must be one of: ${Object.values(DeliveryStatus).join(', ')}`
+    });
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Notification status validation failed: ${errors.map(e => `${e.field}: ${e.message}`).join(', ')}`);
+  }
+
+  return true;
+};
+
+/**
+ * Validates tenant broadcast payload for socket events
+ * @param payload The tenant broadcast payload
+ * @returns True if valid, throws error if invalid
+ */
+export const validateTenantBroadcastPayload = (payload: any): payload is Omit<NotificationPayload, 'recipientId'> => {
+  const baseValidation = validateSocketBasePayload(payload);
+  const errors = [...baseValidation.errors];
+
+  // Validate title
+  if (!payload.title || typeof payload.title !== 'string' || payload.title.trim().length === 0) {
+    errors.push({
+      field: 'title',
+      value: payload.title,
+      message: 'title must be a non-empty string'
+    });
+  }
+
+  // Validate message
+  if (!payload.message || typeof payload.message !== 'string' || payload.message.trim().length === 0) {
+    errors.push({
+      field: 'message',
+      value: payload.message,
+      message: 'message must be a non-empty string'
+    });
+  }
+
+  // Validate type
+  if (!payload.type || !Object.values(NotificationType).includes(payload.type)) {
+    errors.push({
+      field: 'type',
+      value: payload.type,
+      message: `type must be one of: ${Object.values(NotificationType).join(', ')}`
+    });
+  }
+
+  // Validate priority
+  if (!payload.priority || !Object.values(NotificationPriority).includes(payload.priority)) {
+    errors.push({
+      field: 'priority',
+      value: payload.priority,
+      message: `priority must be one of: ${Object.values(NotificationPriority).join(', ')}`
+    });
+  }
+
+  // Validate optional senderId
+  if (payload.senderId !== undefined && (typeof payload.senderId !== 'number' || payload.senderId <= 0)) {
+    errors.push({
+      field: 'senderId',
+      value: payload.senderId,
+      message: 'senderId must be a positive integer when provided'
+    });
+  }
+
+  // Validate optional metadata
+  if (payload.metadata !== undefined && (typeof payload.metadata !== 'object' || payload.metadata === null || Array.isArray(payload.metadata))) {
+    errors.push({
+      field: 'metadata',
+      value: payload.metadata,
+      message: 'metadata must be an object when provided'
+    });
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Tenant broadcast validation failed: ${errors.map(e => `${e.field}: ${e.message}`).join(', ')}`);
+  }
+
+  return true;
+};
+
+/**
+ * Validates system alert payload for socket events
+ * @param payload The system alert payload
+ * @returns True if valid, throws error if invalid
+ */
+export const validateSystemAlertPayload = (payload: any): payload is { message: string; severity: 'info' | 'warning' | 'critical' } => {
+  const errors: SocketValidationError[] = [];
+
+  // Validate message
+  if (!payload.message || typeof payload.message !== 'string' || payload.message.trim().length === 0) {
+    errors.push({
+      field: 'message',
+      value: payload.message,
+      message: 'message must be a non-empty string'
+    });
+  }
+
+  // Validate severity
+  const allowedSeverities = ['info', 'warning', 'critical'] as const;
+  if (!payload.severity || !allowedSeverities.includes(payload.severity)) {
+    errors.push({
+      field: 'severity',
+      value: payload.severity,
+      message: `severity must be one of: ${allowedSeverities.join(', ')}`
+    });
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`System alert validation failed: ${errors.map(e => `${e.field}: ${e.message}`).join(', ')}`);
+  }
+
+  return true;
+};
+
+/**
+ * Validates course update payload for socket events
+ * @param payload The course update payload
+ * @returns True if valid, throws error if invalid
+ */
+export const validateCourseUpdatePayload = (payload: any): payload is CourseUpdatePayload => {
+  const baseValidation = validateSocketBasePayload(payload);
+  const errors = [...baseValidation.errors];
+
+  // Validate courseId
+  if (!payload.courseId || typeof payload.courseId !== 'number' || payload.courseId <= 0) {
+    errors.push({
+      field: 'courseId',
+      value: payload.courseId,
+      message: 'courseId must be a positive integer'
+    });
+  }
+
+  // Validate updateType
+  const allowedUpdateTypes = ['CONTENT', 'SCHEDULE', 'INSTRUCTOR', 'STATUS'] as const;
+  if (!payload.updateType || !allowedUpdateTypes.includes(payload.updateType)) {
+    errors.push({
+      field: 'updateType',
+      value: payload.updateType,
+      message: `updateType must be one of: ${allowedUpdateTypes.join(', ')}`
+    });
+  }
+
+  // Validate title
+  if (!payload.title || typeof payload.title !== 'string' || payload.title.trim().length === 0) {
+    errors.push({
+      field: 'title',
+      value: payload.title,
+      message: 'title must be a non-empty string'
+    });
+  }
+
+  // Validate message
+  if (!payload.message || typeof payload.message !== 'string' || payload.message.trim().length === 0) {
+    errors.push({
+      field: 'message',
+      value: payload.message,
+      message: 'message must be a non-empty string'
+    });
+  }
+
+  // Validate updatedBy
+  if (!payload.updatedBy || typeof payload.updatedBy !== 'number' || payload.updatedBy <= 0) {
+    errors.push({
+      field: 'updatedBy',
+      value: payload.updatedBy,
+      message: 'updatedBy must be a positive integer'
+    });
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Course update validation failed: ${errors.map(e => `${e.field}: ${e.message}`).join(', ')}`);
+  }
+
+  return true;
+};
+
+/**
+ * Higher-order function that wraps socket event handlers with validation and error handling
+ * @param socket The socket instance
+ * @param eventName The name of the socket event
+ * @param validator The validation function
+ * @param handler The actual event handler
+ * @returns Wrapped handler function
+ */
+export const withValidationAndErrorResponse = <T>(
+  socket: Socket,
+  eventName: string,
+  validator: (payload: any) => payload is T,
+  handler: (payload: T) => Promise<void> | void
+) => {
+  return async (payload: any): Promise<void> => {
+    try {
+      // Validate the payload
+      if (!validator(payload)) {
+        socket.emit(`${eventName}:error`, {
+          message: 'Invalid payload structure',
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+
+      // Execute the handler
+      await handler(payload);
+    } catch (error) {
+      // Log the error
+      console.error(`Socket event ${eventName} validation or execution error:`, error);
+      
+      // Send error response to client
+      socket.emit(`${eventName}:error`, {
+        message: error instanceof Error ? error.message : 'Unknown error occurred',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+};
+
+/**
+ * Checks if a socket user has any of the required roles
+ * @param socket The authenticated socket
+ * @param requiredRoles Array of roles that are allowed
+ * @returns True if user has required role, false otherwise
+ */
+export const checkSocketRoleAuthorization = (
+  socket: AuthenticatedSocket,
+  requiredRoles: UserRole[]
+): boolean => {
+  const userRole = socket.data?.user?.role;
+  
+  if (!userRole) {
+    console.warn('Socket user role not found in socket data');
+    return false;
+  }
+
+  const hasRole = requiredRoles.includes(userRole);
+  
+  if (!hasRole) {
+    console.warn(`Socket authorization failed: User role '${userRole}' not in required roles [${requiredRoles.join(', ')}]`);
+  }
+
+  return hasRole;
+};
+
+/**
+ * Validates an enum value against allowed values
+ * @param value The value to validate
+ * @param enumObject The enum object to validate against
+ * @param fieldName The field name for error messages
+ * @returns True if valid
+ */
+export const validateEnumValue = <T extends Record<string, string | number>>(
+  value: any,
+  enumObject: T,
+  fieldName: string
+): value is T[keyof T] => {
+  const allowedValues = Object.values(enumObject);
+  if (!allowedValues.includes(value)) {
+    throw new Error(`${fieldName} must be one of: ${allowedValues.join(', ')}`);
+  }
+  return true;
+};
+
+/**
+ * Validates a numeric range
+ * @param value The value to validate
+ * @param min Minimum allowed value
+ * @param max Maximum allowed value
+ * @param fieldName The field name for error messages
+ * @returns True if valid
+ */
+export const validateNumericRange = (
+  value: any,
+  min: number,
+  max: number,
+  fieldName: string
+): value is number => {
+  if (typeof value !== 'number' || isNaN(value)) {
+    throw new Error(`${fieldName} must be a valid number`);
+  }
+  if (value < min || value > max) {
+    throw new Error(`${fieldName} must be between ${min} and ${max}`);
+  }
+  return true;
+};
+
+/**
+ * Validates that a value is a positive integer
+ * @param value The value to validate
+ * @param fieldName The field name for error messages
+ * @returns True if valid
+ */
+export const validatePositiveInteger = (
+  value: any,
+  fieldName: string
+): value is number => {
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new Error(`${fieldName} must be a positive integer`);
+  }
+  return true;
+};
+
+/**
+ * Validates an array of items using a validator function
+ * @param items The array to validate
+ * @param validator The validator function for each item
+ * @param fieldName The field name for error messages
+ * @returns True if all items are valid
+ */
+export const validateArray = <T>(
+  items: any[],
+  validator: (item: any) => item is T,
+  fieldName: string
+): items is T[] => {
+  if (!Array.isArray(items)) {
+    throw new Error(`${fieldName} must be an array`);
+  }
+  
+  items.forEach((item, index) => {
+    try {
+      validator(item);
+    } catch (error) {
+      throw new Error(`${fieldName}[${index}]: ${error instanceof Error ? error.message : 'Validation failed'}`);
+    }
+  });
+  
+  return true;
+};
+
+/**
+ * Validates that a string is not empty after trimming
+ * @param value The value to validate
+ * @param fieldName The field name for error messages
+ * @returns True if valid
+ */
+export const validateNonEmptyString = (
+  value: any,
+  fieldName: string
+): value is string => {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    throw new Error(`${fieldName} must be a non-empty string`);
+  }
+  return true;
+};
+
+/**
+ * Creates a composite validator that runs multiple validators
+ * @param validators Array of validator functions
+ * @returns Composite validator function
+ */
+export const createCompositeValidator = <T>(
+  ...validators: Array<(value: any) => value is T>
+) => {
+  return (value: any): value is T => {
+    for (const validator of validators) {
+      validator(value); // Will throw if validation fails
+    }
+    return true;
+  };
 };

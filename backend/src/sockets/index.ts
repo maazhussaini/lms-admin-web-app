@@ -12,12 +12,18 @@ import { registerAdminHandlers } from './admin.handlers.js';
 import logger from '@/config/logger.js';
 
 /**
+ * Supported user roles for socket authorization
+ */
+export type UserRole = 'STUDENT' | 'TEACHER' | 'TENANT_ADMIN' | 'SUPER_ADMIN';
+
+/**
  * Socket user data from authentication middleware
  */
 export interface SocketUser {
   id: number;
-  role: string;
+  role: UserRole;
   tenantId: number;
+  email: string;
 }
 
 /**
@@ -47,9 +53,8 @@ export const registerSocketHandlers = (io: Server): void => {
     registerNotificationHandlers(io, authenticatedSocket);
     registerCourseHandlers(io, authenticatedSocket);
     registerProgressHandlers(io, authenticatedSocket);
-    
-    // Register admin handlers only for admin roles
-    if (['ADMIN', 'SUPER_ADMIN', 'TENANT_ADMIN'].includes(user.role)) {
+      // Register admin handlers only for admin roles
+    if (['SUPER_ADMIN', 'TENANT_ADMIN'].includes(user.role)) {
       registerAdminHandlers(io, authenticatedSocket);
     }
 

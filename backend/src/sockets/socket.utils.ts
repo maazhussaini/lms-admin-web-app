@@ -4,7 +4,7 @@
  * Provides common functionality for socket authorization and tenant isolation.
  */
 
-import { AuthenticatedSocket } from './index.js';
+import { AuthenticatedSocket, UserRole } from './index.js';
 import logger from '@/config/logger.js';
 
 /**
@@ -15,7 +15,7 @@ import logger from '@/config/logger.js';
  */
 export const checkSocketRoleAuthorization = (
   socket: AuthenticatedSocket,
-  allowedRoles: string[]
+  allowedRoles: UserRole[]
 ): boolean => {
   const { role } = socket.data.user;
   

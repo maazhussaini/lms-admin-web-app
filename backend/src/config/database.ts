@@ -411,7 +411,7 @@ export const handleDatabaseShutdown = async (): Promise<void> => {
 
 // Initialize connection for immediate use (auto-connect)
 // Can be disabled by setting DB_AUTO_CONNECT=false in environment
-if (process.env.DB_AUTO_CONNECT !== 'false') {
+if (env.DB_AUTO_CONNECT) {
   initializeDatabaseConnection()
     .catch((error) => {
       logger.error('Failed to auto-connect to database:', error);

@@ -11,7 +11,10 @@ import {
 } from '@shared/types/notification.types';
 import logger from '@/config/logger.js';
 import { AuthenticatedSocket } from './index.js';
-import { checkSocketRoleAuthorization } from './socket.utils.js';
+import { 
+  validateNotificationStatusPayload,
+  withValidationAndErrorResponse
+} from '@/utils/validation.utils.js';
 
 // Temporary local enum definition for SocketEventName
 enum SocketEventName {
@@ -24,11 +27,11 @@ enum SocketEventName {
 
 /**
  * Register notification related socket event handlers
- * @param io Socket.IO server instance
+ * @param _io Socket.IO server instance
  * @param socket Authenticated socket instance
  */
 export const registerNotificationHandlers = (
-  io: Server,
+  _io: Server,
   socket: AuthenticatedSocket
 ): void => {
   const { user } = socket.data;
@@ -37,15 +40,17 @@ export const registerNotificationHandlers = (
 
   // Join user-specific notification room for targeted delivery
   socket.join(`user:${userId}:notifications`);
-
   /**
    * Handler for marking a notification as read
    * @param payload Notification status update data
    */
   socket.on(
     SocketEventName.NOTIFICATION_READ,
-    async (payload: NotificationStatusPayload) => {
-      try {
+    withValidationAndErrorResponse(
+      socket,
+      SocketEventName.NOTIFICATION_READ,
+      validateNotificationStatusPayload,
+      async (payload: NotificationStatusPayload) => {
         // Validate tenant isolation
         if (payload.tenantId !== tenantId) {
           logger.warn(`Tenant mismatch attempt: Socket user ${userId} (tenant ${tenantId}) tried to access tenant ${payload.tenantId} data`);
@@ -69,24 +74,20 @@ export const registerNotificationHandlers = (
           status: 'READ',
           timestamp: new Date().toISOString()
         });
-      } catch (error) {
-        logger.error(`Error handling ${SocketEventName.NOTIFICATION_READ} event:`, error);
-        socket.emit(`${SocketEventName.NOTIFICATION_READ}:error`, {
-          message: 'Failed to mark notification as read',
-          timestamp: new Date().toISOString()
-        });
       }
-    }
+    )
   );
-
   /**
    * Handler for dismissing a notification
    * @param payload Notification status update data
    */
   socket.on(
     SocketEventName.NOTIFICATION_DISMISSED,
-    async (payload: NotificationStatusPayload) => {
-      try {
+    withValidationAndErrorResponse(
+      socket,
+      SocketEventName.NOTIFICATION_DISMISSED,
+      validateNotificationStatusPayload,
+      async (payload: NotificationStatusPayload) => {
         // Validate tenant isolation
         if (payload.tenantId !== tenantId) {
           logger.warn(`Tenant mismatch attempt: Socket user ${userId} (tenant ${tenantId}) tried to access tenant ${payload.tenantId} data`);
@@ -110,14 +111,8 @@ export const registerNotificationHandlers = (
           status: 'DISMISSED',
           timestamp: new Date().toISOString()
         });
-      } catch (error) {
-        logger.error(`Error handling ${SocketEventName.NOTIFICATION_DISMISSED} event:`, error);
-        socket.emit(`${SocketEventName.NOTIFICATION_DISMISSED}:error`, {
-          message: 'Failed to dismiss notification',
-          timestamp: new Date().toISOString()
-        });
       }
-    }
+    )
   );
 
   /**

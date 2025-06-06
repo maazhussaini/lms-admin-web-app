@@ -1,10 +1,11 @@
 /**
  * @file config/logger.ts
- * @description Configures the application logger using Winston.
+ * @description Configures the application logger using Winston with enhanced TypeScript safety.
  */
 
 import winston from 'winston';
 import type { Request, Response, NextFunction } from 'express';
+import type { RequestLogMetadata } from '@shared/types/logger.types.js';
 import env from './environment.js';
 
 // Define log format based on environment
@@ -12,12 +13,11 @@ const logFormat = env.IS_PRODUCTION
   ? winston.format.combine(
       winston.format.timestamp(),
       winston.format.json()
-    )
-  : winston.format.combine(
+    )  : winston.format.combine(
       winston.format.colorize(),
       winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
       winston.format.printf(
-        (info) => `${info.timestamp} ${info.level}: ${info.message}`
+        (info) => `${info['timestamp']} ${info.level}: ${info.message}`
       )
     );
 
@@ -50,31 +50,37 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction): 
   res.on('finish', () => {
     const duration = Date.now() - start;
     const message = `${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms`;
+      // Create type-safe metadata object with only defined values
+    const metadata: RequestLogMetadata = {
+      requestId: req.id,
+      method: req.method,
+      path: req.originalUrl,
+      statusCode: res.statusCode,
+      duration
+    };
+
+    // Add optional properties only if they have values
+    if (req.ip) {
+      metadata.ip = req.ip;
+    }
+    if (req.user?.id) {
+      metadata.userId = req.user.id;
+    }
+    if (req.user?.tenantId) {
+      metadata.tenantId = req.user.tenantId;
+    }
+    const userAgent = req.get('user-agent');
+    if (userAgent) {
+      metadata.userAgent = userAgent;
+    }
     
-    // Log based on status code
+    // Log based on status code with type-safe metadata
     if (res.statusCode >= 500) {
-      logger.error(message, { 
-        ip: req.ip, 
-        userId: req.user?.id,
-        tenantId: req.user?.tenantId,
-        userAgent: req.get('user-agent'),
-        requestId: req.id
-      });
+      logger.error(message, metadata);
     } else if (res.statusCode >= 400) {
-      logger.warn(message, { 
-        ip: req.ip, 
-        userId: req.user?.id,
-        tenantId: req.user?.tenantId,
-        userAgent: req.get('user-agent'),
-        requestId: req.id
-      });
+      logger.warn(message, metadata);
     } else {
-      logger.info(message, { 
-        ip: req.ip, 
-        userId: req.user?.id,
-        tenantId: req.user?.tenantId,
-        requestId: req.id
-      });
+      logger.info(message, metadata);
     }
   });
   

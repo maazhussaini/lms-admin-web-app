@@ -10,6 +10,45 @@ import { UnauthorizedError, ForbiddenError } from '@/utils/api-error.utils.js';
 import logger from '@/config/logger.js';
 
 /**
+ * Valid user roles in the system
+ */
+type UserRole = 'SUPER_ADMIN' | 'TENANT_ADMIN' | 'TEACHER' | 'STUDENT';
+
+/**
+ * Type-safe interface for request query parameters
+ */
+interface AuthQuery {
+  token?: string;
+  forceTenantId?: string;
+}
+
+/**
+ * Type-safe interface for response locals
+ */
+interface AuthLocals {
+  tenantId?: number;
+  resource?: {
+    id: number;
+    type: string;
+  };
+}
+
+/**
+ * Extended Request interface with type-safe properties
+ */
+interface AuthenticatedRequest extends Request {
+  user?: TokenPayload;
+  query: AuthQuery & Request['query'];
+}
+
+/**
+ * Extended Response interface with type-safe locals
+ */
+interface AuthenticatedResponse extends Response {
+  locals: AuthLocals & Response['locals'];
+}
+
+/**
  * Extends Express Request interface to include user data from JWT token
  */
 declare global {
@@ -21,29 +60,47 @@ declare global {
 }
 
 /**
+ * Helper function to safely get token from query parameters
+ */
+const getTokenFromQuery = (query: AuthQuery): string | undefined => {
+  return typeof query.token === 'string' ? query.token : undefined;
+};
+
+/**
+ * Helper function to safely parse tenant ID
+ */
+const parseTenantId = (value: string | undefined): number | null => {
+  if (!value) return null;
+  const parsed = parseInt(value, 10);
+  return isNaN(parsed) ? null : parsed;
+};
+
+/**
  * Authenticates requests using JWT token from Authorization header
  * Attaches decoded user data to request object
  * 
  * @throws UnauthorizedError when token is missing, expired, or invalid
  */
 export const authenticate = async (
-  req: Request,
-  res: Response,
+  req: AuthenticatedRequest,
+  _res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     // Get token from Authorization header or query parameter (for socket.io)
-    let token: string;
+    let token: string | undefined;
     
     const authHeader = req.headers.authorization;
     
     if (authHeader) {
       // Use the utility function to extract token from Authorization header
       token = extractTokenFromHeader(authHeader);
-    } else if (req.query.token && typeof req.query.token === 'string') {
-      // Extract token from query parameter (for WebSocket connections)
-      token = req.query.token;
     } else {
+      // Extract token from query parameter (for WebSocket connections)
+      token = getTokenFromQuery(req.query);
+    }
+    
+    if (!token) {
       logger.warn('Authentication failed: No token provided', { 
         ip: req.ip, 
         path: req.path,
@@ -67,9 +124,8 @@ export const authenticate = async (
     });
     
     next();
-  } catch (error: any) {
-    // Since verifyAccessToken and extractTokenFromHeader now throw proper UnauthorizedError instances,
-    // we can simplify error handling
+  } catch (error: unknown) {
+    // Type-safe error handling
     if (error instanceof UnauthorizedError) {
       // Log the authentication failure with context
       logger.warn('Authentication failed', { 
@@ -82,9 +138,12 @@ export const authenticate = async (
       next(error);
     } else {
       // Handle unexpected errors
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      
       logger.error('Unexpected authentication error', { 
-        error: error.message, 
-        stack: error.stack,
+        error: errorMessage, 
+        stack: errorStack,
         ip: req.ip,
         path: req.path,
         requestId: req.id
@@ -103,8 +162,8 @@ export const authenticate = async (
  * @throws UnauthorizedError when user is not authenticated
  * @throws ForbiddenError when user doesn't have required role
  */
-export const authorize = (allowedRoles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+export const authorize = (allowedRoles: readonly UserRole[]) => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
     if (!req.user) {
       logger.warn('Authorization failed: No authenticated user', { 
         path: req.path,
@@ -113,7 +172,9 @@ export const authorize = (allowedRoles: string[]) => {
       return next(new UnauthorizedError('Authentication required', 'USER_NOT_AUTHENTICATED'));
     }
     
-    if (!allowedRoles.includes(req.user.role)) {
+    // Type-safe role checking
+    const userRole = req.user.role as UserRole;
+    if (!allowedRoles.includes(userRole)) {
       logger.warn('Authorization failed: Insufficient permissions', { 
         userId: req.user.id, 
         userRole: req.user.role, 
@@ -138,7 +199,7 @@ export const authorize = (allowedRoles: string[]) => {
  * @throws ForbiddenError when user doesn't belong to requested tenant
  */
 export const verifyTenantAccess = (paramName = 'tenantId') => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
     if (!req.user) {
       logger.warn('Tenant verification failed: No authenticated user', { 
         path: req.path,
@@ -147,10 +208,10 @@ export const verifyTenantAccess = (paramName = 'tenantId') => {
       return next(new UnauthorizedError('Authentication required', 'USER_NOT_AUTHENTICATED'));
     }
     
-    // Get tenant ID from route parameter
-    const requestedTenantId = parseInt(req.params[paramName], 10);
+    // Get tenant ID from route parameter with type safety
+    const requestedTenantId = parseTenantId(req.params[paramName]);
     
-    if (isNaN(requestedTenantId)) {
+    if (requestedTenantId === null) {
       logger.warn('Tenant verification failed: Invalid tenant ID format', { 
         userId: req.user.id, 
         providedTenantId: req.params[paramName],
@@ -196,10 +257,10 @@ export const verifyTenantAccess = (paramName = 'tenantId') => {
  * @throws UnauthorizedError when user is not authenticated
  */
 export const setTenantContext = (
-  req: Request,
-  res: Response,
+  req: AuthenticatedRequest,
+  res: AuthenticatedResponse,
   next: NextFunction
-) => {
+): void => {
   if (!req.user) {
     logger.warn('Tenant context failed: No authenticated user', { 
       path: req.path,
@@ -221,8 +282,8 @@ export const setTenantContext = (
   
   // Set the tenant ID for forced tenant context for super admins
   if (req.user.role === 'SUPER_ADMIN' && req.query.forceTenantId) {
-    const forcedTenantId = parseInt(req.query.forceTenantId as string, 10);
-    if (!isNaN(forcedTenantId)) {
+    const forcedTenantId = parseTenantId(req.query.forceTenantId);
+    if (forcedTenantId !== null) {
       res.locals.tenantId = forcedTenantId;
       logger.debug('Forced tenant context for super admin', { 
         userId: req.user.id,
@@ -249,14 +310,14 @@ export const setTenantContext = (
  * @returns Middleware function that checks permission for specific resource
  */
 export const checkResourcePermission = (resourceType: string, paramName = 'id') => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: AuthenticatedResponse, next: NextFunction): Promise<void> => {
     if (!req.user) {
       return next(new UnauthorizedError('Authentication required', 'USER_NOT_AUTHENTICATED'));
     }
     
-    const resourceId = parseInt(req.params[paramName], 10);
+    const resourceId = parseTenantId(req.params[paramName]);
     
-    if (isNaN(resourceId)) {
+    if (resourceId === null) {
       return next(new ForbiddenError(`Invalid ${resourceType} ID`, 'INVALID_RESOURCE_ID'));
     }
     
@@ -269,7 +330,8 @@ export const checkResourcePermission = (resourceType: string, paramName = 'id') 
     // This would involve checking if the resource belongs to the user's tenant
     // and if the user has appropriate permissions for the specific resource
     
-    // Example: res.locals.resource = { id: resourceId, type: resourceType };
+    // Type-safe assignment to response locals
+    res.locals.resource = { id: resourceId, type: resourceType };
     
     next();
   };

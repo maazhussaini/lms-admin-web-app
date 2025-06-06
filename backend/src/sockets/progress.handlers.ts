@@ -11,6 +11,11 @@ import {
 } from '@shared/types/notification.types';
 import logger from '@/config/logger.js';
 import { AuthenticatedSocket } from './index.js';
+import { 
+  validateContentProgressPayload,
+  validateVideoProgressPayload,
+  withValidationAndErrorResponse
+} from '@/utils/validation.utils.js';
 
 // Temporary local enum definition for SocketEventName
 enum SocketEventName {
@@ -20,25 +25,27 @@ enum SocketEventName {
 
 /**
  * Register progress tracking related socket event handlers
- * @param io Socket.IO server instance
+ * @param _io Socket.IO server instance
  * @param socket Authenticated socket instance
  */
 export const registerProgressHandlers = (
-  io: Server,
+  _io: Server,
   socket: AuthenticatedSocket
 ): void => {
   const { user } = socket.data;
   const userId = user.id;
   const tenantId = user.tenantId;
-
   /**
    * Handler for content progress updates
    * @param payload Content progress data
    */
   socket.on(
     SocketEventName.CONTENT_PROGRESS_UPDATE,
-    async (payload: ContentProgressPayload) => {
-      try {
+    withValidationAndErrorResponse(
+      socket,
+      SocketEventName.CONTENT_PROGRESS_UPDATE,
+      validateContentProgressPayload,
+      async (payload: ContentProgressPayload) => {
         // Validate tenant isolation
         if (payload.tenantId !== tenantId) {
           logger.warn(`Tenant mismatch attempt: Socket user ${userId} (tenant ${tenantId}) tried to update progress in tenant ${payload.tenantId}`);
@@ -80,24 +87,20 @@ export const registerProgressHandlers = (
           //   });
           // });
         }
-      } catch (error) {
-        logger.error(`Error handling ${SocketEventName.CONTENT_PROGRESS_UPDATE} event:`, error);
-        socket.emit(`${SocketEventName.CONTENT_PROGRESS_UPDATE}:error`, {
-          message: 'Failed to save progress update',
-          timestamp: new Date().toISOString()
-        });
       }
-    }
+    )
   );
-
   /**
    * Handler for video progress updates
    * @param payload Video progress data
    */
   socket.on(
     SocketEventName.VIDEO_PROGRESS_UPDATE,
-    async (payload: VideoProgressPayload) => {
-      try {
+    withValidationAndErrorResponse(
+      socket,
+      SocketEventName.VIDEO_PROGRESS_UPDATE,
+      validateVideoProgressPayload,
+      async (payload: VideoProgressPayload) => {
         // Validate tenant isolation
         if (payload.tenantId !== tenantId) {
           logger.warn(`Tenant mismatch attempt: Socket user ${userId} (tenant ${tenantId}) tried to update video progress in tenant ${payload.tenantId}`);
@@ -123,13 +126,7 @@ export const registerProgressHandlers = (
           isCompleted: payload.isCompleted,
           timestamp: new Date().toISOString()
         });
-      } catch (error) {
-        logger.error(`Error handling ${SocketEventName.VIDEO_PROGRESS_UPDATE} event:`, error);
-        socket.emit(`${SocketEventName.VIDEO_PROGRESS_UPDATE}:error`, {
-          message: 'Failed to save video progress update',
-          timestamp: new Date().toISOString()
-        });
       }
-    }
+    )
   );
 };

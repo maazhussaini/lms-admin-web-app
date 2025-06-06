@@ -9,8 +9,31 @@ import http from 'http';
 import env from './environment.js';
 import logger from './logger.js';
 import { verifyAccessToken } from '@/utils/jwt.utils.js';
-import { registerSocketHandlers } from '@/sockets/index.js';
+import { registerSocketHandlers, type SocketUser, type UserRole } from '@/sockets/index.js';
 import { joinStandardRooms } from '@/sockets/socket.utils.js';
+
+/**
+ * Socket.IO error response interface for consistent error handling
+ */
+export interface SocketErrorResponse {
+  success: false;
+  error: {
+    message: string;
+    code: string;
+    details?: Record<string, any>;
+  };
+  timestamp: string;
+}
+
+/**
+ * Socket.IO success response interface for consistent success handling
+ */
+export interface SocketSuccessResponse<T = any> {
+  success: true;
+  message: string;
+  data: T;
+  timestamp: string;
+}
 
 /**
  * Initialize Socket.IO server with authentication middleware and event handlers
@@ -33,30 +56,46 @@ export const initializeSocket = (server: http.Server) => {
     },
     pingTimeout: 30000, // 30 seconds
     pingInterval: 25000, // 25 seconds
-  });
+  });  /**
+   * Safely extract Bearer token from authorization header
+   * @param authHeader Authorization header value
+   * @returns JWT token string or undefined if not valid
+   */
+  const extractBearerToken = (authHeader: string | string[] | undefined): string | undefined => {
+    if (!authHeader || Array.isArray(authHeader) || !authHeader.startsWith('Bearer ')) {
+      return undefined;
+    }
+    return authHeader.slice(7); // Remove 'Bearer ' prefix
+  };
 
-  // Middleware for authentication and tenant scoping
+  // Middleware for authentication and tenant scoping  // Enhanced authentication middleware with better error typing
   io.use(async (socket, next) => {
     try {
-      // Get token from handshake query or headers
-      const token = 
-        socket.handshake.auth.token ||
-        socket.handshake.query.token?.toString() || 
-        socket.handshake.headers.authorization?.split(' ')[1];
-
+      // Extract token from handshake (query parameter for socket connections)
+      const token = extractBearerToken(socket.handshake.auth?.['token'] || socket.handshake.query?.['token']);
+      
       if (!token) {
         logger.warn(`Socket connection rejected: Missing authentication token (IP: ${socket.handshake.address})`);
-        return next(new Error('Authentication required'));
+        const authError = new Error('Authentication required') as Error & { data?: SocketErrorResponse };
+        authError.data = {
+          success: false,
+          error: {
+            message: 'Authentication required',
+            code: 'SOCKET_AUTH_REQUIRED'
+          },
+          timestamp: new Date().toISOString()
+        };
+        return next(authError);
       }
 
       // Verify JWT token
       const decoded = verifyAccessToken(token);
-      
-      // Add user data to socket
-      socket.data.user = {
+        // Add user data to socket with proper typing
+      (socket.data as { user: SocketUser }).user = {
         id: decoded.id,
-        role: decoded.role,
+        role: decoded.role as UserRole,
         tenantId: decoded.tenantId,
+        email: decoded.email,
       };
       
       // Join standard rooms based on user role and tenant
@@ -64,8 +103,22 @@ export const initializeSocket = (server: http.Server) => {
       
       logger.debug(`Socket authenticated: ${socket.id} (User: ${decoded.id}, Role: ${decoded.role}, Tenant: ${decoded.tenantId})`);
       next();
-    } catch (error) {      logger.error('Socket authentication error:', error);
-      return next(new Error('Authentication failed'));
+    } catch (error) {
+      logger.error('Socket authentication error:', error);
+      const authError = new Error('Authentication failed') as Error & { data?: SocketErrorResponse };
+      const errorDetails: Record<string, any> | undefined = process.env['NODE_ENV'] === 'development' 
+        ? { error: String(error) } 
+        : undefined;
+        authError.data = {
+        success: false,
+        error: {
+          message: 'Authentication failed',
+          code: 'SOCKET_AUTH_FAILED',
+          ...(errorDetails && { details: errorDetails })
+        },
+        timestamp: new Date().toISOString()
+      };
+      return next(authError);
     }
   });
 

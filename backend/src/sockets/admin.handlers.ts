@@ -11,6 +11,11 @@ import {
 import logger from '@/config/logger.js';
 import { AuthenticatedSocket } from './index.js';
 import { checkSocketRoleAuthorization } from './socket.utils.js';
+import { 
+  validateTenantBroadcastPayload,
+  validateSystemAlertPayload,
+  withValidationAndErrorResponse
+} from '@/utils/validation.utils.js';
 
 // Temporary local enum definition for SocketEventName
 enum SocketEventName {
@@ -34,17 +39,19 @@ export const registerAdminHandlers = (
 
   // Join admin-specific room
   socket.join(`tenant:${tenantId}:admins`);
-
   /**
    * Handler for tenant-wide broadcasts
    * Only admins can trigger this event
    */
   socket.on(
     SocketEventName.TENANT_BROADCAST,
-    (payload: Omit<NotificationPayload, 'recipientId'>) => {
-      try {
+    withValidationAndErrorResponse(
+      socket,
+      SocketEventName.TENANT_BROADCAST,
+      validateTenantBroadcastPayload,
+      (payload: Omit<NotificationPayload, 'recipientId'>) => {
         // Double-check role authorization
-        if (!checkSocketRoleAuthorization(socket, ['ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN'])) {
+        if (!checkSocketRoleAuthorization(socket, ['TENANT_ADMIN', 'SUPER_ADMIN'])) {
           logger.warn(`Unauthorized broadcast attempt: User ${userId} attempted to send tenant broadcast`);
           return;
         }
@@ -69,24 +76,20 @@ export const registerAdminHandlers = (
           recipients: 'all-tenant-users', // In real implementation, could provide count
           timestamp: new Date().toISOString()
         });
-      } catch (error) {
-        logger.error(`Error handling ${SocketEventName.TENANT_BROADCAST} event:`, error);
-        socket.emit(`${SocketEventName.TENANT_BROADCAST}:error`, {
-          message: 'Failed to broadcast message',
-          timestamp: new Date().toISOString()
-        });
       }
-    }
+    )
   );
-
   /**
    * Handler for system alerts
    * Only super admins can trigger this event
    */
   socket.on(
     SocketEventName.SYSTEM_ALERT,
-    (payload: { message: string; severity: 'info' | 'warning' | 'critical' }) => {
-      try {
+    withValidationAndErrorResponse(
+      socket,
+      SocketEventName.SYSTEM_ALERT,
+      validateSystemAlertPayload,
+      (payload: { message: string; severity: 'info' | 'warning' | 'critical' }) => {
         // Only super admins can send system alerts
         if (!checkSocketRoleAuthorization(socket, ['SUPER_ADMIN'])) {
           logger.warn(`Unauthorized system alert attempt: User ${userId} with role ${user.role} attempted to send system alert`);
@@ -118,14 +121,8 @@ export const registerAdminHandlers = (
           severity: payload.severity,
           timestamp: new Date().toISOString()
         });
-      } catch (error) {
-        logger.error(`Error handling ${SocketEventName.SYSTEM_ALERT} event:`, error);
-        socket.emit(`${SocketEventName.SYSTEM_ALERT}:error`, {
-          message: 'Failed to send system alert',
-          timestamp: new Date().toISOString()
-        });
       }
-    }
+    )
   );
 
   /**
@@ -135,7 +132,7 @@ export const registerAdminHandlers = (
   socket.on('admin:active-users', async () => {
     try {
       // Double-check role authorization
-      if (!checkSocketRoleAuthorization(socket, ['ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN'])) {
+      if (!checkSocketRoleAuthorization(socket, ['TENANT_ADMIN', 'SUPER_ADMIN'])) {
         logger.warn(`Unauthorized active users query: User ${userId} attempted to access active users count`);
         return;
       }

@@ -17,29 +17,108 @@ import {
   PrismaClientUnknownRequestError
 } from '@prisma/client/runtime/library';
 import { TApiErrorResponse } from '@shared/types';
-import { validationResult } from 'express-validator';
+
+/**
+ * Type definitions for enhanced error handling
+ */
+interface ValidationErrorItem {
+  msg: string;
+  param: string;
+  value?: unknown;
+  location?: string;
+}
+
+interface RateLimitError extends Error {
+  headers?: {
+    'retry-after'?: string;
+  };
+}
+
+interface JSONSyntaxError extends SyntaxError {
+  body: string;
+}
+
+/**
+ * Type guard to check if error is a validation error array
+ */
+function isValidationErrorArray(err: unknown): err is ValidationErrorItem[] {
+  return Array.isArray(err) && 
+         err.length > 0 && 
+         typeof err[0] === 'object' && 
+         err[0] !== null && 
+         'msg' in err[0] && 
+         'param' in err[0];
+}
+
+/**
+ * Type guard to check if error is a rate limit error
+ */
+function isRateLimitError(err: Error): err is RateLimitError {
+  return err.name === 'RateLimitExceeded' || 
+         (err.message ? err.message.includes('rate limit') : false);
+}
+
+/**
+ * Type guard to check if error is a JSON syntax error
+ */
+function isJSONSyntaxError(err: Error): err is JSONSyntaxError {
+  return err instanceof SyntaxError && 'body' in err;
+}
+
+/**
+ * Safely extract meta field from Prisma error with proper type safety
+ */
+function getPrismaMetaField(meta: unknown, field: string): string {
+  if (meta && typeof meta === 'object' && meta !== null && field in meta) {
+    const value = (meta as Record<string, unknown>)[field];
+    if (typeof value === 'string') {
+      return value;
+    }
+    if (Array.isArray(value)) {
+      return value.filter((v): v is string => typeof v === 'string').join(', ');
+    }
+  }
+  return 'unknown';
+}
+
+/**
+ * Type-safe helper to extract Prisma meta target field
+ */
+function getPrismaTargetField(meta: unknown): string {
+  const target = getPrismaMetaField(meta, 'target');
+  if (target === 'unknown' && meta && typeof meta === 'object' && meta !== null && 'target' in meta) {
+    const targetValue = (meta as Record<string, unknown>)['target'];
+    if (Array.isArray(targetValue)) {
+      return targetValue.filter((v): v is string => typeof v === 'string').join(', ') || 'field';
+    }
+  }
+  return target === 'unknown' ? 'field' : target;
+}
 
 /**
  * Global error handling middleware
  * Catches all errors and returns standardized error responses conforming to TApiErrorResponse
  */
 export const errorHandler = (
-  err: Error,
+  err: unknown,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): Response<TApiErrorResponse> => {
+  // Ensure err is an Error object
+  const error = err instanceof Error ? err : new Error(String(err));
+  
   // Log the error with structured metadata
-  logError(err, req);
+  logError(error, req);
 
   // Handle ApiError instances (application-specific errors)
-  if (err instanceof ApiError) {
-    return res.status(err.statusCode).json(
+  if (error instanceof ApiError) {
+    return res.status(error.statusCode).json(
       createErrorResponse(
-        err.message,
-        err.statusCode,
-        err.errorCode,
-        err.details,
+        error.message,
+        error.statusCode,
+        error.errorCode,
+        error.details,
         req.id,
         req.path
       )
@@ -47,25 +126,25 @@ export const errorHandler = (
   }
 
   // Handle Prisma database errors
-  if (err instanceof PrismaClientKnownRequestError) {
-    return handlePrismaKnownRequestError(err, req, res);
+  if (error instanceof PrismaClientKnownRequestError) {
+    return handlePrismaKnownRequestError(error, req, res);
   }
 
-  if (err instanceof PrismaClientValidationError) {
+  if (error instanceof PrismaClientValidationError) {
     return res.status(400).json(
       createErrorResponse(
         'Database validation error',
         400,
         'VALIDATION_ERROR',
-        { _error: [err.message.split('\n').pop() || 'Invalid data format'] },
+        { _error: [error.message.split('\n').pop() || 'Invalid data format'] },
         req.id,
         req.path
       )
     );
   }
 
-  if (err instanceof PrismaClientInitializationError) {
-    logger.error('Database initialization error:', err);
+  if (error instanceof PrismaClientInitializationError) {
+    logger.error('Database initialization error:', error);
     return res.status(503).json(
       createErrorResponse(
         'Service temporarily unavailable',
@@ -78,9 +157,9 @@ export const errorHandler = (
     );
   }
 
-  if (err instanceof PrismaClientRustPanicError || 
-      err instanceof PrismaClientUnknownRequestError) {
-    logger.error('Critical database error:', err);
+  if (error instanceof PrismaClientRustPanicError || 
+      error instanceof PrismaClientUnknownRequestError) {
+    logger.error('Critical database error:', error);
     return res.status(500).json(
       createErrorResponse(
         'Critical database error',
@@ -92,11 +171,12 @@ export const errorHandler = (
       )
     );
   }
-  // Handle Express Validator errors
-  if (Array.isArray(err) && err.length > 0 && typeof err[0] === 'object' && err[0] !== null && 'msg' in err[0] && 'param' in err[0]) {
+
+  // Handle Express Validator errors with type safety
+  if (isValidationErrorArray(err)) {
     const validationErrors: Record<string, string[]> = {};
     
-    err.forEach((error: any) => {
+    err.forEach((error: ValidationErrorItem) => {
       const key = error.param || 'general';
       if (!validationErrors[key]) {
         validationErrors[key] = [];
@@ -117,13 +197,13 @@ export const errorHandler = (
   }
 
   // Handle express-validator errors passed from validation middleware
-  if (err instanceof ApiValidationError) {
+  if (error instanceof ApiValidationError) {
     return res.status(422).json(
       createErrorResponse(
-        err.message,
+        error.message,
         422,
-        err.errorCode,
-        err.details,
+        error.errorCode,
+        error.details,
         req.id,
         req.path
       )
@@ -131,7 +211,7 @@ export const errorHandler = (
   }
 
   // Handle JWT errors
-  if (err.name === 'JsonWebTokenError') {
+  if (error.name === 'JsonWebTokenError') {
     return res.status(401).json(
       createErrorResponse(
         'Invalid token',
@@ -144,7 +224,7 @@ export const errorHandler = (
     );
   }
 
-  if (err.name === 'TokenExpiredError') {
+  if (error.name === 'TokenExpiredError') {
     return res.status(401).json(
       createErrorResponse(
         'Token expired',
@@ -157,8 +237,8 @@ export const errorHandler = (
     );
   }
 
-  // Handle JSON parsing errors
-  if (err instanceof SyntaxError && 'body' in err) {
+  // Handle JSON parsing errors with type safety
+  if (isJSONSyntaxError(error)) {
     return res.status(400).json(
       createErrorResponse(
         'Invalid JSON in request body',
@@ -169,9 +249,11 @@ export const errorHandler = (
         req.path
       )
     );
-  }  // Handle rate limit errors
-  if (err.name === 'RateLimitExceeded' || (err.message && err.message.includes('rate limit'))) {
-    const retryAfter = (err as any).headers?.['retry-after'] || '60';
+  }
+
+  // Handle rate limit errors with type safety
+  if (isRateLimitError(error)) {
+    const retryAfter = error.headers?.['retry-after'] || '60';
     return res.status(429).json(
       createErrorResponse(
         'Too many requests',
@@ -185,7 +267,7 @@ export const errorHandler = (
   }
 
   // Handle URI malformed errors
-  if (err.name === 'URIError') {
+  if (error.name === 'URIError') {
     return res.status(400).json(
       createErrorResponse(
         'Invalid URI',
@@ -197,7 +279,7 @@ export const errorHandler = (
       )
     );
   }
-  // Default error handler for unhandled errors
+
   // Default error handler for unhandled errors
   const statusCode = 500;
   const errorCode = 'INTERNAL_SERVER_ERROR';
@@ -207,13 +289,13 @@ export const errorHandler = (
   let details: Record<string, string[]> | undefined = undefined;
   
   if (!env.IS_PRODUCTION) {
-    message = err.message || 'Internal server error';
+    message = error.message || 'Internal server error';
     
     // Include stack trace in development for easier debugging
-    if (err.stack) {
+    if (error.stack) {
       details = {
-        stack: [err.stack.split('\n')[0]], // Just the first line of stack for brevity
-        type: [err.constructor.name]
+        stack: [error.stack.split('\n')[0] || 'No stack trace available'], // Just the first line of stack for brevity
+        type: [error.constructor.name]
       };
     }
   }
@@ -238,62 +320,57 @@ function handlePrismaKnownRequestError(
   req: Request,
   res: Response
 ): Response<TApiErrorResponse> {
-  switch (err.code) {
-    case 'P2002': // Unique constraint violation
+  switch (err.code) {    case 'P2002': // Unique constraint violation
       return res.status(409).json(
         createErrorResponse(
           'Resource already exists',
           409,
           'CONFLICT',
-          { [Array.isArray(err.meta?.target) ? (err.meta?.target as string[]).join(', ') : (err.meta?.target as string || 'field')]: ['Must be unique'] },
+          { [getPrismaTargetField(err.meta)]: ['Must be unique'] },
           req.id,
           req.path
         )
       );
-    
-    case 'P2025': // Record not found
+      case 'P2025': // Record not found
       return res.status(404).json(
         createErrorResponse(
           'Resource not found',
           404,
           'NOT_FOUND',
-          { entity: err.meta?.modelName ? [err.meta.modelName as string] : ['Unknown'] },
+          { entity: [getPrismaMetaField(err.meta, 'modelName')] },
           req.id,
           req.path
         )
       );
-    
-    case 'P2003': // Foreign key constraint violation
+      case 'P2003': // Foreign key constraint violation
       return res.status(400).json(
         createErrorResponse(
           'Invalid relationship',
           400,
           'INVALID_RELATIONSHIP',
-          { [err.meta?.field_name as string || 'field']: ['Invalid reference'] },
+          { [getPrismaMetaField(err.meta, 'field_name')]: ['Invalid reference'] },
           req.id,
           req.path
         )
       );
-    
-    case 'P2004': // Constraint violation
+      case 'P2004': // Constraint violation
       return res.status(400).json(
         createErrorResponse(
           'Constraint violation',
           400,
           'CONSTRAINT_VIOLATION',
-          { [err.meta?.constraint as string || 'constraint']: ['Constraint violated'] },
+          { [getPrismaMetaField(err.meta, 'constraint')]: ['Constraint violated'] },
           req.id,
           req.path
         )
       );
-    
-    case 'P2005': // Invalid value for field
+      case 'P2005': // Invalid value for field
       return res.status(400).json(
         createErrorResponse(
           'Invalid value',
           400,
           'INVALID_VALUE',
-          { [err.meta?.field_name as string || 'field']: [`Invalid value: ${err.meta?.value}`] },
+          { [getPrismaMetaField(err.meta, 'field_name')]: [`Invalid value: ${getPrismaMetaField(err.meta, 'value')}`] },
           req.id,
           req.path
         )
@@ -333,38 +410,34 @@ function handlePrismaKnownRequestError(
           req.path
         )
       );
-      
-    case 'P2018': // Required connected record not found
+        case 'P2018': // Required connected record not found
       return res.status(404).json(
         createErrorResponse(
           'Required related record not found',
           404,
           'RELATED_RECORD_NOT_FOUND',
-          { relationName: [err.meta?.cause as string || 'unknown relation'] },
+          { relationName: [getPrismaMetaField(err.meta, 'cause')] },
           req.id,
           req.path
         )
-      );
-
-    case 'P2019': // Input error in where condition
+      );    case 'P2019': // Input error in where condition
       return res.status(400).json(
         createErrorResponse(
           'Invalid query parameters',
           400,
           'INVALID_QUERY_PARAMETERS',
-          { details: [err.meta?.cause as string || 'Invalid query structure'] },
+          { details: [getPrismaMetaField(err.meta, 'cause')] },
           req.id,
           req.path
         )
       );
-    
-    case 'P2020': // Value out of range for type
+      case 'P2020': // Value out of range for type
       return res.status(400).json(
         createErrorResponse(
           'Value out of range',
           400,
           'VALUE_OUT_OF_RANGE',
-          { details: [err.meta?.cause as string || 'Value exceeds allowed range'] },
+          { details: [getPrismaMetaField(err.meta, 'cause')] },
           req.id,
           req.path
         )
@@ -382,27 +455,25 @@ function handlePrismaKnownRequestError(
           req.path
         )
       );
-    
-    case 'P2022': // Column/Field does not exist
+      case 'P2022': // Column/Field does not exist
       logger.error('Prisma field or column not found:', err.message);
       return res.status(500).json(
         createErrorResponse(
           'Database schema error',
           500,
           'DATABASE_SCHEMA_ERROR',
-          { field: [err.meta?.column as string || 'unknown'] },
+          { field: [getPrismaMetaField(err.meta, 'column')] },
           req.id,
           req.path
         )
       );
-    
-    case 'P2023': // Inconsistent column data
+      case 'P2023': // Inconsistent column data
       return res.status(400).json(
         createErrorResponse(
           'Invalid data format',
           400,
           'INVALID_DATA_FORMAT',
-          { field: [err.meta?.column as string || 'unknown'] },
+          { field: [getPrismaMetaField(err.meta, 'column')] },
           req.id,
           req.path
         )
@@ -443,10 +514,9 @@ function handlePrismaKnownRequestError(
  */
 function logError(err: Error, req: Request): void {
   const sensitiveKeys = ['password', 'token', 'secret', 'key', 'credential', 'authorization'];
-  
-  // Sanitize request body, query and params
+    // Sanitize request body, query and params
   const sanitizeObject = (obj: Record<string, any>): Record<string, any> => {
-    if (!obj) return obj;
+    if (!obj || typeof obj !== 'object') return obj;
     
     const sanitized = { ...obj };
     
@@ -454,7 +524,14 @@ function logError(err: Error, req: Request): void {
       if (sensitiveKeys.some(sk => key.toLowerCase().includes(sk))) {
         sanitized[key] = '[REDACTED]';
       } else if (typeof sanitized[key] === 'object' && sanitized[key] !== null) {
-        sanitized[key] = sanitizeObject(sanitized[key]);
+        // Recursive sanitization for nested objects
+        if (Array.isArray(sanitized[key])) {
+          sanitized[key] = (sanitized[key] as any[]).map(item => 
+            typeof item === 'object' && item !== null ? sanitizeObject(item) : item
+          );
+        } else {
+          sanitized[key] = sanitizeObject(sanitized[key] as Record<string, any>);
+        }
       }
     }
     

@@ -11,6 +11,10 @@ import {
 import logger from '@/config/logger.js';
 import { AuthenticatedSocket } from './index.js';
 import { checkSocketRoleAuthorization } from './socket.utils.js';
+import { 
+  validateCourseUpdatePayload,
+  withValidationAndErrorResponse
+} from '@/utils/validation.utils.js';
 
 // Temporary local enum definition for SocketEventName
 enum SocketEventName {
@@ -30,14 +34,16 @@ export const registerCourseHandlers = (
   const userId = user.id;
   const tenantId = user.tenantId;
   const userRole = user.role;
-
   // Course update event - only instructors/teachers and admins can emit this
   socket.on(
     SocketEventName.COURSE_UPDATE,
-    async (payload: CourseUpdatePayload) => {
-      try {
+    withValidationAndErrorResponse(
+      socket,
+      SocketEventName.COURSE_UPDATE,
+      validateCourseUpdatePayload,
+      async (payload: CourseUpdatePayload) => {
         // Check role authorization
-        if (!checkSocketRoleAuthorization(socket, ['TEACHER', 'INSTRUCTOR', 'ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN'])) {
+        if (!checkSocketRoleAuthorization(socket, ['TEACHER', 'TENANT_ADMIN', 'SUPER_ADMIN'])) {
           logger.warn(`Unauthorized role access: User ${userId} with role ${userRole} attempted to send course update`);
           return;
         }
@@ -59,14 +65,8 @@ export const registerCourseHandlers = (
           ...payload,
           timestamp: new Date().toISOString()
         });
-      } catch (error) {
-        logger.error(`Error handling ${SocketEventName.COURSE_UPDATE} event:`, error);
-        socket.emit(`${SocketEventName.COURSE_UPDATE}:error`, {
-          message: 'Failed to process course update',
-          timestamp: new Date().toISOString()
-        });
       }
-    }
+    )
   );
 
   // Handle student joining a course room when they access a course

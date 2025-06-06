@@ -9,13 +9,9 @@ import {
   validationResult, 
   ValidationChain, 
   matchedData,
-  ValidationError as ExpressValidationError,
   body,
   param,
-  query,
-  oneOf,
-  check
-} from 'express-validator';
+  query} from 'express-validator';
 import { ValidationError as ApiValidationError } from '@/utils/api-error.utils.js';
 import logger from '@/config/logger.js';
 
@@ -65,10 +61,10 @@ export const validate = (
   const { 
     attachSanitizedData = true, 
     errorMessage = 'Validation failed',
-    logErrors = process.env.NODE_ENV !== 'production'
+    logErrors = process.env['NODE_ENV'] !== 'production'
   } = options;
   
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, _res: Response, next: NextFunction) => {
     try {
       // Execute all validations
       await Promise.all(validations.map(validation => validation.run(req)));
