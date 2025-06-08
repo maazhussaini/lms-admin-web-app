@@ -10,6 +10,7 @@ import { asyncHandler } from '@/utils/async-handler.utils';
 import { ApiError } from '@/utils/api-error.utils';
 import { getPaginationFromRequest, getSortParamsFromRequest } from '../utils/pagination.utils';
 import { TApiSuccessResponse } from '@shared/types/api.types';
+import logger from '@/config/logger';
 
 /**
  * Extended Request interface with authenticated user data
@@ -17,9 +18,11 @@ import { TApiSuccessResponse } from '@shared/types/api.types';
 interface AuthenticatedRequest extends Request {
   user?: {
     id: number;
-    tenantId: number;
-    role: string;
     email: string;
+    role: string;
+    tenantId: number; // Can be 0 for SUPER_ADMIN
+    permissions?: string[];
+    [key: string]: any;
   };
 }
 
@@ -38,12 +41,27 @@ export class ProgramController {
       // Extract data from request
       const programData = req.body as CreateProgramDto;
       
+      // Debug the user object to help troubleshoot
+      logger.debug('User object in create program handler', {
+        hasUser: !!req.user,
+        userId: req.user?.id,
+        role: req.user?.role,
+        tenantId: req.user?.tenantId,
+        path: req.path,
+        requestId: req.id
+      });
+      
       // Extract tenant ID and user ID from authenticated user
-      if (!req.user?.tenantId || !req.user?.id) {
+      if (!req.user || req.user.id === undefined) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
       
-      const tenantId = req.user.tenantId;
+      // Special handling for tenantId - Super Admin can have tenantId = 0
+      const tenantId = req.user.tenantId !== undefined ? req.user.tenantId : null;
+      if (tenantId === null) {
+        throw new ApiError('Tenant context required', 400, 'TENANT_REQUIRED');
+      }
+      
       const userId = req.user.id;
       
       // Create program using service
@@ -86,11 +104,22 @@ export class ProgramController {
         throw new ApiError('Invalid program ID', 400, 'INVALID_PROGRAM_ID');
       }
 
+      // Debug the user object to help troubleshoot
+      logger.debug('User object in get program handler', {
+        hasUser: !!req.user,
+        userId: req.user?.id,
+        role: req.user?.role,
+        tenantId: req.user?.tenantId,
+        path: req.path,
+        requestId: req.id
+      });
+
       // Extract tenant ID from authenticated user
-      if (!req.user?.tenantId) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
       
+      // Super Admin can have tenantId = 0, which is valid
       const tenantId = req.user.tenantId;
 
       // Get program using service
@@ -117,11 +146,22 @@ export class ProgramController {
    */
   static getAllProgramsHandler = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
+      // Debug the user object to help troubleshoot
+      logger.debug('User object in get all programs handler', {
+        hasUser: !!req.user,
+        userId: req.user?.id,
+        role: req.user?.role,
+        tenantId: req.user?.tenantId,
+        path: req.path,
+        requestId: req.id
+      });
+
       // Extract tenant ID from authenticated user
-      if (!req.user?.tenantId) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
       
+      // Super Admin can have tenantId = 0, which is valid
       const tenantId = req.user.tenantId;
 
       // Extract pagination and sorting from query parameters

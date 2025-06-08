@@ -1,0 +1,980 @@
+{
+    "info": {
+        "_postman_id": "9a5f8c21-7e33-45db-bc2d-102d8e47a510",
+        "name": "System User Authentication",
+        "description": "Collection for managing authentication in the Learning Management System (LMS). These endpoints handle user login, token refresh, logout, and password reset operations with appropriate security measures.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Login",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has success true and authentication data\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    ",
+                            "    // Test success flag",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Login successful\", \"Message should indicate successful login\");",
+                            "    ",
+                            "    // Test data object",
+                            "    pm.expect(jsonData.data).to.be.an('object', \"Data should be an object\");",
+                            "    ",
+                            "    // Test user information",
+                            "    pm.expect(jsonData.data).to.have.property('user');",
+                            "    pm.expect(jsonData.data.user).to.have.property('id');",
+                            "    pm.expect(jsonData.data.user).to.have.property('username');",
+                            "    pm.expect(jsonData.data.user).to.have.property('email');",
+                            "    pm.expect(jsonData.data.user).to.have.property('role');",
+                            "    pm.expect(jsonData.data.user.role).to.have.property('role_id');",
+                            "    pm.expect(jsonData.data.user.role).to.have.property('role_name');",
+                            "    ",
+                            "    // Test tokens",
+                            "    pm.expect(jsonData.data).to.have.property('tokens');",
+                            "    pm.expect(jsonData.data.tokens).to.have.property('access_token');",
+                            "    pm.expect(jsonData.data.tokens).to.have.property('refresh_token');",
+                            "    pm.expect(jsonData.data.tokens).to.have.property('expires_in');",
+                            "    pm.expect(jsonData.data.tokens).to.have.property('token_type');",
+                            "    pm.expect(jsonData.data.tokens.token_type).to.eql('Bearer');",
+                            "    ",
+                            "    // Test permissions",
+                            "    pm.expect(jsonData.data).to.have.property('permissions');",
+                            "    pm.expect(jsonData.data.permissions).to.be.an('array');",
+                            "    ",
+                            "    // Store tokens for subsequent requests",
+                            "    pm.environment.set(\"accessToken\", jsonData.data.tokens.access_token);",
+                            "    pm.environment.set(\"refreshToken\", jsonData.data.tokens.refresh_token);",
+                            "    pm.environment.set(\"userId\", jsonData.data.user.id);",
+                            "    ",
+                            "    console.log(`Logged in successfully as ${jsonData.data.user.username} with role ${jsonData.data.user.role.role_name}`);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "// Use environment variables for credentials or set defaults",
+                            "if (!pm.environment.get('admin_email')) {",
+                            "    pm.environment.set('admin_email', 'admin@lms.example.com');",
+                            "}",
+                            "",
+                            "if (!pm.environment.get('admin_password')) {",
+                            "    pm.environment.set('admin_password', 'Admin@123');",
+                            "}",
+                            "",
+                            "// Optional: Generate tenant context if needed",
+                            "if (!pm.environment.get('tenant_context') && pm.environment.get('generate_tenant')) {",
+                            "    const tenantNames = ['University A', 'College B', 'Institute C', 'School D'];",
+                            "    const randomTenant = tenantNames[Math.floor(Math.random() * tenantNames.length)];",
+                            "    pm.environment.set('tenant_context', randomTenant);",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"email_address\": \"{{admin_email}}\",\n    \"password\": \"{{admin_password}}\"{{#tenant_context}},\n    \"tenant_context\": \"{{tenant_context}}\"{{/tenant_context}}\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/auth/login",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "auth",
+                        "login"
+                    ]
+                },
+                "description": "Authenticates a user with their email and password. For SuperAdmin users, an optional tenant_context can be provided to switch to a specific tenant. Returns user information, access and refresh tokens, and user permissions."
+            },
+            "response": []
+        },
+        {
+            "name": "Login (Invalid Credentials)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 401 Unauthorized\", function () {",
+                            "    pm.response.to.have.status(401);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has correct error structure\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    ",
+                            "    // Test error structure",
+                            "    pm.expect(jsonData.success).to.eql(false, \"Response success should be false\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(401, \"Status code should be 401\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Invalid credentials\", \"Message should indicate invalid credentials\");",
+                            "    pm.expect(jsonData.errorCode).to.eql(\"INVALID_CREDENTIALS\", \"Error code should be INVALID_CREDENTIALS\");",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "// Generate invalid credentials",
+                            "pm.environment.set('invalid_email', `invalid${Date.now()}@example.com`);",
+                            "pm.environment.set('invalid_password', 'WrongPassword123!');"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"email_address\": \"{{invalid_email}}\",\n    \"password\": \"{{invalid_password}}\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/auth/login",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "auth",
+                        "login"
+                    ]
+                },
+                "description": "Tests login with invalid credentials. The API should return a 401 Unauthorized response with the appropriate error message and code."
+            },
+            "response": []
+        },
+        {
+            "name": "Login (Invalid Input)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 400 Bad Request\", function () {",
+                            "    pm.response.to.have.status(400);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has validation error structure\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    ",
+                            "    // Test error structure",
+                            "    pm.expect(jsonData.success).to.eql(false, \"Response success should be false\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(400, \"Status code should be 400\");",
+                            "    pm.expect(jsonData.message).to.include(\"validation\", \"Message should indicate validation error\");",
+                            "    ",
+                            "    // Test validation errors array",
+                            "    pm.expect(jsonData).to.have.property('errors');",
+                            "    pm.expect(jsonData.errors).to.be.an('array');",
+                            "    pm.expect(jsonData.errors.length).to.be.at.least(1);",
+                            "    ",
+                            "    // Test first error has required properties",
+                            "    pm.expect(jsonData.errors[0]).to.have.property('msg');",
+                            "    pm.expect(jsonData.errors[0]).to.have.property('param');",
+                            "    pm.expect(jsonData.errors[0].param).to.eql(\"email_address\");",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"email_address\": \"not-an-email\",\n    \"password\": \"\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/auth/login",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "auth",
+                        "login"
+                    ]
+                },
+                "description": "Tests login with invalid input format. The API should return a 400 Bad Request response with validation errors."
+            },
+            "response": []
+        },
+        {
+            "name": "Refresh Token",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has success true and new tokens\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    ",
+                            "    // Test success flag",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Token refreshed successfully\", \"Message should indicate successful refresh\");",
+                            "    ",
+                            "    // Test data object",
+                            "    pm.expect(jsonData.data).to.be.an('object', \"Data should be an object\");",
+                            "    ",
+                            "    // Test tokens",
+                            "    pm.expect(jsonData.data).to.have.property('tokens');",
+                            "    pm.expect(jsonData.data.tokens).to.have.property('access_token');",
+                            "    pm.expect(jsonData.data.tokens).to.have.property('refresh_token');",
+                            "    pm.expect(jsonData.data.tokens).to.have.property('expires_in');",
+                            "    pm.expect(jsonData.data.tokens.token_type).to.eql('Bearer');",
+                            "    ",
+                            "    // Test that new tokens are different from old ones",
+                            "    const oldAccessToken = pm.environment.get(\"accessToken\");",
+                            "    const oldRefreshToken = pm.environment.get(\"refreshToken\");",
+                            "    pm.expect(jsonData.data.tokens.access_token).to.not.eql(oldAccessToken, \"New access token should be different\");",
+                            "    pm.expect(jsonData.data.tokens.refresh_token).to.not.eql(oldRefreshToken, \"New refresh token should be different\");",
+                            "    ",
+                            "    // Store the new tokens",
+                            "    pm.environment.set(\"accessToken\", jsonData.data.tokens.access_token);",
+                            "    pm.environment.set(\"refreshToken\", jsonData.data.tokens.refresh_token);",
+                            "    ",
+                            "    console.log(\"Successfully refreshed tokens\");",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"refreshToken\": \"{{refreshToken}}\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/auth/refresh",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "auth",
+                        "refresh"
+                    ]
+                },
+                "description": "Refreshes the access token using a valid refresh token. Returns new access and refresh tokens while invalidating the previous refresh token."
+            },
+            "response": []
+        },
+        {
+            "name": "Refresh Token (Invalid)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 401 Unauthorized\", function () {",
+                            "    pm.response.to.have.status(401);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has correct error structure\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    ",
+                            "    // Test error structure",
+                            "    pm.expect(jsonData.success).to.eql(false, \"Response success should be false\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(401, \"Status code should be 401\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Invalid refresh token\", \"Message should indicate invalid token\");",
+                            "    pm.expect(jsonData.errorCode).to.eql(\"INVALID_REFRESH_TOKEN\", \"Error code should be INVALID_REFRESH_TOKEN\");",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "// Generate an invalid refresh token",
+                            "pm.environment.set('invalid_refresh_token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkludmFsaWQgVG9rZW4iLCJpYXQiOjE1MTYyMzkwMjJ9.keH6T3x1z7mmhKL1T3r9sQdAxxdzB6siemGMr_6ZOwE');"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"refreshToken\": \"{{invalid_refresh_token}}\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/auth/refresh",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "auth",
+                        "refresh"
+                    ]
+                },
+                "description": "Tests token refresh with an invalid refresh token. The API should return a 401 Unauthorized response."
+            },
+            "response": []
+        },
+        {
+            "name": "Test Protected Route",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "// This endpoint is just for testing authentication - adjust the test based on the actual protected endpoint response",
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has success true\", function () {",
+                            "    try {",
+                            "        const jsonData = pm.response.json();",
+                            "        pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    } catch (e) {",
+                            "        pm.expect.fail(\"Response should be valid JSON\");",
+                            "    }",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/programs",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "programs"
+                    ]
+                },
+                "description": "Tests a protected route using the access token. This request verifies that authentication is working correctly by accessing a protected endpoint."
+            },
+            "response": []
+        },
+        {
+            "name": "Forgot Password",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has success true and appropriate message\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    ",
+                            "    // Test success flag",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+                            "    // Note: The message should be vague to prevent email enumeration attacks",
+                            "    pm.expect(jsonData.message).to.include(\"Password reset instructions\", \"Message should indicate instructions sent\");",
+                            "    ",
+                            "    // Check that no user data is returned (for security)",
+                            "    pm.expect(jsonData.data).to.be.null;",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "// Use existing email if available, otherwise use a default",
+                            "if (!pm.environment.get('admin_email')) {",
+                            "    pm.environment.set('admin_email', 'admin@lms.example.com');",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"email_address\": \"{{admin_email}}\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/auth/forgot-password",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "auth",
+                        "forgot-password"
+                    ]
+                },
+                "description": "Initiates a password reset process for the specified email. For security, the API returns a success response regardless of whether the email exists in the system to prevent email enumeration attacks. In a real application, an email would be sent to the user with a password reset link containing a token."
+            },
+            "response": []
+        },
+        {
+            "name": "Forgot Password (Invalid Email Format)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 400 Bad Request\", function () {",
+                            "    pm.response.to.have.status(400);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has validation error for email\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    ",
+                            "    // Test error structure",
+                            "    pm.expect(jsonData.success).to.eql(false, \"Response success should be false\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(400, \"Status code should be 400\");",
+                            "    ",
+                            "    // Test validation errors array",
+                            "    pm.expect(jsonData).to.have.property('errors');",
+                            "    pm.expect(jsonData.errors).to.be.an('array');",
+                            "    pm.expect(jsonData.errors.length).to.be.at.least(1);",
+                            "    ",
+                            "    // Check that error is about email format",
+                            "    const emailError = jsonData.errors.find(err => err.param === 'email_address');",
+                            "    pm.expect(emailError).to.not.be.undefined;",
+                            "    pm.expect(emailError.msg).to.include(\"valid email\");",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"email_address\": \"not-an-email-address\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/auth/forgot-password",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "auth",
+                        "forgot-password"
+                    ]
+                },
+                "description": "Tests the forgot password endpoint with an invalid email format. The API should return a 400 Bad Request with validation errors."
+            },
+            "response": []
+        },
+        {
+            "name": "Reset Password",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "// Note: In a real scenario, you would need an actual reset token from the system",
+                            "// This test might fail if using a mock token",
+                            "",
+                            "// Handle both success and expected failure scenarios",
+                            "if (pm.response.code === 200) {",
+                            "    pm.test(\"Status code is 200 OK\", function () {",
+                            "        pm.response.to.have.status(200);",
+                            "    });",
+                            "",
+                            "    pm.test(\"Response indicates successful password reset\", function () {",
+                            "        const jsonData = pm.response.json();",
+                            "        ",
+                            "        pm.expect(jsonData.success).to.eql(true);",
+                            "        pm.expect(jsonData.statusCode).to.eql(200);",
+                            "        pm.expect(jsonData.message).to.include(\"Password has been reset\");",
+                            "        pm.expect(jsonData.data).to.be.null;",
+                            "    });",
+                            "} else if (pm.response.code === 400) {",
+                            "    pm.test(\"Status code is 400 Bad Request (expected for mock token)\", function () {",
+                            "        pm.response.to.have.status(400);",
+                            "    });",
+                            "",
+                            "    pm.test(\"Response indicates invalid token (expected for mock token)\", function () {",
+                            "        const jsonData = pm.response.json();",
+                            "        ",
+                            "        pm.expect(jsonData.success).to.eql(false);",
+                            "        pm.expect(jsonData.statusCode).to.eql(400);",
+                            "        pm.expect(jsonData.message).to.include(\"Invalid\");",
+                            "        pm.expect(jsonData.errorCode).to.include(\"INVALID_RESET_TOKEN\");",
+                            "    });",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "// Generate a mock reset token and new password",
+                            "// Note: In a real scenario, you would get an actual token from an email",
+                            "pm.environment.set('resetToken', 'mock-reset-token-' + Math.random().toString(36).substring(2, 15));",
+                            "pm.environment.set('newPassword', 'NewSecurePassword123!');"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"token\": \"{{resetToken}}\",\n    \"newPassword\": \"{{newPassword}}\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/auth/reset-password",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "auth",
+                        "reset-password"
+                    ]
+                },
+                "description": "Completes the password reset process using a token and new password. Since this collection uses a mock token, it's expected to receive a 400 Bad Request response in a real environment. In a real application, the user would receive a valid token via email."
+            },
+            "response": []
+        },
+        {
+            "name": "Reset Password (Validation Error)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 400 Bad Request\", function () {",
+                            "    pm.response.to.have.status(400);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has validation errors for password\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    ",
+                            "    // Test error structure",
+                            "    pm.expect(jsonData.success).to.eql(false, \"Response success should be false\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(400, \"Status code should be 400\");",
+                            "    ",
+                            "    // Test validation errors array",
+                            "    pm.expect(jsonData).to.have.property('errors');",
+                            "    pm.expect(jsonData.errors).to.be.an('array');",
+                            "    pm.expect(jsonData.errors.length).to.be.at.least(1);",
+                            "    ",
+                            "    // Check that error is about password requirement",
+                            "    const passwordError = jsonData.errors.find(err => err.param === 'newPassword');",
+                            "    pm.expect(passwordError).to.not.be.undefined;",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "// Generate a mock reset token and weak password",
+                            "pm.environment.set('resetToken', 'mock-reset-token-' + Math.random().toString(36).substring(2, 15));",
+                            "pm.environment.set('weakPassword', 'weak');"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"token\": \"{{resetToken}}\",\n    \"newPassword\": \"{{weakPassword}}\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/auth/reset-password",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "auth",
+                        "reset-password"
+                    ]
+                },
+                "description": "Tests password reset with a weak password that doesn't meet the validation requirements. The API should return a 400 Bad Request with validation errors about password complexity."
+            },
+            "response": []
+        },
+        {
+            "name": "Logout",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has success true and logout confirmation\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    ",
+                            "    // Test success flag and message",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Logout successful\", \"Message should indicate successful logout\");",
+                            "    pm.expect(jsonData.data).to.be.null;",
+                            "    ",
+                            "    // Clear authentication tokens",
+                            "    pm.environment.set(\"accessToken\", \"\");",
+                            "    pm.environment.set(\"refreshToken\", \"\");",
+                            "    ",
+                            "    console.log(\"Successfully logged out and cleared tokens\");",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "POST",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/auth/logout",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "auth",
+                        "logout"
+                    ]
+                },
+                "description": "Logs out the current user by invalidating their refresh token. Requires authentication via access token. After successful logout, the tokens are cleared from the environment variables."
+            },
+            "response": []
+        },
+        {
+            "name": "Unauthorized Access After Logout",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 401 Unauthorized\", function () {",
+                            "    pm.response.to.have.status(401);",
+                            "});",
+                            "",
+                            "pm.test(\"Response indicates unauthorized access\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    ",
+                            "    // Test error structure",
+                            "    pm.expect(jsonData.success).to.eql(false, \"Response success should be false\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(401, \"Status code should be 401\");",
+                            "    pm.expect(jsonData.message).to.include(\"Unauthorized\", \"Message should indicate unauthorized access\");",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/programs",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "programs"
+                    ]
+                },
+                "description": "Tests accessing a protected route after logout. The API should return a 401 Unauthorized response, confirming that authentication is required."
+            },
+            "response": []
+        },
+        {
+            "name": "SuperAdmin Login with Tenant Context",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has tenant context applied\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    ",
+                            "    // Test success flag",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    ",
+                            "    // Check user data and tenant information",
+                            "    pm.expect(jsonData.data.user).to.have.property('tenant_id');",
+                            "    pm.expect(jsonData.data.user.tenant_id).to.be.a('number').and.not.eql(0);",
+                            "    ",
+                            "    // Store tokens and tenant ID",
+                            "    if (jsonData.data.tokens) {",
+                            "        pm.environment.set(\"accessToken\", jsonData.data.tokens.access_token);",
+                            "        pm.environment.set(\"refreshToken\", jsonData.data.tokens.refresh_token);",
+                            "        pm.environment.set(\"currentTenantId\", jsonData.data.user.tenant_id);",
+                            "        ",
+                            "        console.log(`Logged in as SuperAdmin with tenant context. Tenant ID: ${jsonData.data.user.tenant_id}`);",
+                            "    }",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "// Use environment variables for SuperAdmin credentials or set defaults",
+                            "if (!pm.environment.get('superadmin_email')) {",
+                            "    pm.environment.set('superadmin_email', 'superadmin@lms.example.com');",
+                            "}",
+                            "",
+                            "if (!pm.environment.get('superadmin_password')) {",
+                            "    pm.environment.set('superadmin_password', 'SuperAdmin@123');",
+                            "}",
+                            "",
+                            "// Set tenant context - typically would be an actual tenant ID or name",
+                            "pm.environment.set('tenant_context', '1');"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"email_address\": \"{{superadmin_email}}\",\n    \"password\": \"{{superadmin_password}}\",\n    \"tenant_context\": \"{{tenant_context}}\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/auth/login",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "auth",
+                        "login"
+                    ]
+                },
+                "description": "Authenticates a SuperAdmin user with a specific tenant context. This allows SuperAdmin users to operate within a specific tenant's scope. The API will verify the tenant exists and is active."
+            },
+            "response": []
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{accessToken}}",
+                "type": "string"
+            }
+        ]
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "// Global pre-request script",
+                    "console.log(`Running request: ${pm.info.requestName}`);",
+                    "",
+                    "// Ensure environment variables exist",
+                    "if (!pm.environment.get('base_url')) {",
+                    "    console.error('base_url environment variable is not set!');",
+                    "}"
+                ]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "// Global test script",
+                    "console.log(`Completed request: ${pm.info.requestName} with status ${pm.response.code}`);",
+                    "",
+                    "// Add timestamp validation for all JSON responses",
+                    "if (pm.response.headers.get('Content-Type') && ",
+                    "    pm.response.headers.get('Content-Type').includes('application/json')) {",
+                    "    try {",
+                    "        const jsonData = pm.response.json();",
+                    "        if (jsonData.timestamp) {",
+                    "            pm.test(\"Response includes valid timestamp\", function () {",
+                    "                const timestamp = new Date(jsonData.timestamp).getTime();",
+                    "                pm.expect(timestamp).to.be.a('number');",
+                    "                pm.expect(timestamp).to.be.at.most(Date.now());",
+                    "                pm.expect(timestamp).to.be.at.least(Date.now() - 60000); // Within last minute",
+                    "            });",
+                    "        }",
+                    "    } catch (e) {",
+                    "        console.log(\"Could not parse response as JSON or timestamp missing\");",
+                    "    }",
+                    "}"
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "accessToken",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "refreshToken",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "userId",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "admin_email",
+            "value": "admin@lms.example.com",
+            "type": "string"
+        },
+        {
+            "key": "admin_password",
+            "value": "Admin@123",
+            "type": "string"
+        },
+        {
+            "key": "superadmin_email",
+            "value": "superadmin@lms.example.com",
+            "type": "string"
+        },
+        {
+            "key": "superadmin_password",
+            "value": "SuperAdmin@123",
+            "type": "string"
+        },
+        {
+            "key": "currentTenantId",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}

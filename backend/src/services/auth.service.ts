@@ -16,7 +16,6 @@ import {
   BadRequestError 
 } from '@/utils/api-error.utils';
 import { TAuthResponse } from '@shared/types/api.types';
-import { SystemUserRole } from '@shared/types/system-users.types';
 import { 
   LoginDto, 
   RefreshTokenDto, 
@@ -33,6 +32,15 @@ const TOKEN_RESET_HASHES = new Map<string, {
   hash: string, 
   expiresAt: Date 
 }>();
+
+/**
+ * System user role enumeration
+ * @description Defines system-level roles with proper hierarchy
+ */
+export enum SystemUserRole {
+  SUPERADMIN = 1,     // Global system administrator (no tenant)
+  TENANT_ADMIN = 2,   // Tenant administrator
+}
 
 export class AuthService {
   constructor(private prisma: PrismaClient) {}

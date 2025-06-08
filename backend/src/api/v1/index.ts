@@ -6,7 +6,9 @@
 import { Router } from 'express';
 
 // Import route modules
-// import authRoutes from './routes/auth.routes.js';
+import authRoutes from './routes/auth.routes.js';
+import studentAuthRoutes from './routes/student/auth.routes.js';
+import teacherAuthRoutes from './routes/teacher/auth.routes.js';
 // import userRoutes from './routes/user.routes.js';
 import programRoutes from './routes/program.routes';
 // import courseRoutes from './routes/course.routes.js';
@@ -31,7 +33,9 @@ router.get('/', (_req, res) => {
       version: 'v1',
       documentation: '/api/v1/docs',
       endpoints: [
-        // '/api/v1/auth',
+        '/api/v1/auth',
+        '/api/v1/auth/student',
+        '/api/v1/auth/teacher',
         // '/api/v1/users',
         // '/api/v1/tenants',
         '/api/v1/programs',
@@ -49,7 +53,9 @@ router.get('/', (_req, res) => {
 });
 
 // Register route modules
-// router.use('/auth', authRoutes);
+router.use('/auth', authRoutes);
+router.use('/auth/student', studentAuthRoutes);
+router.use('/auth/teacher', teacherAuthRoutes);
 // router.use('/users', userRoutes);
 // router.use('/tenants', tenantRoutes);
 router.use('/programs', programRoutes);

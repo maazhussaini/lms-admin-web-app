@@ -7,6 +7,7 @@ import { PrismaClient } from '@prisma/client';
 import { CreateProgramDto, UpdateProgramDto, ProgramResponseDto } from '@/dtos/course/program.dto';
 import { ApiError } from '@/utils/api-error.utils';
 import { TListResponse } from '@shared/types';
+import logger from '@/config/logger';
 
 // Initialize Prisma client
 const prisma = new PrismaClient();
@@ -21,11 +22,21 @@ export class ProgramService {
    * @returns Newly created program
    */
   async createProgram(data: CreateProgramDto, tenantId: number, userId: number, ip?: string): Promise<ProgramResponseDto> {
+    // Log the tenant context for debugging
+    logger.debug('Creating program with tenant context', {
+      tenantId,
+      userId,
+      programName: data.program_name
+    });
+
+    // Special handling for Super Admin (tenantId = 0)
+    const tenantFilter = tenantId === 0 ? {} : { tenant_id: tenantId };
+
     // Check if program with same name exists in this tenant
     const existingProgram = await prisma.program.findFirst({
       where: {
         program_name: data.program_name,
-        tenant_id: tenantId,
+        ...tenantFilter,
         is_deleted: false
       }
     });
@@ -59,10 +70,19 @@ export class ProgramService {
    * @returns Program if found, null otherwise
    */
   async getProgramById(programId: number, tenantId: number): Promise<ProgramResponseDto> {
+    // Log the tenant context for debugging
+    logger.debug('Getting program by ID with tenant context', {
+      programId,
+      tenantId
+    });
+
+    // Special handling for Super Admin (tenantId = 0)
+    const tenantFilter = tenantId === 0 ? {} : { tenant_id: tenantId };
+    
     const program = await prisma.program.findFirst({
       where: {
         program_id: programId,
-        tenant_id: tenantId,
+        ...tenantFilter,
         is_deleted: false
       }
     });
@@ -92,16 +112,27 @@ export class ProgramService {
       is_active?: boolean | undefined;
     } = {}
   ): Promise<TListResponse<ProgramResponseDto>> {
+    // Log the tenant context for debugging
+    logger.debug('Getting all programs with tenant context', {
+      tenantId,
+      options
+    });
+
     // Set default pagination options
     const page = options.page || 1;
     const limit = options.limit || 20;
     const skip = (page - 1) * limit;
     
     // Build where clause with tenant isolation
-    const where = {
-      tenant_id: tenantId,
+    // Special handling for Super Admin (tenantId = 0)
+    const where: any = {
       is_deleted: false
-    } as any;
+    };
+    
+    // Only add tenant filter if not Super Admin or Super Admin viewing specific tenant
+    if (tenantId !== 0) {
+      where.tenant_id = tenantId;
+    }
     
     // Add optional filters
     if (options.search) {
