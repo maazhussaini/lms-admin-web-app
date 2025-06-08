@@ -3,13 +3,18 @@
  * @description Service for managing system users with tenant isolation and proper authorization
  */
 
-import { PrismaClient, SystemUserStatus as PrismaSystemUserStatus } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { CreateSystemUserDto, UpdateSystemUserDto, SystemUserFilterDto } from '@/dtos/user/systemUser.dto.js';
 import { SystemUser } from '@shared/types/system-users.types';
 import { BadRequestError, ForbiddenError, NotFoundError, ConflictError } from '@/utils/api-error.utils.js';
 import { hashPassword } from '@/utils/password.utils.js';
 import { getPrismaPagination } from '@/utils/pagination.utils.js';
 import { tryCatch } from '@/utils/error-wrapper.utils.js';
+import { 
+  SystemUserStatus,
+  toPrismaSystemUserStatus,
+  fromPrismaSystemUser,
+} from '@/utils/enum-mapper.utils.js';
 
 /**
  * System user role enumeration
@@ -18,63 +23,6 @@ import { tryCatch } from '@/utils/error-wrapper.utils.js';
 export enum SystemUserRole {
   SUPERADMIN = 1,     // Global system administrator (no tenant)
   TENANT_ADMIN = 2,   // Tenant administrator
-}
-
-/**
- * System user status enumeration
- * @description Operational status of system users
- */
-export enum SystemUserStatus {
-  ACTIVE = 1,
-  INACTIVE = 2,
-  SUSPENDED = 3,
-  LOCKED = 4
-}
-
-/**
- * Convert shared SystemUserStatus enum to Prisma enum
- */
-function toPrismaStatus(status: SystemUserStatus): PrismaSystemUserStatus {
-  switch (status) {
-    case SystemUserStatus.ACTIVE:
-      return PrismaSystemUserStatus.ACTIVE;
-    case SystemUserStatus.INACTIVE:
-      return PrismaSystemUserStatus.INACTIVE;
-    case SystemUserStatus.SUSPENDED:
-      return PrismaSystemUserStatus.SUSPENDED;
-    case SystemUserStatus.LOCKED:
-      return PrismaSystemUserStatus.LOCKED;
-    default:
-      return PrismaSystemUserStatus.ACTIVE;
-  }
-}
-
-/**
- * Convert Prisma SystemUser to shared SystemUser type
- */
-function fromPrismaUser(prismaUser: any): SystemUser {
-  return {
-    ...prismaUser,
-    system_user_status: mapPrismaStatusToShared(prismaUser.system_user_status)
-  };
-}
-
-/**
- * Convert Prisma status to shared status
- */
-function mapPrismaStatusToShared(prismaStatus: PrismaSystemUserStatus): SystemUserStatus {
-  switch (prismaStatus) {
-    case PrismaSystemUserStatus.ACTIVE:
-      return SystemUserStatus.ACTIVE;
-    case PrismaSystemUserStatus.INACTIVE:
-      return SystemUserStatus.INACTIVE;
-    case PrismaSystemUserStatus.SUSPENDED:
-      return SystemUserStatus.SUSPENDED;
-    case PrismaSystemUserStatus.LOCKED:
-      return SystemUserStatus.LOCKED;
-    default:
-      return SystemUserStatus.ACTIVE;
-  }
 }
 
 export class SystemUserService {
@@ -86,7 +34,8 @@ export class SystemUserService {
 
   /**
    * Create a new system user with proper authorization checks
-   */  async createSystemUser(
+   */
+  async createSystemUser(
     data: CreateSystemUserDto,
     requestingUser: SystemUser
   ): Promise<SystemUser> {
@@ -116,7 +65,9 @@ export class SystemUserService {
       }
 
       // Hash the password
-      const passwordHash = await hashPassword(data.password);      // Create the system user
+      const passwordHash = await hashPassword(data.password);
+
+      // Create the system user
       const newUser = await this.prisma.systemUser.create({
         data: {
           username: data.username,
@@ -125,7 +76,7 @@ export class SystemUserService {
           password_hash: passwordHash,
           role_id: data.role,
           tenant_id: data.role === SystemUserRole.SUPERADMIN ? null : (data.tenantId || null),
-          system_user_status: toPrismaStatus(data.status || SystemUserStatus.ACTIVE),
+          system_user_status: toPrismaSystemUserStatus(data.status || SystemUserStatus.ACTIVE),
           
           // Audit fields
           created_by: requestingUser.system_user_id,
@@ -135,7 +86,7 @@ export class SystemUserService {
         }
       });
 
-      return fromPrismaUser(newUser);
+      return fromPrismaSystemUser(newUser);
     }, {
       context: {
         requestingUser: { id: requestingUser.system_user_id, role: requestingUser.role_id, tenantId: requestingUser.tenant_id }
@@ -156,7 +107,9 @@ export class SystemUserService {
           system_user_id: userId,
           is_deleted: false
         }
-      });      if (!user) {
+      });
+
+      if (!user) {
         throw new NotFoundError(`System user with ID ${userId} not found`);
       }
 
@@ -168,7 +121,7 @@ export class SystemUserService {
         throw new ForbiddenError('You cannot access users from another tenant');
       }
 
-      return fromPrismaUser(user);
+      return fromPrismaSystemUser(user);
     }, {
       context: {
         userId,
@@ -204,8 +157,10 @@ export class SystemUserService {
       // Apply additional filters
       if (filter.role !== undefined) {
         where.role_id = filter.role;
-      }      if (filter.status !== undefined) {
-        where.system_user_status = toPrismaStatus(filter.status);
+      }
+
+      if (filter.status !== undefined) {
+        where.system_user_status = toPrismaSystemUserStatus(filter.status);
       }
 
       // Apply search if provided
@@ -230,7 +185,7 @@ export class SystemUserService {
         this.prisma.systemUser.count({ where })
       ]);
 
-      return { users: users.map(fromPrismaUser), total };
+      return { users: users.map(fromPrismaSystemUser), total };
     }, {
       context: {
         filter,
@@ -298,9 +253,9 @@ export class SystemUserService {
 
       // Prepare update data
       const updateData: any = {};
-        if (data.fullName !== undefined) updateData.full_name = data.fullName;
+      if (data.fullName !== undefined) updateData.full_name = data.fullName;
       if (data.email !== undefined) updateData.email_address = data.email;
-      if (data.status !== undefined) updateData.system_user_status = toPrismaStatus(data.status);
+      if (data.status !== undefined) updateData.system_user_status = toPrismaSystemUserStatus(data.status);
       
       // Handle password update if provided
       if (data.password) {
@@ -325,13 +280,15 @@ export class SystemUserService {
       // Update audit fields
       updateData.updated_by = requestingUser.system_user_id;
       updateData.updated_at = new Date();
-      updateData.updated_ip = '127.0.0.1'; // This should be passed from the controller      // Perform the update
+      updateData.updated_ip = '127.0.0.1'; // This should be passed from the controller
+
+      // Perform the update
       const updatedUser = await this.prisma.systemUser.update({
         where: { system_user_id: userId },
         data: updateData
       });
 
-      return fromPrismaUser(updatedUser);
+      return fromPrismaSystemUser(updatedUser);
     }, {
       context: {
         userId,
@@ -395,6 +352,7 @@ export class SystemUserService {
       }
     });
   }
+
   /**
    * Helper method to check for existing users with the same username or email
    * Scope is global for SUPER_ADMIN, tenant-specific for TENANT_ADMIN
@@ -415,7 +373,7 @@ export class SystemUserService {
           is_deleted: false
         }
       });
-      return user ? fromPrismaUser(user) : null;
+      return user ? fromPrismaSystemUser(user) : null;
     } 
     // For TenantAdmin (tenant-scoped uniqueness)
     else {
@@ -428,7 +386,7 @@ export class SystemUserService {
           is_deleted: false
         }
       });
-      return user ? fromPrismaUser(user) : null;
+      return user ? fromPrismaSystemUser(user) : null;
     }
   }
 }
