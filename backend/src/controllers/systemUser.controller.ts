@@ -9,7 +9,7 @@ import { CreateSystemUserDto, UpdateSystemUserDto, SystemUserFilterDto } from '@
 import { SystemUser } from '@shared/types/system-users.types';
 import {
   createRouteHandler,
-  createPaginatedResponse,
+  createSuccessResponse,
   asyncHandler
 } from '@/utils/index.js';
 import prisma from '@/config/database.js';
@@ -106,12 +106,21 @@ export class SystemUserController {
         requestingUser
       );
 
-      const response = createPaginatedResponse(
-        users,
+      // Use createSuccessResponse instead to avoid duplicate pagination
+      const paginationMetadata = {
         page,
         limit,
         total,
-        'System users retrieved successfully'
+        totalPages: Math.ceil(total / limit),
+        hasNext: page < Math.ceil(total / limit),
+        hasPrev: page > 1
+      };
+
+      const response = createSuccessResponse(
+        users,
+        'System users retrieved successfully',
+        200,
+        paginationMetadata
       );
 
       res.status(200).json(response);
