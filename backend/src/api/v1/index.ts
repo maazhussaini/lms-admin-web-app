@@ -11,14 +11,8 @@ import studentAuthRoutes from './routes/student/auth.routes.js';
 import teacherAuthRoutes from './routes/teacher/auth.routes.js';
 import userRoutes from './routes/systemUser.routes.js';
 import programRoutes from './routes/program.routes';
-// import courseRoutes from './routes/course.routes.js';
-// import tenantRoutes from './routes/tenant.routes.js';
-// import studentRoutes from './routes/student.routes.js';
-// import teacherRoutes from './routes/teacher.routes.js';
-// import enrollmentRoutes from './routes/enrollment.routes.js';
-// import quizRoutes from './routes/quiz.routes.js';
-// import assignmentRoutes from './routes/assignment.routes.js';
-// import notificationRoutes from './routes/notification.routes.js';
+import tenantRoutes from './routes/tenant.routes.js';
+import clientRoutes from './routes/client.routes.js';
 
 // Create router
 const router = Router();
@@ -37,15 +31,9 @@ router.get('/', (_req, res) => {
         '/api/v1/auth/student',
         '/api/v1/auth/teacher',
         '/api/v1/users',
-        // '/api/v1/tenants',
+        '/api/v1/tenants',
+        '/api/v1/clients',
         '/api/v1/programs',
-        // '/api/v1/courses',
-        // '/api/v1/students',
-        // '/api/v1/teachers',
-        // '/api/v1/enrollments',
-        // '/api/v1/quizzes',
-        // '/api/v1/assignments',
-        // '/api/v1/notifications'
       ]
     },
     timestamp: new Date().toISOString(),
@@ -57,14 +45,8 @@ router.use('/auth', authRoutes);
 router.use('/auth/student', studentAuthRoutes);
 router.use('/auth/teacher', teacherAuthRoutes);
 router.use('/users', userRoutes);
-// router.use('/tenants', tenantRoutes);
+router.use('/tenants', tenantRoutes);
+router.use('/clients', clientRoutes);
 router.use('/programs', programRoutes);
-// router.use('/courses', courseRoutes);
-// router.use('/students', studentRoutes);
-// router.use('/teachers', teacherRoutes);
-// router.use('/enrollments', enrollmentRoutes);
-// router.use('/quizzes', quizRoutes);
-// router.use('/assignments', assignmentRoutes);
-// router.use('/notifications', notificationRoutes);
 
 export default router;

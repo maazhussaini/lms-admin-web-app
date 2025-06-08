@@ -1,6 +1,7 @@
 /**
  * @file api/v1/routes/tenant.routes.ts
  * @description Tenant management routes with comprehensive CRUD operations
+ * @note Client-specific routes have been moved to client.routes.ts for better organization
  */
 
 import { Router } from 'express';
@@ -10,13 +11,10 @@ import { validate } from '@/middleware/validation.middleware';
 import { 
   CreateTenantDto, 
   UpdateTenantDto,
-  CreateClientDto,
-  UpdateClientDto,
   CreateTenantPhoneNumberDto,
   UpdateTenantPhoneNumberDto,
   CreateTenantEmailAddressDto,
-  UpdateTenantEmailAddressDto,
-  CreateClientTenantDto
+  UpdateTenantEmailAddressDto
 } from '@/dtos/tenant/tenant.dto';
 import { param, query } from 'express-validator';
 
@@ -125,115 +123,6 @@ router.delete(
       .withMessage('Tenant ID must be a positive integer')
   ]),
   TenantController.deleteTenantHandler
-);
-
-// ==================== CLIENT MANAGEMENT ROUTES ====================
-
-/**
- * @route POST /api/v1/clients
- * @description Create a new client
- * @access Private (SUPER_ADMIN, TENANT_ADMIN)
- */
-router.post(
-  '/clients',
-  authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
-  validate(CreateClientDto.validate()),
-  TenantController.createClientHandler
-);
-
-/**
- * @route GET /api/v1/clients
- * @description Get all clients with pagination and filtering
- * @access Private (SUPER_ADMIN or same tenant)
- */
-router.get(
-  '/clients',
-  authenticate,
-  validate([
-    query('page')
-      .optional()
-      .isInt({ min: 1 })
-      .withMessage('Page must be a positive integer'),
-    query('limit')
-      .optional()
-      .isInt({ min: 1, max: 100 })
-      .withMessage('Limit must be between 1 and 100'),
-    query('search')
-      .optional()
-      .isString()
-      .trim()
-      .isLength({ max: 255 })
-      .withMessage('Search term cannot exceed 255 characters'),
-    query('tenantId')
-      .optional()
-      .isInt({ min: 1 })
-      .withMessage('Tenant ID must be a positive integer'),
-    query('status')
-      .optional()
-      .isInt({ min: 1, max: 4 })
-      .withMessage('Status must be a valid client status (1-4)'),
-    query('sortBy')
-      .optional()
-      .isIn(['client_id', 'full_name', 'email_address', 'client_status', 'created_at', 'updated_at'])
-      .withMessage('Invalid sort field'),
-    query('order')
-      .optional()
-      .isIn(['asc', 'desc'])
-      .withMessage('Order must be asc or desc')
-  ]),
-  TenantController.getAllClientsHandler
-);
-
-/**
- * @route GET /api/v1/clients/:clientId
- * @description Get client by ID
- * @access Private (SUPER_ADMIN or same tenant)
- */
-router.get(
-  '/clients/:clientId',
-  authenticate,
-  validate([
-    param('clientId')
-      .isInt({ min: 1 })
-      .withMessage('Client ID must be a positive integer')
-  ]),
-  TenantController.getClientByIdHandler
-);
-
-/**
- * @route PATCH /api/v1/clients/:clientId
- * @description Update client by ID
- * @access Private (SUPER_ADMIN, TENANT_ADMIN)
- */
-router.patch(
-  '/clients/:clientId',
-  authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
-  validate([
-    param('clientId')
-      .isInt({ min: 1 })
-      .withMessage('Client ID must be a positive integer'),
-    ...UpdateClientDto.validate()
-  ]),
-  TenantController.updateClientHandler
-);
-
-/**
- * @route DELETE /api/v1/clients/:clientId
- * @description Delete client by ID (soft delete)
- * @access Private (SUPER_ADMIN, TENANT_ADMIN)
- */
-router.delete(
-  '/clients/:clientId',
-  authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
-  validate([
-    param('clientId')
-      .isInt({ min: 1 })
-      .withMessage('Client ID must be a positive integer')
-  ]),
-  TenantController.deleteClientHandler
 );
 
 // ==================== TENANT CONTACT INFORMATION ROUTES ====================
@@ -404,41 +293,11 @@ router.delete(
   TenantController.deleteTenantEmailAddressHandler
 );
 
-// ==================== CLIENT-TENANT ASSOCIATION ROUTES ====================
-
-/**
- * @route POST /api/v1/client-tenants
- * @description Create a new client-tenant association
- * @access Private (SUPER_ADMIN, TENANT_ADMIN)
- */
-router.post(
-  '/client-tenants',
-  authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
-  validate(CreateClientTenantDto.validate()),
-  TenantController.createClientTenantAssociationHandler
-);
-
-/**
- * @route GET /api/v1/clients/:clientId/tenants
- * @description Get all tenants for a client
- * @access Private (SUPER_ADMIN or same tenant)
- */
-router.get(
-  '/clients/:clientId/tenants',
-  authenticate,
-  validate([
-    param('clientId')
-      .isInt({ min: 1 })
-      .withMessage('Client ID must be a positive integer')
-  ]),
-  TenantController.getClientTenantsHandler
-);
-
 /**
  * @route GET /api/v1/tenants/:tenantId/clients
  * @description Get all clients for a tenant
  * @access Private (SUPER_ADMIN or same tenant)
+ * @note This is a convenience route. Full client management is available at /api/v1/clients
  */
 router.get(
   '/:tenantId/clients',
@@ -449,23 +308,6 @@ router.get(
       .withMessage('Tenant ID must be a positive integer')
   ]),
   TenantController.getTenantClientsHandler
-);
-
-/**
- * @route DELETE /api/v1/client-tenants/:associationId
- * @description Remove client-tenant association
- * @access Private (SUPER_ADMIN, TENANT_ADMIN)
- */
-router.delete(
-  '/client-tenants/:associationId',
-  authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
-  validate([
-    param('associationId')
-      .isInt({ min: 1 })
-      .withMessage('Association ID must be a positive integer')
-  ]),
-  TenantController.removeClientTenantAssociationHandler
 );
 
 export default router;

@@ -1,0 +1,1702 @@
+{
+  "info": {
+    "_postman_id": "9f4c8e3a-7d53-49ea-bd4e-204f9e58c72a",
+    "name": "Tenant Management",
+    "description": "Comprehensive collection for managing tenants, clients, and their associations in the Learning Management System (LMS). These endpoints handle tenant creation, client management, contact information, and client-tenant associations with proper multi-tenant isolation and role-based access controls.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "SuperAdmin Operations",
+      "description": "Operations that can be performed by users with the SuperAdmin role.",
+      "item": [
+        {
+          "name": "Login as SuperAdmin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has access token', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.accessToken).to.exist;",
+                  "    pm.environment.set('accessToken', jsonData.data.accessToken);",
+                  "    pm.environment.set('currentUserId', jsonData.data.user.system_user_id);",
+                  "    pm.environment.set('currentTenantId', jsonData.data.user.tenant_id);",
+                  "    pm.environment.set('currentUserRole', jsonData.data.user.role);",
+                  "});",
+                  "",
+                  "pm.test('User has SuperAdmin role', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.user.role).to.eql('SUPER_ADMIN');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set('superadmin_email', 'superadmin@lms.com');",
+                  "pm.environment.set('superadmin_password', 'SuperAdmin@123');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email_address\": \"{{superadmin_email}}\",\n    \"password\": \"{{superadmin_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticate as a SuperAdmin user to perform privileged tenant operations."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Tenant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response has success true', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('Tenant created with correct data', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('tenant_id');",
+                  "    pm.expect(jsonData.data.tenant_name).to.eql(pm.environment.get('new_tenant_name'));",
+                  "    pm.expect(jsonData.data.tenant_status).to.exist;",
+                  "    ",
+                  "    // Store created tenant ID for subsequent tests",
+                  "    pm.environment.set('created_tenant_id', jsonData.data.tenant_id);",
+                  "});",
+                  "",
+                  "pm.test('Response has audit fields', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('created_at');",
+                  "    pm.expect(jsonData.data).to.have.property('created_by');",
+                  "    pm.expect(jsonData.data.is_active).to.be.true;",
+                  "    pm.expect(jsonData.data.is_deleted).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate unique tenant name",
+                  "const timestamp = Date.now();",
+                  "const tenantName = `Tech Solutions ${timestamp}`;",
+                  "pm.environment.set('new_tenant_name', tenantName);",
+                  "",
+                  "// Set other tenant data",
+                  "pm.environment.set('tenant_logo_light', 'https://example.com/logo-light.png');",
+                  "pm.environment.set('tenant_logo_dark', 'https://example.com/logo-dark.png');",
+                  "pm.environment.set('tenant_favicon', 'https://example.com/favicon.ico');",
+                  "",
+                  "// Generate theme JSON",
+                  "const theme = {",
+                  "    primaryColor: '#007bff',",
+                  "    secondaryColor: '#6c757d',",
+                  "    fontFamily: 'Arial, sans-serif'",
+                  "};",
+                  "pm.environment.set('tenant_theme', JSON.stringify(theme));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"tenant_name\": \"{{new_tenant_name}}\",\n    \"logo_url_light\": \"{{tenant_logo_light}}\",\n    \"logo_url_dark\": \"{{tenant_logo_dark}}\",\n    \"favicon_url\": \"{{tenant_favicon}}\",\n    \"theme\": {{tenant_theme}},\n    \"tenant_status\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tenants",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tenants"
+              ]
+            },
+            "description": "Create a new tenant with complete configuration including branding assets."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Tenants",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has pagination', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.pagination).to.exist;",
+                  "    pm.expect(jsonData.pagination).to.have.property('page');",
+                  "    pm.expect(jsonData.pagination).to.have.property('limit');",
+                  "    pm.expect(jsonData.pagination).to.have.property('total');",
+                  "});",
+                  "",
+                  "pm.test('Response contains tenant array', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Tenant objects have required fields', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data.length > 0) {",
+                  "        const tenant = jsonData.data[0];",
+                  "        pm.expect(tenant).to.have.property('tenant_id');",
+                  "        pm.expect(tenant).to.have.property('tenant_name');",
+                  "        pm.expect(tenant).to.have.property('tenant_status');",
+                  "        pm.expect(tenant).to.have.property('created_at');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tenants?page=1&limit=10&sortBy=created_at&order=desc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tenants"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "created_at"
+                },
+                {
+                  "key": "order",
+                  "value": "desc"
+                }
+              ]
+            },
+            "description": "Get all tenants with pagination and sorting. SuperAdmin can view all tenants."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Tenant by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains tenant data', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.exist;",
+                  "    pm.expect(jsonData.data.tenant_id).to.eql(parseInt(pm.environment.get('created_tenant_id')));",
+                  "});",
+                  "",
+                  "pm.test('Tenant has complete data structure', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    const tenant = jsonData.data;",
+                  "    pm.expect(tenant).to.have.property('tenant_name');",
+                  "    pm.expect(tenant).to.have.property('logo_url_light');",
+                  "    pm.expect(tenant).to.have.property('logo_url_dark');",
+                  "    pm.expect(tenant).to.have.property('favicon_url');",
+                  "    pm.expect(tenant).to.have.property('theme');",
+                  "    pm.expect(tenant).to.have.property('tenant_status');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tenants/{{created_tenant_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tenants",
+                "{{created_tenant_id}}"
+              ]
+            },
+            "description": "Get a specific tenant by ID. SuperAdmin can access any tenant."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Tenant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Tenant updated successfully', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.tenant_name).to.eql(pm.environment.get('updated_tenant_name'));",
+                  "});",
+                  "",
+                  "pm.test('Updated audit fields', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('updated_at');",
+                  "    pm.expect(jsonData.data).to.have.property('updated_by');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate updated tenant name",
+                  "const timestamp = Date.now();",
+                  "const updatedName = `Updated Tech Solutions ${timestamp}`;",
+                  "pm.environment.set('updated_tenant_name', updatedName);",
+                  "",
+                  "// Update theme",
+                  "const updatedTheme = {",
+                  "    primaryColor: '#28a745',",
+                  "    secondaryColor: '#6c757d',",
+                  "    fontFamily: 'Roboto, sans-serif',",
+                  "    darkMode: true",
+                  "};",
+                  "pm.environment.set('updated_tenant_theme', JSON.stringify(updatedTheme));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"tenant_name\": \"{{updated_tenant_name}}\",\n    \"theme\": {{updated_tenant_theme}},\n    \"tenant_status\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tenants/{{created_tenant_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tenants",
+                "{{created_tenant_id}}"
+              ]
+            },
+            "description": "Update tenant information including branding and configuration."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Client",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Client created successfully', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('client_id');",
+                  "    pm.expect(jsonData.data.full_name).to.eql(pm.environment.get('new_client_name'));",
+                  "    pm.expect(jsonData.data.email_address).to.eql(pm.environment.get('new_client_email'));",
+                  "    ",
+                  "    // Store created client ID",
+                  "    pm.environment.set('created_client_id', jsonData.data.client_id);",
+                  "});",
+                  "",
+                  "pm.test('Client belongs to correct tenant', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.tenant_id).to.eql(parseInt(pm.environment.get('created_tenant_id')));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate unique client data",
+                  "const timestamp = Date.now();",
+                  "const clientName = `John Doe ${timestamp}`;",
+                  "const clientEmail = `john.doe.${timestamp}@example.com`;",
+                  "",
+                  "pm.environment.set('new_client_name', clientName);",
+                  "pm.environment.set('new_client_email', clientEmail);",
+                  "pm.environment.set('client_dial_code', '+1');",
+                  "pm.environment.set('client_phone', '555-0123');",
+                  "pm.environment.set('client_address', '123 Main Street, Anytown, USA');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"full_name\": \"{{new_client_name}}\",\n    \"email_address\": \"{{new_client_email}}\",\n    \"dial_code\": \"{{client_dial_code}}\",\n    \"phone_number\": \"{{client_phone}}\",\n    \"address\": \"{{client_address}}\",\n    \"client_status\": 1,\n    \"tenant_id\": {{created_tenant_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/clients",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clients"
+              ]
+            },
+            "description": "Create a new client within a specific tenant."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Clients",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains clients array', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Pagination metadata exists', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.pagination).to.exist;",
+                  "    pm.expect(jsonData.pagination).to.have.property('page');",
+                  "    pm.expect(jsonData.pagination).to.have.property('total');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clients?page=1&limit=10&tenantId={{created_tenant_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clients"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "tenantId",
+                  "value": "{{created_tenant_id}}"
+                }
+              ]
+            },
+            "description": "Get all clients with optional tenant filtering."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Client by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Client data is correct', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.client_id).to.eql(parseInt(pm.environment.get('created_client_id')));",
+                  "    pm.expect(jsonData.data.full_name).to.eql(pm.environment.get('new_client_name'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clients/{{created_client_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clients",
+                "{{created_client_id}}"
+              ]
+            },
+            "description": "Get a specific client by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Client",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Client updated successfully', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.full_name).to.eql(pm.environment.get('updated_client_name'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate updated client data",
+                  "const timestamp = Date.now();",
+                  "const updatedName = `Jane Smith ${timestamp}`;",
+                  "pm.environment.set('updated_client_name', updatedName);",
+                  "pm.environment.set('updated_client_address', '456 Oak Avenue, New City, USA');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"full_name\": \"{{updated_client_name}}\",\n    \"address\": \"{{updated_client_address}}\",\n    \"client_status\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/clients/{{created_client_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clients",
+                "{{created_client_id}}"
+              ]
+            },
+            "description": "Update client information."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Tenant Phone Number",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Phone number created successfully', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('tenant_phone_number_id');",
+                  "    pm.expect(jsonData.data.dial_code).to.eql(pm.environment.get('phone_dial_code'));",
+                  "    pm.expect(jsonData.data.phone_number).to.eql(pm.environment.get('phone_number'));",
+                  "    ",
+                  "    // Store phone number ID",
+                  "    pm.environment.set('created_phone_id', jsonData.data.tenant_phone_number_id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate phone number data",
+                  "pm.environment.set('phone_dial_code', '+1');",
+                  "pm.environment.set('phone_number', '555-0199');",
+                  "pm.environment.set('phone_country_code', 'US');",
+                  "pm.environment.set('phone_contact_type', '1'); // PRIMARY",
+                  "pm.environment.set('phone_is_primary', 'true');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"dial_code\": \"{{phone_dial_code}}\",\n    \"phone_number\": \"{{phone_number}}\",\n    \"iso_country_code\": \"{{phone_country_code}}\",\n    \"is_primary\": {{phone_is_primary}},\n    \"contact_type\": {{phone_contact_type}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tenants/{{created_tenant_id}}/phone-numbers",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tenants",
+                "{{created_tenant_id}}",
+                "phone-numbers"
+              ]
+            },
+            "description": "Add a phone number to a tenant."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Tenant Phone Numbers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Phone numbers retrieved successfully', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tenants/{{created_tenant_id}}/phone-numbers",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tenants",
+                "{{created_tenant_id}}",
+                "phone-numbers"
+              ]
+            },
+            "description": "Get all phone numbers for a tenant."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Tenant Email Address",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Email address created successfully', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('tenant_email_address_id');",
+                  "    pm.expect(jsonData.data.email_address).to.eql(pm.environment.get('tenant_email'));",
+                  "    ",
+                  "    // Store email ID",
+                  "    pm.environment.set('created_email_id', jsonData.data.tenant_email_address_id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate email data",
+                  "const timestamp = Date.now();",
+                  "const email = `contact.${timestamp}@techsolutions.com`;",
+                  "pm.environment.set('tenant_email', email);",
+                  "pm.environment.set('email_contact_type', '1'); // PRIMARY",
+                  "pm.environment.set('email_is_primary', 'true');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email_address\": \"{{tenant_email}}\",\n    \"is_primary\": {{email_is_primary}},\n    \"contact_type\": {{email_contact_type}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tenants/{{created_tenant_id}}/email-addresses",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tenants",
+                "{{created_tenant_id}}",
+                "email-addresses"
+              ]
+            },
+            "description": "Add an email address to a tenant."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Tenant Email Addresses",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Email addresses retrieved successfully', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tenants/{{created_tenant_id}}/email-addresses",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tenants",
+                "{{created_tenant_id}}",
+                "email-addresses"
+              ]
+            },
+            "description": "Get all email addresses for a tenant."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Client-Tenant Association",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Association created successfully', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('client_tenant_id');",
+                  "    pm.expect(jsonData.data.client_id).to.eql(parseInt(pm.environment.get('created_client_id')));",
+                  "    pm.expect(jsonData.data.tenant_id).to.eql(parseInt(pm.environment.get('created_tenant_id')));",
+                  "    ",
+                  "    // Store association ID",
+                  "    pm.environment.set('created_association_id', jsonData.data.client_tenant_id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"client_id\": {{created_client_id}},\n    \"tenant_id\": {{created_tenant_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/client-tenants",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "client-tenants"
+              ]
+            },
+            "description": "Create an association between a client and tenant."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Client Tenants",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Client tenants retrieved successfully', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clients/{{created_client_id}}/tenants",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clients",
+                "{{created_client_id}}",
+                "tenants"
+              ]
+            },
+            "description": "Get all tenants associated with a client."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Tenant Clients",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Tenant clients retrieved successfully', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tenants/{{created_tenant_id}}/clients",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tenants",
+                "{{created_tenant_id}}",
+                "clients"
+              ]
+            },
+            "description": "Get all clients associated with a tenant."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Tenant (Soft Delete)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Tenant deleted successfully', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.message).to.include('deleted successfully');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tenants/{{created_tenant_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tenants",
+                "{{created_tenant_id}}"
+              ]
+            },
+            "description": "Soft delete a tenant. Only SuperAdmin can delete tenants."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "TenantAdmin Operations",
+      "description": "Operations that can be performed by users with the TenantAdmin role.",
+      "item": [
+        {
+          "name": "Login as TenantAdmin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has access token', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.accessToken).to.exist;",
+                  "    pm.environment.set('tenantAdminAccessToken', jsonData.data.accessToken);",
+                  "    pm.environment.set('tenantAdminUserId', jsonData.data.user.system_user_id);",
+                  "    pm.environment.set('tenantAdminTenantId', jsonData.data.user.tenant_id);",
+                  "    pm.environment.set('tenantAdminRole', jsonData.data.user.role);",
+                  "});",
+                  "",
+                  "pm.test('User has TenantAdmin role', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.user.role).to.eql('TENANT_ADMIN');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set('tenant_admin_email', 'tenant.admin@lms.com');",
+                  "pm.environment.set('tenant_admin_password', 'TenantAdmin@123');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email_address\": \"{{tenant_admin_email}}\",\n    \"password\": \"{{tenant_admin_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticate as a TenantAdmin user to perform tenant-specific operations."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Own Tenant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Can access own tenant', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.tenant_id).to.eql(parseInt(pm.environment.get('tenantAdminTenantId')));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantAdminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tenants/{{tenantAdminTenantId}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tenants",
+                "{{tenantAdminTenantId}}"
+              ]
+            },
+            "description": "TenantAdmin can access their own tenant information."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Own Tenant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Tenant updated successfully', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate updated branding",
+                  "const timestamp = Date.now();",
+                  "const updatedTheme = {",
+                  "    primaryColor: '#dc3545',",
+                  "    secondaryColor: '#6c757d',",
+                  "    fontFamily: 'Open Sans, sans-serif'",
+                  "};",
+                  "pm.environment.set('tenant_admin_updated_theme', JSON.stringify(updatedTheme));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantAdminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"theme\": {{tenant_admin_updated_theme}},\n    \"logo_url_light\": \"https://example.com/new-logo-light.png\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tenants/{{tenantAdminTenantId}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tenants",
+                "{{tenantAdminTenantId}}"
+              ]
+            },
+            "description": "TenantAdmin can update their own tenant's branding and configuration."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Client in Own Tenant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Client created in own tenant', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.tenant_id).to.eql(parseInt(pm.environment.get('tenantAdminTenantId')));",
+                  "    ",
+                  "    // Store client ID for cleanup",
+                  "    pm.environment.set('tenant_admin_client_id', jsonData.data.client_id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate client data for tenant admin",
+                  "const timestamp = Date.now();",
+                  "const clientName = `Alice Johnson ${timestamp}`;",
+                  "const clientEmail = `alice.johnson.${timestamp}@example.com`;",
+                  "",
+                  "pm.environment.set('tenant_admin_client_name', clientName);",
+                  "pm.environment.set('tenant_admin_client_email', clientEmail);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantAdminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"full_name\": \"{{tenant_admin_client_name}}\",\n    \"email_address\": \"{{tenant_admin_client_email}}\",\n    \"dial_code\": \"+1\",\n    \"phone_number\": \"555-0188\",\n    \"address\": \"789 Pine Street, Somewhere, USA\",\n    \"client_status\": 1,\n    \"tenant_id\": {{tenantAdminTenantId}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/clients",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clients"
+              ]
+            },
+            "description": "TenantAdmin can create clients within their own tenant."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Clients in Own Tenant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Can view clients in own tenant', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantAdminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clients?tenantId={{tenantAdminTenantId}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clients"
+              ],
+              "query": [
+                {
+                  "key": "tenantId",
+                  "value": "{{tenantAdminTenantId}}"
+                }
+              ]
+            },
+            "description": "TenantAdmin can view clients in their own tenant."
+          },
+          "response": []
+        },
+        {
+          "name": "Try to Access Other Tenant (Forbidden)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 403 or 404', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([403, 404]);",
+                  "});",
+                  "",
+                  "pm.test('Access denied to other tenant', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Set a different tenant ID (assuming tenant 1 exists and is different)",
+                  "const otherTenantId = pm.environment.get('tenantAdminTenantId') === '1' ? '2' : '1';",
+                  "pm.environment.set('other_tenant_id', otherTenantId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantAdminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tenants/{{other_tenant_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tenants",
+                "{{other_tenant_id}}"
+              ]
+            },
+            "description": "TenantAdmin should not be able to access other tenants."
+          },
+          "response": []
+        },
+        {
+          "name": "Try to Create Tenant (Forbidden)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 403', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "pm.test('Tenant creation denied', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const timestamp = Date.now();",
+                  "const forbiddenTenantName = `Forbidden Tenant ${timestamp}`;",
+                  "pm.environment.set('forbidden_tenant_name', forbiddenTenantName);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantAdminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"tenant_name\": \"{{forbidden_tenant_name}}\",\n    \"tenant_status\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tenants",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tenants"
+              ]
+            },
+            "description": "TenantAdmin should not be able to create new tenants."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Error Handling & Edge Cases",
+      "description": "Tests for various error conditions, validation, and edge cases.",
+      "item": [
+        {
+          "name": "Create Tenant with Invalid Data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Validation errors returned', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "    pm.expect(jsonData.message).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"tenant_name\": \"a\",\n    \"logo_url_light\": \"not-a-url\",\n    \"tenant_status\": 999\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tenants",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tenants"
+              ]
+            },
+            "description": "Test validation with invalid tenant data."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Tenant with Duplicate Name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 409', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "",
+                  "pm.test('Duplicate name error returned', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "    pm.expect(jsonData.message).to.include('already exists');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Use an existing tenant name",
+                  "pm.environment.set('duplicate_tenant_name', 'Default Tenant');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"tenant_name\": \"{{duplicate_tenant_name}}\",\n    \"tenant_status\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tenants",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tenants"
+              ]
+            },
+            "description": "Test creating a tenant with a duplicate name."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

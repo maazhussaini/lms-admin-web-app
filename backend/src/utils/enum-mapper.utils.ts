@@ -16,16 +16,58 @@ import {
   ClientTenant as PrismaClientTenant
 } from '@prisma/client';
 import { 
-  TenantStatus, 
-  ClientStatus, 
-  ContactType, 
   Tenant, 
   Client,
   TenantPhoneNumber,
   TenantEmailAddress,
   ClientTenant
 } from '@shared/types/tenant.types';
-import { SystemUser, SystemUserStatus } from '@shared/types/system-users.types';
+import { SystemUser } from '@shared/types/system-users.types';
+
+/**
+ * Client status enumeration
+ * @description Defines the operational status of a client
+ */
+export enum ClientStatus {
+  ACTIVE = 1,
+  INACTIVE = 2,
+  SUSPENDED = 3,
+  TERMINATED = 4
+}
+
+/**
+ * Contact type enumeration
+ * @description Categorizes different types of contact information
+ */
+export enum ContactType {
+  PRIMARY = 1,
+  SECONDARY = 2,
+  EMERGENCY = 3,
+  BILLING = 4
+}
+
+/**
+ * System user status enumeration
+ * @description Operational status of system users
+ */
+export enum SystemUserStatus {
+  ACTIVE = 1,
+  INACTIVE = 2,
+  SUSPENDED = 3,
+  LOCKED = 4
+}
+
+/**
+ * Tenant status enumeration
+ * @description Defines the operational status of a tenant in the system
+ */
+export enum TenantStatus {
+  ACTIVE = 1,
+  SUSPENDED = 2,
+  TRIAL = 3,
+  EXPIRED = 4,
+  CANCELLED = 5
+}
 
 /**
  * Convert shared SystemUserStatus enum to Prisma enum

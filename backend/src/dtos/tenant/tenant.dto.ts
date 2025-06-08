@@ -4,7 +4,11 @@
  */
 
 import { body } from 'express-validator';
-import { TenantStatus, ContactType, ClientStatus } from '@shared/types/tenant.types';
+import {
+  ClientStatus,
+  TenantStatus,
+  ContactType
+} from '@/utils/enum-mapper.utils';
 
 /**
  * DTO for creating a new tenant
@@ -198,8 +202,6 @@ export class UpdateTenantDto {
  * @description Data Transfer Objects for Client-Tenant association with validation rules
  */
 
-// import { body } from 'express-validator';
-
 /**
  * DTO for creating a new client-tenant association
  */
@@ -235,8 +237,6 @@ export class CreateClientTenantDto {
  * @file dtos/tenant/tenantContact.dto.ts
  * @description Data Transfer Objects for Tenant Contact information (phone, email) with validation rules
  */
-
-// import { body } from 'express-validator';
 
 /**
  * DTO for creating a new tenant phone number
@@ -514,8 +514,6 @@ export class UpdateTenantEmailAddressDto {
  * @file dtos/tenant/client.dto.ts
  * @description Data Transfer Objects for Client operations with validation rules
  */
-
-// import { body } from 'express-validator';
 
 /**
  * DTO for creating a new client

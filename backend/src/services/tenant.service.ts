@@ -11,11 +11,12 @@ import {
   CreateClientTenantDto
 } from '@/dtos/tenant/tenant.dto';
 import { ApiError, NotFoundError, ConflictError, ForbiddenError } from '@/utils/api-error.utils';
-import { TenantStatus, ClientStatus } from '@shared/types/tenant.types';
 import { TokenPayload } from '@/utils/jwt.utils';
 import { 
   toPrismaTenantStatus, 
-  toPrismaClientStatus
+  toPrismaClientStatus,
+  ClientStatus,
+  TenantStatus
 } from '@/utils/enum-mapper.utils';
 import logger from '@/config/logger';
 
