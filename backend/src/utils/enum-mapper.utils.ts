@@ -10,55 +10,22 @@ import {
   ContactType as PrismaContactType,
   Tenant as PrismaTenant,
   Client as PrismaClient,
-  SystemUser as PrismaSystemUser
+  SystemUser as PrismaSystemUser,
+  TenantPhoneNumber as PrismaTenantPhoneNumber,
+  TenantEmailAddress as PrismaTenantEmailAddress,
+  ClientTenant as PrismaClientTenant
 } from '@prisma/client';
-import { TenantStatus, ClientStatus, ContactType, Tenant, Client } from '@shared/types/tenant.types';
-import { SystemUser } from '@shared/types/system-users.types';
-
-/**
- * System user status enumeration (shared)
- * @description Operational status of system users
- */
-export enum SystemUserStatus {
-  ACTIVE = 1,
-  INACTIVE = 2,
-  SUSPENDED = 3,
-  LOCKED = 4
-}
-
-/**
- * Tenant status enumeration (shared)
- * @description Operational status of tenants
- */
-export enum TenantStatusEnum {
-  ACTIVE = 1,
-  SUSPENDED = 2,
-  TRIAL = 3,
-  EXPIRED = 4,
-  CANCELLED = 5
-}
-
-/**
- * Client status enumeration (shared)
- * @description Operational status of clients
- */
-export enum ClientStatusEnum {
-  ACTIVE = 1,
-  INACTIVE = 2,
-  SUSPENDED = 3,
-  TERMINATED = 4
-}
-
-/**
- * Contact type enumeration (shared)
- * @description Contact type classification
- */
-export enum ContactTypeEnum {
-  PRIMARY = 1,
-  SECONDARY = 2,
-  EMERGENCY = 3,
-  BILLING = 4
-}
+import { 
+  TenantStatus, 
+  ClientStatus, 
+  ContactType, 
+  Tenant, 
+  Client,
+  TenantPhoneNumber,
+  TenantEmailAddress,
+  ClientTenant
+} from '@shared/types/tenant.types';
+import { SystemUser, SystemUserStatus } from '@shared/types/system-users.types';
 
 /**
  * Convert shared SystemUserStatus enum to Prisma enum
@@ -306,6 +273,156 @@ export function fromPrismaSystemUser(prismaSystemUser: PrismaSystemUser): System
     updated_at: prismaSystemUser.updated_at,
     updated_by: prismaSystemUser.updated_by,
     updated_ip: prismaSystemUser.updated_ip
+  };
+}
+
+/**
+ * Convert Prisma TenantPhoneNumber to shared TenantPhoneNumber type
+ * @param prismaTenantPhoneNumber - Prisma tenant phone number entity
+ * @returns Shared tenant phone number type
+ */
+export function fromPrismaTenantPhoneNumber(prismaTenantPhoneNumber: PrismaTenantPhoneNumber): TenantPhoneNumber {
+  return {
+    tenant_phone_number_id: prismaTenantPhoneNumber.tenant_phone_number_id,
+    dial_code: prismaTenantPhoneNumber.dial_code,
+    phone_number: prismaTenantPhoneNumber.phone_number,
+    iso_country_code: prismaTenantPhoneNumber.iso_country_code,
+    is_primary: prismaTenantPhoneNumber.is_primary,
+    contact_type: fromPrismaContactType(prismaTenantPhoneNumber.contact_type),
+    
+    // Audit fields - handle nullable to non-nullable conversion
+    tenant_id: prismaTenantPhoneNumber.tenant_id,
+    is_active: prismaTenantPhoneNumber.is_active,
+    is_deleted: prismaTenantPhoneNumber.is_deleted,
+    created_at: prismaTenantPhoneNumber.created_at,
+    created_by: prismaTenantPhoneNumber.created_by ?? 0, // Default to 0 if null (system-created)
+    created_ip: prismaTenantPhoneNumber.created_ip ?? '',
+    updated_at: prismaTenantPhoneNumber.updated_at,
+    updated_by: prismaTenantPhoneNumber.updated_by,
+    updated_ip: prismaTenantPhoneNumber.updated_ip
+  };
+}
+
+/**
+ * Convert Prisma TenantEmailAddress to shared TenantEmailAddress type
+ * @param prismaTenantEmailAddress - Prisma tenant email address entity
+ * @returns Shared tenant email address type
+ */
+export function fromPrismaTenantEmailAddress(prismaTenantEmailAddress: PrismaTenantEmailAddress): TenantEmailAddress {
+  return {
+    tenant_email_address_id: prismaTenantEmailAddress.tenant_email_address_id,
+    email_address: prismaTenantEmailAddress.email_address,
+    is_primary: prismaTenantEmailAddress.is_primary,
+    contact_type: fromPrismaContactType(prismaTenantEmailAddress.contact_type),
+    
+    // Audit fields - handle nullable to non-nullable conversion
+    tenant_id: prismaTenantEmailAddress.tenant_id,
+    is_active: prismaTenantEmailAddress.is_active,
+    is_deleted: prismaTenantEmailAddress.is_deleted,
+    created_at: prismaTenantEmailAddress.created_at,
+    created_by: prismaTenantEmailAddress.created_by ?? 0, // Default to 0 if null (system-created)
+    created_ip: prismaTenantEmailAddress.created_ip ?? '',
+    updated_at: prismaTenantEmailAddress.updated_at,
+    updated_by: prismaTenantEmailAddress.updated_by,
+    updated_ip: prismaTenantEmailAddress.updated_ip
+  };
+}
+
+/**
+ * Convert Prisma ClientTenant to shared ClientTenant type
+ * @param prismaClientTenant - Prisma client tenant association entity
+ * @returns Shared client tenant association type
+ */
+export function fromPrismaClientTenant(prismaClientTenant: PrismaClientTenant): ClientTenant {
+  return {
+    client_tenant_id: prismaClientTenant.client_tenant_id,
+    client_id: prismaClientTenant.client_id,
+    
+    // Audit fields - handle nullable to non-nullable conversion
+    tenant_id: prismaClientTenant.tenant_id,
+    is_active: prismaClientTenant.is_active,
+    is_deleted: prismaClientTenant.is_deleted,
+    created_at: prismaClientTenant.created_at,
+    created_by: prismaClientTenant.created_by ?? 0, // Default to 0 if null (system-created)
+    created_ip: prismaClientTenant.created_ip ?? '',
+    updated_at: prismaClientTenant.updated_at,
+    updated_by: prismaClientTenant.updated_by,
+    updated_ip: prismaClientTenant.updated_ip
+  };
+}
+
+/**
+ * Convert shared TenantPhoneNumber to Prisma type for database operations
+ * @param tenantPhoneNumber - Shared tenant phone number data
+ * @returns Prisma-compatible tenant phone number data
+ */
+export function toPrismaTenantPhoneNumber(tenantPhoneNumber: Omit<TenantPhoneNumber, 'tenant_phone_number_id'>): Omit<PrismaTenantPhoneNumber, 'tenant_phone_number_id'> {  return {
+    dial_code: tenantPhoneNumber.dial_code,
+    phone_number: tenantPhoneNumber.phone_number,
+    iso_country_code: tenantPhoneNumber.iso_country_code ?? null,
+    is_primary: tenantPhoneNumber.is_primary,
+    contact_type: toPrismaContactType(tenantPhoneNumber.contact_type),
+    
+    // Audit fields - handle type conversions
+    tenant_id: tenantPhoneNumber.tenant_id,
+    is_active: tenantPhoneNumber.is_active,
+    is_deleted: tenantPhoneNumber.is_deleted,
+    created_at: typeof tenantPhoneNumber.created_at === 'string' ? new Date(tenantPhoneNumber.created_at) : tenantPhoneNumber.created_at,
+    created_by: tenantPhoneNumber.created_by,
+    created_ip: tenantPhoneNumber.created_ip,
+    updated_at: tenantPhoneNumber.updated_at ? (typeof tenantPhoneNumber.updated_at === 'string' ? new Date(tenantPhoneNumber.updated_at) : tenantPhoneNumber.updated_at) : new Date(),
+    updated_by: tenantPhoneNumber.updated_by ?? null,
+    updated_ip: tenantPhoneNumber.updated_ip ?? null,
+    deleted_at: null,
+    deleted_by: null
+  };
+}
+
+/**
+ * Convert shared TenantEmailAddress to Prisma type for database operations
+ * @param tenantEmailAddress - Shared tenant email address data
+ * @returns Prisma-compatible tenant email address data
+ */
+export function toPrismaTenantEmailAddress(tenantEmailAddress: Omit<TenantEmailAddress, 'tenant_email_address_id'>): Omit<PrismaTenantEmailAddress, 'tenant_email_address_id'> {  return {
+    email_address: tenantEmailAddress.email_address,
+    is_primary: tenantEmailAddress.is_primary,
+    contact_type: toPrismaContactType(tenantEmailAddress.contact_type),
+    
+    // Audit fields - handle type conversions
+    tenant_id: tenantEmailAddress.tenant_id,
+    is_active: tenantEmailAddress.is_active,
+    is_deleted: tenantEmailAddress.is_deleted,
+    created_at: typeof tenantEmailAddress.created_at === 'string' ? new Date(tenantEmailAddress.created_at) : tenantEmailAddress.created_at,
+    created_by: tenantEmailAddress.created_by,
+    created_ip: tenantEmailAddress.created_ip,
+    updated_at: tenantEmailAddress.updated_at ? (typeof tenantEmailAddress.updated_at === 'string' ? new Date(tenantEmailAddress.updated_at) : tenantEmailAddress.updated_at) : new Date(),
+    updated_by: tenantEmailAddress.updated_by ?? null,
+    updated_ip: tenantEmailAddress.updated_ip ?? null,
+    deleted_at: null,
+    deleted_by: null
+  };
+}
+
+/**
+ * Convert shared ClientTenant to Prisma type for database operations
+ * @param clientTenant - Shared client tenant association data
+ * @returns Prisma-compatible client tenant association data
+ */
+export function toPrismaClientTenant(clientTenant: Omit<ClientTenant, 'client_tenant_id'>): Omit<PrismaClientTenant, 'client_tenant_id'> {  return {
+    client_id: clientTenant.client_id,
+    
+    // Audit fields - handle type conversions
+    tenant_id: clientTenant.tenant_id,
+    is_active: clientTenant.is_active,
+    is_deleted: clientTenant.is_deleted,
+    created_at: typeof clientTenant.created_at === 'string' ? new Date(clientTenant.created_at) : clientTenant.created_at,
+    created_by: clientTenant.created_by,
+    created_ip: clientTenant.created_ip,
+    updated_at: clientTenant.updated_at ? (typeof clientTenant.updated_at === 'string' ? new Date(clientTenant.updated_at) : clientTenant.updated_at) : new Date(),
+    updated_by: clientTenant.updated_by ?? null,
+    updated_ip: clientTenant.updated_ip ?? null,
+    deleted_at: null,
+    deleted_by: null
   };
 }
 

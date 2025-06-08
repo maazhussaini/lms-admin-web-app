@@ -29,6 +29,7 @@ export * from './jwt.utils.js';
 export * from './pagination.utils.js';
 export * from './password.utils.js';
 export * from './validation.utils.js';
+export * from './enum-mapper.utils.js';
 
 // Re-export the default async handler for convenience
 export { default as asyncHandler } from './async-handler.utils.js';

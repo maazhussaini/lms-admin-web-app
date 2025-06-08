@@ -10,8 +10,8 @@ import { BadRequestError, ForbiddenError, NotFoundError, ConflictError } from '@
 import { hashPassword } from '@/utils/password.utils.js';
 import { getPrismaPagination } from '@/utils/pagination.utils.js';
 import { tryCatch } from '@/utils/error-wrapper.utils.js';
+import { SystemUserStatus } from '@shared/types/system-users.types';
 import { 
-  SystemUserStatus,
   toPrismaSystemUserStatus,
   fromPrismaSystemUser,
 } from '@/utils/enum-mapper.utils.js';
