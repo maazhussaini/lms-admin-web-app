@@ -1,0 +1,893 @@
+{
+    "info": {
+        "_postman_id": "8f5e7a12-6f38-42c3-ba25-554a725c9853",
+        "name": "LMS - Program Management",
+        "description": "Collection for managing academic programs within the Learning Management System (LMS). These endpoints handle the creation, retrieval, update, and deletion of programs with tenant isolation.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Create Program",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "// Generate random academic program name",
+                            "const subjects = ['Computer Science', 'Medical Science', 'Engineering', 'Business', 'Arts', 'Law', 'Education', 'Science'];",
+                            "const types = ['Bachelor', 'Master', 'Diploma', 'Certificate', 'Doctorate', 'Associate'];",
+                            "const focus = ['Program', 'Studies', 'Degree', 'Course'];",
+                            "",
+                            "// Select random elements to create a program name",
+                            "const subject = subjects[Math.floor(Math.random() * subjects.length)];",
+                            "const type = types[Math.floor(Math.random() * types.length)];",
+                            "const focusType = focus[Math.floor(Math.random() * focus.length)];",
+                            "",
+                            "// Set the generated program name in environment variable",
+                            "pm.environment.set('randomProgramName', `${type} of ${subject} ${focusType}`);",
+                            "",
+                            "console.log(`Generated program name: ${pm.environment.get('randomProgramName')}`);"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 201 Created\", function () {",
+                            "    pm.response.to.have.status(201);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has success true and correct structure\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    ",
+                            "    // Test success flag",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(201, \"Status code should be 201\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Program created successfully\", \"Message should indicate successful creation\");",
+                            "    ",
+                            "    // Test data object",
+                            "    pm.expect(jsonData.data).to.be.an('object', \"Data should be an object\");",
+                            "    pm.expect(jsonData.data).to.have.property('program_id');",
+                            "    pm.expect(jsonData.data.program_id).to.be.a('number').and.not.eql(0);",
+                            "    pm.expect(jsonData.data).to.have.property('program_name');",
+                            "    pm.expect(jsonData.data.program_name).to.eql(pm.environment.get('randomProgramName'), \"Program name should match what was sent\");",
+                            "    pm.expect(jsonData.data).to.have.property('is_active');",
+                            "    pm.expect(jsonData.data.is_active).to.be.true;",
+                            "    pm.expect(jsonData.data).to.have.property('created_at');",
+                            "    pm.expect(jsonData.data).to.have.property('updated_at');",
+                            "    ",
+                            "    // Store program ID for future requests",
+                            "    pm.environment.set(\"programId\", jsonData.data.program_id);",
+                            "    ",
+                            "    console.log(`Program created with ID: ${jsonData.data.program_id}`);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"program_name\": \"{{randomProgramName}}\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/programs",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "programs"
+                    ]
+                },
+                "description": "Creates a new academic program with the specified name. The tenant ID is extracted from the JWT token of the authenticated user. Program names must be unique within a tenant."
+            },
+            "response": []
+        },
+        {
+            "name": "List Programs",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has success true and program data array\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    ",
+                            "    // Test success flag",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Programs retrieved successfully\", \"Message should indicate successful retrieval\");",
+                            "    ",
+                            "    // Test data array",
+                            "    pm.expect(jsonData.data).to.be.an('array', \"Data should be an array\");",
+                            "    ",
+                            "    // Test pagination meta object existence and structure",
+                            "    pm.expect(jsonData).to.have.property('pagination');",
+                            "    const pagination = jsonData.pagination;",
+                            "    ",
+                            "    // Test required pagination properties",
+                            "    pm.expect(pagination).to.have.property('page');",
+                            "    pm.expect(pagination).to.have.property('limit');",
+                            "    pm.expect(pagination).to.have.property('total');",
+                            "    pm.expect(pagination).to.have.property('totalPages');",
+                            "    ",
+                            "    // Test that pagination values are of correct type",
+                            "    pm.expect(pagination.page).to.be.a('number');",
+                            "    pm.expect(pagination.limit).to.be.a('number');",
+                            "    pm.expect(pagination.total).to.be.a('number');",
+                            "    pm.expect(pagination.totalPages).to.be.a('number');",
+                            "    ",
+                            "    // Test hasPrev and hasNext based on current page",
+                            "    if (pagination.page === 1) {",
+                            "        pm.expect(pagination.hasPrev).to.be.false;",
+                            "    } else {",
+                            "        pm.expect(pagination.hasPrev).to.be.true;",
+                            "    }",
+                            "    ",
+                            "    if (pagination.page < pagination.totalPages) {",
+                            "        pm.expect(pagination.hasNext).to.be.true;",
+                            "    } else {",
+                            "        pm.expect(pagination.hasNext).to.be.false;",
+                            "    }",
+                            "    ",
+                            "    // If there are any items in the response, validate structure",
+                            "    if (jsonData.data.length > 0) {",
+                            "        const firstProgram = jsonData.data[0];",
+                            "        pm.expect(firstProgram).to.have.property('program_id');",
+                            "        pm.expect(firstProgram).to.have.property('program_name');",
+                            "        pm.expect(firstProgram).to.have.property('is_active');",
+                            "        pm.expect(firstProgram).to.have.property('created_at');",
+                            "        pm.expect(firstProgram).to.have.property('updated_at');",
+                            "    }",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/programs?page=1&limit=10&sortBy=created_at&order=desc&search=Science&is_active=true",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "programs"
+                    ],
+                    "query": [
+                        {
+                            "key": "page",
+                            "value": "1",
+                            "description": "(Optional) Page number for pagination"
+                        },
+                        {
+                            "key": "limit",
+                            "value": "10",
+                            "description": "(Optional) Number of items per page"
+                        },
+                        {
+                            "key": "sortBy",
+                            "value": "created_at",
+                            "description": "(Optional) Field to sort by: program_id, program_name, created_at, updated_at"
+                        },
+                        {
+                            "key": "order",
+                            "value": "desc",
+                            "description": "(Optional) Sort order: asc or desc"
+                        },
+                        {
+                            "key": "search",
+                            "value": "Science",
+                            "description": "(Optional) Search term for program name"
+                        },
+                        {
+                            "key": "is_active",
+                            "value": "true",
+                            "description": "(Optional) Filter by active status"
+                        }
+                    ]
+                },
+                "description": "Retrieves a paginated list of academic programs with optional filtering and sorting. The tenant ID is extracted from the JWT token of the authenticated user, ensuring that only programs within the user's tenant are returned."
+            },
+            "response": []
+        },
+        {
+            "name": "Get Program by ID",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has success true and correct program data\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    const programId = parseInt(pm.environment.get(\"programId\"));",
+                            "    ",
+                            "    // Test success flag",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Program retrieved successfully\", \"Message should indicate successful retrieval\");",
+                            "    ",
+                            "    // Test data object",
+                            "    pm.expect(jsonData.data).to.be.an('object', \"Data should be an object\");",
+                            "    pm.expect(jsonData.data.program_id).to.eql(programId, \"Program ID should match the one requested\");",
+                            "    pm.expect(jsonData.data).to.have.property('program_name');",
+                            "    pm.expect(jsonData.data).to.have.property('is_active');",
+                            "    pm.expect(jsonData.data).to.have.property('created_at');",
+                            "    pm.expect(jsonData.data).to.have.property('updated_at');",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/programs/{{programId}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "programs",
+                        "{{programId}}"
+                    ]
+                },
+                "description": "Retrieves detailed information for a specific academic program by its ID. The tenant ID is extracted from the JWT token of the authenticated user, ensuring that the program belongs to the user's tenant."
+            },
+            "response": []
+        },
+        {
+            "name": "Update Program",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "// Generate updated program name",
+                            "const subjects = ['Data Science', 'Artificial Intelligence', 'Civil Engineering', 'Finance', 'Humanities', 'Medicine'];",
+                            "const types = ['Advanced', 'Professional', 'Executive', 'Graduate', 'Undergraduate', 'Specialized'];",
+                            "const focus = ['Program', 'Studies', 'Degree', 'Course'];",
+                            "",
+                            "// Select random elements to create an updated program name",
+                            "const subject = subjects[Math.floor(Math.random() * subjects.length)];",
+                            "const type = types[Math.floor(Math.random() * types.length)];",
+                            "const focusType = focus[Math.floor(Math.random() * focus.length)];",
+                            "",
+                            "// Set the generated program name in environment variable",
+                            "pm.environment.set('updatedProgramName', `${type} ${subject} ${focusType}`);",
+                            "",
+                            "console.log(`Generated updated program name: ${pm.environment.get('updatedProgramName')}`);"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has success true and updated program data\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    const programId = parseInt(pm.environment.get(\"programId\"));",
+                            "    const updatedName = pm.environment.get(\"updatedProgramName\");",
+                            "    ",
+                            "    // Test success flag",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Program updated successfully\", \"Message should indicate successful update\");",
+                            "    ",
+                            "    // Test data object",
+                            "    pm.expect(jsonData.data).to.be.an('object', \"Data should be an object\");",
+                            "    pm.expect(jsonData.data.program_id).to.eql(programId, \"Program ID should match\");",
+                            "    pm.expect(jsonData.data.program_name).to.eql(updatedName, \"Program name should be updated\");",
+                            "    pm.expect(jsonData.data).to.have.property('is_active');",
+                            "    pm.expect(jsonData.data).to.have.property('created_at');",
+                            "    pm.expect(jsonData.data).to.have.property('updated_at');",
+                            "    ",
+                            "    // Test that updated_at is different from created_at",
+                            "    const createdAt = new Date(jsonData.data.created_at).getTime();",
+                            "    const updatedAt = new Date(jsonData.data.updated_at).getTime();",
+                            "    pm.expect(updatedAt).to.be.at.least(createdAt, \"updated_at should be same as or later than created_at\");",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "PATCH",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"program_name\": \"{{updatedProgramName}}\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/programs/{{programId}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "programs",
+                        "{{programId}}"
+                    ]
+                },
+                "description": "Updates an existing academic program's information. The tenant ID is extracted from the JWT token of the authenticated user, ensuring that only programs within the user's tenant can be modified. Program names must be unique within a tenant."
+            },
+            "response": []
+        },
+        {
+            "name": "Update Program Status",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has success true and updated program status\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    const programId = parseInt(pm.environment.get(\"programId\"));",
+                            "    ",
+                            "    // Test success flag",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Program updated successfully\", \"Message should indicate successful update\");",
+                            "    ",
+                            "    // Test data object",
+                            "    pm.expect(jsonData.data).to.be.an('object', \"Data should be an object\");",
+                            "    pm.expect(jsonData.data.program_id).to.eql(programId, \"Program ID should match\");",
+                            "    pm.expect(jsonData.data.is_active).to.eql(false, \"Program status should be inactive\");",
+                            "    ",
+                            "    // Test that updated_at changed",
+                            "    const updatedAt = new Date(jsonData.data.updated_at).getTime();",
+                            "    pm.expect(updatedAt).to.be.a('number', \"updated_at should be a valid timestamp\");",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "PATCH",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"is_active\": false\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/programs/{{programId}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "programs",
+                        "{{programId}}"
+                    ]
+                },
+                "description": "Updates the active status of an academic program. The tenant ID is extracted from the JWT token of the authenticated user, ensuring that only programs within the user's tenant can be modified."
+            },
+            "response": []
+        },
+        {
+            "name": "Get Inactive Program",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Program is now inactive\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    const programId = parseInt(pm.environment.get(\"programId\"));",
+                            "    ",
+                            "    // Test success flag",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+                            "    ",
+                            "    // Test data object",
+                            "    pm.expect(jsonData.data).to.be.an('object', \"Data should be an object\");",
+                            "    pm.expect(jsonData.data.program_id).to.eql(programId, \"Program ID should match the one requested\");",
+                            "    pm.expect(jsonData.data.is_active).to.eql(false, \"Program should be inactive\");",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/programs/{{programId}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "programs",
+                        "{{programId}}"
+                    ]
+                },
+                "description": "Retrieves detailed information for a specific academic program by its ID to verify its inactive status."
+            },
+            "response": []
+        },
+        {
+            "name": "List Programs (filter inactive)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has filtered inactive programs\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    ",
+                            "    // Test success flag",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+                            "    ",
+                            "    // Test data array",
+                            "    pm.expect(jsonData.data).to.be.an('array', \"Data should be an array\");",
+                            "    ",
+                            "    // Check if all returned programs are inactive",
+                            "    jsonData.data.forEach(program => {",
+                            "        pm.expect(program.is_active).to.eql(false, \"All programs should be inactive\");",
+                            "    });",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/programs?is_active=false",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "programs"
+                    ],
+                    "query": [
+                        {
+                            "key": "is_active",
+                            "value": "false",
+                            "description": "Filter to show only inactive programs"
+                        }
+                    ]
+                },
+                "description": "Retrieves a list of inactive academic programs to verify filtering functionality."
+            },
+            "response": []
+        },
+        {
+            "name": "Restore Program Status",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has success true and restored program status\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    const programId = parseInt(pm.environment.get(\"programId\"));",
+                            "    ",
+                            "    // Test success flag",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Program updated successfully\", \"Message should indicate successful update\");",
+                            "    ",
+                            "    // Test data object",
+                            "    pm.expect(jsonData.data).to.be.an('object', \"Data should be an object\");",
+                            "    pm.expect(jsonData.data.program_id).to.eql(programId, \"Program ID should match\");",
+                            "    pm.expect(jsonData.data.is_active).to.eql(true, \"Program status should be active\");",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "PATCH",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"is_active\": true\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/programs/{{programId}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "programs",
+                        "{{programId}}"
+                    ]
+                },
+                "description": "Restores an inactive program back to active status. This is useful for testing the full lifecycle of program status changes."
+            },
+            "response": []
+        },
+        {
+            "name": "Delete Program",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response indicates successful deletion\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    ",
+                            "    // Test success flag",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Program deleted successfully\", \"Message should indicate successful deletion\");",
+                            "    pm.expect(jsonData.data).to.be.null;",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/programs/{{programId}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "programs",
+                        "{{programId}}"
+                    ]
+                },
+                "description": "Soft deletes an academic program by setting its is_deleted flag to true. The tenant ID is extracted from the JWT token of the authenticated user, ensuring that only programs within the user's tenant can be deleted. Programs with existing specializations cannot be deleted."
+            },
+            "response": []
+        },
+        {
+            "name": "Verify Program Deletion",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 404 Not Found\", function () {",
+                            "    pm.response.to.have.status(404);",
+                            "});",
+                            "",
+                            "pm.test(\"Response indicates program not found\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    ",
+                            "    // Test error structure",
+                            "    pm.expect(jsonData.success).to.eql(false, \"Response success should be false\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(404, \"Status code should be 404\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Program not found\", \"Message should indicate program not found\");",
+                            "    pm.expect(jsonData.errorCode).to.eql(\"PROGRAM_NOT_FOUND\", \"Error code should be PROGRAM_NOT_FOUND\");",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/programs/{{programId}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "programs",
+                        "{{programId}}"
+                    ]
+                },
+                "description": "Attempts to retrieve a soft-deleted program to verify that it's no longer accessible. The API should return a 404 Not Found response."
+            },
+            "response": []
+        },
+        {
+            "name": "Create Program (Duplicate Name)",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "// Create a program with a known name to test duplicate validation",
+                            "pm.environment.set('duplicateProgramName', 'Test Duplicate Program');"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "// First, test successful creation",
+                            "if (pm.response.code === 201) {",
+                            "    pm.test(\"First program creation successful\", function () {",
+                            "        const jsonData = pm.response.json();",
+                            "        pm.expect(jsonData.success).to.eql(true);",
+                            "        pm.expect(jsonData.data.program_name).to.eql(pm.environment.get('duplicateProgramName'));",
+                            "        ",
+                            "        // Store the new program ID temporarily",
+                            "        pm.environment.set(\"tempProgramId\", jsonData.data.program_id);",
+                            "    });",
+                            "}",
+                            "// If we get a 409 conflict, it means we're testing the duplicate",
+                            "else if (pm.response.code === 409) {",
+                            "    pm.test(\"Duplicate program name rejected\", function () {",
+                            "        const jsonData = pm.response.json();",
+                            "        pm.expect(jsonData.success).to.eql(false);",
+                            "        pm.expect(jsonData.statusCode).to.eql(409);",
+                            "        pm.expect(jsonData.message).to.eql(\"Program with this name already exists\");",
+                            "        pm.expect(jsonData.errorCode).to.eql(\"DUPLICATE_PROGRAM_NAME\");",
+                            "    });",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"program_name\": \"{{duplicateProgramName}}\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/programs",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "programs"
+                    ]
+                },
+                "description": "Attempts to create a program with a name that already exists within the tenant. This request is intended to test the duplicate name validation. Run this request twice - first to create the program, then again to test the duplicate name validation."
+            },
+            "response": []
+        },
+        {
+            "name": "Delete Temporary Program",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response indicates successful deletion\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData.success).to.eql(true);",
+                            "    pm.expect(jsonData.message).to.eql(\"Program deleted successfully\");",
+                            "    ",
+                            "    // Clean up environment variable",
+                            "    pm.environment.unset(\"tempProgramId\");",
+                            "    pm.environment.unset(\"duplicateProgramName\");",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/programs/{{tempProgramId}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "programs",
+                        "{{tempProgramId}}"
+                    ]
+                },
+                "description": "Deletes the temporary program created for the duplicate name test."
+            },
+            "response": []
+        },
+        {
+            "name": "Invalid Program ID Format",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 400 Bad Request\", function () {",
+                            "    pm.response.to.have.status(400);",
+                            "});",
+                            "",
+                            "pm.test(\"Response indicates invalid program ID\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    ",
+                            "    pm.expect(jsonData.success).to.eql(false);",
+                            "    pm.expect(jsonData.statusCode).to.eql(400);",
+                            "    pm.expect(jsonData.message).to.include(\"Program ID\");",
+                            "    ",
+                            "    // Check for validation errors array",
+                            "    pm.expect(jsonData).to.have.property('errors');",
+                            "    pm.expect(jsonData.errors).to.be.an('array');",
+                            "    pm.expect(jsonData.errors.length).to.be.at.least(1);",
+                            "    ",
+                            "    // Check first error",
+                            "    pm.expect(jsonData.errors[0]).to.have.property('msg');",
+                            "    pm.expect(jsonData.errors[0]).to.have.property('param');",
+                            "    pm.expect(jsonData.errors[0].param).to.eql(\"programId\");",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/programs/invalid",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "programs",
+                        "invalid"
+                    ]
+                },
+                "description": "Attempts to retrieve a program with an invalid ID format to test input validation. The API should return a 400 Bad Request response with validation error details."
+            },
+            "response": []
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+            }
+        ]
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "// Global pre-request script for the collection",
+                    "// You can add common logic here that should run before every request"
+                ]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "// Global test script for the collection",
+                    "// You can add common logic here that should run after every request",
+                    "",
+                    "// Log request details for debugging",
+                    "console.log(`Request: ${pm.request.method} ${pm.request.url.toString()}`);",
+                    "console.log(`Response status: ${pm.response.code} ${pm.response.status}`);",
+                    "",
+                    "// Add a timestamp check for all successful responses",
+                    "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                    "    try {",
+                    "        const jsonData = pm.response.json();",
+                    "        if (jsonData.timestamp) {",
+                    "            pm.test(\"Response includes valid timestamp\", function () {",
+                    "                const timestamp = new Date(jsonData.timestamp).getTime();",
+                    "                pm.expect(timestamp).to.be.a('number');",
+                    "                pm.expect(timestamp).to.be.at.most(Date.now());",
+                    "                pm.expect(timestamp).to.be.at.least(Date.now() - 60000); // Within last minute",
+                    "            });",
+                    "        }",
+                    "    } catch (e) {",
+                    "        console.log(\"Response is not valid JSON or doesn't have timestamp\");",
+                    "    }",
+                    "}"
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "authToken",
+            "value": "YOUR_JWT_TOKEN_HERE",
+            "type": "string"
+        },
+        {
+            "key": "programId",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "randomProgramName",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "updatedProgramName",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "tempProgramId",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "duplicateProgramName",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}
