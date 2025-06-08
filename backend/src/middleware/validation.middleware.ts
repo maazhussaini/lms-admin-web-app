@@ -401,7 +401,44 @@ export const validationChains = {
     return chain
       .isIn(allowedValues).withMessage(`${fieldName} must be one of: ${allowedValues.join(', ')}`);
   },
-  
+
+  /**
+   * Validates integer field in request body
+   * @param fieldName Field name
+   * @param options Validation options
+   * @returns Validation chain
+   */
+  integer: (
+    fieldName: string,
+    options: {
+      required?: boolean;
+      min?: number;
+      max?: number;
+    } = {}
+  ): ValidationChain => {
+    const { required = true, min, max } = options;
+
+    let chain = body(fieldName);
+
+    if (required) {
+      chain = chain.exists().withMessage(`${fieldName} is required`);
+    } else {
+      chain = chain.optional({ nullable: true });
+    }
+
+    chain = chain.isInt().withMessage(`${fieldName} must be an integer`);
+
+    if (min !== undefined) {
+      chain = chain.isInt({ min }).withMessage(`${fieldName} must be at least ${min}`);
+    }
+
+    if (max !== undefined) {
+      chain = chain.isInt({ max }).withMessage(`${fieldName} must be at most ${max}`);
+    }
+
+    return chain;
+  },
+
   /**
    * Validates array field in request body
    * @param fieldName Field name

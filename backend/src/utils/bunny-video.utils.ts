@@ -17,7 +17,6 @@ import logger from '@/config/logger.js';
 import { 
   BunnyTokenConfig, 
   BunnyVideoUploadResponse,
-  BunnyVideoStatus,
   BunnyVideoOperationResponse,
   BunnyDrmConfiguration,
   BunnyApiError,
@@ -26,6 +25,17 @@ import {
   BunnyCdnPurgeRequest,
   BunnyCdnPurgeResponse
 } from '@shared/types/bunny.types';
+
+/**
+ * Bunny.net video processing and upload status
+ */
+export enum BunnyVideoStatus {
+  UPLOADING = 'uploading',
+  PROCESSING = 'processing',
+  FINISHED = 'finished',
+  FAILED = 'failed',
+  CANCELLED = 'cancelled',
+}
 
 /**
  * Type-safe metadata interface for video uploads

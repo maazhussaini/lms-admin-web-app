@@ -1,0 +1,919 @@
+{
+  "info": {
+    "_postman_id": "9f5e2a71-8d24-48bf-b395-e42f3d7c8a01",
+    "name": "Teacher Authentication",
+    "description": "Collection for managing teacher authentication in the Learning Management System (LMS). These endpoints handle teacher login, token refresh, logout, and password reset operations with appropriate security measures and multi-tenant support.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Teacher Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has success true and authentication data\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    ",
+              "    // Test success flag",
+              "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+              "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+              "    pm.expect(jsonData.message).to.eql(\"Teacher login successful\", \"Message should indicate successful login\");",
+              "    ",
+              "    // Test data object",
+              "    pm.expect(jsonData.data).to.be.an('object', \"Data should be an object\");",
+              "    ",
+              "    // Test user information",
+              "    pm.expect(jsonData.data).to.have.property('user');",
+              "    pm.expect(jsonData.data.user).to.have.property('id');",
+              "    pm.expect(jsonData.data.user).to.have.property('username');",
+              "    pm.expect(jsonData.data.user).to.have.property('full_name');",
+              "    pm.expect(jsonData.data.user).to.have.property('email');",
+              "    pm.expect(jsonData.data.user).to.have.property('tenant_id');",
+              "    pm.expect(jsonData.data.user).to.have.property('user_type');",
+              "    pm.expect(jsonData.data.user.user_type).to.eql('TEACHER');",
+              "    ",
+              "    // Test tokens",
+              "    pm.expect(jsonData.data).to.have.property('tokens');",
+              "    pm.expect(jsonData.data.tokens).to.have.property('access_token');",
+              "    pm.expect(jsonData.data.tokens).to.have.property('refresh_token');",
+              "    pm.expect(jsonData.data.tokens).to.have.property('expires_in');",
+              "    pm.expect(jsonData.data.tokens).to.have.property('token_type');",
+              "    pm.expect(jsonData.data.tokens.token_type).to.eql('Bearer');",
+              "    ",
+              "    // Test permissions",
+              "    pm.expect(jsonData.data).to.have.property('permissions');",
+              "    pm.expect(jsonData.data.permissions).to.be.an('array');",
+              "    ",
+              "    // Store tokens for subsequent requests",
+              "    pm.environment.set(\"teacherAccessToken\", jsonData.data.tokens.access_token);",
+              "    pm.environment.set(\"teacherRefreshToken\", jsonData.data.tokens.refresh_token);",
+              "    pm.environment.set(\"teacherId\", jsonData.data.user.id);",
+              "    pm.environment.set(\"teacherTenantId\", jsonData.data.user.tenant_id);",
+              "    ",
+              "    console.log(`Logged in successfully as teacher ${jsonData.data.user.username} (${jsonData.data.user.full_name})`);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Use environment variables for credentials or set defaults",
+              "if (!pm.environment.get('teacher_email')) {",
+              "    pm.environment.set('teacher_email', 'teacher1@example.com');",
+              "}",
+              "",
+              "if (!pm.environment.get('teacher_password')) {",
+              "    pm.environment.set('teacher_password', 'Teacher@123');",
+              "}",
+              "",
+              "// Optional: Generate tenant context if needed",
+              "if (!pm.environment.get('teacher_tenant_context') && pm.environment.get('generate_tenant')) {",
+              "    pm.environment.set('teacher_tenant_context', Math.floor(Math.random() * 3) + 1);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email_address\": \"{{teacher_email}}\",\n    \"password\": \"{{teacher_password}}\"{{#teacher_tenant_context}},\n    \"tenant_context\": \"{{teacher_tenant_context}}\"{{/teacher_tenant_context}}\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/teacher/auth/login",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "teacher",
+            "auth",
+            "login"
+          ]
+        },
+        "description": "Authenticates a teacher with their email and password. Returns teacher information, access and refresh tokens, and teacher permissions. The tenant context is automatically derived from the teacher's assignment."
+      },
+      "response": []
+    },
+    {
+      "name": "Teacher Login (Invalid Credentials)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 401 Unauthorized\", function () {",
+              "    pm.response.to.have.status(401);",
+              "});",
+              "",
+              "pm.test(\"Response has correct error structure\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    ",
+              "    // Test error structure",
+              "    pm.expect(jsonData.success).to.eql(false, \"Response success should be false\");",
+              "    pm.expect(jsonData.statusCode).to.eql(401, \"Status code should be 401\");",
+              "    pm.expect(jsonData.message).to.eql(\"Invalid credentials\", \"Message should indicate invalid credentials\");",
+              "    pm.expect(jsonData.errorCode).to.eql(\"INVALID_CREDENTIALS\", \"Error code should be INVALID_CREDENTIALS\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Generate invalid credentials",
+              "pm.environment.set('invalid_teacher_email', `invalid.teacher${Date.now()}@example.com`);",
+              "pm.environment.set('invalid_teacher_password', 'WrongPassword123!');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email_address\": \"{{invalid_teacher_email}}\",\n    \"password\": \"{{invalid_teacher_password}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/teacher/auth/login",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "teacher",
+            "auth",
+            "login"
+          ]
+        },
+        "description": "Tests login with invalid teacher credentials. The API should return a 401 Unauthorized response with the appropriate error message and code."
+      },
+      "response": []
+    },
+    {
+      "name": "Teacher Login (Invalid Input)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 400 Bad Request\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test(\"Response has validation error structure\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    ",
+              "    // Test error structure",
+              "    pm.expect(jsonData.success).to.eql(false, \"Response success should be false\");",
+              "    pm.expect(jsonData.statusCode).to.eql(400, \"Status code should be 400\");",
+              "    ",
+              "    // Test validation errors array",
+              "    pm.expect(jsonData).to.have.property('errors');",
+              "    pm.expect(jsonData.errors).to.be.an('array');",
+              "    pm.expect(jsonData.errors.length).to.be.at.least(1);",
+              "    ",
+              "    // Test first error has required properties",
+              "    pm.expect(jsonData.errors[0]).to.have.property('msg');",
+              "    pm.expect(jsonData.errors[0]).to.have.property('param');",
+              "    pm.expect(jsonData.errors[0].param).to.eql(\"email_address\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email_address\": \"not-an-email\",\n    \"password\": \"\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/teacher/auth/login",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "teacher",
+            "auth",
+            "login"
+          ]
+        },
+        "description": "Tests teacher login with invalid input format. The API should return a 400 Bad Request response with validation errors."
+      },
+      "response": []
+    },
+    {
+      "name": "Teacher Refresh Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has success true and new tokens\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    ",
+              "    // Test success flag",
+              "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+              "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+              "    pm.expect(jsonData.message).to.eql(\"Token refreshed successfully\", \"Message should indicate successful refresh\");",
+              "    ",
+              "    // Test data object",
+              "    pm.expect(jsonData.data).to.be.an('object', \"Data should be an object\");",
+              "    ",
+              "    // Test tokens",
+              "    pm.expect(jsonData.data).to.have.property('tokens');",
+              "    pm.expect(jsonData.data.tokens).to.have.property('access_token');",
+              "    pm.expect(jsonData.data.tokens).to.have.property('refresh_token');",
+              "    pm.expect(jsonData.data.tokens).to.have.property('expires_in');",
+              "    pm.expect(jsonData.data.tokens.token_type).to.eql('Bearer');",
+              "    ",
+              "    // Test that new tokens are different from old ones",
+              "    const oldAccessToken = pm.environment.get(\"teacherAccessToken\");",
+              "    const oldRefreshToken = pm.environment.get(\"teacherRefreshToken\");",
+              "    pm.expect(jsonData.data.tokens.access_token).to.not.eql(oldAccessToken, \"New access token should be different\");",
+              "    pm.expect(jsonData.data.tokens.refresh_token).to.not.eql(oldRefreshToken, \"New refresh token should be different\");",
+              "    ",
+              "    // Store the new tokens",
+              "    pm.environment.set(\"teacherAccessToken\", jsonData.data.tokens.access_token);",
+              "    pm.environment.set(\"teacherRefreshToken\", jsonData.data.tokens.refresh_token);",
+              "    ",
+              "    console.log(\"Successfully refreshed teacher tokens\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"refreshToken\": \"{{teacherRefreshToken}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/teacher/auth/refresh",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "teacher",
+            "auth",
+            "refresh"
+          ]
+        },
+        "description": "Refreshes the teacher's access token using a valid refresh token. Returns new access and refresh tokens while invalidating the previous refresh token."
+      },
+      "response": []
+    },
+    {
+      "name": "Teacher Refresh Token (Invalid)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 401 Unauthorized\", function () {",
+              "    pm.response.to.have.status(401);",
+              "});",
+              "",
+              "pm.test(\"Response has correct error structure\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    ",
+              "    // Test error structure",
+              "    pm.expect(jsonData.success).to.eql(false, \"Response success should be false\");",
+              "    pm.expect(jsonData.statusCode).to.eql(401, \"Status code should be 401\");",
+              "    pm.expect(jsonData.message).to.eql(\"Invalid refresh token\", \"Message should indicate invalid token\");",
+              "    pm.expect(jsonData.errorCode).to.eql(\"INVALID_REFRESH_TOKEN\", \"Error code should be INVALID_REFRESH_TOKEN\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Generate an invalid refresh token",
+              "pm.environment.set('invalid_teacher_refresh_token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkludmFsaWQgVG9rZW4iLCJpYXQiOjE1MTYyMzkwMjJ9.keH6T3x1z7mmhKL1T3r9sQdAxxdzB6siemGMr_6ZOwE');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"refreshToken\": \"{{invalid_teacher_refresh_token}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/teacher/auth/refresh",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "teacher",
+            "auth",
+            "refresh"
+          ]
+        },
+        "description": "Tests token refresh with an invalid teacher refresh token. The API should return a 401 Unauthorized response."
+      },
+      "response": []
+    },
+    {
+      "name": "Teacher Profile (Protected Route)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has teacher profile data\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    ",
+              "    // Test success flag",
+              "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+              "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+              "    ",
+              "    // Test teacher profile data",
+              "    pm.expect(jsonData.data).to.be.an('object');",
+              "    pm.expect(jsonData.data).to.have.property('teacher_id');",
+              "    pm.expect(jsonData.data.teacher_id).to.eql(Number(pm.environment.get(\"teacherId\")));",
+              "    pm.expect(jsonData.data).to.have.property('full_name');",
+              "    pm.expect(jsonData.data).to.have.property('username');",
+              "    pm.expect(jsonData.data).to.have.property('tenant_id');",
+              "    pm.expect(jsonData.data.tenant_id).to.eql(Number(pm.environment.get(\"teacherTenantId\")));",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{teacherAccessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/teacher/profile",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "teacher",
+            "profile"
+          ]
+        },
+        "description": "Tests a protected teacher route using the teacher access token. This request verifies that teacher authentication is working correctly by accessing the teacher's profile."
+      },
+      "response": []
+    },
+    {
+      "name": "Teacher Forgot Password",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has success true and appropriate message\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    ",
+              "    // Test success flag",
+              "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+              "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+              "    // Note: The message should be vague to prevent email enumeration",
+              "    pm.expect(jsonData.message).to.include(\"Password reset instructions\", \"Message should indicate instructions sent\");",
+              "    ",
+              "    // Check that no user data is returned (for security)",
+              "    pm.expect(jsonData.data).to.be.null;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Use existing email if available, otherwise use a default",
+              "if (!pm.environment.get('teacher_email')) {",
+              "    pm.environment.set('teacher_email', 'teacher1@example.com');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email_address\": \"{{teacher_email}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/teacher/auth/forgot-password",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "teacher",
+            "auth",
+            "forgot-password"
+          ]
+        },
+        "description": "Initiates a password reset process for the specified teacher email. For security, the API returns a success response regardless of whether the email exists in the system to prevent email enumeration attacks. In a real application, an email would be sent to the teacher with a password reset link containing a token."
+      },
+      "response": []
+    },
+    {
+      "name": "Teacher Forgot Password (Invalid Email Format)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 400 Bad Request\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test(\"Response has validation error for email\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    ",
+              "    // Test error structure",
+              "    pm.expect(jsonData.success).to.eql(false, \"Response success should be false\");",
+              "    pm.expect(jsonData.statusCode).to.eql(400, \"Status code should be 400\");",
+              "    ",
+              "    // Test validation errors array",
+              "    pm.expect(jsonData).to.have.property('errors');",
+              "    pm.expect(jsonData.errors).to.be.an('array');",
+              "    pm.expect(jsonData.errors.length).to.be.at.least(1);",
+              "    ",
+              "    // Check that error is about email format",
+              "    const emailError = jsonData.errors.find(err => err.param === 'email_address');",
+              "    pm.expect(emailError).to.not.be.undefined;",
+              "    pm.expect(emailError.msg).to.include(\"valid email\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email_address\": \"not-an-email-address\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/teacher/auth/forgot-password",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "teacher",
+            "auth",
+            "forgot-password"
+          ]
+        },
+        "description": "Tests the teacher forgot password endpoint with an invalid email format. The API should return a 400 Bad Request with validation errors."
+      },
+      "response": []
+    },
+    {
+      "name": "Teacher Reset Password",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Note: In a real scenario, you would need an actual reset token from the system",
+              "// This test might fail if using a mock token",
+              "",
+              "// Handle both success and expected failure scenarios",
+              "if (pm.response.code === 200) {",
+              "    pm.test(\"Status code is 200 OK\", function () {",
+              "        pm.response.to.have.status(200);",
+              "    });",
+              "",
+              "    pm.test(\"Response indicates successful password reset\", function () {",
+              "        const jsonData = pm.response.json();",
+              "        ",
+              "        pm.expect(jsonData.success).to.eql(true);",
+              "        pm.expect(jsonData.statusCode).to.eql(200);",
+              "        pm.expect(jsonData.message).to.include(\"Password has been reset\");",
+              "        pm.expect(jsonData.data).to.be.null;",
+              "    });",
+              "} else if (pm.response.code === 400) {",
+              "    pm.test(\"Status code is 400 Bad Request (expected for mock token)\", function () {",
+              "        pm.response.to.have.status(400);",
+              "    });",
+              "",
+              "    pm.test(\"Response indicates invalid token (expected for mock token)\", function () {",
+              "        const jsonData = pm.response.json();",
+              "        ",
+              "        pm.expect(jsonData.success).to.eql(false);",
+              "        pm.expect(jsonData.statusCode).to.eql(400);",
+              "        pm.expect(jsonData.message).to.include(\"Invalid or expired\");",
+              "    });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Generate a secure password",
+              "pm.environment.set('new_teacher_password', 'NewSecure' + Math.floor(Math.random() * 1000) + 'Pwd!');",
+              "",
+              "// In a real scenario, this token would come from the email sent to the teacher",
+              "// For testing, we're using a mock token",
+              "if (!pm.environment.get('teacher_reset_token')) {",
+              "    pm.environment.set('teacher_reset_token', 'mock-reset-token-' + Date.now());",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"token\": \"{{teacher_reset_token}}\",\n    \"newPassword\": \"{{new_teacher_password}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/teacher/auth/reset-password",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "teacher",
+            "auth",
+            "reset-password"
+          ]
+        },
+        "description": "Completes the teacher password reset process using a token and new password. Since this collection uses a mock token, it's expected to receive a 400 Bad Request response in a real environment. In a real application, the teacher would receive a valid token via email."
+      },
+      "response": []
+    },
+    {
+      "name": "Teacher Reset Password (Validation Error)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 400 Bad Request\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test(\"Response has validation error for password\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    ",
+              "    // Test error structure",
+              "    pm.expect(jsonData.success).to.eql(false, \"Response success should be false\");",
+              "    pm.expect(jsonData.statusCode).to.eql(400, \"Status code should be 400\");",
+              "    ",
+              "    // Test validation errors array",
+              "    pm.expect(jsonData).to.have.property('errors');",
+              "    pm.expect(jsonData.errors).to.be.an('array');",
+              "    pm.expect(jsonData.errors.length).to.be.at.least(1);",
+              "    ",
+              "    // Check that error is about password complexity",
+              "    const passwordError = jsonData.errors.find(err => err.param === 'newPassword');",
+              "    pm.expect(passwordError).to.not.be.undefined;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Use a weak password that will fail validation",
+              "pm.environment.set('weak_password', 'password123');",
+              "",
+              "// In a real scenario, this token would come from the email sent to the teacher",
+              "// For testing, we're using a mock token",
+              "if (!pm.environment.get('teacher_reset_token')) {",
+              "    pm.environment.set('teacher_reset_token', 'mock-reset-token-' + Date.now());",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"token\": \"{{teacher_reset_token}}\",\n    \"newPassword\": \"{{weak_password}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/teacher/auth/reset-password",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "teacher",
+            "auth",
+            "reset-password"
+          ]
+        },
+        "description": "Tests teacher password reset with a weak password that doesn't meet the validation requirements. The API should return a 400 Bad Request with validation errors about password complexity."
+      },
+      "response": []
+    },
+    {
+      "name": "Teacher Logout",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has success true and logout message\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    ",
+              "    // Test success flag",
+              "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+              "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+              "    pm.expect(jsonData.message).to.eql(\"Teacher logout successful\", \"Message should indicate successful logout\");",
+              "    pm.expect(jsonData.data).to.be.null;",
+              "    ",
+              "    // Note that we're not clearing tokens here to allow testing unauthorized access",
+              "    console.log(\"Teacher logged out successfully\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{teacherAccessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/teacher/auth/logout",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "teacher",
+            "auth",
+            "logout"
+          ]
+        },
+        "description": "Logs out the current teacher by invalidating their refresh token. Requires authentication via teacher access token."
+      },
+      "response": []
+    },
+    {
+      "name": "Unauthorized Access After Teacher Logout",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 401 Unauthorized\", function () {",
+              "    pm.response.to.have.status(401);",
+              "});",
+              "",
+              "pm.test(\"Response has correct error structure\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    ",
+              "    // Test error structure",
+              "    pm.expect(jsonData.success).to.eql(false, \"Response success should be false\");",
+              "    pm.expect(jsonData.statusCode).to.eql(401, \"Status code should be 401\");",
+              "    pm.expect(jsonData).to.have.property('errorCode');",
+              "    ",
+              "    // Clear tokens after confirming unauthorized",
+              "    pm.environment.unset(\"teacherAccessToken\");",
+              "    pm.environment.unset(\"teacherRefreshToken\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{teacherAccessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/teacher/profile",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "teacher",
+            "profile"
+          ]
+        },
+        "description": "Tests accessing a protected teacher route after logout. The API should return a 401 Unauthorized response, confirming that authentication is required."
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{teacherAccessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script",
+          "console.log(`Running request: ${pm.info.requestName}`);",
+          "",
+          "// Ensure environment variables exist",
+          "if (!pm.environment.get('base_url')) {",
+          "    console.error('base_url environment variable is not set!');",
+          "    console.log('Setting default base URL for teacher API...');",
+          "    pm.environment.set('base_url', 'http://localhost:3000/api/v1');",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script",
+          "console.log(`Completed request: ${pm.info.requestName} with status ${pm.response.code}`);",
+          "",
+          "// Add timestamp validation for all JSON responses",
+          "if (pm.response.headers.get('Content-Type') && ",
+          "    pm.response.headers.get('Content-Type').includes('application/json')) {",
+          "    try {",
+          "        const jsonData = pm.response.json();",
+          "        if (jsonData.timestamp) {",
+          "            pm.test(\"Response includes valid timestamp\", function () {",
+          "                const timestamp = new Date(jsonData.timestamp).getTime();",
+          "                pm.expect(timestamp).to.be.a('number');",
+          "                pm.expect(timestamp).to.be.at.most(Date.now());",
+          "                pm.expect(timestamp).to.be.at.least(Date.now() - 60000); // Within last minute",
+          "            });",
+          "        }",
+          "    } catch (e) {",
+          "        console.log(\"Could not parse response as JSON or timestamp missing\");",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "teacherAccessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "teacherRefreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "teacherId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "teacher_email",
+      "value": "teacher1@example.com",
+      "type": "string"
+    },
+    {
+      "key": "teacher_password",
+      "value": "Teacher@123",
+      "type": "string"
+    },
+    {
+      "key": "teacherTenantId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
