@@ -28,16 +28,19 @@ async function main() {
   try {
     // Bootstrap process to handle circular dependency between role and user
     
-    // 1. Create SUPER_ADMIN role without user reference (to break circular dependency)
+    // 1. Create system roles first
     const superAdminRole = await createSuperAdminRole();
     logger.info(`SUPER_ADMIN role configured: ${superAdminRole.role_name} (ID: ${superAdminRole.role_id})`);
+    
+    const tenantAdminRole = await createTenantAdminRole();
+    logger.info(`TENANT_ADMIN role configured: ${tenantAdminRole.role_name} (ID: ${tenantAdminRole.role_id})`);
     
     // 2. Create SUPER_ADMIN user with role reference
     const superAdmin = await createSuperAdminUser(superAdminRole.role_id);
     logger.info(`SUPER_ADMIN user configured: ${superAdmin.email_address}`);
     
     // 3. Update references after both entities exist
-    await updateSelfReferences(superAdmin.system_user_id, superAdminRole.role_id);
+    await updateSelfReferences(superAdmin.system_user_id, superAdminRole.role_id, tenantAdminRole.role_id);
     logger.info('Self-references updated successfully');
     
     logger.info('Database seeding completed successfully');
@@ -48,14 +51,11 @@ async function main() {
 }
 
 /**
- * Creates the SUPER_ADMIN role if it doesn't exist
+ * Creates the SUPER_ADMIN role with role_id 1 if it doesn't exist
  */
 async function createSuperAdminRole() {
-  const existingRole = await prisma.role.findFirst({
-    where: { 
-      role_name: 'SUPER_ADMIN', 
-      is_system_role: true 
-    }
+  const existingRole = await prisma.role.findUnique({
+    where: { role_id: 1 }
   });
   
   if (existingRole) {
@@ -66,11 +66,41 @@ async function createSuperAdminRole() {
   logger.info('Creating SUPER_ADMIN role...');
   return prisma.role.create({
     data: {
+      role_id: 1,
       role_name: 'SUPER_ADMIN',
       role_description: 'Global system administrator with full access to all features',
       is_system_role: true,
       is_active: true,
-      // Don't set created_by initially to avoid circular dependency
+      created_by: null, // Set to null initially, will update later
+      updated_by: null,
+      created_at: new Date(),
+      updated_at: new Date(),
+      is_deleted: false
+    }
+  });
+}
+
+/**
+ * Creates the TENANT_ADMIN role with role_id 2 if it doesn't exist
+ */
+async function createTenantAdminRole() {
+  const existingRole = await prisma.role.findUnique({
+    where: { role_id: 2 }
+  });
+  
+  if (existingRole) {
+    logger.info('TENANT_ADMIN role already exists');
+    return existingRole;
+  }
+  
+  logger.info('Creating TENANT_ADMIN role...');
+  return prisma.role.create({
+    data: {
+      role_id: 2,
+      role_name: 'TENANT_ADMIN',
+      role_description: 'Tenant administrator with full access to tenant-specific features',
+      is_system_role: true,
+      is_active: true,
       created_by: null, // Set to null initially, will update later
       updated_by: null,
       created_at: new Date(),
@@ -129,7 +159,7 @@ async function createSuperAdminUser(roleId: number) {
 /**
  * Updates self-references to maintain data integrity
  */
-async function updateSelfReferences(userId: number, roleId: number) {
+async function updateSelfReferences(userId: number, superAdminRoleId: number, tenantAdminRoleId: number) {
   try {
     // Update user record to reference itself as creator
     await prisma.systemUser.update({
@@ -138,12 +168,19 @@ async function updateSelfReferences(userId: number, roleId: number) {
     });
     logger.info(`Updated user ${userId} to reference itself as creator`);
     
-    // Update role record to reference the admin user as creator
+    // Update SUPER_ADMIN role record to reference the admin user as creator
     await prisma.role.update({
-      where: { role_id: roleId },
+      where: { role_id: superAdminRoleId },
       data: { created_by: userId }
     });
-    logger.info(`Updated role ${roleId} to reference user ${userId} as creator`);
+    logger.info(`Updated SUPER_ADMIN role ${superAdminRoleId} to reference user ${userId} as creator`);
+    
+    // Update TENANT_ADMIN role record to reference the admin user as creator
+    await prisma.role.update({
+      where: { role_id: tenantAdminRoleId },
+      data: { created_by: userId }
+    });
+    logger.info(`Updated TENANT_ADMIN role ${tenantAdminRoleId} to reference user ${userId} as creator`);
   } catch (error) {
     logger.error('Error updating self-references:', error);
     throw error;
