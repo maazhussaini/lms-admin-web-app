@@ -9,7 +9,7 @@ import { check, ValidationChain } from 'express-validator';
  * Teacher Login DTO for authentication
  */
 export interface TeacherLoginDto {
-  username: string;
+  email_address: string;
   password: string;
   tenant_context?: string; // For multi-tenant support
 }
@@ -25,7 +25,7 @@ export interface TeacherRefreshTokenDto {
  * Teacher Forgot password DTO
  */
 export interface TeacherForgotPasswordDto {
-  username: string;
+  email_address: string;
 }
 
 /**
@@ -40,12 +40,12 @@ export interface TeacherResetPasswordDto {
  * Validation chains for teacher login DTO
  */
 export const teacherLoginValidation: ValidationChain[] = [
-  check('username')
+  check('email_address')
     .notEmpty()
-    .withMessage('Username is required')
-    .isString()
-    .withMessage('Username must be a string')
-    .trim(),
+    .withMessage('Email address is required')
+    .isEmail()
+    .withMessage('Must be a valid email address')
+    .normalizeEmail({ gmail_remove_dots: false, all_lowercase: true }),
   check('password')
     .notEmpty()
     .withMessage('Password is required')
@@ -74,12 +74,12 @@ export const teacherRefreshTokenValidation: ValidationChain[] = [
  * Validation chains for teacher forgot password DTO
  */
 export const teacherForgotPasswordValidation: ValidationChain[] = [
-  check('username')
+  check('email_address')
     .notEmpty()
-    .withMessage('Username is required')
-    .isString()
-    .withMessage('Username must be a string')
-    .trim(),
+    .withMessage('Email address is required')
+    .isEmail()
+    .withMessage('Must be a valid email address')
+    .normalizeEmail({ gmail_remove_dots: false, all_lowercase: true }),
 ];
 
 /**

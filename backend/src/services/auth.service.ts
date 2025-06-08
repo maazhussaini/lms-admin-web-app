@@ -43,15 +43,12 @@ export class AuthService {
    * @returns Authentication response with tokens and user info
    */
   async loginUser(data: LoginDto): Promise<TAuthResponse> {
-    const { username, password, tenant_context } = data;
+    const { email_address, password, tenant_context } = data;
 
-    // Find user by username or email, ensuring they are active
+    // Find user by email address, ensuring they are active
     const user = await this.prisma.systemUser.findFirst({
       where: {
-        OR: [
-          { username },
-          { email_address: username }
-        ],
+        email_address,
         system_user_status: PrismaSystemUserStatus.ACTIVE,
         is_active: true,
         is_deleted: false

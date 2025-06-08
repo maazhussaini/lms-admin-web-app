@@ -43,27 +43,33 @@ export class TeacherAuthService {
    * @returns Authentication response with tokens and user info
    */
   async loginTeacher(data: TeacherLoginDto): Promise<TAuthResponse> {
-    const { username, password, tenant_context } = data;
+    const { email_address, password, tenant_context } = data;
 
-    // Find teacher by username, ensuring they are active
-    const teacher = await this.prisma.teacher.findFirst({
+    // Find teacher email first, then get the teacher record
+    const teacherEmail = await this.prisma.teacherEmailAddress.findFirst({
       where: {
-        username,
+        email_address,
         is_active: true,
         is_deleted: false
+      },
+      include: {
+        teacher: true
       }
     });
 
-    if (!teacher) {
+    // If no email found or associated teacher is inactive/deleted
+    if (!teacherEmail || !teacherEmail.teacher || !teacherEmail.teacher.is_active || teacherEmail.teacher.is_deleted) {
       throw new UnauthorizedError('Invalid credentials', 'INVALID_CREDENTIALS');
     }
+
+    const teacher = teacherEmail.teacher;
 
     // Verify password
     const isPasswordValid = await comparePassword(password, teacher.password_hash);
     
     if (!isPasswordValid) {
       // Log failed login attempt
-      logger.info(`Failed login attempt for teacher username: ${username}`);
+      logger.info(`Failed login attempt for teacher email: ${email_address}`);
       
       throw new UnauthorizedError('Invalid credentials', 'INVALID_CREDENTIALS');
     }
@@ -84,10 +90,13 @@ export class TeacherAuthService {
     // Get teacher permissions
     const permissions = await this.getTeacherPermissions(teacher.teacher_id, teacher.tenant_id);
 
+    // Get primary email for teacher using the helper method
+    const primaryEmail = await this.getPrimaryEmail(teacher.teacher_id);
+
     // Generate JWT tokens
     const tokenPayload: TokenPayload = {
       id: teacher.teacher_id,
-      email: teacher.username, // Use username for teachers
+      email: primaryEmail || teacher.username,
       role: 'TEACHER',
       tenantId: teacher.tenant_id,
       permissions
@@ -95,22 +104,12 @@ export class TeacherAuthService {
 
     const tokens = generateTokens(tokenPayload);
 
-    // Get teacher's primary email if available
-    const primaryEmail = await this.prisma.teacherEmailAddress.findFirst({
-      where: {
-        teacher_id: teacher.teacher_id,
-        is_primary: true,
-        is_active: true,
-        is_deleted: false
-      }
-    });
-
     return {
       user: {
         id: teacher.teacher_id,
         username: teacher.username,
         full_name: teacher.full_name,
-        email: primaryEmail?.email_address || teacher.username, // Use primary email if available, otherwise username
+        email: primaryEmail || teacher.username,
         role: {
           role_id: 0, // Teachers don't have traditional roles like admins
           role_name: 'TEACHER'
@@ -161,20 +160,13 @@ export class TeacherAuthService {
       // Get teacher permissions
       const permissions = await this.getTeacherPermissions(teacher.teacher_id, teacher.tenant_id);
 
-      // Get teacher's primary email if available
-      const primaryEmail = await this.prisma.teacherEmailAddress.findFirst({
-        where: {
-          teacher_id: teacher.teacher_id,
-          is_primary: true,
-          is_active: true,
-          is_deleted: false
-        }
-      });
-
+      // Get primary email for teacher using the helper method
+      const primaryEmail = await this.getPrimaryEmail(teacher.teacher_id);
+      
       // Generate new tokens
       const tokenPayload: TokenPayload = {
         id: teacher.teacher_id,
-        email: primaryEmail?.email_address || teacher.username,
+        email: primaryEmail || teacher.username,
         role: 'TEACHER',
         tenantId: teacher.tenant_id,
         permissions
@@ -195,7 +187,7 @@ export class TeacherAuthService {
           id: teacher.teacher_id,
           username: teacher.username,
           full_name: teacher.full_name,
-          email: primaryEmail?.email_address || teacher.username,
+          email: primaryEmail || teacher.username,
           role: {
             role_id: 0,
             role_name: 'TEACHER'
@@ -251,26 +243,38 @@ export class TeacherAuthService {
 
   /**
    * Initiate password reset process for a teacher
-   * @param data Teacher's username
+   * @param data Teacher's email address
    */
   async initiateTeacherPasswordReset(data: TeacherForgotPasswordDto): Promise<void> {
-    const { username } = data;
+    const { email_address } = data;
 
-    // Find teacher by username
-    const teacher = await this.prisma.teacher.findFirst({
+    // Find teacher by email address from the teacher_email_addresses table
+    const teacherEmail = await this.prisma.teacherEmailAddress.findFirst({
       where: {
-        username,
+        email_address,
         is_active: true,
         is_deleted: false
+      },
+      include: {
+        teacher: {
+          select: {
+            teacher_id: true,
+            username: true,
+            is_active: true,
+            is_deleted: true
+          }
+        }
       }
     });
 
-    // For security reasons, don't reveal if username exists or not
-    if (!teacher) {
-      // Log the attempt but return success to prevent username enumeration
-      logger.info(`Password reset requested for non-existent teacher username: ${username}`);
+    // For security reasons, don't reveal if email exists or not
+    if (!teacherEmail || !teacherEmail.teacher || !teacherEmail.teacher.is_active || teacherEmail.teacher.is_deleted) {
+      // Log the attempt but return success to prevent email enumeration
+      logger.info(`Password reset requested for non-existent teacher email: ${email_address}`);
       return;
     }
+
+    const teacher = teacherEmail.teacher;
 
     // Generate a secure random token
     const resetToken = crypto.randomBytes(32).toString('hex');
@@ -297,21 +301,8 @@ export class TeacherAuthService {
       TEACHER_TOKEN_RESET_HASHES.delete(tokenHash);
     }, 60 * 60 * 1000); // 1 hour
 
-    // Get teacher's primary email if available, to send reset instructions
-    const primaryEmail = await this.prisma.teacherEmailAddress.findFirst({
-      where: {
-        teacher_id: teacher.teacher_id,
-        is_primary: true,
-        is_active: true,
-        is_deleted: false
-      }
-    });
-
-    const emailToSendResetLink = primaryEmail?.email_address || username;
-
     // In a real application, send an email to the teacher with the reset link
-    logger.info(`Password reset token generated for teacher ${teacher.teacher_id} (${username}): ${resetToken}`);
-    logger.info(`Reset link would be sent to: ${emailToSendResetLink}`);
+    logger.info(`Password reset token generated for teacher ${teacher.teacher_id} (${email_address}): ${resetToken}`);
     logger.info(`Reset URL would be: /teacher/reset-password?token=${resetToken}`);
   }
 
@@ -426,6 +417,29 @@ export class TeacherAuthService {
     } catch (error) {
       logger.error('Error fetching teacher permissions', { error, teacherId, tenantId });
       return [];
+    }
+  }
+
+  /**
+   * Helper method to get a teacher's primary email address
+   * @param teacherId Teacher ID
+   * @returns Primary email address string or null
+   */
+  private async getPrimaryEmail(teacherId: number): Promise<string | null> {
+    try {
+      const primaryEmail = await this.prisma.teacherEmailAddress.findFirst({
+        where: {
+          teacher_id: teacherId,
+          is_primary: true,
+          is_active: true,
+          is_deleted: false
+        }
+      });
+      
+      return primaryEmail?.email_address || null;
+    } catch (error) {
+      logger.error('Error fetching teacher primary email', { error, teacherId });
+      return null;
     }
   }
 }

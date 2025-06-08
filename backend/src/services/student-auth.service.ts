@@ -43,35 +43,42 @@ export class StudentAuthService {
    * @returns Authentication response with tokens and user info
    */
   async loginStudent(data: StudentLoginDto): Promise<TAuthResponse> {
-    const { username, password, tenant_context } = data;
+    const { email_address, password, tenant_context } = data;
 
-    // Find student by username, ensuring they are active
-    const student = await this.prisma.student.findFirst({
+    // Find student email first, then get the student record
+    const studentEmail = await this.prisma.studentEmailAddress.findFirst({
       where: {
-        username,
+        email_address,
         is_active: true,
         is_deleted: false
       },
       include: {
-        tenant: {
-          select: {
-            tenant_id: true,
-            tenant_name: true
+        student: {
+          include: {
+            tenant: {
+              select: {
+                tenant_id: true,
+                tenant_name: true
+              }
+            }
           }
         }
       }
     });
 
-    if (!student) {
+    // If no email found or associated student is inactive/deleted
+    if (!studentEmail || !studentEmail.student || !studentEmail.student.is_active || studentEmail.student.is_deleted) {
       throw new UnauthorizedError('Invalid credentials', 'INVALID_CREDENTIALS');
     }
+
+    const student = studentEmail.student;
 
     // Verify password
     const isPasswordValid = await comparePassword(password, student.password_hash);
     
     if (!isPasswordValid) {
       // Log failed login attempt
-      logger.info(`Failed login attempt for student username: ${username}`);
+      logger.info(`Failed login attempt for student email: ${email_address}`);
       
       throw new UnauthorizedError('Invalid credentials', 'INVALID_CREDENTIALS');
     }
@@ -92,10 +99,13 @@ export class StudentAuthService {
     // Get student permissions
     const permissions = await this.getStudentPermissions(student.student_id, student.tenant_id);
 
+    // Get primary email for student
+    const primaryEmail = await this.getPrimaryEmail(student.student_id);
+
     // Generate JWT tokens
     const tokenPayload: TokenPayload = {
       id: student.student_id,
-      email: student.username,
+      email: primaryEmail || student.username,
       role: 'STUDENT',
       tenantId: student.tenant_id,
       permissions
@@ -103,22 +113,12 @@ export class StudentAuthService {
 
     const tokens = generateTokens(tokenPayload);
 
-    // Get student's primary email if available
-    const primaryEmail = await this.prisma.studentEmailAddress.findFirst({
-      where: {
-        student_id: student.student_id,
-        is_primary: true,
-        is_active: true,
-        is_deleted: false
-      }
-    });
-
     return {
       user: {
         id: student.student_id,
         username: student.username,
         full_name: student.full_name,
-        email: primaryEmail?.email_address || student.username,
+        email: primaryEmail || student.username,
         role: {
           role_id: 0, // Students don't have traditional roles like admins
           role_name: 'STUDENT'
@@ -177,10 +177,13 @@ export class StudentAuthService {
       // Get student permissions
       const permissions = await this.getStudentPermissions(student.student_id, student.tenant_id);
 
+      // Get primary email for student
+      const primaryEmail = await this.getPrimaryEmail(student.student_id);
+      
       // Generate new tokens
       const tokenPayload: TokenPayload = {
         id: student.student_id,
-        email: student.username,
+        email: primaryEmail || student.username,
         role: 'STUDENT',
         tenantId: student.tenant_id,
         permissions
@@ -201,7 +204,7 @@ export class StudentAuthService {
           id: student.student_id,
           username: student.username,
           full_name: student.full_name,
-          email: student.username, // Use email as username for students
+          email: primaryEmail || student.username,
           role: {
             role_id: 0,
             role_name: 'STUDENT'
@@ -257,26 +260,38 @@ export class StudentAuthService {
 
   /**
    * Initiate password reset process for a student
-   * @param data Student's username
+   * @param data Student's email address
    */
   async initiateStudentPasswordReset(data: StudentForgotPasswordDto): Promise<void> {
-    const { username } = data;
+    const { email_address } = data;
 
-    // Find student by username
-    const student = await this.prisma.student.findFirst({
+    // Find student email first, then the associated student
+    const studentEmail = await this.prisma.studentEmailAddress.findFirst({
       where: {
-        username,
+        email_address,
         is_active: true,
         is_deleted: false
+      },
+      include: {
+        student: {
+          select: {
+            student_id: true,
+            username: true,
+            is_active: true,
+            is_deleted: true
+          }
+        }
       }
     });
 
-    // For security reasons, don't reveal if username exists or not
-    if (!student) {
-      // Log the attempt but return success to prevent username enumeration
-      logger.info(`Password reset requested for non-existent student username: ${username}`);
+    // For security reasons, don't reveal if email exists or not
+    if (!studentEmail || !studentEmail.student || !studentEmail.student.is_active || studentEmail.student.is_deleted) {
+      // Log the attempt but return success to prevent email enumeration
+      logger.info(`Password reset requested for non-existent student email: ${email_address}`);
       return;
     }
+
+    const student = studentEmail.student;
 
     // Generate a secure random token
     const resetToken = crypto.randomBytes(32).toString('hex');
@@ -304,7 +319,7 @@ export class StudentAuthService {
     }, 60 * 60 * 1000); // 1 hour
 
     // In a real application, send an email to the student with the reset link
-    logger.info(`Password reset token generated for student ${student.student_id} (${username}): ${resetToken}`);
+    logger.info(`Password reset token generated for student ${student.student_id} (${email_address}): ${resetToken}`);
     logger.info(`Reset URL would be: /student/reset-password?token=${resetToken}`);
   }
 
@@ -411,6 +426,29 @@ export class StudentAuthService {
     } catch (error) {
       logger.error('Error fetching student permissions', { error, studentId, tenantId });
       return [];
+    }
+  }
+
+  /**
+   * Helper method to get a student's primary email address
+   * @param studentId Student ID
+   * @returns Primary email address string or null
+   */
+  private async getPrimaryEmail(studentId: number): Promise<string | null> {
+    try {
+      const primaryEmail = await this.prisma.studentEmailAddress.findFirst({
+        where: {
+          student_id: studentId,
+          is_primary: true,
+          is_active: true,
+          is_deleted: false
+        }
+      });
+      
+      return primaryEmail?.email_address || null;
+    } catch (error) {
+      logger.error('Error fetching student primary email', { error, studentId });
+      return null;
     }
   }
 }

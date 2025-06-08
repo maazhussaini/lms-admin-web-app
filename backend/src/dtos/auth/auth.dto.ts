@@ -9,7 +9,7 @@ import { check, ValidationChain } from 'express-validator';
  * Login DTO for authentication
  */
 export interface LoginDto {
-  username: string;
+  email_address: string; // Changed from username to email_address for consistency
   password: string;
   tenant_context?: string;
 }
@@ -40,11 +40,12 @@ export interface ResetPasswordDto {
  * Validation chains for login DTO
  */
 export const loginValidation: ValidationChain[] = [
-  check('username')
+  check('email_address')
     .notEmpty()
-    .withMessage('Username is required')
-    .isString()
-    .withMessage('Username must be a string')
+    .withMessage('Email address is required')
+    .isEmail()
+    .withMessage('Must be a valid email address')
+    .normalizeEmail({ gmail_remove_dots: false, all_lowercase: true })
     .trim(),
   check('password')
     .notEmpty()
