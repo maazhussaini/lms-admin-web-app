@@ -10,7 +10,7 @@ model Role {
   is_deleted        Boolean           @default(false)
   created_at        DateTime          @default(now())
   updated_at        DateTime          @updatedAt
-  created_by        Int
+  created_by        Int?
   updated_by        Int?
   deleted_at        DateTime?
   deleted_by        Int?
@@ -20,7 +20,7 @@ model Role {
   // Relationships
   system_users      SystemUser[]
   role_screens      RoleScreen[]
-  created_by_user   SystemUser        @relation("RoleCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  created_by_user   SystemUser?       @relation("RoleCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user   SystemUser?       @relation("RoleUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
   deleted_by_user   SystemUser?       @relation("RoleDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
@@ -79,7 +79,7 @@ model SystemUser {
   is_deleted        Boolean           @default(false)
   created_at        DateTime          @default(now())
   updated_at        DateTime          @updatedAt
-  created_by        Int
+  created_by        Int?
   updated_by        Int?
   deleted_at        DateTime?
   deleted_by        Int?
@@ -93,7 +93,7 @@ model SystemUser {
 
   // Self-references for audit trails
   created_by_me_users      SystemUser[]      @relation("UserCreatedBy")
-  created_by_user          SystemUser        @relation("UserCreatedBy", fields: [created_by], references: [system_user_id])
+  created_by_user          SystemUser?       @relation("UserCreatedBy", fields: [created_by], references: [system_user_id])
   updated_by_me_users      SystemUser[]      @relation("UserUpdatedBy")
   updated_by_user          SystemUser?       @relation("UserUpdatedBy", fields: [updated_by], references: [system_user_id])
   deleted_by_me_users      SystemUser[]      @relation("UserDeletedBy")
