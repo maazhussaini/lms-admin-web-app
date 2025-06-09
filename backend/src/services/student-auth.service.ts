@@ -108,6 +108,7 @@ export class StudentAuthService {
       id: student.student_id,
       email: primaryEmail || student.username,
       role: 'STUDENT',
+      user_type: UserType.STUDENT,
       tenantId: student.tenant_id,
       permissions
     };
@@ -186,6 +187,7 @@ export class StudentAuthService {
         id: student.student_id,
         email: primaryEmail || student.username,
         role: 'STUDENT',
+        user_type: UserType.STUDENT,
         tenantId: student.tenant_id,
         permissions
       };

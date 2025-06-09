@@ -12,7 +12,8 @@ import { ApiError, NotFoundError, ConflictError, ForbiddenError } from '@/utils/
 import { TokenPayload } from '@/utils/jwt.utils';
 import { 
   TenantStatus,
-  ContactType
+  ContactType,
+  UserType
 } from '@/types/enums.js';
 import logger from '@/config/logger';
 
@@ -306,7 +307,13 @@ export class TenantService {
       tenantId,
       userId
     });    // Verify tenant exists
-    await this.getTenantById(tenantId, { id: userId, email: 'system@admin.com', role: 'SUPER_ADMIN', tenantId });    // Update tenant
+    await this.getTenantById(tenantId, {
+      id: userId, 
+      email: 'system@admin.com', 
+      role: 'SUPER_ADMIN', 
+      tenantId,
+      user_type: UserType.STUDENT
+    });    // Update tenant
     const updateData: any = {
       updated_by: userId,
       updated_at: new Date(),
@@ -346,7 +353,13 @@ export class TenantService {
     });
 
     // Verify tenant exists
-    await this.getTenantById(tenantId, { id: userId, email: 'system@admin.com', role: 'SUPER_ADMIN', tenantId });
+    await this.getTenantById(tenantId, {
+      id: userId, 
+      email: 'system@admin.com', 
+      role: 'SUPER_ADMIN', 
+      tenantId,
+      user_type: UserType.STUDENT
+    });
 
     // Soft delete by updating is_deleted flag
     await prisma.tenant.update({

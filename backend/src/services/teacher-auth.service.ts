@@ -99,6 +99,7 @@ export class TeacherAuthService {
       id: teacher.teacher_id,
       email: primaryEmail || teacher.username,
       role: 'TEACHER',
+      user_type: UserType.TEACHER,
       tenantId: teacher.tenant_id,
       permissions
     };
@@ -168,6 +169,7 @@ export class TeacherAuthService {
         id: teacher.teacher_id,
         email: primaryEmail || teacher.username,
         role: 'TEACHER',
+        user_type: UserType.TEACHER,
         tenantId: teacher.tenant_id,
         permissions
       };

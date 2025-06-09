@@ -12,6 +12,7 @@ import type { StringValue } from 'ms';
 import env from '@/config/environment.js';
 import { UnauthorizedError } from './api-error.utils.js';
 import logger from '@/config/logger.js';
+import { UserType } from '@/types/enums.js';
 
 /**
  * User payload structure for JWT token
@@ -22,6 +23,7 @@ export interface TokenPayload {
   email: string;
   tenantId: number;
   role: string;
+  user_type: UserType; // Add userType field for authorization
   permissions?: string[];
   sessionId?: string; // Optional session ID for tracking/revocation
 }
@@ -148,7 +150,8 @@ export const verifyAccessToken = (token: string): TokenPayload => {
     };
     
     const decoded = jwt.verify(token, env.JWT_SECRET, options) as jwt.JwtPayload;
-      // Validate token type to prevent token substitution attacks
+
+    // Validate token type to prevent token substitution attacks
     if (decoded['type'] !== 'access') {
       logger.warn('Token type verification failed', { 
         expectedType: 'access', 
@@ -163,6 +166,7 @@ export const verifyAccessToken = (token: string): TokenPayload => {
       email: decoded['email'],
       tenantId: decoded['tenantId'],
       role: decoded['role'],
+      user_type: decoded['user_type'], // Include user_type for authorization
       permissions: decoded['permissions'],
       sessionId: decoded['sessionId']
     };
@@ -200,6 +204,7 @@ export const verifyAccessTokenAsync = async (token: string): Promise<TokenPayloa
       email: decoded['email'],
       tenantId: decoded['tenantId'],
       role: decoded['role'],
+      user_type: decoded['user_type'], // Include user_type for authorization
       permissions: decoded['permissions'],
       sessionId: decoded['sessionId']
     };

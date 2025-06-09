@@ -123,6 +123,7 @@ export class AuthService {
       id: user.system_user_id,
       email: user.email_address,
       role: user.role.role_name,
+      user_type: user.role_type as UserType, // Use enum for role type
       tenantId: user.tenant_id || 0, // 0 is a special case for SUPER_ADMIN with no tenant
       permissions
     };
@@ -199,6 +200,7 @@ export class AuthService {
         id: user.system_user_id,
         email: user.email_address,
         role: user.role.role_name,
+        user_type: user.role_type as UserType, // Use enum for role type
         tenantId: user.tenant_id || 0,
         permissions
       };

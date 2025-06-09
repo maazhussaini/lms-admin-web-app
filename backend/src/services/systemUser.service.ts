@@ -13,6 +13,7 @@ import { tryCatch } from '@/utils/error-wrapper.utils.js';
 import {
   SystemUserStatus,
   SystemUserRole,
+  UserType, // Add UserType import
 } from '@/types/enums.js';
 
 /**
@@ -34,8 +35,10 @@ export class SystemUserService {
     requestingUser: SystemUser
   ): Promise<SystemUser> {
     return tryCatch(async () => {
-      // Authorization checks
-      if (requestingUser.role_type === SystemUserRole.TENANT_ADMIN) {
+      // Authorization checks - compare userType instead of role_type
+      const requestingUserType = this.mapSystemUserRoleToUserType(requestingUser.role_type);
+      
+      if (requestingUserType === UserType.TENANT_ADMIN) {
         // Tenant admins can only create users within their own tenant
         if (data.tenantId !== requestingUser.tenant_id) {
           throw new ForbiddenError('You can only create users within your own tenant');
@@ -108,8 +111,10 @@ export class SystemUserService {
       }
 
       // Authorization check - TENANT_ADMIN can only view users in their tenant
+      const requestingUserType = this.mapSystemUserRoleToUserType(requestingUser.role_type);
+      
       if (
-        requestingUser.role_type === SystemUserRole.TENANT_ADMIN &&
+        requestingUserType === UserType.TENANT_ADMIN &&
         user.tenant_id !== requestingUser.tenant_id
       ) {
         throw new ForbiddenError('You cannot access users from another tenant');
@@ -140,7 +145,9 @@ export class SystemUserService {
       };
 
       // Apply tenant isolation for TENANT_ADMIN
-      if (requestingUser.role_type === SystemUserRole.TENANT_ADMIN) {
+      const requestingUserType = this.mapSystemUserRoleToUserType(requestingUser.role_type);
+      
+      if (requestingUserType === UserType.TENANT_ADMIN) {
         where.tenant_id = requestingUser.tenant_id;
       } 
       // SUPER_ADMIN can filter by tenant if they want
@@ -212,7 +219,9 @@ export class SystemUserService {
       }
 
       // Authorization checks
-      if (requestingUser.role_type === SystemUserRole.TENANT_ADMIN) {
+      const requestingUserType = this.mapSystemUserRoleToUserType(requestingUser.role_type);
+      
+      if (requestingUserType === UserType.TENANT_ADMIN) {
         // Tenant admin can only update users in their own tenant
         if (existingUser.tenant_id !== requestingUser.tenant_id) {
           throw new ForbiddenError('You cannot update users from another tenant');
@@ -257,7 +266,7 @@ export class SystemUserService {
       }
 
       // Special handling for role changes (SUPER_ADMIN only)
-      if (data.role !== undefined && requestingUser.role_type === SystemUserRole.SUPER_ADMIN) {
+      if (data.role !== undefined && requestingUserType === UserType.SUPER_ADMIN) {
         updateData.role_type = data.role;
         
         // Handle tenant implications of role change
@@ -312,7 +321,9 @@ export class SystemUserService {
       }
 
       // Authorization checks
-      if (requestingUser.role_type === SystemUserRole.TENANT_ADMIN) {
+      const requestingUserType = this.mapSystemUserRoleToUserType(requestingUser.role_type);
+      
+      if (requestingUserType === UserType.TENANT_ADMIN) {
         // Tenant admin can only delete users in their own tenant
         if (existingUser.tenant_id !== requestingUser.tenant_id) {
           throw new ForbiddenError('You cannot delete users from another tenant');
@@ -381,6 +392,20 @@ export class SystemUserService {
         }
       });
       return user as SystemUser | null;
+    }
+  }
+
+  /**
+   * Helper method to map SystemUserRole to UserType for authorization
+   */
+  private mapSystemUserRoleToUserType(role: SystemUserRole): UserType {
+    switch (role) {
+      case SystemUserRole.SUPER_ADMIN:
+        return UserType.SUPER_ADMIN;
+      case SystemUserRole.TENANT_ADMIN:
+        return UserType.TENANT_ADMIN;
+      default:
+        throw new Error(`Unknown system user role: ${role}`);
     }
   }
 }

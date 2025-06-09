@@ -14,7 +14,7 @@ import { asyncHandler } from '@/utils/async-handler.utils';
 import { ApiError } from '@/utils/api-error.utils';
 import { getPaginationFromRequest, getSortParamsFromRequest } from '@/utils/pagination.utils';
 import { TApiSuccessResponse } from '@shared/types/api.types';
-import { ClientStatus } from '@/types/enums';
+import { ClientStatus, UserType } from '@/types/enums';
 
 /**
  * Extended Request interface with authenticated user data
@@ -24,6 +24,7 @@ interface AuthenticatedRequest extends Request {
     id: number;
     email: string;
     role: string;
+    user_type: UserType;
     tenantId: number;
     permissions?: string[];
     [key: string]: any;
@@ -54,6 +55,7 @@ export class ClientController {
         id: req.user.id,
         email: req.user.email,
         role: req.user.role,
+        user_type: req.user.user_type,
         tenantId: req.user.tenantId
       };
       
@@ -101,6 +103,7 @@ export class ClientController {
         id: req.user.id,
         email: req.user.email,
         role: req.user.role,
+        user_type: req.user.user_type,
         tenantId: req.user.tenantId
       };
 
@@ -134,6 +137,7 @@ export class ClientController {
         id: req.user.id,
         email: req.user.email,
         role: req.user.role,
+        user_type: req.user.user_type,
         tenantId: req.user.tenantId
       };
 
@@ -221,6 +225,7 @@ export class ClientController {
         id: req.user.id,
         email: req.user.email,
         role: req.user.role,
+        user_type: req.user.user_type,
         tenantId: req.user.tenantId
       };
       
@@ -269,6 +274,7 @@ export class ClientController {
         id: req.user.id,
         email: req.user.email,
         role: req.user.role,
+        user_type: req.user.user_type,
         tenantId: req.user.tenantId
       };
 
@@ -310,6 +316,7 @@ export class ClientController {
         id: req.user.id,
         email: req.user.email,
         role: req.user.role,
+        user_type: req.user.user_type,
         tenantId: req.user.tenantId
       };
       
@@ -357,6 +364,7 @@ export class ClientController {
         id: req.user.id,
         email: req.user.email,
         role: req.user.role,
+        user_type: req.user.user_type,
         tenantId: req.user.tenantId
       };
 
@@ -400,6 +408,7 @@ export class ClientController {
         id: req.user.id,
         email: req.user.email,
         role: req.user.role,
+        user_type: req.user.user_type,
         tenantId: req.user.tenantId
       };
 

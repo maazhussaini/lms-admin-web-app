@@ -18,6 +18,7 @@ import { ApiError } from '@/utils/api-error.utils';
 import { getPaginationFromRequest, getSortParamsFromRequest } from '@/utils/pagination.utils';
 import { TApiSuccessResponse } from '@shared/types/api.types';
 import logger from '@/config/logger';
+import { UserType } from '@/types/enums';
 
 /**
  * Extended Request interface with authenticated user data
@@ -27,6 +28,7 @@ interface AuthenticatedRequest extends Request {
     id: number;
     email: string;
     role: string;
+    user_type: UserType;
     tenantId: number;
     permissions?: string[];
     [key: string]: any;
@@ -105,6 +107,7 @@ export class TenantController {
         id: req.user.id,
         email: req.user.email,
         role: req.user.role,
+        user_type: req.user.user_type,
         tenantId: req.user.tenantId
       };
 
@@ -206,6 +209,7 @@ export class TenantController {
         id: req.user.id,
         email: req.user.email,
         role: req.user.role,
+        user_type: req.user.user_type,
         tenantId: req.user.tenantId
       };
 
@@ -344,6 +348,7 @@ export class TenantController {
         id: req.user.id,
         email: req.user.email,
         role: req.user.role,
+        user_type: req.user.user_type,
         tenantId: req.user.tenantId
       };
       
@@ -392,6 +397,7 @@ export class TenantController {
         id: req.user.id,
         email: req.user.email,
         role: req.user.role,
+        user_type: req.user.user_type,
         tenantId: req.user.tenantId
       };      const contactType = req.query['contactType'] ? parseInt(req.query['contactType'] as string, 10) : undefined;
 
@@ -461,6 +467,7 @@ export class TenantController {
         id: req.user.id,
         email: req.user.email,
         role: req.user.role,
+        user_type: req.user.user_type,
         tenantId: req.user.tenantId
       };
 
@@ -529,6 +536,7 @@ export class TenantController {
         id: req.user.id,
         email: req.user.email,
         role: req.user.role,
+        user_type: req.user.user_type,
         tenantId: req.user.tenantId
       };
 
@@ -581,6 +589,7 @@ export class TenantController {
         id: req.user.id,
         email: req.user.email,
         role: req.user.role,
+        user_type: req.user.user_type,
         tenantId: req.user.tenantId
       };
       
@@ -629,6 +638,7 @@ export class TenantController {
         id: req.user.id,
         email: req.user.email,
         role: req.user.role,
+        user_type: req.user.user_type,
         tenantId: req.user.tenantId
       };      const contactType = req.query['contactType'] ? parseInt(req.query['contactType'] as string, 10) : undefined;
 
@@ -698,6 +708,7 @@ export class TenantController {
         id: req.user.id,
         email: req.user.email,
         role: req.user.role,
+        user_type: req.user.user_type,
         tenantId: req.user.tenantId
       };
 
@@ -766,6 +777,7 @@ export class TenantController {
         id: req.user.id,
         email: req.user.email,
         role: req.user.role,
+        user_type: req.user.user_type,
         tenantId: req.user.tenantId
       };
 

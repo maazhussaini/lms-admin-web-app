@@ -168,12 +168,13 @@ export const authorize = (allowedRoles: readonly UserType[]) => {
       return next(new UnauthorizedError('Authentication required', 'USER_NOT_AUTHENTICATED'));
     }
     
-    // Type-safe role checking
-    const userRole = req.user.role as UserType;
-    if (!allowedRoles.includes(userRole)) {
+    // Use userType field for authorization instead of role
+    const userType = req.user.user_type as UserType;
+    if (!allowedRoles.includes(userType)) {
       logger.warn('Authorization failed: Insufficient permissions', { 
         userId: req.user.id, 
-        userRole: req.user.role, 
+        userType: req.user.user_type, 
+        userRole: req.user.role,
         requiredRoles: allowedRoles,
         path: req.path,
         requestId: req.id
@@ -217,8 +218,8 @@ export const verifyTenantAccess = (paramName = 'tenantId') => {
       return next(new ForbiddenError('Invalid tenant ID', 'INVALID_TENANT_ID_FORMAT'));
     }
     
-    // Super admins can access any tenant
-    if (req.user.role === 'SUPER_ADMIN') {
+    // Super admins can access any tenant - use userType instead of role
+    if (req.user.user_type === UserType.SUPER_ADMIN) {
       logger.debug('Tenant access granted for super admin', { 
         userId: req.user.id, 
         userTenantId: req.user.tenantId,
@@ -265,9 +266,8 @@ export const setTenantContext = (
     return next(new UnauthorizedError('Authentication required', 'USER_NOT_AUTHENTICATED'));
   }
   
-  // Skip tenant context for super admins if they don't specify a tenant
-  // This allows super admins to access cross-tenant data when needed
-  if (req.user.role === 'SUPER_ADMIN' && !req.query.forceTenantId) {
+  // Skip tenant context for super admins if they don't specify a tenant - use userType
+  if (req.user.user_type === UserType.SUPER_ADMIN && !req.query.forceTenantId) {
     logger.debug('Tenant context skipped for super admin', { 
       userId: req.user.id,
       path: req.path,
@@ -276,8 +276,8 @@ export const setTenantContext = (
     return next();
   }
   
-  // Set the tenant ID for forced tenant context for super admins
-  if (req.user.role === 'SUPER_ADMIN' && req.query.forceTenantId) {
+  // Set the tenant ID for forced tenant context for super admins - use userType
+  if (req.user.user_type === UserType.SUPER_ADMIN && req.query.forceTenantId) {
     const forcedTenantId = parseTenantId(req.query.forceTenantId);
     if (forcedTenantId !== null) {
       res.locals.tenantId = forcedTenantId;
@@ -317,8 +317,8 @@ export const checkResourcePermission = (resourceType: string, paramName = 'id') 
       return next(new ForbiddenError(`Invalid ${resourceType} ID`, 'INVALID_RESOURCE_ID'));
     }
     
-    // Super admins bypass additional permission checks
-    if (req.user.role === 'SUPER_ADMIN') {
+    // Super admins bypass additional permission checks - use userType
+    if (req.user.user_type === UserType.SUPER_ADMIN) {
       return next();
     }
     

@@ -11,6 +11,7 @@ import { ApiError } from '@/utils/api-error.utils';
 import { getPaginationFromRequest, getSortParamsFromRequest } from '../utils/pagination.utils';
 import { TApiSuccessResponse } from '@shared/types/api.types';
 import logger from '@/config/logger';
+import { UserType } from '@/types/enums';
 
 /**
  * Extended Request interface with authenticated user data
@@ -20,6 +21,7 @@ interface AuthenticatedRequest extends Request {
     id: number;
     email: string;
     role: string;
+    user_type: UserType;
     tenantId: number; // Can be 0 for SUPER_ADMIN
     permissions?: string[];
     [key: string]: any;
