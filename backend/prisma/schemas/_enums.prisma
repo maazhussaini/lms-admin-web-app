@@ -2,307 +2,307 @@
 
 // System user role enumeration
 enum SystemUserRole {
-  SUPERADMIN   @map("1")  // Global system administrator (no tenant)
-  TENANT_ADMIN @map("2")  // Tenant administrator
+  SUPERADMIN   @map("SUPERADMIN")
+  TENANT_ADMIN @map("TENANT_ADMIN")
 }
 
 // System user status enumeration
 enum SystemUserStatus {
-  ACTIVE    @map("1")
-  INACTIVE  @map("2")
-  SUSPENDED @map("3")
-  LOCKED    @map("4")
+  ACTIVE    @map("ACTIVE")
+  INACTIVE  @map("INACTIVE")
+  SUSPENDED @map("SUSPENDED")
+  LOCKED    @map("LOCKED")
 }
 
 // Tenant status enumeration
 enum TenantStatus {
-  ACTIVE    @map("1")
-  SUSPENDED @map("2")
-  TRIAL     @map("3")
-  EXPIRED   @map("4")
-  CANCELLED @map("5")
+  ACTIVE    @map("ACTIVE")
+  SUSPENDED @map("SUSPENDED")
+  TRIAL     @map("TRIAL")
+  EXPIRED   @map("EXPIRED")
+  CANCELLED @map("CANCELLED")
 }
 
 // Client status enumeration
 enum ClientStatus {
-  ACTIVE     @map("1")
-  INACTIVE   @map("2")
-  SUSPENDED  @map("3")
-  TERMINATED @map("4")
+  ACTIVE     @map("ACTIVE")
+  INACTIVE   @map("INACTIVE")
+  SUSPENDED  @map("SUSPENDED")
+  TERMINATED @map("TERMINATED")
 }
 
 // Contact type enumeration
 enum ContactType {
-  PRIMARY   @map("1")
-  SECONDARY @map("2")
-  EMERGENCY @map("3")
-  BILLING   @map("4")
+  PRIMARY   @map("PRIMARY")
+  SECONDARY @map("SECONDARY")
+  EMERGENCY @map("EMERGENCY")
+  BILLING   @map("BILLING")
 }
 
 // Assessment-related enumerations
 
 // Quiz enums
 enum QuizStatus {
-  DRAFT @map("1")
-  PUBLISHED @map("2")
-  GRADING_IN_PROGRESS @map("3")
-  GRADED @map("4")
-  ARCHIVED @map("5")
+  DRAFT @map("DRAFT")
+  PUBLISHED @map("PUBLISHED")
+  GRADING_IN_PROGRESS @map("GRADING_IN_PROGRESS")
+  GRADED @map("GRADED")
+  ARCHIVED @map("ARCHIVED")
 }
 
 enum QuizQuestionType {
-  MULTIPLE_CHOICE_SINGLE_ANSWER @map("1")
-  MULTIPLE_CHOICE_MULTIPLE_ANSWERS @map("2")
-  TRUE_FALSE @map("3")
-  SHORT_ANSWER_ESSAY @map("4")
+  MULTIPLE_CHOICE_SINGLE_ANSWER @map("MULTIPLE_CHOICE_SINGLE_ANSWER")
+  MULTIPLE_CHOICE_MULTIPLE_ANSWERS @map("MULTIPLE_CHOICE_MULTIPLE_ANSWERS")
+  TRUE_FALSE @map("TRUE_FALSE")
+  SHORT_ANSWER_ESSAY @map("SHORT_ANSWER_ESSAY")
 }
 
 enum QuizAttemptStatus {
-  NOT_STARTED @map("1")
-  IN_PROGRESS @map("2")
-  SUBMITTED @map("3")
-  GRADED @map("4")
+  NOT_STARTED @map("NOT_STARTED")
+  IN_PROGRESS @map("IN_PROGRESS")
+  SUBMITTED @map("SUBMITTED")
+  GRADED @map("GRADED")
 }
 
 enum QuizReferenceTable {
-  COURSE @map("1")
-  COURSE_MODULE @map("2")
-  COURSE_TOPIC @map("3")
+  COURSE @map("COURSE")
+  COURSE_MODULE @map("COURSE_MODULE")
+  COURSE_TOPIC @map("COURSE_TOPIC")
 }
 
 // Assignment enums
 enum AssignmentType {
-  FILE_UPLOAD @map("1")
+  FILE_UPLOAD @map("FILE_UPLOAD")
 }
 
 enum AssignmentStatus {
-  DRAFT @map("1")
-  PUBLISHED @map("2")
-  GRADING_IN_PROGRESS @map("3")
-  GRADED @map("4")
-  ARCHIVED @map("5")
+  DRAFT @map("DRAFT")
+  PUBLISHED @map("PUBLISHED")
+  GRADING_IN_PROGRESS @map("GRADING_IN_PROGRESS")
+  GRADED @map("GRADED")
+  ARCHIVED @map("ARCHIVED")
 }
 
 enum SubmissionStatus {
-  NOT_SUBMITTED @map("1")
-  SUBMITTED @map("2")
-  LATE_SUBMISSION @map("3")
-  GRADED @map("4")
-  RESUBMITTED @map("5")
+  NOT_SUBMITTED @map("NOT_SUBMITTED")
+  SUBMITTED @map("SUBMITTED")
+  LATE_SUBMISSION @map("LATE_SUBMISSION")
+  GRADED @map("GRADED")
+  RESUBMITTED @map("RESUBMITTED")
 }
 
 enum AssignmentReferenceTable {
-  COURSE @map("1")
-  COURSE_MODULE @map("2")
-  COURSE_TOPIC @map("3")
+  COURSE @map("COURSE")
+  COURSE_MODULE @map("COURSE_MODULE")
+  COURSE_TOPIC @map("COURSE_TOPIC")
 }
 
 // Upload status enumeration
 enum UploadStatus {
-  PENDING @map("1")
-  UPLOADING @map("2")
-  COMPLETED @map("3")
-  FAILED @map("4")
-  CANCELLED @map("5")
+  PENDING @map("PENDING")
+  UPLOADING @map("UPLOADING")
+  COMPLETED @map("COMPLETED")
+  FAILED @map("FAILED")
+  CANCELLED @map("CANCELLED")
 }
 
 // User-related enumerations
 
 // Gender enumeration
 enum Gender {
-  MALE @map("1")
-  FEMALE @map("2")
+  MALE @map("MALE")
+  FEMALE @map("FEMALE")
 }
 
 // Student status enumeration
 enum StudentStatusName {
-  ACTIVE @map("1")
-  ALUMNI @map("2")
-  DROPOUT @map("3")
-  ACCOUNT_FREEZED @map("4")
-  BLACKLISTED @map("5")
-  SUSPENDED @map("6")
-  DEACTIVATED @map("7")
+  ACTIVE @map("ACTIVE")
+  ALUMNI @map("ALUMNI")
+  DROPOUT @map("DROPOUT")
+  ACCOUNT_FREEZED @map("ACCOUNT_FREEZED")
+  BLACKLISTED @map("BLACKLISTED")
+  SUSPENDED @map("SUSPENDED")
+  DEACTIVATED @map("DEACTIVATED")
 }
 
 // Device type enumeration
 enum DeviceType {
-  IOS @map("1")
-  ANDROID @map("2")
-  WEB @map("3")
-  DESKTOP @map("4")
+  IOS @map("IOS")
+  ANDROID @map("ANDROID")
+  WEB @map("WEB")
+  DESKTOP @map("DESKTOP")
 }
 
 // Enrollment status enumeration
 enum EnrollmentStatus {
-  PENDING @map("1")
-  ACTIVE @map("2")
-  COMPLETED @map("3")
-  DROPPED @map("4")
-  SUSPENDED @map("5")
-  EXPELLED @map("6")
-  TRANSFERRED @map("7")
-  DEFERRED @map("8")
+  PENDING @map("PENDING")
+  ACTIVE @map("ACTIVE")
+  COMPLETED @map("COMPLETED")
+  DROPPED @map("DROPPED")
+  SUSPENDED @map("SUSPENDED")
+  EXPELLED @map("EXPELLED")
+  TRANSFERRED @map("TRANSFERRED")
+  DEFERRED @map("DEFERRED")
 }
 
 // Course-related enumerations
 
 // Course status enumeration
 enum CourseStatus {
-  DRAFT @map("1")
-  PUBLISHED @map("2")
-  ARCHIVED @map("3")
-  SUSPENDED @map("4")
+  DRAFT @map("DRAFT")
+  PUBLISHED @map("PUBLISHED")
+  ARCHIVED @map("ARCHIVED")
+  SUSPENDED @map("SUSPENDED")
 }
 
 // Video upload status enumeration
 enum VideoUploadStatus {
-  PENDING @map("1")
-  PROCESSING @map("2")
-  COMPLETED @map("3")
-  FAILED @map("4")
-  CANCELLED @map("5")
+  PENDING @map("PENDING")
+  PROCESSING @map("PROCESSING")
+  COMPLETED @map("COMPLETED")
+  FAILED @map("FAILED")
+  CANCELLED @map("CANCELLED")
 }
 
 // Course session enumerations
 
 // Course session status enumeration
 enum CourseSessionStatus {
-  DRAFT @map("1")
-  PUBLISHED @map("2")
-  EXPIRED @map("3")
+  DRAFT @map("DRAFT")
+  PUBLISHED @map("PUBLISHED")
+  EXPIRED @map("EXPIRED")
 }
 
 // Session enrollment status enumeration
 enum SessionEnrollmentStatus {
-  ENROLLED @map("1")
-  DROPPED @map("2")
-  COMPLETED @map("3")
-  EXPELLED @map("4")
+  ENROLLED @map("ENROLLED")
+  DROPPED @map("DROPPED")
+  COMPLETED @map("COMPLETED")
+  EXPELLED @map("EXPELLED")
 }
 
 // Notification-related enumerations
 
 // Notification type enumeration
 enum NotificationType {
-  ANNOUNCEMENT @map("1")
-  ASSIGNMENT_DUE @map("2")
-  QUIZ_AVAILABLE @map("3")
-  GRADE_POSTED @map("4")
-  COURSE_UPDATE @map("5")
-  SYSTEM_ALERT @map("6")
-  ENROLLMENT_CONFIRMATION @map("7")
-  DEADLINE_REMINDER @map("8")
+  ANNOUNCEMENT @map("ANNOUNCEMENT")
+  ASSIGNMENT_DUE @map("ASSIGNMENT_DUE")
+  QUIZ_AVAILABLE @map("QUIZ_AVAILABLE")
+  GRADE_POSTED @map("GRADE_POSTED")
+  COURSE_UPDATE @map("COURSE_UPDATE")
+  SYSTEM_ALERT @map("SYSTEM_ALERT")
+  ENROLLMENT_CONFIRMATION @map("ENROLLMENT_CONFIRMATION")
+  DEADLINE_REMINDER @map("DEADLINE_REMINDER")
 }
 
 // Notification priority enumeration
 enum NotificationPriority {
-  LOW @map("1")
-  NORMAL @map("2")
-  HIGH @map("3")
-  URGENT @map("4")
+  LOW @map("LOW")
+  NORMAL @map("NORMAL")
+  HIGH @map("HIGH")
+  URGENT @map("URGENT")
 }
 
 // Delivery status enumeration
 enum DeliveryStatus {
-  PENDING @map("1")
-  DELIVERED @map("2")
-  FAILED @map("3")
-  READ @map("4")
-  DISMISSED @map("5")
+  PENDING @map("PENDING")
+  DELIVERED @map("DELIVERED")
+  FAILED @map("FAILED")
+  READ @map("READ")
+  DISMISSED @map("DISMISSED")
 }
 
 // Delivery channel enumeration
 enum DeliveryChannel {
-  IN_APP @map("1")
-  EMAIL @map("2")
-  PUSH @map("3")
-  SMS @map("4")
+  IN_APP @map("IN_APP")
+  EMAIL @map("EMAIL")
+  PUSH @map("PUSH")
+  SMS @map("SMS")
 }
 
 // Template type enumeration
 enum TemplateType {
-  EMAIL_HTML @map("1")
-  EMAIL_TEXT @map("2")
-  PUSH @map("3")
-  IN_APP @map("4")
+  EMAIL_HTML @map("EMAIL_HTML")
+  EMAIL_TEXT @map("EMAIL_TEXT")
+  PUSH @map("PUSH")
+  IN_APP @map("IN_APP")
 }
 
 // Recipient type enumeration
 enum RecipientType {
-  STUDENT @map("1")
-  TEACHER @map("2")
-  SYSTEM_USER @map("3")
-  ALL_STUDENTS @map("4")
-  ALL_TEACHERS @map("5")
-  COURSE_ENROLLMENTS @map("6")
+  STUDENT @map("STUDENT")
+  TEACHER @map("TEACHER")
+  SYSTEM_USER @map("SYSTEM_USER")
+  ALL_STUDENTS @map("ALL_STUDENTS")
+  ALL_TEACHERS @map("ALL_TEACHERS")
+  COURSE_ENROLLMENTS @map("COURSE_ENROLLMENTS")
 }
 
 // Email send status enumeration
 enum EmailSendStatus {
-  PENDING @map("1")
-  SENT @map("2")
-  FAILED @map("3")
-  BOUNCED @map("4")
-  DELIVERED @map("5")
+  PENDING @map("PENDING")
+  SENT @map("SENT")
+  FAILED @map("FAILED")
+  BOUNCED @map("BOUNCED")
+  DELIVERED @map("DELIVERED")
 }
 
 // Analytics-related enumerations
 
 // Report type enumeration
 enum ReportType {
-  COURSE_PERFORMANCE @map("1")
-  USER_ENGAGEMENT @map("2")
-  SYSTEM_USAGE @map("3")
-  ASSESSMENT_SUMMARY @map("4")
-  VIDEO_ANALYTICS @map("5")
-  CUSTOM @map("6")
+  COURSE_PERFORMANCE @map("COURSE_PERFORMANCE")
+  USER_ENGAGEMENT @map("USER_ENGAGEMENT")
+  SYSTEM_USAGE @map("SYSTEM_USAGE")
+  ASSESSMENT_SUMMARY @map("ASSESSMENT_SUMMARY")
+  VIDEO_ANALYTICS @map("VIDEO_ANALYTICS")
+  CUSTOM @map("CUSTOM")
 }
 
 // Report status enumeration
 enum ReportStatus {
-  DRAFT @map("1")
-  SCHEDULED @map("2")
-  GENERATING @map("3")
-  COMPLETED @map("4")
-  FAILED @map("5")
-  CANCELLED @map("6")
+  DRAFT @map("DRAFT")
+  SCHEDULED @map("SCHEDULED")
+  GENERATING @map("GENERATING")
+  COMPLETED @map("COMPLETED")
+  FAILED @map("FAILED")
+  CANCELLED @map("CANCELLED")
 }
 
 // Metric type enumeration
 enum MetricType {
-  COUNT @map("1")
-  PERCENTAGE @map("2")
-  AVERAGE @map("3")
-  SUM @map("4")
-  RATIO @map("5")
-  TREND @map("6")
+  COUNT @map("COUNT")
+  PERCENTAGE @map("PERCENTAGE")
+  AVERAGE @map("AVERAGE")
+  SUM @map("SUM")
+  RATIO @map("RATIO")
+  TREND @map("TREND")
 }
 
 // Time granularity enumeration
 enum TimeGranularity {
-  HOURLY @map("1")
-  DAILY @map("2")
-  WEEKLY @map("3")
-  MONTHLY @map("4")
-  QUARTERLY @map("5")
-  YEARLY @map("6")
+  HOURLY @map("HOURLY")
+  DAILY @map("DAILY")
+  WEEKLY @map("WEEKLY")
+  MONTHLY @map("MONTHLY")
+  QUARTERLY @map("QUARTERLY")
+  YEARLY @map("YEARLY")
 }
 
 // Widget type enumeration
 enum WidgetType {
-  CHART @map("1")
-  TABLE @map("2")
-  METRIC_CARD @map("3")
-  PROGRESS_BAR @map("4")
-  MAP @map("5")
-  TIMELINE @map("6")
+  CHART @map("CHART")
+  TABLE @map("TABLE")
+  METRIC_CARD @map("METRIC_CARD")
+  PROGRESS_BAR @map("PROGRESS_BAR")
+  MAP @map("MAP")
+  TIMELINE @map("TIMELINE")
 }
 
 // Export format enumeration
 enum ExportFormat {
-  PDF @map("1")
-  EXCEL @map("2")
-  CSV @map("3")
-  JSON @map("4")
+  PDF @map("PDF")
+  EXCEL @map("EXCEL")
+  CSV @map("CSV")
+  JSON @map("JSON")
 }

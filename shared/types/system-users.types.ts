@@ -42,7 +42,7 @@ export interface SystemUser extends BaseAuditFields {
  * @description Role definition for system users
  */
 export interface Role extends BaseAuditFields {
-  role_id: number;
+  role_id: SystemUserRole;
   role_name: string;
   role_description?: string | null;
   is_system_role: boolean; // True for built-in roles
@@ -85,7 +85,7 @@ export interface UserScreen extends BaseAuditFields {
 export interface RoleScreen extends BaseAuditFields {
   role_screen_id: number;
   tenant_id: number;
-  role_id: number;
+  role_id: SystemUserRole;
   screen_id: number;
   can_view: boolean;
   can_create: boolean;

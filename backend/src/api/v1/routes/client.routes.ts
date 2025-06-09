@@ -4,14 +4,14 @@
  */
 
 import { Router } from 'express';
-import { TenantController } from '@/controllers/tenant.controller';
+import { ClientController } from '@/controllers/client.controller';
 import { authenticate, authorize } from '@/middleware/auth.middleware';
 import { validate } from '@/middleware/validation.middleware';
 import { 
   CreateClientDto,
   UpdateClientDto,
   CreateClientTenantDto
-} from '@/dtos/tenant/tenant.dto';
+} from '@/dtos/client/client.dto';
 import { param, query } from 'express-validator';
 
 const router = Router();
@@ -28,7 +28,7 @@ router.post(
   authenticate,
   authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
   validate(CreateClientDto.validate()),
-  TenantController.createClientHandler
+  ClientController.createClientHandler
 );
 
 /**
@@ -71,7 +71,7 @@ router.get(
       .isIn(['asc', 'desc'])
       .withMessage('Order must be asc or desc')
   ]),
-  TenantController.getAllClientsHandler
+  ClientController.getAllClientsHandler
 );
 
 /**
@@ -87,7 +87,7 @@ router.get(
       .isInt({ min: 1 })
       .withMessage('Client ID must be a positive integer')
   ]),
-  TenantController.getClientByIdHandler
+  ClientController.getClientByIdHandler
 );
 
 /**
@@ -105,7 +105,7 @@ router.patch(
       .withMessage('Client ID must be a positive integer'),
     ...UpdateClientDto.validate()
   ]),
-  TenantController.updateClientHandler
+  ClientController.updateClientHandler
 );
 
 /**
@@ -122,7 +122,7 @@ router.delete(
       .isInt({ min: 1 })
       .withMessage('Client ID must be a positive integer')
   ]),
-  TenantController.deleteClientHandler
+  ClientController.deleteClientHandler
 );
 
 // ==================== CLIENT-TENANT ASSOCIATION ROUTES ====================
@@ -137,7 +137,7 @@ router.post(
   authenticate,
   authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
   validate(CreateClientTenantDto.validate()),
-  TenantController.createClientTenantAssociationHandler
+  ClientController.createClientTenantAssociationHandler
 );
 
 /**
@@ -153,7 +153,7 @@ router.get(
       .isInt({ min: 1 })
       .withMessage('Client ID must be a positive integer')
   ]),
-  TenantController.getClientTenantsHandler
+  ClientController.getClientTenantsHandler
 );
 
 /**
@@ -170,7 +170,7 @@ router.delete(
       .isInt({ min: 1 })
       .withMessage('Association ID must be a positive integer')
   ]),
-  TenantController.removeClientTenantAssociationHandler
+  ClientController.removeClientTenantAssociationHandler
 );
 
 export default router;
