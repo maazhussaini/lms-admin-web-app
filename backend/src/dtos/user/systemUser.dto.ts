@@ -3,8 +3,27 @@
  * @description Defines data transfer objects for system user management with validation rules
  */
 
-import { SystemUserRole, SystemUserStatus } from '@shared/types/system-users.types';
 import { body, ValidationChain } from 'express-validator';
+
+/**
+ * System user status enumeration
+ * @description Operational status of system users
+ */
+export enum SystemUserStatus {
+  ACTIVE = 1,
+  INACTIVE = 2,
+  SUSPENDED = 3,
+  LOCKED = 4
+}
+
+/**
+ * System user role enumeration
+ * @description Defines system-level roles with proper hierarchy
+ */
+export enum SystemUserRole {
+  SUPERADMIN = 1,     // Global system administrator (no tenant)
+  TENANT_ADMIN = 2,   // Tenant administrator
+}
 
 /**
  * DTO interface for creating a new system user
@@ -71,7 +90,8 @@ export const createSystemUserValidation: ValidationChain[] = [
     .exists().withMessage('Role is required')
     .isInt().withMessage('Role must be a valid SystemUserRole')
     .custom(value => {
-      if (!Object.values(SystemUserRole).includes(value)) {
+      const validRoles = Object.values(SystemUserRole).filter(v => typeof v === 'number');
+      if (!validRoles.includes(value)) {
         throw new Error('Invalid role value');
       }
       return true;
@@ -99,7 +119,8 @@ export const createSystemUserValidation: ValidationChain[] = [
     .optional()
     .isInt().withMessage('Status must be a valid SystemUserStatus')
     .custom(value => {
-      if (!Object.values(SystemUserStatus).includes(value)) {
+      const validStatuses = Object.values(SystemUserStatus).filter(v => typeof v === 'number');
+      if (!validStatuses.includes(value)) {
         throw new Error('Invalid status value');
       }
       return true;
@@ -127,7 +148,8 @@ export const updateSystemUserValidation: ValidationChain[] = [
     .optional()
     .isInt().withMessage('Role must be a valid SystemUserRole')
     .custom(value => {
-      if (!Object.values(SystemUserRole).includes(value)) {
+      const validRoles = Object.values(SystemUserRole).filter(v => typeof v === 'number');
+      if (!validRoles.includes(value)) {
         throw new Error('Invalid role value');
       }
       return true;
@@ -137,7 +159,8 @@ export const updateSystemUserValidation: ValidationChain[] = [
     .optional()
     .isInt().withMessage('Status must be a valid SystemUserStatus')
     .custom(value => {
-      if (!Object.values(SystemUserStatus).includes(value)) {
+      const validStatuses = Object.values(SystemUserStatus).filter(v => typeof v === 'number');
+      if (!validStatuses.includes(value)) {
         throw new Error('Invalid status value');
       }
       return true;
@@ -157,7 +180,8 @@ export const filterSystemUserValidation: ValidationChain[] = [
     .optional()
     .isInt().withMessage('Role must be a valid SystemUserRole')
     .custom(value => {
-      if (value !== undefined && !Object.values(SystemUserRole).includes(value)) {
+      const validRoles = Object.values(SystemUserRole).filter(v => typeof v === 'number');
+      if (value !== undefined && !validRoles.includes(value)) {
         throw new Error('Invalid role value');
       }
       return true;
@@ -167,7 +191,8 @@ export const filterSystemUserValidation: ValidationChain[] = [
     .optional()
     .isInt().withMessage('Status must be a valid SystemUserStatus')
     .custom(value => {
-      if (value !== undefined && !Object.values(SystemUserStatus).includes(value)) {
+      const validStatuses = Object.values(SystemUserStatus).filter(v => typeof v === 'number');
+      if (value !== undefined && !validStatuses.includes(value)) {
         throw new Error('Invalid status value');
       }
       return true;
