@@ -15,11 +15,7 @@ import {
   validateCourseUpdatePayload,
   withValidationAndErrorResponse
 } from '@/utils/validation.utils.js';
-
-// Temporary local enum definition for SocketEventName
-enum SocketEventName {
-  COURSE_UPDATE = 'course:update'
-}
+import { SocketEventName } from '@/types/enums';
 
 /**
  * Register course related socket event handlers

@@ -5,8 +5,8 @@ import { BaseAuditFields } from './base.types';
  * @description Defines system-level roles with proper hierarchy
  */
 export enum SystemUserRole {
-  SUPERADMIN = 1,     // Global system administrator (no tenant)
-  TENANT_ADMIN = 2,   // Tenant administrator
+  SUPERADMIN = 'SUPERADMIN',
+  TENANT_ADMIN = 'TENANT_ADMIN',
 }
 
 /**
@@ -14,10 +14,10 @@ export enum SystemUserRole {
  * @description Operational status of system users
  */
 export enum SystemUserStatus {
-  ACTIVE = 1,
-  INACTIVE = 2,
-  SUSPENDED = 3,
-  LOCKED = 4
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  LOCKED = 'LOCKED',
 }
 
 /**

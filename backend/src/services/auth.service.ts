@@ -24,6 +24,7 @@ import {
 } from '@/dtos/auth/auth.dto';
 import crypto from 'crypto';
 import logger from '@/config/logger';
+import { SystemUserRole } from '@/types/enums';
 
 // Token blacklist - In production, this would be implemented with Redis
 const TOKEN_BLACKLIST = new Set<string>();
@@ -32,15 +33,6 @@ const TOKEN_RESET_HASHES = new Map<string, {
   hash: string, 
   expiresAt: Date 
 }>();
-
-/**
- * System user role enumeration
- * @description Defines system-level roles with proper hierarchy
- */
-export enum SystemUserRole {
-  SUPERADMIN = 1,     // Global system administrator (no tenant)
-  TENANT_ADMIN = 2,   // Tenant administrator
-}
 
 export class AuthService {
   constructor(private prisma: PrismaClient) {}

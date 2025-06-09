@@ -1,18 +1,26 @@
 import { MultiTenantAuditFields } from './base.types';
 
+/**
+ * Video upload status enumeration
+ * @description Represents the lifecycle of a video upload
+ */
 export enum VideoUploadStatus {
-  PENDING = 1,
-  PROCESSING = 2,
-  COMPLETED = 3,
-  FAILED = 4,
-  CANCELLED = 5,
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  CANCELLED = 'CANCELLED',
 }
 
+/**
+ * Course status enumeration
+ * @description Represents the lifecycle status of a course
+ */
 export enum CourseStatus {
-  DRAFT = 1,
-  PUBLISHED = 2,
-  ARCHIVED = 3,
-  SUSPENDED = 4,
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  ARCHIVED = 'ARCHIVED',
+  SUSPENDED = 'SUSPENDED',
 }
 
 /**

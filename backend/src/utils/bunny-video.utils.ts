@@ -25,17 +25,7 @@ import {
   BunnyCdnPurgeRequest,
   BunnyCdnPurgeResponse
 } from '@shared/types/bunny.types';
-
-/**
- * Bunny.net video processing and upload status
- */
-export enum BunnyVideoStatus {
-  UPLOADING = 'uploading',
-  PROCESSING = 'processing',
-  FINISHED = 'finished',
-  FAILED = 'failed',
-  CANCELLED = 'cancelled',
-}
+import { BunnyVideoStatus } from '@/types/enums';
 
 /**
  * Type-safe metadata interface for video uploads

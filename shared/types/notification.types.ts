@@ -6,14 +6,14 @@ import { DeviceType } from './student.types';
  * @description Types of notifications available in the system
  */
 export enum NotificationType {
-  ANNOUNCEMENT = 1,
-  ASSIGNMENT_DUE = 2,
-  QUIZ_AVAILABLE = 3,
-  GRADE_POSTED = 4,
-  COURSE_UPDATE = 5,
-  SYSTEM_ALERT = 6,
-  ENROLLMENT_CONFIRMATION = 7,
-  DEADLINE_REMINDER = 8,
+  ANNOUNCEMENT = 'ANNOUNCEMENT',
+  ASSIGNMENT_DUE = 'ASSIGNMENT_DUE',
+  QUIZ_AVAILABLE = 'QUIZ_AVAILABLE',
+  GRADE_POSTED = 'GRADE_POSTED',
+  COURSE_UPDATE = 'COURSE_UPDATE',
+  SYSTEM_ALERT = 'SYSTEM_ALERT',
+  ENROLLMENT_CONFIRMATION = 'ENROLLMENT_CONFIRMATION',
+  DEADLINE_REMINDER = 'DEADLINE_REMINDER',
 }
 
 /**
@@ -21,10 +21,10 @@ export enum NotificationType {
  * @description Priority levels for notifications
  */
 export enum NotificationPriority {
-  LOW = 1,
-  NORMAL = 2,
-  HIGH = 3,
-  URGENT = 4,
+  LOW = 'LOW',
+  NORMAL = 'NORMAL',
+  HIGH = 'HIGH',
+  URGENT = 'URGENT',
 }
 
 /**
@@ -32,11 +32,11 @@ export enum NotificationPriority {
  * @description Status of notification delivery
  */
 export enum DeliveryStatus {
-  PENDING = 1,
-  DELIVERED = 2,
-  FAILED = 3,
-  READ = 4,
-  DISMISSED = 5,
+  PENDING = 'PENDING',
+  DELIVERED = 'DELIVERED',
+  FAILED = 'FAILED',
+  READ = 'READ',
+  DISMISSED = 'DISMISSED',
 }
 
 /**
@@ -44,10 +44,10 @@ export enum DeliveryStatus {
  * @description Available delivery channels for notifications
  */
 export enum DeliveryChannel {
-  IN_APP = 1,
-  EMAIL = 2,
-  PUSH = 3,
-  SMS = 4,
+  IN_APP = 'IN_APP',
+  EMAIL = 'EMAIL',
+  PUSH = 'PUSH',
+  SMS = 'SMS',
 }
 
 /**
@@ -55,10 +55,10 @@ export enum DeliveryChannel {
  * @description Types of notification templates
  */
 export enum TemplateType {
-  EMAIL_HTML = 1,
-  EMAIL_TEXT = 2,
-  PUSH = 3,
-  IN_APP = 4,
+  EMAIL_HTML = 'EMAIL_HTML',
+  EMAIL_TEXT = 'EMAIL_TEXT',
+  PUSH = 'PUSH',
+  IN_APP = 'IN_APP',
 }
 
 /**
@@ -66,12 +66,12 @@ export enum TemplateType {
  * @description Types of notification recipients
  */
 export enum RecipientType {
-  STUDENT = 1,
-  TEACHER = 2,
-  SYSTEM_USER = 3,
-  ALL_STUDENTS = 4,
-  ALL_TEACHERS = 5,
-  COURSE_ENROLLMENTS = 6,
+  STUDENT = 'STUDENT',
+  TEACHER = 'TEACHER',
+  SYSTEM_USER = 'SYSTEM_USER',
+  ALL_STUDENTS = 'ALL_STUDENTS',
+  ALL_TEACHERS = 'ALL_TEACHERS',
+  COURSE_ENROLLMENTS = 'COURSE_ENROLLMENTS',
 }
 
 /**
@@ -79,11 +79,11 @@ export enum RecipientType {
  * @description Status of email sending attempts
  */
 export enum EmailSendStatus {
-  PENDING = 1,
-  SENT = 2,
-  FAILED = 3,
-  BOUNCED = 4,
-  DELIVERED = 5,
+  PENDING = 'PENDING',
+  SENT = 'SENT',
+  FAILED = 'FAILED',
+  BOUNCED = 'BOUNCED',
+  DELIVERED = 'DELIVERED',
 }
 
 /**

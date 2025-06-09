@@ -4,26 +4,7 @@
  */
 
 import { body, ValidationChain } from 'express-validator';
-
-/**
- * System user status enumeration
- * @description Operational status of system users
- */
-export enum SystemUserStatus {
-  ACTIVE = 1,
-  INACTIVE = 2,
-  SUSPENDED = 3,
-  LOCKED = 4
-}
-
-/**
- * System user role enumeration
- * @description Defines system-level roles with proper hierarchy
- */
-export enum SystemUserRole {
-  SUPERADMIN = 1,     // Global system administrator (no tenant)
-  TENANT_ADMIN = 2,   // Tenant administrator
-}
+import { SystemUserRole, SystemUserStatus } from '@/types/enums';
 
 /**
  * DTO interface for creating a new system user
@@ -88,43 +69,31 @@ export const createSystemUserValidation: ValidationChain[] = [
 
   body('role')
     .exists().withMessage('Role is required')
-    .isInt().withMessage('Role must be a valid SystemUserRole')
-    .custom(value => {
-      const validRoles = Object.values(SystemUserRole).filter(v => typeof v === 'number');
-      if (!validRoles.includes(value)) {
-        throw new Error('Invalid role value');
-      }
-      return true;
-    }),
-
-  body('tenantId')
-    .optional()
-    .isInt().withMessage('Tenant ID must be an integer')
+    .isString().withMessage('Role must be a string')
+    .isIn(Object.values(SystemUserRole)).withMessage('Role must be a valid SystemUserRole')
     .custom((value, { req }) => {
-      const role = req.body.role;
-      // SUPER_ADMIN cannot have a tenantId
-      if (role === SystemUserRole.SUPERADMIN && value !== undefined) {
-        throw new Error('SUPER_ADMIN users cannot be associated with a tenant');
+      const tenantId = req.body.tenantId;
+      // SUPERADMIN cannot have a tenantId
+      if (value === SystemUserRole.SUPERADMIN && tenantId !== undefined) {
+        throw new Error('SUPERADMIN users cannot be associated with a tenant');
       }
       
       // TENANT_ADMIN must have a tenantId
-      if (role === SystemUserRole.TENANT_ADMIN && value === undefined) {
+      if (value === SystemUserRole.TENANT_ADMIN && tenantId === undefined) {
         throw new Error('TENANT_ADMIN users must be associated with a tenant');
       }
       
       return true;
     }),
 
+  body('tenantId')
+    .optional()
+    .isInt().withMessage('Tenant ID must be an integer'),
+
   body('status')
     .optional()
-    .isInt().withMessage('Status must be a valid SystemUserStatus')
-    .custom(value => {
-      const validStatuses = Object.values(SystemUserStatus).filter(v => typeof v === 'number');
-      if (!validStatuses.includes(value)) {
-        throw new Error('Invalid status value');
-      }
-      return true;
-    })
+    .isString().withMessage('Status must be a string')
+    .isIn(Object.values(SystemUserStatus)).withMessage('Status must be a valid SystemUserStatus')
     .default(SystemUserStatus.ACTIVE)
 ];
 
@@ -146,25 +115,13 @@ export const updateSystemUserValidation: ValidationChain[] = [
 
   body('role')
     .optional()
-    .isInt().withMessage('Role must be a valid SystemUserRole')
-    .custom(value => {
-      const validRoles = Object.values(SystemUserRole).filter(v => typeof v === 'number');
-      if (!validRoles.includes(value)) {
-        throw new Error('Invalid role value');
-      }
-      return true;
-    }),
+    .isString().withMessage('Role must be a string')
+    .isIn(Object.values(SystemUserRole)).withMessage('Role must be a valid SystemUserRole'),
 
   body('status')
     .optional()
-    .isInt().withMessage('Status must be a valid SystemUserStatus')
-    .custom(value => {
-      const validStatuses = Object.values(SystemUserStatus).filter(v => typeof v === 'number');
-      if (!validStatuses.includes(value)) {
-        throw new Error('Invalid status value');
-      }
-      return true;
-    }),
+    .isString().withMessage('Status must be a string')
+    .isIn(Object.values(SystemUserStatus)).withMessage('Status must be a valid SystemUserStatus'),
 
   body('password')
     .optional()
@@ -178,25 +135,13 @@ export const updateSystemUserValidation: ValidationChain[] = [
 export const filterSystemUserValidation: ValidationChain[] = [
   body('role')
     .optional()
-    .isInt().withMessage('Role must be a valid SystemUserRole')
-    .custom(value => {
-      const validRoles = Object.values(SystemUserRole).filter(v => typeof v === 'number');
-      if (value !== undefined && !validRoles.includes(value)) {
-        throw new Error('Invalid role value');
-      }
-      return true;
-    }),
+    .isString().withMessage('Role must be a string')
+    .isIn(Object.values(SystemUserRole)).withMessage('Role must be a valid SystemUserRole'),
 
   body('status')
     .optional()
-    .isInt().withMessage('Status must be a valid SystemUserStatus')
-    .custom(value => {
-      const validStatuses = Object.values(SystemUserStatus).filter(v => typeof v === 'number');
-      if (value !== undefined && !validStatuses.includes(value)) {
-        throw new Error('Invalid status value');
-      }
-      return true;
-    }),
+    .isString().withMessage('Status must be a string')
+    .isIn(Object.values(SystemUserStatus)).withMessage('Status must be a valid SystemUserStatus'),
 
   body('tenantId')
     .optional()

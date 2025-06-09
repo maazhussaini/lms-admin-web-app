@@ -10,21 +10,15 @@ import { BadRequestError, ForbiddenError, NotFoundError, ConflictError } from '@
 import { hashPassword } from '@/utils/password.utils.js';
 import { getPrismaPagination } from '@/utils/pagination.utils.js';
 import { tryCatch } from '@/utils/error-wrapper.utils.js';
-import { 
-  toPrismaSystemUserStatus,
-  fromPrismaSystemUser,
+import {
   SystemUserStatus,
-} from '@/utils/enum-mapper.utils.js';
+  SystemUserRole,
+} from '@/types/enums.js';
 
 /**
  * System user role enumeration
  * @description Defines system-level roles with proper hierarchy
  */
-export enum SystemUserRole {
-  SUPERADMIN = 1,     // Global system administrator (no tenant)
-  TENANT_ADMIN = 2,   // Tenant administrator
-}
-
 export class SystemUserService {
   private prisma: PrismaClient;
 
@@ -76,7 +70,7 @@ export class SystemUserService {
           password_hash: passwordHash,
           role_id: data.role,
           tenant_id: data.role === SystemUserRole.SUPERADMIN ? null : (data.tenantId || null),
-          system_user_status: toPrismaSystemUserStatus(data.status || SystemUserStatus.ACTIVE),
+          system_user_status: data.status || SystemUserStatus.ACTIVE,
           
           // Audit fields
           created_by: requestingUser.system_user_id,
@@ -86,7 +80,7 @@ export class SystemUserService {
         }
       });
 
-      return fromPrismaSystemUser(newUser);
+      return this.fromPrismaSystemUser(newUser);
     }, {
       context: {
         requestingUser: { id: requestingUser.system_user_id, role: requestingUser.role_id, tenantId: requestingUser.tenant_id }
@@ -121,7 +115,7 @@ export class SystemUserService {
         throw new ForbiddenError('You cannot access users from another tenant');
       }
 
-      return fromPrismaSystemUser(user);
+      return this.fromPrismaSystemUser(user);
     }, {
       context: {
         userId,
@@ -160,7 +154,7 @@ export class SystemUserService {
       }
 
       if (filter.status !== undefined) {
-        where.system_user_status = toPrismaSystemUserStatus(filter.status);
+        where.system_user_status = filter.status;
       }
 
       // Apply search if provided
@@ -185,7 +179,7 @@ export class SystemUserService {
         this.prisma.systemUser.count({ where })
       ]);
 
-      return { users: users.map(fromPrismaSystemUser), total };
+      return { users: users.map(user => this.fromPrismaSystemUser(user)), total };
     }, {
       context: {
         filter,
@@ -255,7 +249,7 @@ export class SystemUserService {
       const updateData: any = {};
       if (data.fullName !== undefined) updateData.full_name = data.fullName;
       if (data.email !== undefined) updateData.email_address = data.email;
-      if (data.status !== undefined) updateData.system_user_status = toPrismaSystemUserStatus(data.status);
+      if (data.status !== undefined) updateData.system_user_status = data.status;
       
       // Handle password update if provided
       if (data.password) {
@@ -288,7 +282,7 @@ export class SystemUserService {
         data: updateData
       });
 
-      return fromPrismaSystemUser(updatedUser);
+      return this.fromPrismaSystemUser(updatedUser);
     }, {
       context: {
         userId,
@@ -373,7 +367,7 @@ export class SystemUserService {
           is_deleted: false
         }
       });
-      return user ? fromPrismaSystemUser(user) : null;
+      return user ? this.fromPrismaSystemUser(user) : null;
     } 
     // For TenantAdmin (tenant-scoped uniqueness)
     else {
@@ -386,8 +380,33 @@ export class SystemUserService {
           is_deleted: false
         }
       });
-      return user ? fromPrismaSystemUser(user) : null;
+      return user ? this.fromPrismaSystemUser(user) : null;
     }
+  }
+
+  /**
+   * Helper method to convert Prisma SystemUser to domain SystemUser
+   */
+  private fromPrismaSystemUser(prismaUser: any): SystemUser {
+    return {
+      system_user_id: prismaUser.system_user_id,
+      username: prismaUser.username,
+      full_name: prismaUser.full_name,
+      email_address: prismaUser.email_address,
+      role_id: prismaUser.role_id,
+      tenant_id: prismaUser.tenant_id,
+      system_user_status: prismaUser.system_user_status,
+      is_active: prismaUser.is_active,
+      is_deleted: prismaUser.is_deleted,
+      created_by: prismaUser.created_by,
+      created_at: prismaUser.created_at,
+      created_ip: prismaUser.created_ip,
+      updated_by: prismaUser.updated_by,
+      updated_at: prismaUser.updated_at,
+      updated_ip: prismaUser.updated_ip,
+      deleted_by: prismaUser.deleted_by,
+      deleted_at: prismaUser.deleted_at,
+    };
   }
 }
 

@@ -16,12 +16,7 @@ import {
   validateVideoProgressPayload,
   withValidationAndErrorResponse
 } from '@/utils/validation.utils.js';
-
-// Temporary local enum definition for SocketEventName
-enum SocketEventName {
-  CONTENT_PROGRESS_UPDATE = 'content:progress:update',
-  VIDEO_PROGRESS_UPDATE = 'video:progress:update'
-}
+import { SocketEventName } from '@/types/enums';
 
 /**
  * Register progress tracking related socket event handlers

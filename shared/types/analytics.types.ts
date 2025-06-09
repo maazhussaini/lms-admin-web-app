@@ -4,70 +4,70 @@ import { MultiTenantAuditFields } from './base.types';
  * Enum for report types
  */
 export enum ReportType {
-  COURSE_PERFORMANCE = 1,
-  USER_ENGAGEMENT = 2,
-  SYSTEM_USAGE = 3,
-  ASSESSMENT_SUMMARY = 4,
-  VIDEO_ANALYTICS = 5,
-  CUSTOM = 6,
+  COURSE_PERFORMANCE = 'COURSE_PERFORMANCE',
+  USER_ENGAGEMENT = 'USER_ENGAGEMENT',
+  SYSTEM_USAGE = 'SYSTEM_USAGE',
+  ASSESSMENT_SUMMARY = 'ASSESSMENT_SUMMARY',
+  VIDEO_ANALYTICS = 'VIDEO_ANALYTICS',
+  CUSTOM = 'CUSTOM',
 }
 
 /**
  * Enum for report status
  */
 export enum ReportStatus {
-  DRAFT = 1,
-  SCHEDULED = 2,
-  GENERATING = 3,
-  COMPLETED = 4,
-  FAILED = 5,
-  CANCELLED = 6,
+  DRAFT = 'DRAFT',
+  SCHEDULED = 'SCHEDULED',
+  GENERATING = 'GENERATING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  CANCELLED = 'CANCELLED',
 }
 
 /**
  * Enum for metric types
  */
 export enum MetricType {
-  COUNT = 1,
-  PERCENTAGE = 2,
-  AVERAGE = 3,
-  SUM = 4,
-  RATIO = 5,
-  TREND = 6,
+  COUNT = 'COUNT',
+  PERCENTAGE = 'PERCENTAGE',
+  AVERAGE = 'AVERAGE',
+  SUM = 'SUM',
+  RATIO = 'RATIO',
+  TREND = 'TREND',
 }
 
 /**
  * Enum for time granularity
  */
 export enum TimeGranularity {
-  HOURLY = 1,
-  DAILY = 2,
-  WEEKLY = 3,
-  MONTHLY = 4,
-  QUARTERLY = 5,
-  YEARLY = 6,
+  HOURLY = 'HOURLY',
+  DAILY = 'DAILY',
+  WEEKLY = 'WEEKLY',
+  MONTHLY = 'MONTHLY',
+  QUARTERLY = 'QUARTERLY',
+  YEARLY = 'YEARLY',
 }
 
 /**
  * Enum for widget types
  */
 export enum WidgetType {
-  CHART = 1,
-  TABLE = 2,
-  METRIC_CARD = 3,
-  PROGRESS_BAR = 4,
-  MAP = 5,
-  TIMELINE = 6,
+  CHART = 'CHART',
+  TABLE = 'TABLE',
+  METRIC_CARD = 'METRIC_CARD',
+  PROGRESS_BAR = 'PROGRESS_BAR',
+  MAP = 'MAP',
+  TIMELINE = 'TIMELINE',
 }
 
 /**
  * Enum for export formats
  */
 export enum ExportFormat {
-  PDF = 1,
-  EXCEL = 2,
-  CSV = 3,
-  JSON = 4,
+  PDF = 'PDF',
+  EXCEL = 'EXCEL',
+  CSV = 'CSV',
+  JSON = 'JSON',
 }
 
 /**

@@ -15,15 +15,7 @@ import {
   validateNotificationStatusPayload,
   withValidationAndErrorResponse
 } from '@/utils/validation.utils.js';
-
-// Temporary local enum definition for SocketEventName
-enum SocketEventName {
-  NOTIFICATION_READ = 'notification:read',
-  NOTIFICATION_DISMISSED = 'notification:dismissed',
-  NOTIFICATION_COUNT = 'notification:count',
-  NOTIFICATION_LIST = 'notification:list',
-  NOTIFICATION_NEW = 'notification:new'
-}
+import { SocketEventName } from '@/types/enums';
 
 /**
  * Register notification related socket event handlers

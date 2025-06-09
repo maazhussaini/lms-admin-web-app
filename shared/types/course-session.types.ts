@@ -5,9 +5,9 @@ import { MultiTenantAuditFields } from './base.types';
  * @description Defines the lifecycle status of a course session
  */
 export enum CourseSessionStatus {
-  DRAFT = 1,
-  PUBLISHED = 2,
-  EXPIRED = 3,
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  EXPIRED = 'EXPIRED',
 }
 
 /**
@@ -15,10 +15,10 @@ export enum CourseSessionStatus {
  * @description Defines the enrollment status for course session enrollments
  */
 export enum SessionEnrollmentStatus {
-  ENROLLED = 1,
-  DROPPED = 2,
-  COMPLETED = 3,
-  EXPELLED = 4,
+  ENROLLED = 'ENROLLED',
+  DROPPED = 'DROPPED',
+  COMPLETED = 'COMPLETED',
+  EXPELLED = 'EXPELLED',
 }
 
 /**

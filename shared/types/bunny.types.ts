@@ -10,67 +10,67 @@ import { BaseAuditFields } from './base.types';
  * Bunny.net video processing and upload status
  */
 export enum BunnyVideoStatus {
-  UPLOADING = 'uploading',
-  PROCESSING = 'processing',
-  FINISHED = 'finished',
-  FAILED = 'failed',
-  CANCELLED = 'cancelled',
+  UPLOADING = 'UPLOADING',
+  PROCESSING = 'PROCESSING',
+  FINISHED = 'FINISHED',
+  FAILED = 'FAILED',
+  CANCELLED = 'CANCELLED',
 }
 
 /**
  * Bunny.net video quality/resolution options
  */
 export enum BunnyVideoQuality {
-  AUTO = 'auto',
-  P240 = '240p',
-  P360 = '360p',
-  P480 = '480p',
-  P720 = '720p',
-  P1080 = '1080p',
-  P1440 = '1440p',
-  P2160 = '2160p',
+  AUTO = 'AUTO',
+  P240 = 'P240',
+  P360 = 'P360',
+  P480 = 'P480',
+  P720 = 'P720',
+  P1080 = 'P1080',
+  P1440 = 'P1440',
+  P2160 = 'P2160',
 }
 
 /**
  * DRM provider types supported by Bunny.net
  */
 export enum BunnyDrmProvider {
-  WIDEVINE = 'widevine',
-  PLAYREADY = 'playready',
-  FAIRPLAY = 'fairplay',
+  WIDEVINE = 'WIDEVINE',
+  PLAYREADY = 'PLAYREADY',
+  FAIRPLAY = 'FAIRPLAY',
 }
 
 /**
  * Bunny.net webhook event types
  */
 export enum BunnyWebhookEvent {
-  VIDEO_UPLOADED = 'video.uploaded',
-  VIDEO_ENCODED = 'video.encoded',
-  VIDEO_FAILED = 'video.failed',
-  VIDEO_DELETED = 'video.deleted',
-  PURGE_COMPLETED = 'purge.completed',
+  VIDEO_UPLOADED = 'VIDEO_UPLOADED',
+  VIDEO_ENCODED = 'VIDEO_ENCODED',
+  VIDEO_FAILED = 'VIDEO_FAILED',
+  VIDEO_DELETED = 'VIDEO_DELETED',
+  PURGE_COMPLETED = 'PURGE_COMPLETED',
 }
 
 /**
  * Bunny.net CDN regions/zones
  */
 export enum BunnyCdnRegion {
-  GLOBAL = 'global',
-  US_EAST = 'us-east',
-  US_WEST = 'us-west',
-  EUROPE = 'europe',
-  ASIA = 'asia',
-  OCEANIA = 'oceania',
+  GLOBAL = 'GLOBAL',
+  US_EAST = 'US_EAST',
+  US_WEST = 'US_WEST',
+  EUROPE = 'EUROPE',
+  ASIA = 'ASIA',
+  OCEANIA = 'OCEANIA',
 }
 
 /**
  * Video encoding preset options
  */
 export enum BunnyEncodingPreset {
-  FAST = 'fast',
-  BALANCED = 'balanced',
-  QUALITY = 'quality',
-  CUSTOM = 'custom',
+  FAST = 'FAST',
+  BALANCED = 'BALANCED',
+  QUALITY = 'QUALITY',
+  CUSTOM = 'CUSTOM',
 }
 
 /**

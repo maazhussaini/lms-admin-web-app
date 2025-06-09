@@ -8,7 +8,7 @@ import {
   ClientStatus,
   TenantStatus,
   ContactType
-} from '@/utils/enum-mapper.utils';
+} from '@/types/enums';
 
 /**
  * DTO for creating a new tenant
@@ -88,15 +88,10 @@ export class CreateTenantDto {
         }),
       body('tenant_status')
         .optional()
-        .isInt({ min: 1, max: 5 })
-        .withMessage('Tenant status must be a valid status code')
-        .toInt()
-        .custom(value => {
-          if (!Object.values(TenantStatus).includes(value)) {
-            throw new Error('Invalid tenant status');
-          }
-          return true;
-        })
+        .isString()
+        .withMessage('Tenant status must be a string')
+        .isIn(Object.values(TenantStatus))
+        .withMessage('Tenant status must be a valid status')
     ];
   }
 }
@@ -184,15 +179,10 @@ export class UpdateTenantDto {
         }),
       body('tenant_status')
         .optional()
-        .isInt({ min: 1, max: 5 })
-        .withMessage('Tenant status must be a valid status code')
-        .toInt()
-        .custom(value => {
-          if (!Object.values(TenantStatus).includes(value)) {
-            throw new Error('Invalid tenant status');
-          }
-          return true;
-        })
+        .isString()
+        .withMessage('Tenant status must be a string')
+        .isIn(Object.values(TenantStatus))
+        .withMessage('Tenant status must be a valid status')
     ];
   }
 }
@@ -308,15 +298,10 @@ export class CreateTenantPhoneNumberDto {
         .withMessage('Primary flag must be a boolean')
         .toBoolean(),
       body('contact_type')
-        .isInt({ min: 1, max: 4 })
-        .withMessage('Contact type must be a valid type code')
-        .toInt()
-        .custom(value => {
-          if (!Object.values(ContactType).includes(value)) {
-            throw new Error('Invalid contact type');
-          }
-          return true;
-        })
+        .isString()
+        .withMessage('Contact type must be a string')
+        .isIn(Object.values(ContactType))
+        .withMessage('Contact type must be a valid contact type')
     ];
   }
 }
@@ -396,15 +381,10 @@ export class UpdateTenantPhoneNumberDto {
         .toBoolean(),
       body('contact_type')
         .optional()
-        .isInt({ min: 1, max: 4 })
-        .withMessage('Contact type must be a valid type code')
-        .toInt()
-        .custom(value => {
-          if (!Object.values(ContactType).includes(value)) {
-            throw new Error('Invalid contact type');
-          }
-          return true;
-        })
+        .isString()
+        .withMessage('Contact type must be a string')
+        .isIn(Object.values(ContactType))
+        .withMessage('Contact type must be a valid contact type')
     ];
   }
 }
@@ -445,15 +425,10 @@ export class CreateTenantEmailAddressDto {
         .withMessage('Primary flag must be a boolean')
         .toBoolean(),
       body('contact_type')
-        .isInt({ min: 1, max: 4 })
-        .withMessage('Contact type must be a valid type code')
-        .toInt()
-        .custom(value => {
-          if (!Object.values(ContactType).includes(value)) {
-            throw new Error('Invalid contact type');
-          }
-          return true;
-        })
+        .isString()
+        .withMessage('Contact type must be a string')
+        .isIn(Object.values(ContactType))
+        .withMessage('Contact type must be a valid contact type')
     ];
   }
 }
@@ -497,15 +472,10 @@ export class UpdateTenantEmailAddressDto {
         .toBoolean(),
       body('contact_type')
         .optional()
-        .isInt({ min: 1, max: 4 })
-        .withMessage('Contact type must be a valid type code')
-        .toInt()
-        .custom(value => {
-          if (!Object.values(ContactType).includes(value)) {
-            throw new Error('Invalid contact type');
-          }
-          return true;
-        })
+        .isString()
+        .withMessage('Contact type must be a string')
+        .isIn(Object.values(ContactType))
+        .withMessage('Contact type must be a valid contact type')
     ];
   }
 }
@@ -597,15 +567,10 @@ export class CreateClientDto {
         .withMessage('Address cannot exceed 500 characters'),
       body('client_status')
         .optional()
-        .isInt({ min: 1, max: 4 })
-        .withMessage('Client status must be a valid status code')
-        .toInt()
-        .custom(value => {
-          if (!Object.values(ClientStatus).includes(value)) {
-            throw new Error('Invalid client status');
-          }
-          return true;
-        }),
+        .isString()
+        .withMessage('Client status must be a string')
+        .isIn(Object.values(ClientStatus))
+        .withMessage('Client status must be a valid status'),
       body('tenant_id')
         .isInt({ min: 1 })
         .withMessage('Valid tenant ID is required')
@@ -696,15 +661,10 @@ export class UpdateClientDto {
         .withMessage('Address cannot exceed 500 characters'),
       body('client_status')
         .optional()
-        .isInt({ min: 1, max: 4 })
-        .withMessage('Client status must be a valid status code')
-        .toInt()
-        .custom(value => {
-          if (!Object.values(ClientStatus).includes(value)) {
-            throw new Error('Invalid client status');
-          }
-          return true;
-        })
+        .isString()
+        .withMessage('Client status must be a string')
+        .isIn(Object.values(ClientStatus))
+        .withMessage('Client status must be a valid status')
     ];
   }
 }

@@ -5,11 +5,11 @@ import { MultiTenantAuditFields } from './base.types';
  * @description Defines the lifecycle status of a quiz
  */
 export enum QuizStatus {
-  DRAFT = 1,
-  PUBLISHED = 2,
-  GRADING_IN_PROGRESS = 3,
-  GRADED = 4,
-  ARCHIVED = 5,
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  GRADING_IN_PROGRESS = 'GRADING_IN_PROGRESS',
+  GRADED = 'GRADED',
+  ARCHIVED = 'ARCHIVED',
 }
 
 /**
@@ -17,10 +17,10 @@ export enum QuizStatus {
  * @description Types of quiz questions available
  */
 export enum QuizQuestionType {
-  MULTIPLE_CHOICE_SINGLE_ANSWER = 1,
-  MULTIPLE_CHOICE_MULTIPLE_ANSWERS = 2,
-  TRUE_FALSE = 3,
-  SHORT_ANSWER_ESSAY = 4,
+  MULTIPLE_CHOICE_SINGLE_ANSWER = 'MULTIPLE_CHOICE_SINGLE_ANSWER',
+  MULTIPLE_CHOICE_MULTIPLE_ANSWERS = 'MULTIPLE_CHOICE_MULTIPLE_ANSWERS',
+  TRUE_FALSE = 'TRUE_FALSE',
+  SHORT_ANSWER_ESSAY = 'SHORT_ANSWER_ESSAY',
 }
 
 /**
@@ -28,10 +28,10 @@ export enum QuizQuestionType {
  * @description Status of a student's quiz attempt
  */
 export enum QuizAttemptStatus {
-  NOT_STARTED = 1,
-  IN_PROGRESS = 2,
-  SUBMITTED = 3,
-  GRADED = 4,
+  NOT_STARTED = 'NOT_STARTED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  SUBMITTED = 'SUBMITTED',
+  GRADED = 'GRADED',
 }
 
 /**
@@ -39,9 +39,9 @@ export enum QuizAttemptStatus {
  * @description Entities that can have quizzes mapped to them
  */
 export enum QuizReferenceTable {
-  COURSE = 1,
-  COURSE_MODULE = 2,
-  COURSE_TOPIC = 3,
+  COURSE = 'COURSE',
+  COURSE_MODULE = 'COURSE_MODULE',
+  COURSE_TOPIC = 'COURSE_TOPIC',
 }
 
 /**

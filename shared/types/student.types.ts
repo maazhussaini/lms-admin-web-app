@@ -1,36 +1,52 @@
 import { MultiTenantAuditFields, MinimalAuditFields } from './base.types';
 
+/**
+ * Gender enumeration
+ * @description Represents the gender of a student
+ */
 export enum Gender {
-  MALE = 1,
-  FEMALE = 2,
+  MALE = 'MALE',
+  FEMALE = 'FEMALE',
 }
 
+/**
+ * Student status enumeration
+ * @description Represents the lifecycle status of a student
+ */
 export enum StudentStatusName {
-  ACTIVE = 1,
-  ALUMNI = 2,
-  DROPOUT = 3,
-  ACCOUNT_FREEZED = 4,
-  BLACKLISTED = 5,
-  SUSPENDED = 6,
-  DEACTIVATED = 7,
+  ACTIVE = 'ACTIVE',
+  ALUMNI = 'ALUMNI',
+  DROPOUT = 'DROPOUT',
+  ACCOUNT_FREEZED = 'ACCOUNT_FREEZED',
+  BLACKLISTED = 'BLACKLISTED',
+  SUSPENDED = 'SUSPENDED',
+  DEACTIVATED = 'DEACTIVATED',
 }
 
+/**
+ * Device type enumeration
+ * @description Represents the type of device used by a student
+ */
 export enum DeviceType {
-  IOS = 1,
-  ANDROID = 2,
-  WEB = 3,
-  DESKTOP = 4,
+  IOS = 'IOS',
+  ANDROID = 'ANDROID',
+  WEB = 'WEB',
+  DESKTOP = 'DESKTOP',
 }
 
+/**
+ * Enrollment status enumeration
+ * @description Represents the lifecycle status of a student's enrollment in a course
+ */
 export enum EnrollmentStatus {
-  PENDING = 1,        // Enrollment requested but not confirmed
-  ACTIVE = 2,         // Currently enrolled and active
-  COMPLETED = 3,      // Successfully completed the course
-  DROPPED = 4,        // Student dropped the course
-  SUSPENDED = 5,      // Temporarily suspended from course
-  EXPELLED = 6,       // Permanently removed from course
-  TRANSFERRED = 7,    // Transferred to different section/batch
-  DEFERRED = 8        // Deferred to later term
+  PENDING = 'PENDING',
+  ACTIVE = 'ACTIVE',
+  COMPLETED = 'COMPLETED',
+  DROPPED = 'DROPPED',
+  SUSPENDED = 'SUSPENDED',
+  EXPELLED = 'EXPELLED',
+  TRANSFERRED = 'TRANSFERRED',
+  DEFERRED = 'DEFERRED',
 }
 
 /**

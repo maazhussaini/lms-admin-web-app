@@ -16,13 +16,7 @@ import {
   validateSystemAlertPayload,
   withValidationAndErrorResponse
 } from '@/utils/validation.utils.js';
-
-// Temporary local enum definition for SocketEventName
-enum SocketEventName {
-  TENANT_BROADCAST = 'tenant:broadcast',
-  SYSTEM_ALERT = 'system:alert',
-  NOTIFICATION_NEW = 'notification:new'
-}
+import { SocketEventName } from '@/types/enums';
 
 /**
  * Register admin-only socket event handlers

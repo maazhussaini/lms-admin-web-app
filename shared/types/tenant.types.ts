@@ -5,11 +5,11 @@ import { MultiTenantAuditFields } from './base.types';
  * @description Defines the operational status of a tenant in the system
  */
 export enum TenantStatus {
-  ACTIVE = 1,
-  SUSPENDED = 2,
-  TRIAL = 3,
-  EXPIRED = 4,
-  CANCELLED = 5
+  ACTIVE = 'ACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  TRIAL = 'TRIAL',
+  EXPIRED = 'EXPIRED',
+  CANCELLED = 'CANCELLED',
 }
 
 /**
@@ -17,10 +17,10 @@ export enum TenantStatus {
  * @description Defines the operational status of a client
  */
 export enum ClientStatus {
-  ACTIVE = 1,
-  INACTIVE = 2,
-  SUSPENDED = 3,
-  TERMINATED = 4
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  TERMINATED = 'TERMINATED',
 }
 
 /**
@@ -28,10 +28,10 @@ export enum ClientStatus {
  * @description Categorizes different types of contact information
  */
 export enum ContactType {
-  PRIMARY = 1,
-  SECONDARY = 2,
-  EMERGENCY = 3,
-  BILLING = 4
+  PRIMARY = 'PRIMARY',
+  SECONDARY = 'SECONDARY',
+  EMERGENCY = 'EMERGENCY',
+  BILLING = 'BILLING',
 }
 
 /**

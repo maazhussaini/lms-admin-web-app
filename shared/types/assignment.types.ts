@@ -5,7 +5,7 @@ import { MultiTenantAuditFields } from './base.types';
  * @description Types of assignments available
  */
 export enum AssignmentType {
-  FILE_UPLOAD = 1,
+  FILE_UPLOAD = 'FILE_UPLOAD'
 }
 
 /**
@@ -13,11 +13,11 @@ export enum AssignmentType {
  * @description Defines the lifecycle status of an assignment
  */
 export enum AssignmentStatus {
-  DRAFT = 1,
-  PUBLISHED = 2,
-  GRADING_IN_PROGRESS = 3,
-  GRADED = 4,
-  ARCHIVED = 5,
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  GRADING_IN_PROGRESS = 'GRADING_IN_PROGRESS',
+  GRADED = 'GRADED',
+  ARCHIVED = 'ARCHIVED',
 }
 
 /**
@@ -25,11 +25,11 @@ export enum AssignmentStatus {
  * @description Status of a student's assignment submission
  */
 export enum SubmissionStatus {
-  NOT_SUBMITTED = 1,
-  SUBMITTED = 2,
-  LATE_SUBMISSION = 3,
-  GRADED = 4,
-  RESUBMITTED = 5,
+  NOT_SUBMITTED = 'NOT_SUBMITTED',
+  SUBMITTED = 'SUBMITTED',
+  LATE_SUBMISSION = 'LATE_SUBMISSION',
+  GRADED = 'GRADED',
+  RESUBMITTED = 'RESUBMITTED',
 }
 
 /**
@@ -37,11 +37,11 @@ export enum SubmissionStatus {
  * @description Status of file upload for assignment submissions
  */
 export enum UploadStatus {
-  PENDING = 1,
-  UPLOADING = 2,
-  COMPLETED = 3,
-  FAILED = 4,
-  CANCELLED = 5,
+  PENDING = 'PENDING',
+  UPLOADING = 'UPLOADING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  CANCELLED = 'CANCELLED',
 }
 
 /**
@@ -49,9 +49,9 @@ export enum UploadStatus {
  * @description Entities that can have assignments mapped to them
  */
 export enum AssignmentReferenceTable {
-  COURSE = 1,
-  COURSE_MODULE = 2,
-  COURSE_TOPIC = 3,
+  COURSE = 'COURSE',
+  COURSE_MODULE = 'COURSE_MODULE',
+  COURSE_TOPIC = 'COURSE_TOPIC',
 }
 
 /**
