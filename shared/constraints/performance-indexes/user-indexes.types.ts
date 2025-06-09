@@ -37,7 +37,7 @@ export const USER_PERFORMANCE_INDEXES: Record<string, IndexConstraint> = {
     table: 'students',
     constraintName: 'idx_student_status_tenant',
     indexName: 'idx_student_status_tenant',
-    columns: ['student_status_id', 'tenant_id', 'is_active'],
+    columns: ['student_status', 'tenant_id', 'is_active'],
     indexType: 'BTREE',
     isUnique: false,
     description: 'Optimize student status filtering'

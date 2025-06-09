@@ -65,7 +65,7 @@ model Screen {
 // SystemUser model - core user entity with conditional tenant isolation
 model SystemUser {
   system_user_id    Int               @id @default(autoincrement())
-  tenant_id         Int?              // NULL for SuperAdmin
+  tenant_id         Int?              
   role_type         SystemUserRole
   username          String            @db.VarChar(50)
   full_name         String            @db.VarChar(255)

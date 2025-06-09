@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The System User Management API provides comprehensive functionality for managing system-level users within the LMS platform. This API handles both SuperAdmin users (global system administrators) and Tenant Admin users (tenant-specific administrators), implementing role-based access control and tenant isolation patterns.
+The System User Management API provides comprehensive functionality for managing system-level users within the LMS platform. This API handles both SUPER_ADMIN users (global system administrators) and Tenant Admin users (tenant-specific administrators), implementing role-based access control and tenant isolation patterns.
 
 ## Data Model Overview
 
@@ -20,7 +20,7 @@ The System User domain consists of the following main entities defined in `@shar
 
 From `@shared/types/system-users.types.ts`:
 
-- **SystemUserRole**: `SUPERADMIN (1)`, `TENANT_ADMIN (2)`
+- **SystemUserRole**: `SUPER_ADMIN (1)`, `TENANT_ADMIN (2)`
 - **SystemUserStatus**: `ACTIVE (1)`, `INACTIVE (2)`, `SUSPENDED (3)`, `LOCKED (4)`
 
 ### Base Interfaces
@@ -32,7 +32,7 @@ All entities extend `BaseAuditFields` from `@shared/types/base.types.ts`, provid
 
 ## API Endpoints
 
-### SuperAdmin Operations
+### SUPER_ADMIN Operations
 
 #### Create SuperAdmin User
 - **Method**: `POST`
@@ -301,7 +301,7 @@ All entities extend `BaseAuditFields` from `@shared/types/base.types.ts`, provid
 ```prisma
 model SystemUser {
   system_user_id    Int               @id @default(autoincrement())
-  tenant_id         Int?              // NULL for SuperAdmin
+  tenant_id         Int?              
   role_id           Int
   username          String
   full_name         String

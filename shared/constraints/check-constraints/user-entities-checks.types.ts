@@ -63,7 +63,7 @@ export const USER_ENTITIES_CHECK_CONSTRAINTS: Record<string, CheckConstraint> = 
   STUDENT_STATUS_ENUM_CHECK: {
     table: 'students',
     constraintName: 'chk_student_status_range',
-    condition: 'student_status_id BETWEEN 1 AND 7',
+    condition: 'student_status',
     description: 'Student status must be within valid enum range (1-7)'
   },
 

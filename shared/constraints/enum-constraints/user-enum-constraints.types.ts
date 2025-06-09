@@ -26,8 +26,8 @@ export const USER_ENUM_CONSTRAINTS: Record<string, EnumConstraint> = {
   STUDENT_STATUS_ENUM: {
     table: 'students',
     constraintName: 'chk_student_status_valid',
-    column: 'student_status_id',
-    enumName: 'StudentStatusName',
+    column: 'student_status',
+    enumName: 'StudentStatus',
     enumValues: {
       ACTIVE: 1,
       ALUMNI: 2,

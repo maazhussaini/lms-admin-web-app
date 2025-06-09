@@ -19,7 +19,7 @@ model Student {
   username                String                 @db.VarChar(50)
   password_hash           String                 @db.VarChar(255)
   last_login_at           DateTime?
-  student_status          StudentStatusName      // Updated to use enum instead of student_status_id Int
+  student_status          StudentStatus          @default(ACTIVE)
   referral_type           String?                @db.VarChar(100)
   
   // Audit fields

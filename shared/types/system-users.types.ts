@@ -5,7 +5,7 @@ import { BaseAuditFields } from './base.types';
  * @description Defines system-level roles with proper hierarchy
  */
 export enum SystemUserRole {
-  SUPERADMIN = 'SUPERADMIN',
+  SUPER_ADMIN = 'SUPER_ADMIN',
   TENANT_ADMIN = 'TENANT_ADMIN',
 }
 
@@ -106,7 +106,7 @@ export const isSystemUserStatus = (value: any): value is SystemUserStatus =>
  * Helper function to check if a system user is SuperAdmin
  */
 export const isSuperAdmin = (user: SystemUser): boolean => 
-  user.tenant_id === null && user.role_type === SystemUserRole.SUPERADMIN;
+  user.tenant_id === null && user.role_type === SystemUserRole.SUPER_ADMIN;
 
 /**
  * Helper function to check if a system user is tenant-specific

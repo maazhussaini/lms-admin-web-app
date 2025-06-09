@@ -3,7 +3,7 @@ export enum Gender {
   FEMALE,
 }
 
-export enum StudentStatusName {
+export enum StudentStatus {
   ACTIVE,
   ALUMNI,
   DROPOUT,

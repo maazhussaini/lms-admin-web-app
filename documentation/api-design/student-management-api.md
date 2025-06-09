@@ -21,7 +21,7 @@ The student management system is built around several key entities:
 
 From `base.types.ts` and `student.types.ts`:
 - `Gender`: MALE (1), FEMALE (2)
-- `StudentStatusName`: ACTIVE, ALUMNI, DROPOUT, ACCOUNT_FREEZED, BLACKLISTED, SUSPENDED, DEACTIVATED
+- `StudentStatus`: ACTIVE, ALUMNI, DROPOUT, ACCOUNT_FREEZED, BLACKLISTED, SUSPENDED, DEACTIVATED
 - `DeviceType`: IOS, ANDROID, WEB, DESKTOP
 
 ### Audit and Multi-tenancy
@@ -43,7 +43,7 @@ All entities extend `MultiTenantAuditFields` from `base.types.ts`, providing:
 - Query Parameters:
   - `page` (number): Page number (default: 1)
   - `limit` (number): Items per page (default: 20, max: 100)
-  - `status` (StudentStatusName): Filter by student status
+  - `status` (StudentStatus): Filter by student status
   - `search` (string): Search by name, username, or email
   - `country_id` (number): Filter by country
   - `state_id` (number): Filter by state
@@ -80,7 +80,7 @@ All entities extend `MultiTenantAuditFields` from `base.types.ts`, providing:
   gender?: Gender;
   username: string;
   password: string;
-  student_status_id: StudentStatusName;
+  student_status: StudentStatus;
   referral_type?: string;
 }
 ```
@@ -336,11 +336,11 @@ model Student {
   profile_picture_url     String?                @db.VarChar(500)
   zip_code                String?                @db.VarChar(20)
   age                     Int?
-  gender                  Int?                   // 1: MALE, 2: FEMALE
+  gender                  Int?                   
   username                String                 @db.VarChar(50)
   password_hash           String                 @db.VarChar(255)
   last_login_at           DateTime?
-  student_status_id       Int                    // 1-7 enum values
+  student_status          StudentStatus          
   referral_type           String?                @db.VarChar(100)
   
   // Audit fields
@@ -365,7 +365,7 @@ model Student {
   institute_associations  StudentInstitute[]
 
   @@unique([username, tenant_id], name: "uq_student_username_tenant")
-  @@index([student_status_id, tenant_id, is_active], name: "idx_student_status_tenant")
+  @@index([student_status, tenant_id, is_active], name: "idx_student_status_tenant")
   @@index([full_name, tenant_id], name: "idx_student_name_search")
   @@index([country_id, state_id, city_id, tenant_id], name: "idx_student_geographic")
   @@map("students")
@@ -687,7 +687,7 @@ import {
   Institute,
   StudentInstitute,
   Gender,
-  StudentStatusName,
+  StudentStatus,
   DeviceType
 } from '@shared/types/student.types';
 import { 

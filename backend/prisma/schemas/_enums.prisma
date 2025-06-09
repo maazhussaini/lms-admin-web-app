@@ -419,7 +419,7 @@ enum Gender {
  * Student status enumeration
  * @description Represents the lifecycle status of a student
  */
-enum StudentStatusName {
+enum StudentStatus {
   ACTIVE @map("ACTIVE")
   ALUMNI @map("ALUMNI")
   DROPOUT @map("DROPOUT")
@@ -465,7 +465,7 @@ enum EnrollmentStatus {
  * @description Defines system-level roles with proper hierarchy
  */
 enum SystemUserRole {
-  SUPERADMIN @map("SUPERADMIN")
+  SUPER_ADMIN @map("SUPER_ADMIN")
   TENANT_ADMIN @map("TENANT_ADMIN")
 }
 

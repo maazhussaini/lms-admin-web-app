@@ -416,7 +416,7 @@ export enum Gender {
  * Student status enumeration
  * @description Represents the lifecycle status of a student
  */
-export enum StudentStatusName {
+export enum StudentStatus {
   ACTIVE = 'ACTIVE',
   ALUMNI = 'ALUMNI',
   DROPOUT = 'DROPOUT',
@@ -462,7 +462,7 @@ export enum EnrollmentStatus {
  * @description Defines system-level roles with proper hierarchy
  */
 export enum SystemUserRole {
-  SUPERADMIN = 'SUPERADMIN',
+  SUPER_ADMIN = 'SUPER_ADMIN',
   TENANT_ADMIN = 'TENANT_ADMIN',
 }
 

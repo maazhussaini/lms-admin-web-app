@@ -5,6 +5,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { SystemUserRole } from '../src/types/enums';
 import { hashPassword } from '../src/utils/password.utils.js';
 import { disableTenantIsolationMiddleware } from '../src/config/database.js';
 import logger from '../src/config/logger.js';
@@ -36,7 +37,7 @@ async function main() {
     logger.info(`TENANT_ADMIN role configured: ${tenantAdminRole.role_name} (ID: ${tenantAdminRole.role_id})`);
     
     // 2. Create SUPER_ADMIN user with role reference
-    const superAdmin = await createSuperAdminUser(superAdminRole.role_id);
+    const superAdmin = await createSuperAdminUser();
     logger.info(`SUPER_ADMIN user configured: ${superAdmin.email_address}`);
     
     // 3. Update references after both entities exist
@@ -51,11 +52,11 @@ async function main() {
 }
 
 /**
- * Creates the SUPER_ADMIN role with role_id 1 if it doesn't exist
+ * Creates the SUPER_ADMIN role if it doesn't exist
  */
 async function createSuperAdminRole() {
   const existingRole = await prisma.role.findUnique({
-    where: { role_id: 1 }
+    where: { role_type: SystemUserRole.SUPER_ADMIN }
   });
   
   if (existingRole) {
@@ -66,8 +67,8 @@ async function createSuperAdminRole() {
   logger.info('Creating SUPER_ADMIN role...');
   return prisma.role.create({
     data: {
-      role_id: 1,
-      role_name: 'SUPER_ADMIN',
+      role_type: SystemUserRole.SUPER_ADMIN,
+      role_name: 'Super Administrator',
       role_description: 'Global system administrator with full access to all features',
       is_system_role: true,
       is_active: true,
@@ -81,11 +82,11 @@ async function createSuperAdminRole() {
 }
 
 /**
- * Creates the TENANT_ADMIN role with role_id 2 if it doesn't exist
+ * Creates the TENANT_ADMIN role if it doesn't exist
  */
 async function createTenantAdminRole() {
   const existingRole = await prisma.role.findUnique({
-    where: { role_id: 2 }
+    where: { role_type: SystemUserRole.TENANT_ADMIN }
   });
   
   if (existingRole) {
@@ -96,8 +97,8 @@ async function createTenantAdminRole() {
   logger.info('Creating TENANT_ADMIN role...');
   return prisma.role.create({
     data: {
-      role_id: 2,
-      role_name: 'TENANT_ADMIN',
+      role_type: SystemUserRole.TENANT_ADMIN,
+      role_name: 'Tenant Administrator',
       role_description: 'Tenant administrator with full access to tenant-specific features',
       is_system_role: true,
       is_active: true,
@@ -113,7 +114,7 @@ async function createTenantAdminRole() {
 /**
  * Creates a SUPER_ADMIN user if it doesn't exist
  */
-async function createSuperAdminUser(roleId: number) {
+async function createSuperAdminUser() {
   // Get admin credentials from environment vars or use defaults
   const adminEmail = process.env.SUPER_ADMIN_EMAIL || 'admin@lms.example.com';
   const adminFullName = process.env.SUPER_ADMIN_NAME || 'System Administrator';
@@ -124,7 +125,7 @@ async function createSuperAdminUser(roleId: number) {
   const existingUser = await prisma.systemUser.findFirst({
     where: {
       email_address: adminEmail,
-      role_id: roleId
+      role_type: SystemUserRole.SUPER_ADMIN
     }
   });
   
@@ -140,7 +141,7 @@ async function createSuperAdminUser(roleId: number) {
   return prisma.systemUser.create({
     data: {
       tenant_id: null, // SUPER_ADMIN is not associated with any tenant
-      role_id: roleId,
+      role_type: SystemUserRole.SUPER_ADMIN,
       username: adminUsername,
       full_name: adminFullName,
       email_address: adminEmail,

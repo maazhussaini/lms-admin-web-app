@@ -62,7 +62,7 @@ export const CORE_ENUM_CONSTRAINTS: Record<string, EnumConstraint> = {
     column: 'role_id',
     enumName: 'SystemUserRole',
     enumValues: { 
-      SUPERADMIN: 1, 
+      SUPER_ADMIN: 1, 
       TENANT_ADMIN: 2 
     },
     description: 'Validates system user role values'

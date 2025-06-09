@@ -73,9 +73,9 @@ export const createSystemUserValidation: ValidationChain[] = [
     .isIn(Object.values(SystemUserRole)).withMessage('Role must be a valid SystemUserRole')
     .custom((value, { req }) => {
       const tenantId = req.body.tenantId;
-      // SUPERADMIN cannot have a tenantId
-      if (value === SystemUserRole.SUPERADMIN && tenantId !== undefined) {
-        throw new Error('SUPERADMIN users cannot be associated with a tenant');
+      // SUPER_ADMIN cannot have a tenantId
+      if (value === SystemUserRole.SUPER_ADMIN && tenantId !== undefined) {
+        throw new Error('SUPER_ADMIN users cannot be associated with a tenant');
       }
       
       // TENANT_ADMIN must have a tenantId

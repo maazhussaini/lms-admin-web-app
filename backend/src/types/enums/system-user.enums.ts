@@ -3,7 +3,7 @@
  * @description Defines system-level roles with proper hierarchy
  */
 export enum SystemUserRole {
-  SUPERADMIN,
+  SUPER_ADMIN,
   TENANT_ADMIN,
 }
 

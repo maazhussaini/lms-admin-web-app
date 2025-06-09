@@ -42,13 +42,13 @@ export class SystemUserService {
         }
 
         // Tenant admins cannot create SUPER_ADMIN users
-        if (data.role === SystemUserRole.SUPERADMIN) {
+        if (data.role === SystemUserRole.SUPER_ADMIN) {
           throw new ForbiddenError('Tenant administrators cannot create super admin users');
         }
       }
 
       // Check uniqueness based on role
-      const existingUser = await this.findExistingUser(data.username, data.email, data.role === SystemUserRole.SUPERADMIN ? null : data.tenantId || null);
+      const existingUser = await this.findExistingUser(data.username, data.email, data.role === SystemUserRole.SUPER_ADMIN ? null : data.tenantId || null);
       
       if (existingUser) {
         if (existingUser.username === data.username) {
@@ -69,7 +69,7 @@ export class SystemUserService {
           email_address: data.email,
           password_hash: passwordHash,
           role_id: data.role,
-          tenant_id: data.role === SystemUserRole.SUPERADMIN ? null : (data.tenantId || null),
+          tenant_id: data.role === SystemUserRole.SUPER_ADMIN ? null : (data.tenantId || null),
           system_user_status: data.status || SystemUserStatus.ACTIVE,
           
           // Audit fields
@@ -143,7 +143,7 @@ export class SystemUserService {
       if (requestingUser.role_id === SystemUserRole.TENANT_ADMIN) {
         where.tenant_id = requestingUser.tenant_id;
       } 
-      // SuperAdmin can filter by tenant if they want
+      // SUPER_ADMIN can filter by tenant if they want
       else if (filter.tenantId !== undefined) {
         where.tenant_id = filter.tenantId;
       }
@@ -219,12 +219,12 @@ export class SystemUserService {
         }
 
         // Tenant admin cannot update SUPER_ADMIN users
-        if (existingUser.role_id === SystemUserRole.SUPERADMIN) {
+        if (existingUser.role_id === SystemUserRole.SUPER_ADMIN) {
           throw new ForbiddenError('Tenant administrators cannot update super admin users');
         }
 
         // Tenant admin cannot change a user's role to SUPER_ADMIN
-        if (data.role === SystemUserRole.SUPERADMIN) {
+        if (data.role === SystemUserRole.SUPER_ADMIN) {
           throw new ForbiddenError('Tenant administrators cannot assign super admin role');
         }
       }
@@ -257,11 +257,11 @@ export class SystemUserService {
       }
 
       // Special handling for role changes (SUPER_ADMIN only)
-      if (data.role !== undefined && requestingUser.role_id === SystemUserRole.SUPERADMIN) {
+      if (data.role !== undefined && requestingUser.role_id === SystemUserRole.SUPER_ADMIN) {
         updateData.role_id = data.role;
         
         // Handle tenant implications of role change
-        if (data.role === SystemUserRole.SUPERADMIN && existingUser.tenant_id !== null) {
+        if (data.role === SystemUserRole.SUPER_ADMIN && existingUser.tenant_id !== null) {
           // Changing to SUPER_ADMIN requires removing tenant association
           updateData.tenant_id = null;
         } 
@@ -319,7 +319,7 @@ export class SystemUserService {
         }
 
         // Tenant admin cannot delete SUPER_ADMIN users
-        if (existingUser.role_id === SystemUserRole.SUPERADMIN) {
+        if (existingUser.role_id === SystemUserRole.SUPER_ADMIN) {
           throw new ForbiddenError('Tenant administrators cannot delete super admin users');
         }
       }
@@ -356,7 +356,7 @@ export class SystemUserService {
     email: string,
     tenantId: number | null
   ): Promise<SystemUser | null> {
-    // For SuperAdmin (global uniqueness)
+    // For SUPER_ADMIN (global uniqueness)
     if (tenantId === null) {
       const user = await this.prisma.systemUser.findFirst({
         where: {

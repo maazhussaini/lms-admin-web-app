@@ -13,7 +13,7 @@ export enum Gender {
  * Student status enumeration
  * @description Represents the lifecycle status of a student
  */
-export enum StudentStatusName {
+export enum StudentStatus {
   ACTIVE = 'ACTIVE',
   ALUMNI = 'ALUMNI',
   DROPOUT = 'DROPOUT',
@@ -104,7 +104,7 @@ export interface Student extends MultiTenantAuditFields {
   username: string;
   password_hash: string;
   last_login_at?: Date | string | null;
-  student_status_id: StudentStatusName;
+  student_status: StudentStatus;
   referral_type?: string | null;
 }
 
@@ -207,8 +207,8 @@ export interface StudentInstitute extends MultiTenantAuditFields {
 export const isGender = (value: any): value is Gender => 
   Object.values(Gender).includes(value);
 
-export const isStudentStatus = (value: any): value is StudentStatusName => 
-  Object.values(StudentStatusName).includes(value);
+export const isStudentStatus = (value: any): value is StudentStatus => 
+  Object.values(StudentStatus).includes(value);
 
 export const isDeviceType = (value: any): value is DeviceType => 
   Object.values(DeviceType).includes(value);

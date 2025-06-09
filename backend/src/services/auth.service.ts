@@ -85,8 +85,8 @@ export class AuthService {
       throw new UnauthorizedError('Invalid credentials', 'INVALID_CREDENTIALS');
     }
 
-    // Check tenant context for SuperAdmin users
-    if (user.role_id === SystemUserRole.SUPERADMIN && tenant_context) {
+    // Check tenant context for SUPER_ADMIN users
+    if (user.role_id === SystemUserRole.SUPER_ADMIN && tenant_context) {
       const tenant = await this.prisma.tenant.findFirst({
         where: {
           OR: [
@@ -102,7 +102,7 @@ export class AuthService {
         throw new NotFoundError('Tenant not found', 'TENANT_NOT_FOUND');
       }
 
-      // SuperAdmin logging into a specific tenant context
+      // SUPER_ADMIN logging into a specific tenant context
       user.tenant_id = tenant.tenant_id;
     }
 
@@ -123,7 +123,7 @@ export class AuthService {
       id: user.system_user_id,
       email: user.email_address,
       role: user.role.role_name,
-      tenantId: user.tenant_id || 0, // 0 is a special case for SuperAdmin with no tenant
+      tenantId: user.tenant_id || 0, // 0 is a special case for SUPER_ADMIN with no tenant
       permissions
     };
 
@@ -140,7 +140,7 @@ export class AuthService {
           role_name: user.role.role_name
         },
         tenant_id: user.tenant_id || 0,
-        user_type: user.role_id === SystemUserRole.SUPERADMIN ? 'SUPER_ADMIN' : 'ADMIN'
+        user_type: user.role_id === SystemUserRole.SUPER_ADMIN ? 'SUPER_ADMIN' : 'ADMIN'
       },
       tokens: {
         access_token: tokens.accessToken,
@@ -224,7 +224,7 @@ export class AuthService {
             role_name: user.role.role_name
           },
           tenant_id: user.tenant_id || 0,
-          user_type: user.role_id === SystemUserRole.SUPERADMIN ? 'SUPER_ADMIN' : 'ADMIN'
+          user_type: user.role_id === SystemUserRole.SUPER_ADMIN ? 'SUPER_ADMIN' : 'ADMIN'
         },
         tokens: {
           access_token: tokens.accessToken,
@@ -393,9 +393,9 @@ export class AuthService {
    * @returns Array of permission strings
    */
   private async getUserPermissions(userId: number, tenantId?: number | null): Promise<string[]> {
-    // If no tenant ID for SuperAdmin, return all permissions
+    // If no tenant ID for SUPER_ADMIN, return all permissions
     if (!tenantId) {
-      return ['*']; // SuperAdmin has all permissions
+      return ['*']; // SUPER_ADMIN has all permissions
     }
 
     try {
