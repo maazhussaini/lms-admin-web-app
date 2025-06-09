@@ -46,7 +46,7 @@ model AssignmentMapping {
   assignment_mapping_id Int                       @id @default(autoincrement())
   tenant_id             Int
   assignment_id         Int
-  reference_table_id    AssignmentReferenceTable
+  reference_table_type  AssignmentReferenceTable
   reference_id          Int
   teacher_id            Int                       // Teacher who created this mapping
 
@@ -77,7 +77,7 @@ model StudentAssignment {
   student_id              Int
   attempt_number          Int
   submission_date         DateTime?
-  submission_status       SubmissionStatus
+  submission_status       SubmissionStatus   @default(PENDING)
   grade                   Decimal?           @db.Decimal(6, 2)
   percentage              Decimal?           @db.Decimal(5, 2)
   feedback                String?            @db.Text
@@ -117,7 +117,7 @@ model AssignmentSubmissionFile {
   file_url                      String           @db.Text
   file_size_bytes               Int?
   mime_type                     String?          @db.VarChar(128)
-  upload_status_id              UploadStatus?    @default(PENDING)
+  upload_status                 UploadStatus?    @default(PENDING)
 
   // Standard audit and tenant fields (keep fields, remove relationships)
   is_active                     Boolean          @default(true)

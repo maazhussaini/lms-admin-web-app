@@ -1,80 +1,97 @@
 // System enumerations for the LMS platform
 
-// System user role enumeration
-enum SystemUserRole {
-  SUPERADMIN   @map("SUPERADMIN")
-  TENANT_ADMIN @map("TENANT_ADMIN")
+/**
+ * Analytics and Reporting Enums
+ * @description Defines enums for analytics reports, metrics, time granularity, widgets, and formats
+ */
+
+/**
+ * Enum for report types
+ */
+enum ReportType {
+  COURSE_PERFORMANCE @map("COURSE_PERFORMANCE")
+  USER_ENGAGEMENT @map("USER_ENGAGEMENT")
+  SYSTEM_USAGE @map("SYSTEM_USAGE")
+  ASSESSMENT_SUMMARY @map("ASSESSMENT_SUMMARY")
+  VIDEO_ANALYTICS @map("VIDEO_ANALYTICS")
+  CUSTOM @map("CUSTOM")
 }
 
-// System user status enumeration
-enum SystemUserStatus {
-  ACTIVE    @map("ACTIVE")
-  INACTIVE  @map("INACTIVE")
-  SUSPENDED @map("SUSPENDED")
-  LOCKED    @map("LOCKED")
-}
-
-// Tenant status enumeration
-enum TenantStatus {
-  ACTIVE    @map("ACTIVE")
-  SUSPENDED @map("SUSPENDED")
-  TRIAL     @map("TRIAL")
-  EXPIRED   @map("EXPIRED")
+/**
+ * Enum for report status
+ */
+enum ReportStatus {
+  DRAFT @map("DRAFT")
+  SCHEDULED @map("SCHEDULED")
+  GENERATING @map("GENERATING")
+  COMPLETED @map("COMPLETED")
+  FAILED @map("FAILED")
   CANCELLED @map("CANCELLED")
 }
 
-// Client status enumeration
-enum ClientStatus {
-  ACTIVE     @map("ACTIVE")
-  INACTIVE   @map("INACTIVE")
-  SUSPENDED  @map("SUSPENDED")
-  TERMINATED @map("TERMINATED")
+/**
+ * Enum for metric types
+ */
+enum MetricType {
+  COUNT @map("COUNT")
+  PERCENTAGE @map("PERCENTAGE")
+  AVERAGE @map("AVERAGE")
+  SUM @map("SUM")
+  RATIO @map("RATIO")
+  TREND @map("TREND")
 }
 
-// Contact type enumeration
-enum ContactType {
-  PRIMARY   @map("PRIMARY")
-  SECONDARY @map("SECONDARY")
-  EMERGENCY @map("EMERGENCY")
-  BILLING   @map("BILLING")
+/**
+ * Enum for time granularity
+ */
+enum TimeGranularity {
+  HOURLY @map("HOURLY")
+  DAILY @map("DAILY")
+  WEEKLY @map("WEEKLY")
+  MONTHLY @map("MONTHLY")
+  QUARTERLY @map("QUARTERLY")
+  YEARLY @map("YEARLY")
 }
 
-// Assessment-related enumerations
-
-// Quiz enums
-enum QuizStatus {
-  DRAFT @map("DRAFT")
-  PUBLISHED @map("PUBLISHED")
-  GRADING_IN_PROGRESS @map("GRADING_IN_PROGRESS")
-  GRADED @map("GRADED")
-  ARCHIVED @map("ARCHIVED")
+/**
+ * Enum for widget types
+ */
+enum WidgetType {
+  CHART @map("CHART")
+  TABLE @map("TABLE")
+  METRIC_CARD @map("METRIC_CARD")
+  PROGRESS_BAR @map("PROGRESS_BAR")
+  MAP @map("MAP")
+  TIMELINE @map("TIMELINE")
 }
 
-enum QuizQuestionType {
-  MULTIPLE_CHOICE_SINGLE_ANSWER @map("MULTIPLE_CHOICE_SINGLE_ANSWER")
-  MULTIPLE_CHOICE_MULTIPLE_ANSWERS @map("MULTIPLE_CHOICE_MULTIPLE_ANSWERS")
-  TRUE_FALSE @map("TRUE_FALSE")
-  SHORT_ANSWER_ESSAY @map("SHORT_ANSWER_ESSAY")
+/**
+ * Enum for formats
+ */
+enum ExportFormat {
+  PDF @map("PDF")
+  EXCEL @map("EXCEL")
+  CSV @map("CSV")
+  JSON @map("JSON")
 }
 
-enum QuizAttemptStatus {
-  NOT_STARTED @map("NOT_STARTED")
-  IN_PROGRESS @map("IN_PROGRESS")
-  SUBMITTED @map("SUBMITTED")
-  GRADED @map("GRADED")
-}
+/**
+ * Assignment Management Enums
+ * @description Defines enums for assignment types, statuses, submissions, uploads, and reference mappings
+ */
 
-enum QuizReferenceTable {
-  COURSE @map("COURSE")
-  COURSE_MODULE @map("COURSE_MODULE")
-  COURSE_TOPIC @map("COURSE_TOPIC")
-}
-
-// Assignment enums
+/**
+ * Assignment type enumeration
+ * @description Types of assignments available
+ */
 enum AssignmentType {
-  FILE_UPLOAD @map("FILE_UPLOAD")
+  FILE_UPLOAD @map("FILE_UPLOA")
 }
 
+/**
+ * Assignment status enumeration
+ * @description Defines the lifecycle status of an assignment
+ */
 enum AssignmentStatus {
   DRAFT @map("DRAFT")
   PUBLISHED @map("PUBLISHED")
@@ -83,7 +100,12 @@ enum AssignmentStatus {
   ARCHIVED @map("ARCHIVED")
 }
 
+/**
+ * Submission status enumeration
+ * @description Status of a student's assignment submission
+ */
 enum SubmissionStatus {
+  PENDING @map("PENDING")
   NOT_SUBMITTED @map("NOT_SUBMITTED")
   SUBMITTED @map("SUBMITTED")
   LATE_SUBMISSION @map("LATE_SUBMISSION")
@@ -91,13 +113,10 @@ enum SubmissionStatus {
   RESUBMITTED @map("RESUBMITTED")
 }
 
-enum AssignmentReferenceTable {
-  COURSE @map("COURSE")
-  COURSE_MODULE @map("COURSE_MODULE")
-  COURSE_TOPIC @map("COURSE_TOPIC")
-}
-
-// Upload status enumeration
+/**
+ * Upload status enumeration
+ * @description Status of file upload for assignment submissions
+ */
 enum UploadStatus {
   PENDING @map("PENDING")
   UPLOADING @map("UPLOADING")
@@ -106,56 +125,124 @@ enum UploadStatus {
   CANCELLED @map("CANCELLED")
 }
 
-// User-related enumerations
-
-// Gender enumeration
-enum Gender {
-  MALE @map("MALE")
-  FEMALE @map("FEMALE")
+/**
+ * Reference table enumeration for assignment mappings
+ * @description Entities that can have assignments mapped to them
+ */
+enum AssignmentReferenceTable {
+  COURSE @map("COURSE")
+  COURSE_MODULE @map("COURSE_MODULE")
+  COURSE_TOPIC @map("COURSE_TOPIC")
 }
 
-// Student status enumeration
-enum StudentStatusName {
-  ACTIVE @map("ACTIVE")
-  ALUMNI @map("ALUMNI")
-  DROPOUT @map("DROPOUT")
-  ACCOUNT_FREEZED @map("ACCOUNT_FREEZED")
-  BLACKLISTED @map("BLACKLISTED")
-  SUSPENDED @map("SUSPENDED")
-  DEACTIVATED @map("DEACTIVATED")
+/**
+ * Bunny.net Video Management Enums
+ * @description Defines enums for video processing, quality settings, DRM providers, webhooks, CDN regions, and encoding presets
+ */
+
+/**
+ * Bunny.net video processing and upload status
+ */
+enum BunnyVideoStatus {
+  UPLOADING @map("UPLOADING")
+  PROCESSING @map("PROCESSING")
+  FINISHED @map("FINISHED")
+  FAILED @map("FAILED")
+  CANCELLED @map("CANCELLED")
 }
 
-// Device type enumeration
-enum DeviceType {
-  IOS @map("IOS")
-  ANDROID @map("ANDROID")
-  WEB @map("WEB")
-  DESKTOP @map("DESKTOP")
+/**
+ * Bunny.net video quality/resolution options
+ */
+enum BunnyVideoQuality {
+  AUTO @map("AUTO")
+  P240 @map("P240")
+  P360 @map("P360")
+  P480 @map("P480")
+  P720 @map("P720")
+  P1080 @map("P1080")
+  P1440 @map("P1440")
+  P2160 @map("P2160")
 }
 
-// Enrollment status enumeration
-enum EnrollmentStatus {
-  PENDING @map("PENDING")
-  ACTIVE @map("ACTIVE")
-  COMPLETED @map("COMPLETED")
-  DROPPED @map("DROPPED")
-  SUSPENDED @map("SUSPENDED")
-  EXPELLED @map("EXPELLED")
-  TRANSFERRED @map("TRANSFERRED")
-  DEFERRED @map("DEFERRED")
+/**
+ * DRM provider types supported by Bunny.net
+ */
+enum BunnyDrmProvider {
+  WIDEVINE @map("WIDEVINE")
+  PLAYREADY @map("PLAYREADY")
+  FAIRPLAY @map("FAIRPLAY")
 }
 
-// Course-related enumerations
+/**
+ * Bunny.net webhook event types
+ */
+enum BunnyWebhookEvent {
+  VIDEO_UPLOADED @map("VIDEO_UPLOADED")
+  VIDEO_ENCODED @map("VIDEO_ENCODED")
+  VIDEO_FAILED @map("VIDEO_FAILED")
+  VIDEO_DELETED @map("VIDEO_DELETED")
+  PURGE_COMPLETED @map("PURGE_COMPLETED")
+}
 
-// Course status enumeration
-enum CourseStatus {
+/**
+ * Bunny.net CDN regions/zones
+ */
+enum BunnyCdnRegion {
+  GLOBAL @map("GLOBAL")
+  US_EAST @map("US_EAST")
+  US_WEST @map("US_WEST")
+  EUROPE @map("EUROPE")
+  ASIA @map("ASIA")
+  OCEANIA @map("OCEANIA")
+}
+
+/**
+ * Video encoding preset options
+ */
+enum BunnyEncodingPreset {
+  FAST @map("FAST")
+  BALANCED @map("BALANCED")
+  QUALITY @map("QUALITY")
+  CUSTOM @map("CUSTOM")
+}
+
+/**
+ * Course Session Enums
+ * @description Defines enums for course sessions, and session enrollment statuses
+ */
+
+/**
+ * Course session status enumeration
+ * @description Defines the lifecycle status of a course session
+ */
+enum CourseSessionStatus {
   DRAFT @map("DRAFT")
   PUBLISHED @map("PUBLISHED")
-  ARCHIVED @map("ARCHIVED")
-  SUSPENDED @map("SUSPENDED")
+  EXPIRED @map("EXPIRED")
 }
 
-// Video upload status enumeration
+/**
+ * Session enrollment status enumeration
+ * @description Defines the enrollment status for course session enrollments
+ */
+enum SessionEnrollmentStatus {
+  PENDING @map("PENDING")
+  ENROLLED @map("ENROLLED")
+  DROPPED @map("DROPPED")
+  COMPLETED @map("COMPLETED")
+  EXPELLED @map("EXPELLED")
+}
+
+/**
+ * Video and Course Management Enums
+ * @description Defines enums for video upload lifecycle and course status management
+ */
+
+/**
+ * Video upload status enumeration
+ * @description Represents the lifecycle of a video upload
+ */
 enum VideoUploadStatus {
   PENDING @map("PENDING")
   PROCESSING @map("PROCESSING")
@@ -164,26 +251,26 @@ enum VideoUploadStatus {
   CANCELLED @map("CANCELLED")
 }
 
-// Course session enumerations
-
-// Course session status enumeration
-enum CourseSessionStatus {
+/**
+ * Course status enumeration
+ * @description Represents the lifecycle status of a course
+ */
+enum CourseStatus {
   DRAFT @map("DRAFT")
   PUBLISHED @map("PUBLISHED")
-  EXPIRED @map("EXPIRED")
+  ARCHIVED @map("ARCHIVED")
+  SUSPENDED @map("SUSPENDED")
 }
 
-// Session enrollment status enumeration
-enum SessionEnrollmentStatus {
-  ENROLLED @map("ENROLLED")
-  DROPPED @map("DROPPED")
-  COMPLETED @map("COMPLETED")
-  EXPELLED @map("EXPELLED")
-}
+/**
+ * Notification and Communication Enums
+ * @description Defines enums for notification types, priorities, delivery status, channels, templates, recipients, and email status
+ */
 
-// Notification-related enumerations
-
-// Notification type enumeration
+/**
+ * Notification type enumeration
+ * @description Types of notifications available in the system
+ */
 enum NotificationType {
   ANNOUNCEMENT @map("ANNOUNCEMENT")
   ASSIGNMENT_DUE @map("ASSIGNMENT_DUE")
@@ -195,7 +282,10 @@ enum NotificationType {
   DEADLINE_REMINDER @map("DEADLINE_REMINDER")
 }
 
-// Notification priority enumeration
+/**
+ * Notification priority enumeration
+ * @description Priority levels for notifications
+ */
 enum NotificationPriority {
   LOW @map("LOW")
   NORMAL @map("NORMAL")
@@ -203,7 +293,10 @@ enum NotificationPriority {
   URGENT @map("URGENT")
 }
 
-// Delivery status enumeration
+/**
+ * Delivery status enumeration
+ * @description Status of notification delivery
+ */
 enum DeliveryStatus {
   PENDING @map("PENDING")
   DELIVERED @map("DELIVERED")
@@ -212,7 +305,10 @@ enum DeliveryStatus {
   DISMISSED @map("DISMISSED")
 }
 
-// Delivery channel enumeration
+/**
+ * Delivery channel enumeration
+ * @description Available delivery channels for notifications
+ */
 enum DeliveryChannel {
   IN_APP @map("IN_APP")
   EMAIL @map("EMAIL")
@@ -220,7 +316,10 @@ enum DeliveryChannel {
   SMS @map("SMS")
 }
 
-// Template type enumeration
+/**
+ * Template type enumeration
+ * @description Types of notification templates
+ */
 enum TemplateType {
   EMAIL_HTML @map("EMAIL_HTML")
   EMAIL_TEXT @map("EMAIL_TEXT")
@@ -228,7 +327,10 @@ enum TemplateType {
   IN_APP @map("IN_APP")
 }
 
-// Recipient type enumeration
+/**
+ * Recipient type enumeration
+ * @description Types of notification recipients
+ */
 enum RecipientType {
   STUDENT @map("STUDENT")
   TEACHER @map("TEACHER")
@@ -238,7 +340,10 @@ enum RecipientType {
   COURSE_ENROLLMENTS @map("COURSE_ENROLLMENTS")
 }
 
-// Email send status enumeration
+/**
+ * Email send status enumeration
+ * @description Status of email sending attempts
+ */
 enum EmailSendStatus {
   PENDING @map("PENDING")
   SENT @map("SENT")
@@ -247,62 +352,169 @@ enum EmailSendStatus {
   DELIVERED @map("DELIVERED")
 }
 
-// Analytics-related enumerations
+/**
+ * Quiz and Assessment Enums
+ * @description Defines enums for quiz status, question types, attempt status, and reference mappings
+ */
 
-// Report type enumeration
-enum ReportType {
-  COURSE_PERFORMANCE @map("COURSE_PERFORMANCE")
-  USER_ENGAGEMENT @map("USER_ENGAGEMENT")
-  SYSTEM_USAGE @map("SYSTEM_USAGE")
-  ASSESSMENT_SUMMARY @map("ASSESSMENT_SUMMARY")
-  VIDEO_ANALYTICS @map("VIDEO_ANALYTICS")
-  CUSTOM @map("CUSTOM")
+/**
+ * Quiz status enumeration
+ * @description Defines the lifecycle status of a quiz
+ */
+enum QuizStatus {
+  DRAFT @map("DRAFT")
+  PUBLISHED @map("PUBLISHED")
+  GRADING_IN_PROGRESS @map("GRADING_IN_PROGRESS")
+  GRADED @map("GRADED")
+  ARCHIVED @map("ARCHIVED")
 }
 
-// Report status enumeration
-enum ReportStatus {
-  DRAFT @map("DRAFT")
-  SCHEDULED @map("SCHEDULED")
-  GENERATING @map("GENERATING")
+/**
+ * Quiz question type enumeration
+ * @description Types of quiz questions available
+ */
+enum QuizQuestionType {
+  MULTIPLE_CHOICE_SINGLE_ANSWER @map("MULTIPLE_CHOICE_SINGLE_ANSWER")
+  MULTIPLE_CHOICE_MULTIPLE_ANSWERS @map("MULTIPLE_CHOICE_MULTIPLE_ANSWERS")
+  TRUE_FALSE @map("TRUE_FALSE")
+  SHORT_ANSWER_ESSAY @map("SHORT_ANSWER_ESSAY")
+}
+
+/**
+ * Quiz attempt status enumeration
+ * @description Status of a student's quiz attempt
+ */
+enum QuizAttemptStatus {
+  NOT_STARTED @map("NOT_STARTED")
+  IN_PROGRESS @map("IN_PROGRESS")
+  SUBMITTED @map("SUBMITTED")
+  GRADED @map("GRADED")
+}
+
+/**
+ * Reference table enumeration for quiz mappings
+ * @description Entities that can have quizzes mapped to them
+ */
+enum QuizReferenceTable {
+  COURSE @map("COURSE")
+  COURSE_MODULE @map("COURSE_MODULE")
+  COURSE_TOPIC @map("COURSE_TOPIC")
+}
+
+/**
+ * Student and User Management Enums
+ * @description Defines enums for gender, student status, device types, and enrollment status
+ */
+
+/**
+ * Gender enumeration
+ * @description Represents the gender of a student
+ */
+enum Gender {
+  MALE @map("MALE")
+  FEMALE @map("FEMALE")
+}
+
+/**
+ * Student status enumeration
+ * @description Represents the lifecycle status of a student
+ */
+enum StudentStatusName {
+  ACTIVE @map("ACTIVE")
+  ALUMNI @map("ALUMNI")
+  DROPOUT @map("DROPOUT")
+  ACCOUNT_FREEZED @map("ACCOUNT_FREEZED")
+  BLACKLISTED @map("BLACKLISTED")
+  SUSPENDED @map("SUSPENDED")
+  DEACTIVATED @map("DEACTIVATED")
+}
+
+/**
+ * Device type enumeration
+ * @description Represents the type of device used by a student
+ */
+enum DeviceType {
+  IOS @map("IOS")
+  ANDROID @map("ANDROID")
+  WEB @map("WEB")
+  DESKTOP @map("DESKTOP")
+}
+
+/**
+ * Enrollment status enumeration
+ * @description Represents the lifecycle status of a student's enrollment in a course
+ */
+enum EnrollmentStatus {
+  PENDING @map("PENDING")
+  ACTIVE @map("ACTIVE")
   COMPLETED @map("COMPLETED")
-  FAILED @map("FAILED")
+  DROPPED @map("DROPPED")
+  SUSPENDED @map("SUSPENDED")
+  EXPELLED @map("EXPELLED")
+  TRANSFERRED @map("TRANSFERRED")
+  DEFERRED @map("DEFERRED")
+}
+
+/**
+ * System Administration Enums
+ * @description Defines enums for system user roles and operational status management
+ */
+
+/**
+ * System user role enumeration
+ * @description Defines system-level roles with proper hierarchy
+ */
+enum SystemUserRole {
+  SUPERADMIN @map("SUPERADMIN")
+  TENANT_ADMIN @map("TENANT_ADMIN")
+}
+
+/**
+ * System user status enumeration
+ * @description Operational status of system users
+ */
+enum SystemUserStatus {
+  ACTIVE @map("ACTIVE")
+  INACTIVE @map("INACTIVE")
+  SUSPENDED @map("SUSPENDED")
+  LOCKED @map("LOCKED")
+}
+
+/**
+ * Tenant and Client Management Enums
+ * @description Defines enums for tenant status, client status, and contact type categorization
+ */
+
+/**
+ * Tenant status enumeration
+ * @description Defines the operational status of a tenant in the system
+ */
+enum TenantStatus {
+  ACTIVE @map("ACTIVE")
+  SUSPENDED @map("SUSPENDED")
+  TRIAL @map("TRIAL")
+  EXPIRED @map("EXPIRED")
   CANCELLED @map("CANCELLED")
 }
 
-// Metric type enumeration
-enum MetricType {
-  COUNT @map("COUNT")
-  PERCENTAGE @map("PERCENTAGE")
-  AVERAGE @map("AVERAGE")
-  SUM @map("SUM")
-  RATIO @map("RATIO")
-  TREND @map("TREND")
+/**
+ * Client status enumeration
+ * @description Defines the operational status of a client
+ */
+enum ClientStatus {
+  ACTIVE @map("ACTIVE")
+  INACTIVE @map("INACTIVE")
+  SUSPENDED @map("SUSPENDED")
+  TERMINATED @map("TERMINATED")
 }
 
-// Time granularity enumeration
-enum TimeGranularity {
-  HOURLY @map("HOURLY")
-  DAILY @map("DAILY")
-  WEEKLY @map("WEEKLY")
-  MONTHLY @map("MONTHLY")
-  QUARTERLY @map("QUARTERLY")
-  YEARLY @map("YEARLY")
-}
-
-// Widget type enumeration
-enum WidgetType {
-  CHART @map("CHART")
-  TABLE @map("TABLE")
-  METRIC_CARD @map("METRIC_CARD")
-  PROGRESS_BAR @map("PROGRESS_BAR")
-  MAP @map("MAP")
-  TIMELINE @map("TIMELINE")
-}
-
-// Export format enumeration
-enum ExportFormat {
-  PDF @map("PDF")
-  EXCEL @map("EXCEL")
-  CSV @map("CSV")
-  JSON @map("JSON")
+/**
+ * Contact type enumeration
+ * @description Categorizes different types of contact information
+ */
+enum ContactType {
+  PRIMARY @map("PRIMARY")
+  SECONDARY @map("SECONDARY")
+  EMERGENCY @map("EMERGENCY")
+  BILLING @map("BILLING")
 }

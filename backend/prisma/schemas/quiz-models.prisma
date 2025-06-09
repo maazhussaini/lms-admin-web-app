@@ -43,12 +43,12 @@ model Quiz {
 }
 
 model QuizMapping {
-  quiz_mapping_id     Int                 @id @default(autoincrement())
-  tenant_id           Int
-  quiz_id             Int
-  reference_table_id  QuizReferenceTable
-  reference_id        Int
-  teacher_id          Int                 // Teacher who created this mapping (may differ from quiz owner)
+  quiz_mapping_id      Int                 @id @default(autoincrement())
+  tenant_id            Int
+  quiz_id              Int
+  reference_table_type QuizReferenceTable
+  reference_id         Int
+  teacher_id           Int                 // Teacher who created this mapping (may differ from quiz owner)
 
   // Standard audit and tenant fields (keep fields, remove relationships)
   is_active           Boolean             @default(true)

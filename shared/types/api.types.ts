@@ -49,7 +49,7 @@ export interface TAuthResponse {
     full_name: string;
     email: string;
     role: {
-      role_id: SystemUserRole;
+      role_type: SystemUserRole;       // Changed from role_id to role_type
       role_name: string;
     };
     tenant_id: number;

@@ -27,7 +27,7 @@ export enum SystemUserStatus {
 export interface SystemUser extends BaseAuditFields {
   system_user_id: number;
   tenant_id?: number | null; // NULL for SuperAdmin, required for others
-  role_id: SystemUserRole;
+  role_type: SystemUserRole;  // Changed from role_id to role_type
   username: string;
   full_name: string;
   email_address: string;
@@ -42,7 +42,8 @@ export interface SystemUser extends BaseAuditFields {
  * @description Role definition for system users
  */
 export interface Role extends BaseAuditFields {
-  role_id: SystemUserRole;
+  role_id: number;                    // Auto-increment primary key
+  role_type: SystemUserRole;          // Business identifier (enum) - renamed from role_id
   role_name: string;
   role_description?: string | null;
   is_system_role: boolean; // True for built-in roles
@@ -85,7 +86,7 @@ export interface UserScreen extends BaseAuditFields {
 export interface RoleScreen extends BaseAuditFields {
   role_screen_id: number;
   tenant_id: number;
-  role_id: SystemUserRole;
+  role_type: SystemUserRole;          // Changed from role_id to role_type
   screen_id: number;
   can_view: boolean;
   can_create: boolean;
@@ -105,10 +106,10 @@ export const isSystemUserStatus = (value: any): value is SystemUserStatus =>
  * Helper function to check if a system user is SuperAdmin
  */
 export const isSuperAdmin = (user: SystemUser): boolean => 
-  user.tenant_id === null && user.role_id === SystemUserRole.SUPERADMIN;
+  user.tenant_id === null && user.role_type === SystemUserRole.SUPERADMIN;
 
 /**
  * Helper function to check if a system user is tenant-specific
  */
 export const isTenantUser = (user: SystemUser): boolean => 
-  user.tenant_id !== null && user.role_id === SystemUserRole.TENANT_ADMIN;
+  user.tenant_id !== null && user.role_type === SystemUserRole.TENANT_ADMIN;

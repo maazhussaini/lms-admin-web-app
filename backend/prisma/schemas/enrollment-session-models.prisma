@@ -7,7 +7,7 @@ model Enrollment {
   student_id                Int
   institute_id              Int
   teacher_id                Int?
-  enrollment_status         EnrollmentStatus // Updated to use enum instead of enrollment_status_id Int
+  enrollment_status         EnrollmentStatus @default(PENDING)
   enrolled_at               DateTime  @default(now())
   expected_completion_date  DateTime?
   actual_completion_date    DateTime?
@@ -51,8 +51,8 @@ model EnrollmentStatusHistory {
   enrollment_status_history_id Int            @id @default(autoincrement())
   tenant_id                    Int
   enrollment_id                Int
-  previous_status           EnrollmentStatus? // Updated to use enum instead of previous_status_id Int?
-  new_status                EnrollmentStatus  // Updated to use enum instead of new_status_id Int
+  previous_status              EnrollmentStatus? // Updated to use enum instead of previous_status_id Int?
+  new_status                   EnrollmentStatus  // Updated to use enum instead of new_status_id Int
   status_changed_at            DateTime       @default(now())
   changed_by                   Int
   change_reason                String?        @db.Text
@@ -162,7 +162,7 @@ model CourseSession {
   tenant_id                Int
   teacher_id               Int
   course_id                Int
-  course_session_status    CourseSessionStatus // Updated to use enum instead of course_session_status_id Int
+  course_session_status    CourseSessionStatus @default(DRAFT)
   session_name             String   @db.VarChar(255)
   session_description      String?  @db.Text
   start_date               DateTime
@@ -209,7 +209,7 @@ model CourseSessionEnrollment {
   student_id                   Int
   enrolled_at                  DateTime @default(now())
   dropped_at                   DateTime?
-  enrollment_status            SessionEnrollmentStatus @default(ENROLLED) // Updated to use enum instead of Int @default(1)
+  enrollment_status            SessionEnrollmentStatus @default(PENDING)
   completion_percentage        Int      @default(0)
   final_grade                  Int?
   completion_date              DateTime?

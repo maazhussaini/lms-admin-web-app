@@ -72,7 +72,7 @@ export interface Quiz extends MultiTenantAuditFields {
 export interface QuizMapping extends MultiTenantAuditFields {
   quiz_mapping_id: number;
   quiz_id: number; // Foreign key to Quiz
-  reference_table_id: QuizReferenceTable;
+  reference_table_type: QuizReferenceTable;
   reference_id: number; // ID of the referenced entity
   teacher_id: number; // Teacher who created this mapping
 }

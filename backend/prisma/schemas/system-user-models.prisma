@@ -1,6 +1,7 @@
 // Role model - defines system roles for access control
 model Role {
   role_id           Int               @id @default(autoincrement())
+  role_type         SystemUserRole    @unique
   role_name         String            @db.VarChar(100)
   role_description  String?           @db.Text
   is_system_role    Boolean           @default(false)
@@ -18,8 +19,8 @@ model Role {
   updated_ip        String?           @db.VarChar(45)
 
   // Relationships
-  system_users      SystemUser[]
-  role_screens      RoleScreen[]
+  system_users      SystemUser[]      @relation("UserRole")
+  role_screens      RoleScreen[]      @relation("RoleScreenRole")
   created_by_user   SystemUser?       @relation("RoleCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user   SystemUser?       @relation("RoleUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
   deleted_by_user   SystemUser?       @relation("RoleDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
@@ -65,7 +66,7 @@ model Screen {
 model SystemUser {
   system_user_id    Int               @id @default(autoincrement())
   tenant_id         Int?              // NULL for SuperAdmin
-  role_id           Int
+  role_type         SystemUserRole
   username          String            @db.VarChar(50)
   full_name         String            @db.VarChar(255)
   email_address     String            @db.VarChar(255)
@@ -88,7 +89,7 @@ model SystemUser {
 
   // Relationships
   tenant            Tenant?           @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
-  role              Role              @relation(fields: [role_id], references: [role_id], onDelete: Restrict)
+  role              Role              @relation("UserRole", fields: [role_type], references: [role_type], onDelete: Restrict)
   user_screens      UserScreen[]
 
   // Self-references for audit trails
@@ -289,7 +290,7 @@ model UserScreen {
 model RoleScreen {
   role_screen_id    Int               @id @default(autoincrement())
   tenant_id         Int
-  role_id           Int
+  role_type         SystemUserRole
   screen_id         Int
   can_view          Boolean           @default(false)
   can_create        Boolean           @default(false)
@@ -311,7 +312,7 @@ model RoleScreen {
 
   // Relationships
   tenant            Tenant            @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
-  role              Role              @relation(fields: [role_id], references: [role_id], onDelete: Cascade)
+  role              Role              @relation("RoleScreenRole", fields: [role_type], references: [role_type], onDelete: Cascade)
   screen            Screen            @relation(fields: [screen_id], references: [screen_id], onDelete: Cascade)
   created_by_user   SystemUser        @relation("RoleScreenCreatedBy", fields: [created_by], references: [system_user_id])
   updated_by_user   SystemUser?       @relation("RoleScreenUpdatedBy", fields: [updated_by], references: [system_user_id])

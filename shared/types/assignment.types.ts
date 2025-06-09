@@ -25,6 +25,7 @@ export enum AssignmentStatus {
  * @description Status of a student's assignment submission
  */
 export enum SubmissionStatus {
+  PENDING = 'PENDING',
   NOT_SUBMITTED = 'NOT_SUBMITTED',
   SUBMITTED = 'SUBMITTED',
   LATE_SUBMISSION = 'LATE_SUBMISSION',
@@ -83,7 +84,7 @@ export interface Assignment extends MultiTenantAuditFields {
 export interface AssignmentMapping extends MultiTenantAuditFields {
   assignment_mapping_id: number;
   assignment_id: number; // Foreign key to Assignment
-  reference_table_id: AssignmentReferenceTable;
+  reference_table_type: AssignmentReferenceTable;
   reference_id: number; // ID of the referenced entity
   teacher_id: number; // Teacher who created this mapping
 }
@@ -119,7 +120,7 @@ export interface AssignmentSubmissionFile extends MultiTenantAuditFields {
   file_url: string;
   file_size_bytes?: number | null;
   mime_type?: string | null;
-  upload_status_id?: UploadStatus;
+  upload_status?: UploadStatus;
 }
 
 // Type guards for runtime type checking

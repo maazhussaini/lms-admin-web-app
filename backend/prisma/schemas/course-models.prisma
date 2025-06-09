@@ -6,7 +6,7 @@ model Course {
   tenant_id            Int
   course_name          String    @db.VarChar(255)
   main_thumbnail_url   String?   @db.Text
-  course_status        CourseStatus // Updated to use enum instead of course_status_id Int
+  course_status        CourseStatus @default(DRAFT)
   course_total_hours   Decimal?  @db.Decimal(6, 2)
   specialization_id    Int?
   
@@ -126,7 +126,7 @@ model CourseVideo {
   thumbnail_url        String?   @db.Text
   duration_seconds     Int?
   position             Int?
-  upload_status        VideoUploadStatus? // Updated to use enum instead of Int
+  upload_status        VideoUploadStatus? @default(PENDING)
   
   // Audit fields
   is_active            Boolean   @default(true)

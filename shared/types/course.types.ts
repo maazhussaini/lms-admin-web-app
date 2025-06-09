@@ -50,7 +50,7 @@ export interface Course extends MultiTenantAuditFields {
   course_id: number;
   course_name: string;
   main_thumbnail_url?: string | null;
-  course_status_id: CourseStatus;
+  course_status: CourseStatus;
   course_total_hours?: number | null;
   specialization_id?: number | null; // Foreign key to Specialization
 }

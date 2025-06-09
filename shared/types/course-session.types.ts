@@ -15,6 +15,7 @@ export enum CourseSessionStatus {
  * @description Defines the enrollment status for course session enrollments
  */
 export enum SessionEnrollmentStatus {
+  PENDING = 'PENDING',
   ENROLLED = 'ENROLLED',
   DROPPED = 'DROPPED',
   COMPLETED = 'COMPLETED',

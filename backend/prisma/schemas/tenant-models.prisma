@@ -92,12 +92,12 @@ model Tenant {
 
 // Client model - represents organizations or individuals within tenants
 model Client {
-  client_id     Int     @id @default(autoincrement())
-  full_name     String  @db.VarChar(255)
-  email_address String  @db.VarChar(255)
-  dial_code     String? @db.VarChar(20)
-  phone_number  String? @db.VarChar(20)
-  address       String? @db.VarChar(500)
+  client_id     Int          @id @default(autoincrement())
+  full_name     String       @db.VarChar(255)
+  email_address String       @db.VarChar(255)
+  dial_code     String?      @db.VarChar(20)
+  phone_number  String?      @db.VarChar(20)
+  address       String?      @db.VarChar(500)
   client_status ClientStatus @default(ACTIVE)
 
   // Multi-tenant audit fields
