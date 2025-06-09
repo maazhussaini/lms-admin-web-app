@@ -6,13 +6,14 @@
 import { Request, Response } from 'express';
 import { SystemUserService } from '@/services/systemUser.service.js';
 import { CreateSystemUserDto, UpdateSystemUserDto, SystemUserFilterDto } from '@/dtos/user/systemUser.dto.js';
-import { SystemUser, isSystemUserRole, isSystemUserStatus } from '@shared/types/system-users.types';
+import { SystemUser } from '@shared/types/system-users.types';
 import {
   createRouteHandler,
   createSuccessResponse,
   asyncHandler
 } from '@/utils/index.js';
 import prisma from '@/config/database.js';
+import { SystemUserRole, SystemUserStatus } from '@/types/enums';
 
 export class SystemUserController {
   private systemUserService: SystemUserService;
@@ -85,15 +86,15 @@ export class SystemUserController {
       
       if (req.query['role']) {
         const roleValue = req.query['role'] as string;
-        if (isSystemUserRole(roleValue)) {
-          filter.role = roleValue;
+        if (Object.values(SystemUserRole).includes(roleValue as SystemUserRole)) {
+          filter.role = roleValue as SystemUserRole;
         }
       }
       
       if (req.query['status']) {
         const statusValue = req.query['status'] as string;
-        if (isSystemUserStatus(statusValue)) {
-          filter.status = statusValue;
+        if (Object.values(SystemUserStatus).includes(statusValue as SystemUserStatus)) {
+          filter.status = statusValue as SystemUserStatus;
         }
       }
       

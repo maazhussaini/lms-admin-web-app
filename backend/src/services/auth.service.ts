@@ -15,7 +15,7 @@ import {
   NotFoundError, 
   BadRequestError 
 } from '@/utils/api-error.utils';
-import { TAuthResponse, UserType } from '@shared/types/api.types';
+import { TAuthResponse } from '@shared/types/api.types';
 import { 
   LoginDto, 
   RefreshTokenDto, 
@@ -24,7 +24,7 @@ import {
 } from '@/dtos/auth/auth.dto';
 import crypto from 'crypto';
 import logger from '@/config/logger';
-import { SystemUserRole } from '@/types/enums';
+import { SystemUserRole, UserType } from '@/types/enums';
 
 // Token blacklist - In production, this would be implemented with Redis
 const TOKEN_BLACKLIST = new Set<string>();
