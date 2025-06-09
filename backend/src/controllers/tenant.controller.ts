@@ -126,16 +126,19 @@ export class TenantController {
    * Get all tenants with pagination, sorting, and filtering
    * 
    * @route GET /api/v1/tenants
-   * @access Private (SUPER_ADMIN or own tenant)   */  static getAllTenantsHandler = asyncHandler(
+   * @access Private (SUPER_ADMIN or own tenant)
+   */
+  static getAllTenantsHandler = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
       if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const pagination = getPaginationFromRequest(req);      const sortParams = getSortParamsFromRequest(
-        req, 
-        'created_at', 
-        'desc', 
+      const pagination = getPaginationFromRequest(req);
+      const sortParams = getSortParamsFromRequest(
+        req,
+        'created_at',
+        'desc',
         ['tenant_id', 'tenant_name', 'tenant_status', 'created_at', 'updated_at']
       );
       const sortBy = Object.keys(sortParams)[0] || undefined;
@@ -174,6 +177,49 @@ export class TenantController {
         ...response,
         pagination: result.pagination
       });
+    }
+  );
+
+  /**
+   * Get all clients for a tenant
+   * 
+   * @route GET /api/v1/tenants/:tenantId/clients
+   * @access Private (SUPER_ADMIN or same tenant)
+   */
+  static getTenantClientsHandler = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
+      const tenantIdParam = req.params['tenantId'];
+      if (!tenantIdParam) {
+        throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
+      }
+      
+      const tenantId = parseInt(tenantIdParam, 10);
+      if (isNaN(tenantId)) {
+        throw new ApiError('Invalid tenant ID', 400, 'INVALID_TENANT_ID');
+      }
+
+      if (!req.user) {
+        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
+      }
+
+      const requestingUser = {
+        id: req.user.id,
+        email: req.user.email,
+        role: req.user.role,
+        tenantId: req.user.tenantId
+      };
+
+      const clients = await tenantService.getTenantClients(tenantId, requestingUser);
+      
+      const response: TApiSuccessResponse = {
+        success: true,
+        statusCode: 200,
+        message: 'Tenant clients retrieved successfully',
+        data: clients,
+        timestamp: new Date().toISOString()
+      };
+      
+      return res.status(200).json(response);
     }
   );
 

@@ -180,6 +180,117 @@ export class TenantService {
       }
     };
   }
+
+  /**
+   * Get all clients for a specific tenant
+   * 
+   * @param tenantId Tenant identifier
+   * @param requestingUser User requesting the clients
+   * @param options Pagination and filtering options
+   * @returns List of clients associated with the tenant
+   */
+  async getTenantClients(
+    tenantId: number,
+    requestingUser: TokenPayload,
+    options: {
+      page?: number;
+      limit?: number;
+      sortBy?: string;
+      order?: 'asc' | 'desc';
+      search?: string;
+      status?: string;
+    } = {}
+  ) {
+    logger.debug('Getting tenant clients', {
+      tenantId,
+      requestingUserId: requestingUser.id,
+      options
+    });
+
+    // Verify tenant exists and user has access
+    await this.getTenantById(tenantId, requestingUser);
+
+    // Check access permissions for non-SUPER_ADMIN users
+    if (requestingUser.role !== 'SUPER_ADMIN' && tenantId !== requestingUser.tenantId) {
+      throw new ForbiddenError('Cannot access clients for another tenant');
+    }
+
+    // Set default pagination options
+    const page = options.page || 1;
+    const limit = options.limit || 20;
+    const skip = (page - 1) * limit;
+
+    // Build where clause for clients
+    const where: any = {
+      tenant_id: tenantId,
+      is_deleted: false
+    };
+
+    // Add search filter
+    if (options.search) {
+      where.OR = [
+        {
+          full_name: {
+            contains: options.search,
+            mode: 'insensitive'
+          }
+        },
+        {
+          email_address: {
+            contains: options.search,
+            mode: 'insensitive'
+          }
+        }
+      ];
+    }
+
+    // Add status filter
+    if (options.status) {
+      where.client_status = options.status;
+    }
+
+    // Determine sort field and direction
+    const sortField = options.sortBy || 'created_at';
+    const sortOrder = options.order || 'desc';
+
+    // Execute queries using Promise.all for better performance
+    const [clients, total] = await Promise.all([
+      prisma.client.findMany({
+        where,
+        orderBy: {
+          [sortField]: sortOrder
+        },
+        skip,
+        take: limit,
+        select: {
+          client_id: true,
+          full_name: true,
+          email_address: true,
+          dial_code: true,
+          phone_number: true,
+          address: true,
+          client_status: true,
+          tenant_id: true,
+          is_active: true,
+          created_at: true,
+          updated_at: true
+        }
+      }),
+      prisma.client.count({ where })
+    ]);
+
+    return {
+      items: clients,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNext: page < Math.ceil(total / limit),
+        hasPrev: page > 1
+      }
+    };
+  }
   
   /**
    * Update tenant by ID
