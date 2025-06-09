@@ -25,6 +25,7 @@ import {
 } from '@/dtos/auth/teacher-auth.dto';
 import crypto from 'crypto';
 import logger from '@/config/logger';
+import { UserType } from '@/types/enums';
 
 // Token blacklist - In production, this would be implemented with Redis
 const TEACHER_TOKEN_BLACKLIST = new Set<string>();
@@ -111,11 +112,10 @@ export class TeacherAuthService {
         full_name: teacher.full_name,
         email: primaryEmail || teacher.username,
         role: {
-          role_id: 0, // Teachers don't have traditional roles like admins
           role_name: 'TEACHER'
         },
         tenant_id: teacher.tenant_id,
-        user_type: 'TEACHER'
+        user_type: UserType.TEACHER
       },
       tokens: {
         access_token: tokens.accessToken,
@@ -189,11 +189,10 @@ export class TeacherAuthService {
           full_name: teacher.full_name,
           email: primaryEmail || teacher.username,
           role: {
-            role_id: 0,
             role_name: 'TEACHER'
           },
           tenant_id: teacher.tenant_id,
-          user_type: 'TEACHER'
+          user_type: UserType.TEACHER
         },
         tokens: {
           access_token: tokens.accessToken,

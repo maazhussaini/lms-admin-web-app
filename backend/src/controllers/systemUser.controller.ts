@@ -6,7 +6,7 @@
 import { Request, Response } from 'express';
 import { SystemUserService } from '@/services/systemUser.service.js';
 import { CreateSystemUserDto, UpdateSystemUserDto, SystemUserFilterDto } from '@/dtos/user/systemUser.dto.js';
-import { SystemUser } from '@shared/types/system-users.types';
+import { SystemUser, isSystemUserRole, isSystemUserStatus } from '@shared/types/system-users.types';
 import {
   createRouteHandler,
   createSuccessResponse,
@@ -84,11 +84,17 @@ export class SystemUserController {
       const filter: SystemUserFilterDto = {};
       
       if (req.query['role']) {
-        filter.role = parseInt(req.query['role'] as string, 10);
+        const roleValue = req.query['role'] as string;
+        if (isSystemUserRole(roleValue)) {
+          filter.role = roleValue;
+        }
       }
       
       if (req.query['status']) {
-        filter.status = parseInt(req.query['status'] as string, 10);
+        const statusValue = req.query['status'] as string;
+        if (isSystemUserStatus(statusValue)) {
+          filter.status = statusValue;
+        }
       }
       
       if (req.query['tenantId']) {

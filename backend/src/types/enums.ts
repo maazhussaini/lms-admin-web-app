@@ -544,3 +544,20 @@ export enum SocketEventName {
   CONTENT_PROGRESS_UPDATE = 'content:progress:update',
   VIDEO_PROGRESS_UPDATE = 'video:progress:update',
 }
+
+/**
+ * User Type Enums
+ * @description Defines user types for authentication and authorization purposes
+ *
+ */
+
+/**
+ * User type enumeration for authentication
+ * @description Distinguishes between different categories of users in the system
+ */
+export enum UserType {
+  STUDENT = 'STUDENT',
+  TEACHER = 'TEACHER', 
+  ADMIN = 'ADMIN',
+  SUPER_ADMIN = 'SUPER_ADMIN'
+}

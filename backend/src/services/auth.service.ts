@@ -15,7 +15,7 @@ import {
   NotFoundError, 
   BadRequestError 
 } from '@/utils/api-error.utils';
-import { TAuthResponse } from '@shared/types/api.types';
+import { TAuthResponse, UserType } from '@shared/types/api.types';
 import { 
   LoginDto, 
   RefreshTokenDto, 
@@ -86,7 +86,7 @@ export class AuthService {
     }
 
     // Check tenant context for SUPER_ADMIN users
-    if (user.role_id === SystemUserRole.SUPER_ADMIN && tenant_context) {
+    if (user.role_type === SystemUserRole.SUPER_ADMIN && tenant_context) {
       const tenant = await this.prisma.tenant.findFirst({
         where: {
           OR: [
@@ -136,11 +136,11 @@ export class AuthService {
         full_name: user.full_name,
         email: user.email_address,
         role: {
-          role_id: user.role_id,
+          role_type: user.role_type as SystemUserRole,  // System users have role_type
           role_name: user.role.role_name
         },
         tenant_id: user.tenant_id || 0,
-        user_type: user.role_id === SystemUserRole.SUPER_ADMIN ? 'SUPER_ADMIN' : 'ADMIN'
+        user_type: user.role_type === SystemUserRole.SUPER_ADMIN ? UserType.SUPER_ADMIN : UserType.ADMIN
       },
       tokens: {
         access_token: tokens.accessToken,
@@ -220,11 +220,11 @@ export class AuthService {
           full_name: user.full_name,
           email: user.email_address,
           role: {
-            role_id: user.role_id,
+            role_type: user.role_type as SystemUserRole,  // System users have role_type
             role_name: user.role.role_name
           },
           tenant_id: user.tenant_id || 0,
-          user_type: user.role_id === SystemUserRole.SUPER_ADMIN ? 'SUPER_ADMIN' : 'ADMIN'
+          user_type: user.role_type === SystemUserRole.SUPER_ADMIN ? UserType.SUPER_ADMIN : UserType.ADMIN
         },
         tokens: {
           access_token: tokens.accessToken,
@@ -423,7 +423,7 @@ export class AuthService {
 
       const roleScreens = await this.prisma.roleScreen.findMany({
         where: {
-          role_id: user.role_id,
+          role_type: user.role_type,
           tenant_id: tenantId,
           is_active: true,
           is_deleted: false

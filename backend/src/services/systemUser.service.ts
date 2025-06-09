@@ -35,7 +35,7 @@ export class SystemUserService {
   ): Promise<SystemUser> {
     return tryCatch(async () => {
       // Authorization checks
-      if (requestingUser.role_id === SystemUserRole.TENANT_ADMIN) {
+      if (requestingUser.role_type === SystemUserRole.TENANT_ADMIN) {
         // Tenant admins can only create users within their own tenant
         if (data.tenantId !== requestingUser.tenant_id) {
           throw new ForbiddenError('You can only create users within your own tenant');
@@ -68,7 +68,7 @@ export class SystemUserService {
           full_name: data.fullName,
           email_address: data.email,
           password_hash: passwordHash,
-          role_id: data.role,
+          role_type: data.role,
           tenant_id: data.role === SystemUserRole.SUPER_ADMIN ? null : (data.tenantId || null),
           system_user_status: data.status || SystemUserStatus.ACTIVE,
           
@@ -80,10 +80,10 @@ export class SystemUserService {
         }
       });
 
-      return this.fromPrismaSystemUser(newUser);
+      return newUser as SystemUser;
     }, {
       context: {
-        requestingUser: { id: requestingUser.system_user_id, role: requestingUser.role_id, tenantId: requestingUser.tenant_id }
+        requestingUser: { id: requestingUser.system_user_id, role: requestingUser.role_type, tenantId: requestingUser.tenant_id }
       }
     });
   }
@@ -109,17 +109,17 @@ export class SystemUserService {
 
       // Authorization check - TENANT_ADMIN can only view users in their tenant
       if (
-        requestingUser.role_id === SystemUserRole.TENANT_ADMIN &&
+        requestingUser.role_type === SystemUserRole.TENANT_ADMIN &&
         user.tenant_id !== requestingUser.tenant_id
       ) {
         throw new ForbiddenError('You cannot access users from another tenant');
       }
 
-      return this.fromPrismaSystemUser(user);
+      return user as SystemUser;
     }, {
       context: {
         userId,
-        requestingUser: { id: requestingUser.system_user_id, role: requestingUser.role_id, tenantId: requestingUser.tenant_id }
+        requestingUser: { id: requestingUser.system_user_id, role: requestingUser.role_type, tenantId: requestingUser.tenant_id }
       }
     });
   }
@@ -140,7 +140,7 @@ export class SystemUserService {
       };
 
       // Apply tenant isolation for TENANT_ADMIN
-      if (requestingUser.role_id === SystemUserRole.TENANT_ADMIN) {
+      if (requestingUser.role_type === SystemUserRole.TENANT_ADMIN) {
         where.tenant_id = requestingUser.tenant_id;
       } 
       // SUPER_ADMIN can filter by tenant if they want
@@ -150,7 +150,7 @@ export class SystemUserService {
 
       // Apply additional filters
       if (filter.role !== undefined) {
-        where.role_id = filter.role;
+        where.role_type = filter.role;
       }
 
       if (filter.status !== undefined) {
@@ -179,13 +179,13 @@ export class SystemUserService {
         this.prisma.systemUser.count({ where })
       ]);
 
-      return { users: users.map(user => this.fromPrismaSystemUser(user)), total };
+      return { users: users as SystemUser[], total };
     }, {
       context: {
         filter,
         page,
         limit,
-        requestingUser: { id: requestingUser.system_user_id, role: requestingUser.role_id, tenantId: requestingUser.tenant_id }
+        requestingUser: { id: requestingUser.system_user_id, role: requestingUser.role_type, tenantId: requestingUser.tenant_id }
       }
     });
   }
@@ -212,14 +212,14 @@ export class SystemUserService {
       }
 
       // Authorization checks
-      if (requestingUser.role_id === SystemUserRole.TENANT_ADMIN) {
+      if (requestingUser.role_type === SystemUserRole.TENANT_ADMIN) {
         // Tenant admin can only update users in their own tenant
         if (existingUser.tenant_id !== requestingUser.tenant_id) {
           throw new ForbiddenError('You cannot update users from another tenant');
         }
 
         // Tenant admin cannot update SUPER_ADMIN users
-        if (existingUser.role_id === SystemUserRole.SUPER_ADMIN) {
+        if (existingUser.role_type === SystemUserRole.SUPER_ADMIN) {
           throw new ForbiddenError('Tenant administrators cannot update super admin users');
         }
 
@@ -257,8 +257,8 @@ export class SystemUserService {
       }
 
       // Special handling for role changes (SUPER_ADMIN only)
-      if (data.role !== undefined && requestingUser.role_id === SystemUserRole.SUPER_ADMIN) {
-        updateData.role_id = data.role;
+      if (data.role !== undefined && requestingUser.role_type === SystemUserRole.SUPER_ADMIN) {
+        updateData.role_type = data.role;
         
         // Handle tenant implications of role change
         if (data.role === SystemUserRole.SUPER_ADMIN && existingUser.tenant_id !== null) {
@@ -282,11 +282,11 @@ export class SystemUserService {
         data: updateData
       });
 
-      return this.fromPrismaSystemUser(updatedUser);
+      return updatedUser as SystemUser;
     }, {
       context: {
         userId,
-        requestingUser: { id: requestingUser.system_user_id, role: requestingUser.role_id, tenantId: requestingUser.tenant_id }
+        requestingUser: { id: requestingUser.system_user_id, role: requestingUser.role_type, tenantId: requestingUser.tenant_id }
       }
     });
   }
@@ -312,14 +312,14 @@ export class SystemUserService {
       }
 
       // Authorization checks
-      if (requestingUser.role_id === SystemUserRole.TENANT_ADMIN) {
+      if (requestingUser.role_type === SystemUserRole.TENANT_ADMIN) {
         // Tenant admin can only delete users in their own tenant
         if (existingUser.tenant_id !== requestingUser.tenant_id) {
           throw new ForbiddenError('You cannot delete users from another tenant');
         }
 
         // Tenant admin cannot delete SUPER_ADMIN users
-        if (existingUser.role_id === SystemUserRole.SUPER_ADMIN) {
+        if (existingUser.role_type === SystemUserRole.SUPER_ADMIN) {
           throw new ForbiddenError('Tenant administrators cannot delete super admin users');
         }
       }
@@ -342,7 +342,7 @@ export class SystemUserService {
     }, {
       context: {
         userId,
-        requestingUser: { id: requestingUser.system_user_id, role: requestingUser.role_id, tenantId: requestingUser.tenant_id }
+        requestingUser: { id: requestingUser.system_user_id, role: requestingUser.role_type, tenantId: requestingUser.tenant_id }
       }
     });
   }
@@ -367,7 +367,7 @@ export class SystemUserService {
           is_deleted: false
         }
       });
-      return user ? this.fromPrismaSystemUser(user) : null;
+      return user as SystemUser | null;
     } 
     // For TenantAdmin (tenant-scoped uniqueness)
     else {
@@ -380,33 +380,8 @@ export class SystemUserService {
           is_deleted: false
         }
       });
-      return user ? this.fromPrismaSystemUser(user) : null;
+      return user as SystemUser | null;
     }
-  }
-
-  /**
-   * Helper method to convert Prisma SystemUser to domain SystemUser
-   */
-  private fromPrismaSystemUser(prismaUser: any): SystemUser {
-    return {
-      system_user_id: prismaUser.system_user_id,
-      username: prismaUser.username,
-      full_name: prismaUser.full_name,
-      email_address: prismaUser.email_address,
-      role_id: prismaUser.role_id,
-      tenant_id: prismaUser.tenant_id,
-      system_user_status: prismaUser.system_user_status,
-      is_active: prismaUser.is_active,
-      is_deleted: prismaUser.is_deleted,
-      created_by: prismaUser.created_by,
-      created_at: prismaUser.created_at,
-      created_ip: prismaUser.created_ip,
-      updated_by: prismaUser.updated_by,
-      updated_at: prismaUser.updated_at,
-      updated_ip: prismaUser.updated_ip,
-      deleted_by: prismaUser.deleted_by,
-      deleted_at: prismaUser.deleted_at,
-    };
   }
 }
 
