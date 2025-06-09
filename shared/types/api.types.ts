@@ -45,8 +45,8 @@ export interface TApiErrorResponse {
  */
 export enum UserType {
   STUDENT = 'STUDENT',
-  TEACHER = 'TEACHER', 
-  ADMIN = 'ADMIN',
+  TEACHER = 'TEACHER',
+  TENANT_ADMIN = 'TENANT_ADMIN',
   SUPER_ADMIN = 'SUPER_ADMIN'
 }
 

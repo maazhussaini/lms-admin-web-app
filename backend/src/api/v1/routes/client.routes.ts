@@ -13,6 +13,7 @@ import {
   CreateClientTenantDto
 } from '@/dtos/client/client.dto';
 import { param, query } from 'express-validator';
+import { UserType } from '@/types/enums.js';
 
 const router = Router();
 
@@ -26,7 +27,7 @@ const router = Router();
 router.post(
   '/',
   authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate(CreateClientDto.validate()),
   ClientController.createClientHandler
 );
@@ -98,7 +99,7 @@ router.get(
 router.patch(
   '/:clientId',
   authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('clientId')
       .isInt({ min: 1 })
@@ -116,7 +117,7 @@ router.patch(
 router.delete(
   '/:clientId',
   authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('clientId')
       .isInt({ min: 1 })
@@ -135,7 +136,7 @@ router.delete(
 router.post(
   '/tenant-associations',
   authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate(CreateClientTenantDto.validate()),
   ClientController.createClientTenantAssociationHandler
 );
@@ -164,7 +165,7 @@ router.get(
 router.delete(
   '/tenant-associations/:associationId',
   authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('associationId')
       .isInt({ min: 1 })

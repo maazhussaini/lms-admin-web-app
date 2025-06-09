@@ -17,6 +17,7 @@ import {
   UpdateTenantEmailAddressDto
 } from '@/dtos/tenant/tenant.dto';
 import { param, query } from 'express-validator';
+import { UserType } from '@/types/enums.js';
 
 const router = Router();
 
@@ -30,7 +31,7 @@ const router = Router();
 router.post(
   '/',
   authenticate,
-  authorize(['SUPER_ADMIN']),
+  authorize([UserType.SUPER_ADMIN]),
   validate(CreateTenantDto.validate()),
   TenantController.createTenantHandler
 );
@@ -98,7 +99,7 @@ router.get(
 router.patch(
   '/:tenantId',
   authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('tenantId')
       .isInt({ min: 1 })
@@ -116,7 +117,7 @@ router.patch(
 router.delete(
   '/:tenantId',
   authenticate,
-  authorize(['SUPER_ADMIN']),
+  authorize([UserType.SUPER_ADMIN]),
   validate([
     param('tenantId')
       .isInt({ min: 1 })
@@ -135,7 +136,7 @@ router.delete(
 router.post(
   '/:tenantId/phone-numbers',
   authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('tenantId')
       .isInt({ min: 1 })
@@ -177,7 +178,7 @@ router.get(
 router.patch(
   '/:tenantId/phone-numbers/:phoneNumberId',
   authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('tenantId')
       .isInt({ min: 1 })
@@ -198,7 +199,7 @@ router.patch(
 router.delete(
   '/:tenantId/phone-numbers/:phoneNumberId',
   authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('tenantId')
       .isInt({ min: 1 })
@@ -218,7 +219,7 @@ router.delete(
 router.post(
   '/:tenantId/email-addresses',
   authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('tenantId')
       .isInt({ min: 1 })
@@ -260,7 +261,7 @@ router.get(
 router.patch(
   '/:tenantId/email-addresses/:emailAddressId',
   authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('tenantId')
       .isInt({ min: 1 })
@@ -281,7 +282,7 @@ router.patch(
 router.delete(
   '/:tenantId/email-addresses/:emailAddressId',
   authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('tenantId')
       .isInt({ min: 1 })

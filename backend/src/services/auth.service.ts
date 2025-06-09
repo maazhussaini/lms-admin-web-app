@@ -140,7 +140,7 @@ export class AuthService {
           role_name: user.role.role_name
         },
         tenant_id: user.tenant_id || 0,
-        user_type: user.role_type === SystemUserRole.SUPER_ADMIN ? UserType.SUPER_ADMIN : UserType.ADMIN
+        user_type: user.role_type === SystemUserRole.SUPER_ADMIN ? UserType.SUPER_ADMIN : UserType.TENANT_ADMIN
       },
       tokens: {
         access_token: tokens.accessToken,
@@ -224,7 +224,7 @@ export class AuthService {
             role_name: user.role.role_name
           },
           tenant_id: user.tenant_id || 0,
-          user_type: user.role_type === SystemUserRole.SUPER_ADMIN ? UserType.SUPER_ADMIN : UserType.ADMIN
+          user_type: user.role_type === SystemUserRole.SUPER_ADMIN ? UserType.SUPER_ADMIN : UserType.TENANT_ADMIN
         },
         tokens: {
           access_token: tokens.accessToken,

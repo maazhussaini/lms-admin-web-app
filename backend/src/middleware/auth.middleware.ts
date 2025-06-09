@@ -8,11 +8,7 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken, TokenPayload, extractTokenFromHeader } from '@/utils/jwt.utils.js';
 import { UnauthorizedError, ForbiddenError } from '@/utils/api-error.utils.js';
 import logger from '@/config/logger.js';
-
-/**
- * Valid user roles in the system
- */
-type UserRole = 'SUPER_ADMIN' | 'TENANT_ADMIN' | 'TEACHER' | 'STUDENT';
+import { UserType } from '@/types/enums.js';
 
 /**
  * Type-safe interface for request query parameters
@@ -162,7 +158,7 @@ export const authenticate = async (
  * @throws UnauthorizedError when user is not authenticated
  * @throws ForbiddenError when user doesn't have required role
  */
-export const authorize = (allowedRoles: readonly UserRole[]) => {
+export const authorize = (allowedRoles: readonly UserType[]) => {
   return (req: Request, _res: Response, next: NextFunction): void => {
     if (!req.user) {
       logger.warn('Authorization failed: No authenticated user', { 
@@ -173,7 +169,7 @@ export const authorize = (allowedRoles: readonly UserRole[]) => {
     }
     
     // Type-safe role checking
-    const userRole = req.user.role as UserRole;
+    const userRole = req.user.role as UserType;
     if (!allowedRoles.includes(userRole)) {
       logger.warn('Authorization failed: Insufficient permissions', { 
         userId: req.user.id, 

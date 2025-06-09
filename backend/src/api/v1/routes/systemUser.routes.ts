@@ -11,6 +11,7 @@ import {
   createSystemUserValidation, 
   updateSystemUserValidation 
 } from '@/dtos/user/systemUser.dto.js';
+import { UserType } from '@/types/enums.js';
 
 const router = Router();
 
@@ -18,7 +19,7 @@ const router = Router();
 router.post(
   '/',
   authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate(createSystemUserValidation),
   systemUserController.createSystemUserHandler
 );
@@ -27,7 +28,7 @@ router.post(
 router.get(
   '/:userId',
   authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   systemUserController.getSystemUserByIdHandler
 );
 
@@ -35,7 +36,7 @@ router.get(
 router.get(
   '/',
   authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   systemUserController.getAllSystemUsersHandler
 );
 
@@ -43,7 +44,7 @@ router.get(
 router.patch(
   '/:userId',
   authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate(updateSystemUserValidation),
   systemUserController.updateSystemUserHandler
 );
@@ -52,7 +53,7 @@ router.patch(
 router.delete(
   '/:userId',
   authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   systemUserController.deleteSystemUserHandler
 );
 
