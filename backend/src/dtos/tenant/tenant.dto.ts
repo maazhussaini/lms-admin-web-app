@@ -550,7 +550,7 @@ export class CreateClientDto {
   client_status?: ClientStatus;
 
   /**
-   * Tenant ID to which this client belongs
+   * Tenant ID to which this client belongs - required
    */
   tenant_id!: number;
 

@@ -267,20 +267,48 @@ export class TenantService {
   async createClient(data: CreateClientDto, requestingUser: TokenPayload, ip?: string) {
     logger.debug('Creating client', {
       clientData: data,
-      requestingUserId: requestingUser.id
+      requestingUserId: requestingUser.id,
+      requestingUserRole: requestingUser.role,
+      requestingUserTenantId: requestingUser.tenantId
     });
 
-    // Check if client with same email exists in this tenant
+    // Determine the target tenant ID
+    let targetTenantId: number;
+    
+    if (requestingUser.role === 'SUPER_ADMIN') {
+      // SUPER_ADMIN can create clients for any tenant using the provided tenant_id
+      targetTenantId = data.tenant_id;
+      
+      // Verify the target tenant exists
+      const targetTenant = await prisma.tenant.findFirst({
+        where: {
+          tenant_id: targetTenantId,
+          is_deleted: false
+        }
+      });
+      
+      if (!targetTenant) {
+        throw new ApiError('Target tenant not found', 404, 'TENANT_NOT_FOUND');
+      }
+    } else {
+      // Non-SUPER_ADMIN users can only create clients for their own tenant
+      if (data.tenant_id !== requestingUser.tenantId) {
+        throw new ApiError('Cannot create client for another tenant', 403, 'FORBIDDEN');
+      }
+      targetTenantId = requestingUser.tenantId;
+    }
+
+    // Check if client with same email exists in the target tenant
     const existingClient = await prisma.client.findFirst({
       where: {
         email_address: data.email_address,
-        tenant_id: requestingUser.tenantId,
+        tenant_id: targetTenantId,
         is_deleted: false
       }
     });
 
     if (existingClient) {
-      throw new ApiError('Client with this email already exists', 409, 'DUPLICATE_CLIENT_EMAIL');
+      throw new ApiError('Client with this email already exists in this tenant', 409, 'DUPLICATE_CLIENT_EMAIL');
     }
 
     // Create new client
@@ -292,7 +320,7 @@ export class TenantService {
         phone_number: data.phone_number || null,
         address: data.address || null,
         client_status: data.client_status ? toPrismaClientStatus(data.client_status) : toPrismaClientStatus(ClientStatus.ACTIVE),
-        tenant_id: requestingUser.tenantId,
+        tenant_id: targetTenantId,
         is_active: true,
         is_deleted: false,
         created_by: requestingUser.id,
