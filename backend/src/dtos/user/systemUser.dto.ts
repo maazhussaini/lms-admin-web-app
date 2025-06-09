@@ -14,7 +14,7 @@ export interface CreateSystemUserDto {
   fullName: string;
   email: string;
   password: string;
-  role: SystemUserRole;
+  roleType: SystemUserRole;
   tenantId?: number;
   status?: SystemUserStatus;
 }
@@ -25,7 +25,7 @@ export interface CreateSystemUserDto {
 export interface UpdateSystemUserDto {
   fullName?: string;
   email?: string;
-  role?: SystemUserRole;
+  roleType?: SystemUserRole;
   status?: SystemUserStatus;
   password?: string;
 }
@@ -34,7 +34,7 @@ export interface UpdateSystemUserDto {
  * DTO interface for filtering system users in list operations
  */
 export interface SystemUserFilterDto {
-  role?: SystemUserRole;
+  roleType?: SystemUserRole;
   status?: SystemUserStatus;
   tenantId?: number;
   search?: string;
@@ -59,6 +59,7 @@ export const createSystemUserValidation: ValidationChain[] = [
   body('email')
     .exists().withMessage('Email is required')
     .isEmail().withMessage('Email must be a valid email address')
+    .isLength({ max: 255 }).withMessage('Email must not exceed 255 characters')
     .normalizeEmail({ gmail_remove_dots: false })
     .trim(),
 
@@ -67,19 +68,19 @@ export const createSystemUserValidation: ValidationChain[] = [
     .isString().withMessage('Password must be a string')
     .isLength({ min: 8, max: 100 }).withMessage('Password must be between 8 and 100 characters'),
 
-  body('role')
-    .exists().withMessage('Role is required')
-    .isString().withMessage('Role must be a string')
-    .isIn(Object.values(SystemUserRole)).withMessage('Role must be a valid SystemUserRole')
+  body('roleType')
+    .exists().withMessage('Role type is required')
+    .isString().withMessage('Role type must be a string')
+    .isIn(Object.values(SystemUserRole)).withMessage('Role type must be a valid SystemUserRole')
     .custom((value, { req }) => {
       const tenantId = req.body.tenantId;
       // SUPER_ADMIN cannot have a tenantId
-      if (value === SystemUserRole.SUPER_ADMIN && tenantId !== undefined) {
+      if (value === SystemUserRole.SUPER_ADMIN && tenantId !== undefined && tenantId !== null) {
         throw new Error('SUPER_ADMIN users cannot be associated with a tenant');
       }
       
       // TENANT_ADMIN must have a tenantId
-      if (value === SystemUserRole.TENANT_ADMIN && tenantId === undefined) {
+      if (value === SystemUserRole.TENANT_ADMIN && (tenantId === undefined || tenantId === null)) {
         throw new Error('TENANT_ADMIN users must be associated with a tenant');
       }
       
@@ -88,7 +89,7 @@ export const createSystemUserValidation: ValidationChain[] = [
 
   body('tenantId')
     .optional()
-    .isInt().withMessage('Tenant ID must be an integer'),
+    .isInt({ min: 1 }).withMessage('Tenant ID must be a positive integer'),
 
   body('status')
     .optional()
@@ -110,13 +111,14 @@ export const updateSystemUserValidation: ValidationChain[] = [
   body('email')
     .optional()
     .isEmail().withMessage('Email must be a valid email address')
+    .isLength({ max: 255 }).withMessage('Email must not exceed 255 characters')
     .normalizeEmail({ gmail_remove_dots: false })
     .trim(),
 
-  body('role')
+  body('roleType')
     .optional()
-    .isString().withMessage('Role must be a string')
-    .isIn(Object.values(SystemUserRole)).withMessage('Role must be a valid SystemUserRole'),
+    .isString().withMessage('Role type must be a string')
+    .isIn(Object.values(SystemUserRole)).withMessage('Role type must be a valid SystemUserRole'),
 
   body('status')
     .optional()
@@ -133,10 +135,10 @@ export const updateSystemUserValidation: ValidationChain[] = [
  * Validation chains for filtering system users
  */
 export const filterSystemUserValidation: ValidationChain[] = [
-  body('role')
+  body('roleType')
     .optional()
-    .isString().withMessage('Role must be a string')
-    .isIn(Object.values(SystemUserRole)).withMessage('Role must be a valid SystemUserRole'),
+    .isString().withMessage('Role type must be a string')
+    .isIn(Object.values(SystemUserRole)).withMessage('Role type must be a valid SystemUserRole'),
 
   body('status')
     .optional()
@@ -145,7 +147,7 @@ export const filterSystemUserValidation: ValidationChain[] = [
 
   body('tenantId')
     .optional()
-    .isInt().withMessage('Tenant ID must be an integer'),
+    .isInt({ min: 1 }).withMessage('Tenant ID must be a positive integer'),
 
   body('search')
     .optional()

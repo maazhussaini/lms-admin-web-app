@@ -84,10 +84,10 @@ export class SystemUserController {
       // Extract filter parameters
       const filter: SystemUserFilterDto = {};
       
-      if (req.query['role']) {
-        const roleValue = req.query['role'] as string;
+      if (req.query['roleType']) {
+        const roleValue = req.query['roleType'] as string;
         if (Object.values(SystemUserRole).includes(roleValue as SystemUserRole)) {
-          filter.role = roleValue as SystemUserRole;
+          filter.roleType = roleValue as SystemUserRole;
         }
       }
       
