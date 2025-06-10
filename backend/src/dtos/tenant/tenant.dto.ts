@@ -212,6 +212,7 @@ export class CreateTenantPhoneNumberDto {
 
   /**
    * Is this the primary phone for the contact type - required
+   * Note: Only one phone number can be primary per contact type per tenant
    */
   is_primary!: boolean;
 
@@ -290,6 +291,7 @@ export class UpdateTenantPhoneNumberDto {
 
   /**
    * Optional primary phone flag
+   * Note: Setting this to true will automatically unset other primary phones for the same contact type
    */
   is_primary?: boolean;
 
@@ -363,6 +365,7 @@ export class CreateTenantEmailAddressDto {
 
   /**
    * Is this the primary email for the contact type - required
+   * Note: Only one email address can be primary per contact type per tenant
    */
   is_primary!: boolean;
 
@@ -407,6 +410,7 @@ export class UpdateTenantEmailAddressDto {
 
   /**
    * Optional primary email flag
+   * Note: Setting this to true will automatically unset other primary emails for the same contact type
    */
   is_primary?: boolean;
 

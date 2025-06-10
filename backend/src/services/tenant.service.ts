@@ -416,6 +416,24 @@ export class TenantService {
       throw new ConflictError('Phone number already exists for this tenant');
     }
 
+    // If this is being set as primary, unset other primary phones for the same contact type
+    if (phoneData.is_primary) {
+      await prisma.tenantPhoneNumber.updateMany({
+        where: {
+          tenant_id: tenantId,
+          contact_type: phoneData.contact_type,
+          is_primary: true,
+          is_deleted: false
+        },
+        data: {
+          is_primary: false,
+          updated_by: requestingUser.id,
+          updated_at: new Date(),
+          updated_ip: ip || null
+        }
+      });
+    }
+
     const newPhoneNumber = await prisma.tenantPhoneNumber.create({
       data: {
         tenant_id: tenantId,
@@ -588,6 +606,26 @@ export class TenantService {
       }
     }
 
+    // If this is being set as primary, unset other primary phones for the same contact type
+    if (updateData.is_primary === true) {
+      const contactType = updateData.contact_type || existingPhone.contact_type;
+      await prisma.tenantPhoneNumber.updateMany({
+        where: {
+          tenant_id: tenantId,
+          contact_type: contactType,
+          is_primary: true,
+          tenant_phone_number_id: { not: phoneId },
+          is_deleted: false
+        },
+        data: {
+          is_primary: false,
+          updated_by: requestingUser.id,
+          updated_at: new Date(),
+          updated_ip: ip || null
+        }
+      });
+    }
+
     const updatedPhoneNumber = await prisma.tenantPhoneNumber.update({
       where: {
         tenant_phone_number_id: phoneId
@@ -693,6 +731,24 @@ export class TenantService {
 
     if (existingEmail) {
       throw new ConflictError('Email address already exists for this tenant');
+    }
+
+    // If this is being set as primary, unset other primary emails for the same contact type
+    if (emailData.is_primary) {
+      await prisma.tenantEmailAddress.updateMany({
+        where: {
+          tenant_id: tenantId,
+          contact_type: emailData.contact_type,
+          is_primary: true,
+          is_deleted: false
+        },
+        data: {
+          is_primary: false,
+          updated_by: requestingUser.id,
+          updated_at: new Date(),
+          updated_ip: ip || null
+        }
+      });
     }
 
     const newEmailAddress = await prisma.tenantEmailAddress.create({
@@ -861,6 +917,26 @@ export class TenantService {
       if (duplicateEmail) {
         throw new ConflictError('Email address already exists for this tenant');
       }
+    }
+
+    // If this is being set as primary, unset other primary emails for the same contact type
+    if (updateData.is_primary === true) {
+      const contactType = updateData.contact_type || existingEmail.contact_type;
+      await prisma.tenantEmailAddress.updateMany({
+        where: {
+          tenant_id: tenantId,
+          contact_type: contactType,
+          is_primary: true,
+          tenant_email_address_id: { not: emailId },
+          is_deleted: false
+        },
+        data: {
+          is_primary: false,
+          updated_by: requestingUser.id,
+          updated_at: new Date(),
+          updated_ip: ip || null
+        }
+      });
     }
 
     const updatedEmailAddress = await prisma.tenantEmailAddress.update({
