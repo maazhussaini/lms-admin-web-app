@@ -7,6 +7,7 @@ import { Request, Response } from 'express';
 import { SystemUserService } from '@/services/systemUser.service.js';
 import { CreateSystemUserDto, UpdateSystemUserDto, SystemUserFilterDto } from '@/dtos/user/systemUser.dto.js';
 import { SystemUser } from '@shared/types/system-users.types';
+import { TokenPayload } from '@/utils/jwt.utils.js';
 import {
   createRouteHandler,
   createSuccessResponse,
@@ -31,10 +32,10 @@ export class SystemUserController {
         throw new Error('User not authenticated');
       }
 
-      const requestingUser = req.user as unknown as SystemUser;
+      const requestingUser = req.user as TokenPayload;
       
       // Validate that we have proper user context
-      if (!requestingUser.system_user_id || !requestingUser.role_type) {
+      if (!requestingUser.id || !requestingUser.user_type) {
         throw new Error('Invalid user context - missing required user information');
       }
 
@@ -52,13 +53,14 @@ export class SystemUserController {
 
   /**
    * Get a system user by ID
-   */  getSystemUserByIdHandler = createRouteHandler(
+   */
+  getSystemUserByIdHandler = createRouteHandler(
     async (req: Request): Promise<SystemUser> => {
       if (!req.user) {
         throw new Error('User not authenticated');
       }
 
-      const requestingUser = req.user as unknown as SystemUser;
+      const requestingUser = req.user as TokenPayload;
       const userIdParam = req.params['userId'];
       
       if (!userIdParam) {
@@ -83,7 +85,7 @@ export class SystemUserController {
         throw new Error('User not authenticated');
       }
 
-      const requestingUser = req.user as unknown as SystemUser;
+      const requestingUser = req.user as TokenPayload;
       const page = parseInt(req.query['page'] as string || '1', 10);
       const limit = parseInt(req.query['limit'] as string || '10', 10);
 
@@ -142,13 +144,14 @@ export class SystemUserController {
 
   /**
    * Update a system user
-   */  updateSystemUserHandler = createRouteHandler(
+   */
+  updateSystemUserHandler = createRouteHandler(
     async (req: Request): Promise<SystemUser> => {
       if (!req.user) {
         throw new Error('User not authenticated');
       }
 
-      const requestingUser = req.user as unknown as SystemUser;
+      const requestingUser = req.user as TokenPayload;
       const userIdParam = req.params['userId'];
       
       if (!userIdParam) {
@@ -167,13 +170,14 @@ export class SystemUserController {
 
   /**
    * Delete (soft-delete) a system user
-   */  deleteSystemUserHandler = createRouteHandler(
+   */
+  deleteSystemUserHandler = createRouteHandler(
     async (req: Request): Promise<void> => {
       if (!req.user) {
         throw new Error('User not authenticated');
       }
 
-      const requestingUser = req.user as unknown as SystemUser;
+      const requestingUser = req.user as TokenPayload;
       const userIdParam = req.params['userId'];
       
       if (!userIdParam) {

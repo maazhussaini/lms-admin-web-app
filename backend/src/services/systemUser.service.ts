@@ -5,7 +5,8 @@
 
 import { PrismaClient } from '@prisma/client';
 import { CreateSystemUserDto, UpdateSystemUserDto, SystemUserFilterDto } from '@/dtos/user/systemUser.dto.js';
-import { SystemUser } from '@shared/types';
+import { SystemUser } from '@shared/types/system-users.types';
+import { TokenPayload } from '@/utils/jwt.utils.js';
 import { BadRequestError, ForbiddenError, NotFoundError, ConflictError } from '@/utils/api-error.utils.js';
 import { hashPassword } from '@/utils/password.utils.js';
 import { getPrismaPagination } from '@/utils/pagination.utils.js';
@@ -27,18 +28,18 @@ export class SystemUserService {
    */
   async createSystemUser(
     data: CreateSystemUserDto,
-    requestingUser: SystemUser
+    requestingUser: TokenPayload
   ): Promise<SystemUser> {
     return tryCatch(async () => {
       // Validate that we have a requesting user
-      if (!requestingUser || !requestingUser.role_type) {
+      if (!requestingUser || !requestingUser.user_type) {
         throw new BadRequestError('Invalid requesting user context');
       }
 
       // Authorization checks
-      if (requestingUser.role_type === UserType.TENANT_ADMIN) {
+      if (requestingUser.user_type === UserType.TENANT_ADMIN) {
         // Tenant admins can only create users within their own tenant
-        if (data.tenantId !== requestingUser.tenant_id) {
+        if (data.tenantId !== requestingUser.tenantId) {
           throw new ForbiddenError('You can only create users within your own tenant');
         }
 
@@ -87,7 +88,7 @@ export class SystemUserService {
           system_user_status: data.status || SystemUserStatus.ACTIVE,
           
           // Audit fields
-          created_by: requestingUser.system_user_id,
+          created_by: requestingUser.id,
           created_ip: '127.0.0.1', // This should be passed from the controller
           is_active: true,
           is_deleted: false
@@ -97,7 +98,7 @@ export class SystemUserService {
       return newUser as SystemUser;
     }, {
       context: {
-        requestingUser: { id: requestingUser.system_user_id, role: requestingUser.role_type, tenantId: requestingUser.tenant_id }
+        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId }
       }
     });
   }
@@ -107,7 +108,7 @@ export class SystemUserService {
    */
   async getSystemUserById(
     userId: number,
-    requestingUser: SystemUser
+    requestingUser: TokenPayload
   ): Promise<SystemUser> {
     return tryCatch(async () => {
       const user = await this.prisma.systemUser.findUnique({
@@ -123,8 +124,8 @@ export class SystemUserService {
 
       // Authorization check - TENANT_ADMIN can only view users in their tenant
       if (
-        requestingUser.role_type === UserType.TENANT_ADMIN &&
-        user.tenant_id !== requestingUser.tenant_id
+        requestingUser.user_type === UserType.TENANT_ADMIN &&
+        user.tenant_id !== requestingUser.tenantId
       ) {
         throw new ForbiddenError('You cannot access users from another tenant');
       }
@@ -133,7 +134,7 @@ export class SystemUserService {
     }, {
       context: {
         userId,
-        requestingUser: { id: requestingUser.system_user_id, role: requestingUser.role_type, tenantId: requestingUser.tenant_id }
+        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId }
       }
     });
   }
@@ -145,7 +146,7 @@ export class SystemUserService {
     filter: SystemUserFilterDto = {},
     page = 1,
     limit = 10,
-    requestingUser: SystemUser
+    requestingUser: TokenPayload
   ): Promise<{ users: SystemUser[]; total: number }> {
     return tryCatch(async () => {
       // Base filter condition
@@ -154,8 +155,8 @@ export class SystemUserService {
       };
 
       // Apply tenant isolation for TENANT_ADMIN
-      if (requestingUser.role_type === UserType.TENANT_ADMIN) {
-        where.tenant_id = requestingUser.tenant_id;
+      if (requestingUser.user_type === UserType.TENANT_ADMIN) {
+        where.tenant_id = requestingUser.tenantId;
       } 
       // SUPER_ADMIN can filter by tenant if they want
       else if (filter.tenantId !== undefined) {
@@ -199,7 +200,7 @@ export class SystemUserService {
         filter,
         page,
         limit,
-        requestingUser: { id: requestingUser.system_user_id, role: requestingUser.role_type, tenantId: requestingUser.tenant_id }
+        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId }
       }
     });
   }
@@ -210,7 +211,7 @@ export class SystemUserService {
   async updateSystemUser(
     userId: number,
     data: UpdateSystemUserDto,
-    requestingUser: SystemUser
+    requestingUser: TokenPayload
   ): Promise<SystemUser> {
     return tryCatch(async () => {
       // Find the user to update
@@ -226,9 +227,9 @@ export class SystemUserService {
       }
 
       // Authorization checks
-      if (requestingUser.role_type === UserType.TENANT_ADMIN) {
+      if (requestingUser.user_type === UserType.TENANT_ADMIN) {
         // Tenant admin can only update users in their own tenant
-        if (existingUser.tenant_id !== requestingUser.tenant_id) {
+        if (existingUser.tenant_id !== requestingUser.tenantId) {
           throw new ForbiddenError('You cannot update users from another tenant');
         }
 
@@ -271,7 +272,7 @@ export class SystemUserService {
       }
 
       // Special handling for role changes (SUPER_ADMIN only)
-      if (data.roleType !== undefined && requestingUser.role_type === UserType.SUPER_ADMIN) {
+      if (data.roleType !== undefined && requestingUser.user_type === UserType.SUPER_ADMIN) {
         updateData.role_type = data.roleType;
         
         // Handle tenant implications of role change
@@ -286,7 +287,7 @@ export class SystemUserService {
       }
 
       // Update audit fields
-      updateData.updated_by = requestingUser.system_user_id;
+      updateData.updated_by = requestingUser.id;
       updateData.updated_at = new Date();
       updateData.updated_ip = '127.0.0.1'; // This should be passed from the controller
 
@@ -300,7 +301,7 @@ export class SystemUserService {
     }, {
       context: {
         userId,
-        requestingUser: { id: requestingUser.system_user_id, role: requestingUser.role_type, tenantId: requestingUser.tenant_id }
+        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId }
       }
     });
   }
@@ -310,7 +311,7 @@ export class SystemUserService {
    */
   async deleteSystemUser(
     userId: number,
-    requestingUser: SystemUser
+    requestingUser: TokenPayload
   ): Promise<void> {
     return tryCatch(async () => {
       // Find the user to delete
@@ -326,9 +327,9 @@ export class SystemUserService {
       }
 
       // Authorization checks
-      if (requestingUser.role_type === UserType.TENANT_ADMIN) {
+      if (requestingUser.user_type === UserType.TENANT_ADMIN) {
         // Tenant admin can only delete users in their own tenant
-        if (existingUser.tenant_id !== requestingUser.tenant_id) {
+        if (existingUser.tenant_id !== requestingUser.tenantId) {
           throw new ForbiddenError('You cannot delete users from another tenant');
         }
 
@@ -339,7 +340,7 @@ export class SystemUserService {
       }
 
       // Prevent users from deleting themselves
-      if (existingUser.system_user_id === requestingUser.system_user_id) {
+      if (existingUser.system_user_id === requestingUser.id) {
         throw new BadRequestError('Users cannot delete their own account');
       }
 
@@ -350,13 +351,13 @@ export class SystemUserService {
           is_deleted: true,
           is_active: false,
           deleted_at: new Date(),
-          deleted_by: requestingUser.system_user_id
+          deleted_by: requestingUser.id
         }
       });
     }, {
       context: {
         userId,
-        requestingUser: { id: requestingUser.system_user_id, role: requestingUser.role_type, tenantId: requestingUser.tenant_id }
+        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId }
       }
     });
   }
