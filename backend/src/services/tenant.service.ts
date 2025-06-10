@@ -6,10 +6,17 @@
 import { PrismaClient } from '@prisma/client';
 import {
   CreateTenantDto,
-  UpdateTenantDto
+  UpdateTenantDto,
+  CreateTenantPhoneNumberDto,
+  CreateTenantEmailAddressDto,
+  UpdateTenantPhoneNumberDto,
+  UpdateTenantEmailAddressDto
 } from '@/dtos/tenant/tenant.dto';
-import { ApiError, NotFoundError, ConflictError, ForbiddenError } from '@/utils/api-error.utils';
+import { NotFoundError, ConflictError, ForbiddenError } from '@/utils/api-error.utils';
 import { TokenPayload } from '@/utils/jwt.utils';
+import { getPrismaQueryOptions, SortOrder } from '@/utils/pagination.utils';
+import { tryCatch } from '@/utils/error-wrapper.utils';
+import { ExtendedPaginationWithFilters, SafeFilterParams } from '@/utils/async-handler.utils';
 import { 
   TenantStatus,
   ContactType,
@@ -19,6 +26,37 @@ import logger from '@/config/logger';
 
 // Initialize Prisma client
 const prisma = new PrismaClient();
+
+/**
+ * Filter DTO for tenant queries
+ */
+interface TenantFilterDto {
+  search?: string;
+  status?: number;
+  tenantId?: number;
+}
+
+/**
+ * Filter DTO for tenant phone number queries
+ */
+interface TenantPhoneFilterDto {
+  phoneType?: string;
+}
+
+/**
+ * Filter DTO for tenant email address queries
+ */
+interface TenantEmailFilterDto {
+  emailType?: string;
+}
+
+/**
+ * Filter DTO for tenant client queries
+ */
+interface TenantClientFilterDto {
+  search?: string;
+  status?: string;
+}
 
 export class TenantService {
   /**
@@ -30,42 +68,49 @@ export class TenantService {
    * @returns Newly created tenant
    */
   async createTenant(data: CreateTenantDto, userId: number, ip?: string) {
-    logger.debug('Creating tenant', {
-      tenantName: data.tenant_name,
-      userId
-    });
+    return tryCatch(async () => {
+      logger.debug('Creating tenant', {
+        tenantName: data.tenant_name,
+        userId
+      });
 
-    // Check if tenant with same name exists
-    const existingTenant = await prisma.tenant.findFirst({
-      where: {
-        tenant_name: data.tenant_name,
-        is_deleted: false
+      // Check if tenant with same name exists
+      const existingTenant = await prisma.tenant.findFirst({
+        where: {
+          tenant_name: data.tenant_name,
+          is_deleted: false
+        }
+      });
+
+      if (existingTenant) {
+        throw new ConflictError('Tenant with this name already exists', 'DUPLICATE_TENANT_NAME');
+      }
+
+      // Create new tenant
+      const newTenant = await prisma.tenant.create({
+        data: {
+          tenant_name: data.tenant_name,
+          logo_url_light: data.logo_url_light || null,
+          logo_url_dark: data.logo_url_dark || null,
+          favicon_url: data.favicon_url || null,        
+          ...(data.theme && { theme: data.theme }),
+          tenant_status: data.tenant_status || TenantStatus.ACTIVE,
+          is_active: true,
+          is_deleted: false,
+          created_by: userId,
+          updated_by: userId,
+          created_ip: ip || null,
+          updated_ip: ip || null
+        }
+      });
+
+      return newTenant;
+    }, {
+      context: {
+        tenantName: data.tenant_name,
+        userId
       }
     });
-
-    if (existingTenant) {
-      throw new ApiError('Tenant with this name already exists', 409, 'DUPLICATE_TENANT_NAME');
-    }
-
-    // Create new tenant
-    const newTenant = await prisma.tenant.create({
-      data: {
-        tenant_name: data.tenant_name,
-        logo_url_light: data.logo_url_light || null,
-        logo_url_dark: data.logo_url_dark || null,
-        favicon_url: data.favicon_url || null,        
-        ...(data.theme && { theme: data.theme }),
-        tenant_status: data.tenant_status || TenantStatus.ACTIVE,
-        is_active: true,
-        is_deleted: false,
-        created_by: userId,
-        updated_by: userId,
-        created_ip: ip || null,
-        updated_ip: ip || null
-      }
-    });
-
-    return newTenant;
   }
 
   /**
@@ -76,36 +121,49 @@ export class TenantService {
    * @returns Tenant if found
    */
   async getTenantById(tenantId: number, requestingUser: TokenPayload) {
-    logger.debug('Getting tenant by ID', {
-      tenantId,
-      requestingUserId: requestingUser.id
-    });
+    return tryCatch(async () => {
+      logger.debug('Getting tenant by ID', {
+        tenantId,
+        requestingUserId: requestingUser.id
+      });
 
-    // Super Admin can access any tenant
-    if (requestingUser.user_type === UserType.SUPER_ADMIN) {
+      // Super Admin can access any tenant
+      if (requestingUser.user_type === UserType.SUPER_ADMIN) {
+        const tenant = await prisma.tenant.findFirst({
+          where: {
+            tenant_id: tenantId,
+            is_deleted: false
+          }
+        });
+        
+        if (!tenant) {
+          throw new NotFoundError('Tenant not found', 'TENANT_NOT_FOUND');
+        }
+        
+        return tenant;
+      }
+
+      // Regular users can only access their own tenant
+      if (requestingUser.tenantId !== tenantId) {
+        throw new ForbiddenError('Access denied to this tenant');
+      }
+
       const tenant = await prisma.tenant.findFirst({
         where: {
           tenant_id: tenantId,
           is_deleted: false
         }
       });
-      
+
       if (!tenant) {
-        throw new ApiError('Tenant not found', 404, 'TENANT_NOT_FOUND');
+        throw new NotFoundError('Tenant not found', 'TENANT_NOT_FOUND');
       }
-      
+
       return tenant;
-    }
-
-    // Regular users can only access their own tenant
-    if (requestingUser.tenantId !== tenantId) {
-      throw new ApiError('Access denied to this tenant', 403, 'FORBIDDEN');
-    }
-
-    return await prisma.tenant.findFirst({
-      where: {
-        tenant_id: tenantId,
-        is_deleted: false
+    }, {
+      context: {
+        tenantId,
+        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId }
       }
     });
   }
@@ -113,73 +171,63 @@ export class TenantService {
   /**
    * Get all tenants with pagination, sorting and filtering
    * 
-   * @param options Pagination, sorting, and filtering options
+   * @param params Extended pagination with filters
    * @returns List response with tenants and pagination metadata
    */
   async getAllTenants(
-    options: {
-      page?: number;
-      limit?: number;
-      sortBy?: string;
-      order?: 'asc' | 'desc';
-      search?: string;
-      status?: number;
-    } = {}
+    params: ExtendedPaginationWithFilters
   ) {
-    logger.debug('Getting all tenants with options', {
-      options
-    });
+    return tryCatch(async () => {
+      logger.debug('Getting all tenants with params', {
+        page: params.page,
+        limit: params.limit,
+        filters: Object.keys(params.filters)
+      });
 
-    // Set default pagination options
-    const page = options.page || 1;
-    const limit = options.limit || 20;
-    const skip = (page - 1) * limit;
+      // Convert filter params to structured DTO
+      const filterDto = this.convertTenantFiltersToDto(params.filters);
+      
+      // Build filters using the structured DTO
+      const filters = this.buildTenantFiltersFromDto(filterDto);
+      
+      // Use pagination utilities to build sorting
+      const sorting = this.buildTenantSorting(params);
+      
+      // Get query options using pagination utilities
+      const queryOptions = getPrismaQueryOptions(
+        { page: params.page, limit: params.limit, skip: params.skip },
+        sorting
+      );
 
-    // Build where clause
-    const where: any = {
-      is_deleted: false
-    };
-    
-    // Add optional filters
-    if (options.search) {
-      where.tenant_name = {
-        contains: options.search,
-        mode: 'insensitive'
+      // Execute queries using Promise.all for better performance
+      const [tenants, total] = await Promise.all([
+        prisma.tenant.findMany({
+          where: filters,
+          ...queryOptions
+        }),
+        prisma.tenant.count({ where: filters })
+      ]);
+
+      return {
+        items: tenants,
+        pagination: {
+          page: params.page,
+          limit: params.limit,
+          total,
+          totalPages: Math.ceil(total / params.limit),
+          hasNext: params.page < Math.ceil(total / params.limit),
+          hasPrev: params.page > 1
+        }
       };
-    }
-
-    if (options.status) {
-      where.tenant_status = options.status;
-    }
-
-    // Determine sort field and direction
-    const sortField = options.sortBy || 'created_at';
-    const sortOrder = options.order || 'desc';
-
-    // Execute queries using Promise.all for better performance
-    const [tenants, total] = await Promise.all([
-      prisma.tenant.findMany({
-        where,
-        orderBy: {
-          [sortField]: sortOrder
-        },
-        skip,
-        take: limit
-      }),
-      prisma.tenant.count({ where })
-    ]);
-
-    return {
-      items: tenants,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        hasNext: page < Math.ceil(total / limit),
-        hasPrev: page > 1
+    }, {
+      context: {
+        params: {
+          page: params.page,
+          limit: params.limit,
+          filters: Object.keys(params.filters)
+        }
       }
-    };
+    });
   }
 
   /**
@@ -187,110 +235,92 @@ export class TenantService {
    * 
    * @param tenantId Tenant identifier
    * @param requestingUser User requesting the clients
-   * @param options Pagination and filtering options
+   * @param params Extended pagination with filters
    * @returns List of clients associated with the tenant
    */
   async getTenantClients(
     tenantId: number,
     requestingUser: TokenPayload,
-    options: {
-      page?: number;
-      limit?: number;
-      sortBy?: string;
-      order?: 'asc' | 'desc';
-      search?: string;
-      status?: string;
-    } = {}
+    params: ExtendedPaginationWithFilters
   ) {
-    logger.debug('Getting tenant clients', {
-      tenantId,
-      requestingUserId: requestingUser.id,
-      options
-    });
-
-    // Verify tenant exists and user has access
-    await this.getTenantById(tenantId, requestingUser);
-
-    // Check access permissions for non-SUPER_ADMIN users
-    if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
-      throw new ForbiddenError('Cannot access clients for another tenant');
-    }
-
-    // Set default pagination options
-    const page = options.page || 1;
-    const limit = options.limit || 20;
-    const skip = (page - 1) * limit;
-
-    // Build where clause for clients
-    const where: any = {
-      tenant_id: tenantId,
-      is_deleted: false
-    };
-
-    // Add search filter
-    if (options.search) {
-      where.OR = [
-        {
-          full_name: {
-            contains: options.search,
-            mode: 'insensitive'
-          }
-        },
-        {
-          email_address: {
-            contains: options.search,
-            mode: 'insensitive'
-          }
+    return tryCatch(async () => {
+      logger.debug('Getting tenant clients', {
+        tenantId,
+        requestingUserId: requestingUser.id,
+        params: {
+          page: params.page,
+          limit: params.limit,
+          filters: Object.keys(params.filters)
         }
-      ];
-    }
+      });
 
-    // Add status filter
-    if (options.status) {
-      where.client_status = options.status;
-    }
+      // Verify tenant exists and user has access
+      await this.getTenantById(tenantId, requestingUser);
 
-    // Determine sort field and direction
-    const sortField = options.sortBy || 'created_at';
-    const sortOrder = options.order || 'desc';
-
-    // Execute queries using Promise.all for better performance
-    const [clients, total] = await Promise.all([
-      prisma.client.findMany({
-        where,
-        orderBy: {
-          [sortField]: sortOrder
-        },
-        skip,
-        take: limit,
-        select: {
-          client_id: true,
-          full_name: true,
-          email_address: true,
-          dial_code: true,
-          phone_number: true,
-          address: true,
-          client_status: true,
-          tenant_id: true,
-          is_active: true,
-          created_at: true,
-          updated_at: true
-        }
-      }),
-      prisma.client.count({ where })
-    ]);
-
-    return {
-      items: clients,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        hasNext: page < Math.ceil(total / limit),
-        hasPrev: page > 1
+      // Check access permissions for non-SUPER_ADMIN users
+      if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
+        throw new ForbiddenError('Cannot access clients for another tenant');
       }
-    };
+
+      // Convert filter params to structured DTO
+      const filterDto = this.convertTenantClientFiltersToDto(params.filters);
+      
+      // Build filters using the structured DTO
+      const filters = this.buildTenantClientFiltersFromDto(filterDto, tenantId);
+      
+      // Use pagination utilities to build sorting
+      const sorting = this.buildTenantClientSorting(params);
+      
+      // Get query options using pagination utilities
+      const queryOptions = getPrismaQueryOptions(
+        { page: params.page, limit: params.limit, skip: params.skip },
+        sorting
+      );
+
+      // Execute queries using Promise.all for better performance
+      const [clients, total] = await Promise.all([
+        prisma.client.findMany({
+          where: filters,
+          ...queryOptions,
+          select: {
+            client_id: true,
+            full_name: true,
+            email_address: true,
+            dial_code: true,
+            phone_number: true,
+            address: true,
+            client_status: true,
+            tenant_id: true,
+            is_active: true,
+            created_at: true,
+            updated_at: true
+          }
+        }),
+        prisma.client.count({ where: filters })
+      ]);
+
+      return {
+        items: clients,
+        pagination: {
+          page: params.page,
+          limit: params.limit,
+          total,
+          totalPages: Math.ceil(total / params.limit),
+          hasNext: params.page < Math.ceil(total / params.limit),
+          hasPrev: params.page > 1
+        }
+      };
+    }, {
+      context: {
+        tenantId,
+        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId },
+        params: {
+          page: params.page,
+          limit: params.limit,
+          filters: Object.keys(params.filters)
+        }
+      }
+    });
   }
   
   /**
@@ -303,39 +333,50 @@ export class TenantService {
    * @returns Updated tenant
    */
   async updateTenant(tenantId: number, data: UpdateTenantDto, userId: number, ip?: string) {
-    logger.debug('Updating tenant', {
-      tenantId,
-      userId
-    });    // Verify tenant exists
-    await this.getTenantById(tenantId, {
-      id: userId, 
-      email: 'system@admin.com', 
-      role: 'SUPER_ADMIN', 
-      tenantId,
-      user_type: UserType.SUPER_ADMIN
-    } as TokenPayload);    // Update tenant
-    const updateData: any = {
-      updated_by: userId,
-      updated_at: new Date(),
-      updated_ip: ip || null
-    };
+    return tryCatch(async () => {
+      logger.debug('Updating tenant', {
+        tenantId,
+        userId
+      });
 
-    // Only include fields that are provided in the update data
-    if (data.tenant_name !== undefined) updateData.tenant_name = data.tenant_name;
-    if (data.logo_url_light !== undefined) updateData.logo_url_light = data.logo_url_light;
-    if (data.logo_url_dark !== undefined) updateData.logo_url_dark = data.logo_url_dark;
-    if (data.favicon_url !== undefined) updateData.favicon_url = data.favicon_url;
-    if (data.theme !== undefined) updateData.theme = data.theme;
-    if (data.tenant_status !== undefined) updateData.tenant_status = data.tenant_status;
+      // Verify tenant exists
+      await this.getTenantById(tenantId, {
+        id: userId, 
+        email: 'system@admin.com', 
+        role: 'SUPER_ADMIN', 
+        tenantId,
+        user_type: UserType.SUPER_ADMIN
+      } as TokenPayload);
 
-    const updatedTenant = await prisma.tenant.update({
-      where: {
-        tenant_id: tenantId
-      },
-      data: updateData
+      // Update tenant
+      const updateData: any = {
+        updated_by: userId,
+        updated_at: new Date(),
+        updated_ip: ip || null
+      };
+
+      // Only include fields that are provided in the update data
+      if (data.tenant_name !== undefined) updateData.tenant_name = data.tenant_name;
+      if (data.logo_url_light !== undefined) updateData.logo_url_light = data.logo_url_light;
+      if (data.logo_url_dark !== undefined) updateData.logo_url_dark = data.logo_url_dark;
+      if (data.favicon_url !== undefined) updateData.favicon_url = data.favicon_url;
+      if (data.theme !== undefined) updateData.theme = data.theme;
+      if (data.tenant_status !== undefined) updateData.tenant_status = data.tenant_status;
+
+      const updatedTenant = await prisma.tenant.update({
+        where: {
+          tenant_id: tenantId
+        },
+        data: updateData
+      });
+      
+      return updatedTenant;
+    }, {
+      context: {
+        tenantId,
+        userId
+      }
     });
-    
-    return updatedTenant;
   }
   
   /**
@@ -347,36 +388,43 @@ export class TenantService {
    * @returns Success message
    */
   async deleteTenant(tenantId: number, userId: number, ip?: string) {
-    logger.debug('Deleting tenant', {
-      tenantId,
-      userId
-    });
+    return tryCatch(async () => {
+      logger.debug('Deleting tenant', {
+        tenantId,
+        userId
+      });
 
-    // Verify tenant exists
-    await this.getTenantById(tenantId, {
-      id: userId, 
-      email: 'system@admin.com', 
-      role: 'SUPER_ADMIN', 
-      tenantId,
-      user_type: UserType.SUPER_ADMIN
-    } as TokenPayload);
+      // Verify tenant exists
+      await this.getTenantById(tenantId, {
+        id: userId, 
+        email: 'system@admin.com', 
+        role: 'SUPER_ADMIN', 
+        tenantId,
+        user_type: UserType.SUPER_ADMIN
+      } as TokenPayload);
 
-    // Soft delete by updating is_deleted flag
-    await prisma.tenant.update({
-      where: {
-        tenant_id: tenantId
-      },
-      data: {
-        is_deleted: true,
-        deleted_at: new Date(),
-        deleted_by: userId,
-        updated_by: userId,
-        updated_at: new Date(),
-        updated_ip: ip || null
+      // Soft delete by updating is_deleted flag
+      await prisma.tenant.update({
+        where: {
+          tenant_id: tenantId
+        },
+        data: {
+          is_deleted: true,
+          deleted_at: new Date(),
+          deleted_by: userId,
+          updated_by: userId,
+          updated_at: new Date(),
+          updated_ip: ip || null
+        }
+      });
+      
+      return { message: 'Tenant deleted successfully' };
+    }, {
+      context: {
+        tenantId,
+        userId
       }
     });
-    
-    return { message: 'Tenant deleted successfully' };
   }
 
   /**
@@ -388,70 +436,82 @@ export class TenantService {
    * @param ip IP address for audit trail
    * @returns Newly created tenant phone number
    */
-  async createTenantPhoneNumber(tenantId: number, phoneData: any, requestingUser: TokenPayload, ip?: string) {
-    logger.debug('Creating tenant phone number', {
-      tenantId,
-      requestingUserId: requestingUser.id
-    });
+  async createTenantPhoneNumber(
+    tenantId: number, 
+    phoneData: CreateTenantPhoneNumberDto, 
+    requestingUser: TokenPayload, 
+    ip?: string
+  ) {
+    return tryCatch(async () => {
+      logger.debug('Creating tenant phone number', {
+        tenantId,
+        requestingUserId: requestingUser.id
+      });
 
-    // Verify tenant exists and user has access
-    await this.getTenantById(tenantId, requestingUser);
+      // Verify tenant exists and user has access
+      await this.getTenantById(tenantId, requestingUser);
 
-    // Check access permissions for non-SUPER_ADMIN users
-    if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
-      throw new ForbiddenError('Cannot create phone number for another tenant');
-    }
-
-    // Check for duplicate phone number in this tenant
-    const existingPhone = await prisma.tenantPhoneNumber.findFirst({
-      where: {
-        tenant_id: tenantId,
-        dial_code: phoneData.dial_code,
-        phone_number: phoneData.phone_number,
-        is_deleted: false
+      // Check access permissions for non-SUPER_ADMIN users
+      if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
+        throw new ForbiddenError('Cannot create phone number for another tenant');
       }
-    });
 
-    if (existingPhone) {
-      throw new ConflictError('Phone number already exists for this tenant');
-    }
-
-    // If this is being set as primary, unset other primary phones for the same contact type
-    if (phoneData.is_primary) {
-      await prisma.tenantPhoneNumber.updateMany({
+      // Check for duplicate phone number in this tenant
+      const existingPhone = await prisma.tenantPhoneNumber.findFirst({
         where: {
           tenant_id: tenantId,
-          contact_type: phoneData.contact_type,
-          is_primary: true,
+          dial_code: phoneData.dial_code,
+          phone_number: phoneData.phone_number,
           is_deleted: false
-        },
+        }
+      });
+
+      if (existingPhone) {
+        throw new ConflictError('Phone number already exists for this tenant');
+      }
+
+      // If this is being set as primary, unset other primary phones for the same contact type
+      if (phoneData.is_primary) {
+        await prisma.tenantPhoneNumber.updateMany({
+          where: {
+            tenant_id: tenantId,
+            contact_type: phoneData.contact_type,
+            is_primary: true,
+            is_deleted: false
+          },
+          data: {
+            is_primary: false,
+            updated_by: requestingUser.id,
+            updated_at: new Date(),
+            updated_ip: ip || null
+          }
+        });
+      }
+
+      const newPhoneNumber = await prisma.tenantPhoneNumber.create({
         data: {
-          is_primary: false,
+          tenant_id: tenantId,
+          dial_code: phoneData.dial_code,
+          phone_number: phoneData.phone_number,
+          iso_country_code: phoneData.iso_country_code || null,
+          contact_type: phoneData.contact_type || ContactType.PRIMARY,
+          is_primary: phoneData.is_primary || false,
+          is_active: true,
+          is_deleted: false,
+          created_by: requestingUser.id,
           updated_by: requestingUser.id,
-          updated_at: new Date(),
+          created_ip: ip || null,
           updated_ip: ip || null
         }
       });
-    }
 
-    const newPhoneNumber = await prisma.tenantPhoneNumber.create({
-      data: {
-        tenant_id: tenantId,
-        dial_code: phoneData.dial_code,
-        phone_number: phoneData.phone_number,
-        iso_country_code: phoneData.iso_country_code || null,
-        contact_type: phoneData.contact_type || ContactType.PRIMARY,
-        is_primary: phoneData.is_primary || false,
-        is_active: true,
-        is_deleted: false,
-        created_by: requestingUser.id,
-        updated_by: requestingUser.id,
-        created_ip: ip || null,
-        updated_ip: ip || null
+      return newPhoneNumber;
+    }, {
+      context: {
+        tenantId,
+        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId }
       }
     });
-
-    return newPhoneNumber;
   }
 
   /**
@@ -459,77 +519,79 @@ export class TenantService {
    * 
    * @param tenantId Tenant identifier
    * @param requestingUser User requesting the phone numbers
-   * @param options Pagination and filtering options
+   * @param params Extended pagination with filters
    * @returns List of tenant phone numbers with pagination metadata
    */
   async getAllTenantPhoneNumbers(
     tenantId: number,
     requestingUser: TokenPayload,
-    options: {
-      page?: number;
-      limit?: number;
-      sortBy?: string;
-      order?: 'asc' | 'desc';
-      phoneType?: string;
-    } = {}
+    params: ExtendedPaginationWithFilters
   ) {
-    logger.debug('Getting all tenant phone numbers', {
-      tenantId,
-      requestingUserId: requestingUser.id,
-      options
-    });
+    return tryCatch(async () => {
+      logger.debug('Getting all tenant phone numbers', {
+        tenantId,
+        requestingUserId: requestingUser.id,
+        params: {
+          page: params.page,
+          limit: params.limit,
+          filters: Object.keys(params.filters)
+        }
+      });
 
-    // Verify tenant exists and user has access
-    await this.getTenantById(tenantId, requestingUser);
+      // Verify tenant exists and user has access
+      await this.getTenantById(tenantId, requestingUser);
 
-    // Check access permissions for non-SUPER_ADMIN users
-    if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
-      throw new ForbiddenError('Cannot access phone numbers for another tenant');
-    }
-
-    // Set default pagination options
-    const page = options.page || 1;
-    const limit = options.limit || 20;
-    const skip = (page - 1) * limit;
-
-    // Build where clause
-    const where: any = {
-      tenant_id: tenantId,
-      is_deleted: false
-    };
-
-    if (options.phoneType) {
-      where.contact_type = options.phoneType;
-    }
-
-    // Determine sort field and direction
-    const sortField = options.sortBy || 'created_at';
-    const sortOrder = options.order || 'desc';
-
-    // Execute queries using Promise.all for better performance
-    const [phoneNumbers, total] = await Promise.all([
-      prisma.tenantPhoneNumber.findMany({
-        where,
-        orderBy: {
-          [sortField]: sortOrder
-        },
-        skip,
-        take: limit
-      }),
-      prisma.tenantPhoneNumber.count({ where })
-    ]);
-
-    return {
-      items: phoneNumbers,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        hasNext: page < Math.ceil(total / limit),
-        hasPrev: page > 1
+      // Check access permissions for non-SUPER_ADMIN users
+      if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
+        throw new ForbiddenError('Cannot access phone numbers for another tenant');
       }
-    };
+
+      // Convert filter params to structured DTO
+      const filterDto = this.convertTenantPhoneFiltersToDto(params.filters);
+      
+      // Build filters using the structured DTO
+      const filters = this.buildTenantPhoneFiltersFromDto(filterDto, tenantId);
+      
+      // Use pagination utilities to build sorting
+      const sorting = this.buildTenantPhoneSorting(params);
+      
+      // Get query options using pagination utilities
+      const queryOptions = getPrismaQueryOptions(
+        { page: params.page, limit: params.limit, skip: params.skip },
+        sorting
+      );
+
+      // Execute queries using Promise.all for better performance
+      const [phoneNumbers, total] = await Promise.all([
+        prisma.tenantPhoneNumber.findMany({
+          where: filters,
+          ...queryOptions
+        }),
+        prisma.tenantPhoneNumber.count({ where: filters })
+      ]);
+
+      return {
+        items: phoneNumbers,
+        pagination: {
+          page: params.page,
+          limit: params.limit,
+          total,
+          totalPages: Math.ceil(total / params.limit),
+          hasNext: params.page < Math.ceil(total / params.limit),
+          hasPrev: params.page > 1
+        }
+      };
+    }, {
+      context: {
+        tenantId,
+        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId },
+        params: {
+          page: params.page,
+          limit: params.limit,
+          filters: Object.keys(params.filters)
+        }
+      }
+    });
   }
 
   /**
@@ -545,97 +607,105 @@ export class TenantService {
   async updateTenantPhoneNumber(
     tenantId: number,
     phoneId: number,
-    updateData: any,
+    updateData: UpdateTenantPhoneNumberDto,
     requestingUser: TokenPayload,
     ip?: string
   ) {
-    logger.debug('Updating tenant phone number', {
-      tenantId,
-      phoneId,
-      requestingUserId: requestingUser.id
-    });
+    return tryCatch(async () => {
+      logger.debug('Updating tenant phone number', {
+        tenantId,
+        phoneId,
+        requestingUserId: requestingUser.id
+      });
 
-    // Verify tenant exists and user has access
-    await this.getTenantById(tenantId, requestingUser);
+      // Verify tenant exists and user has access
+      await this.getTenantById(tenantId, requestingUser);
 
-    // Check access permissions for non-SUPER_ADMIN users
-    if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
-      throw new ForbiddenError('Cannot update phone number for another tenant');
-    }
-
-    // Verify phone number exists and belongs to the tenant
-    const existingPhone = await prisma.tenantPhoneNumber.findFirst({
-      where: {
-        tenant_phone_number_id: phoneId,
-        tenant_id: tenantId,
-        is_deleted: false
+      // Check access permissions for non-SUPER_ADMIN users
+      if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
+        throw new ForbiddenError('Cannot update phone number for another tenant');
       }
-    });
 
-    if (!existingPhone) {
-      throw new NotFoundError('Tenant phone number not found', 'TENANT_PHONE_NOT_FOUND');
-    }
-
-    // Build update data
-    const updatePayload: any = {
-      updated_by: requestingUser.id,
-      updated_at: new Date(),
-      updated_ip: ip || null
-    };
-
-    // Only include fields that are provided in the update data
-    if (updateData.dial_code !== undefined) updatePayload.dial_code = updateData.dial_code;
-    if (updateData.phone_number !== undefined) updatePayload.phone_number = updateData.phone_number;
-    if (updateData.iso_country_code !== undefined) updatePayload.iso_country_code = updateData.iso_country_code;
-    if (updateData.contact_type !== undefined) updatePayload.contact_type = updateData.contact_type;
-    if (updateData.is_primary !== undefined) updatePayload.is_primary = updateData.is_primary;
-
-    // Check for duplicate phone number if phone details are being updated
-    if ((updateData.dial_code || updateData.phone_number) && 
-        (updateData.dial_code !== existingPhone.dial_code || updateData.phone_number !== existingPhone.phone_number)) {
-      const duplicatePhone = await prisma.tenantPhoneNumber.findFirst({
+      // Verify phone number exists and belongs to the tenant
+      const existingPhone = await prisma.tenantPhoneNumber.findFirst({
         where: {
+          tenant_phone_number_id: phoneId,
           tenant_id: tenantId,
-          dial_code: updateData.dial_code || existingPhone.dial_code,
-          phone_number: updateData.phone_number || existingPhone.phone_number,
-          tenant_phone_number_id: { not: phoneId },
           is_deleted: false
         }
       });
 
-      if (duplicatePhone) {
-        throw new ConflictError('Phone number already exists for this tenant');
+      if (!existingPhone) {
+        throw new NotFoundError('Tenant phone number not found', 'TENANT_PHONE_NOT_FOUND');
       }
-    }
 
-    // If this is being set as primary, unset other primary phones for the same contact type
-    if (updateData.is_primary === true) {
-      const contactType = updateData.contact_type || existingPhone.contact_type;
-      await prisma.tenantPhoneNumber.updateMany({
+      // Build update data
+      const updatePayload: any = {
+        updated_by: requestingUser.id,
+        updated_at: new Date(),
+        updated_ip: ip || null
+      };
+
+      // Only include fields that are provided in the update data
+      if (updateData.dial_code !== undefined) updatePayload.dial_code = updateData.dial_code;
+      if (updateData.phone_number !== undefined) updatePayload.phone_number = updateData.phone_number;
+      if (updateData.iso_country_code !== undefined) updatePayload.iso_country_code = updateData.iso_country_code;
+      if (updateData.contact_type !== undefined) updatePayload.contact_type = updateData.contact_type;
+      if (updateData.is_primary !== undefined) updatePayload.is_primary = updateData.is_primary;
+
+      // Check for duplicate phone number if phone details are being updated
+      if ((updateData.dial_code || updateData.phone_number) && 
+          (updateData.dial_code !== existingPhone.dial_code || updateData.phone_number !== existingPhone.phone_number)) {
+        const duplicatePhone = await prisma.tenantPhoneNumber.findFirst({
+          where: {
+            tenant_id: tenantId,
+            dial_code: updateData.dial_code || existingPhone.dial_code,
+            phone_number: updateData.phone_number || existingPhone.phone_number,
+            tenant_phone_number_id: { not: phoneId },
+            is_deleted: false
+          }
+        });
+
+        if (duplicatePhone) {
+          throw new ConflictError('Phone number already exists for this tenant');
+        }
+      }
+
+      // If this is being set as primary, unset other primary phones for the same contact type
+      if (updateData.is_primary === true) {
+        const contactType = updateData.contact_type || existingPhone.contact_type;
+        await prisma.tenantPhoneNumber.updateMany({
+          where: {
+            tenant_id: tenantId,
+            contact_type: contactType,
+            is_primary: true,
+            tenant_phone_number_id: { not: phoneId },
+            is_deleted: false
+          },
+          data: {
+            is_primary: false,
+            updated_by: requestingUser.id,
+            updated_at: new Date(),
+            updated_ip: ip || null
+          }
+        });
+      }
+
+      const updatedPhoneNumber = await prisma.tenantPhoneNumber.update({
         where: {
-          tenant_id: tenantId,
-          contact_type: contactType,
-          is_primary: true,
-          tenant_phone_number_id: { not: phoneId },
-          is_deleted: false
+          tenant_phone_number_id: phoneId
         },
-        data: {
-          is_primary: false,
-          updated_by: requestingUser.id,
-          updated_at: new Date(),
-          updated_ip: ip || null
-        }
+        data: updatePayload
       });
-    }
 
-    const updatedPhoneNumber = await prisma.tenantPhoneNumber.update({
-      where: {
-        tenant_phone_number_id: phoneId
-      },
-      data: updatePayload
+      return updatedPhoneNumber;
+    }, {
+      context: {
+        tenantId,
+        phoneId,
+        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId }
+      }
     });
-
-    return updatedPhoneNumber;
   }
 
   /**
@@ -653,50 +723,58 @@ export class TenantService {
     requestingUser: TokenPayload,
     ip?: string
   ) {
-    logger.debug('Deleting tenant phone number', {
-      tenantId,
-      phoneId,
-      requestingUserId: requestingUser.id
-    });
+    return tryCatch(async () => {
+      logger.debug('Deleting tenant phone number', {
+        tenantId,
+        phoneId,
+        requestingUserId: requestingUser.id
+      });
 
-    // Verify tenant exists and user has access
-    await this.getTenantById(tenantId, requestingUser);
+      // Verify tenant exists and user has access
+      await this.getTenantById(tenantId, requestingUser);
 
-    // Check access permissions for non-SUPER_ADMIN users
-    if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
-      throw new ForbiddenError('Cannot delete phone number for another tenant');
-    }
+      // Check access permissions for non-SUPER_ADMIN users
+      if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
+        throw new ForbiddenError('Cannot delete phone number for another tenant');
+      }
 
-    // Verify phone number exists and belongs to the tenant
-    const existingPhone = await prisma.tenantPhoneNumber.findFirst({
-      where: {
-        tenant_phone_number_id: phoneId,
-        tenant_id: tenantId,
-        is_deleted: false
+      // Verify phone number exists and belongs to the tenant
+      const existingPhone = await prisma.tenantPhoneNumber.findFirst({
+        where: {
+          tenant_phone_number_id: phoneId,
+          tenant_id: tenantId,
+          is_deleted: false
+        }
+      });
+
+      if (!existingPhone) {
+        throw new NotFoundError('Tenant phone number not found', 'TENANT_PHONE_NOT_FOUND');
+      }
+
+      // Soft delete by updating is_deleted flag
+      await prisma.tenantPhoneNumber.update({
+        where: {
+          tenant_phone_number_id: phoneId
+        },
+        data: {
+          is_deleted: true,
+          is_active: false,
+          deleted_at: new Date(),
+          deleted_by: requestingUser.id,
+          updated_by: requestingUser.id,
+          updated_at: new Date(),
+          updated_ip: ip || null
+        }
+      });
+
+      return { message: 'Tenant phone number deleted successfully' };
+    }, {
+      context: {
+        tenantId,
+        phoneId,
+        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId }
       }
     });
-
-    if (!existingPhone) {
-      throw new NotFoundError('Tenant phone number not found', 'TENANT_PHONE_NOT_FOUND');
-    }
-
-    // Soft delete by updating is_deleted flag
-    await prisma.tenantPhoneNumber.update({
-      where: {
-        tenant_phone_number_id: phoneId
-      },
-      data: {
-        is_deleted: true,
-        is_active: false,
-        deleted_at: new Date(),
-        deleted_by: requestingUser.id,
-        updated_by: requestingUser.id,
-        updated_at: new Date(),
-        updated_ip: ip || null
-      }
-    });
-
-    return { message: 'Tenant phone number deleted successfully' };
   }
 
   /**
@@ -708,67 +786,79 @@ export class TenantService {
    * @param ip IP address for audit trail
    * @returns Newly created tenant email address
    */
-  async createTenantEmailAddress(tenantId: number, emailData: any, requestingUser: TokenPayload, ip?: string) {
-    logger.debug('Creating tenant email address', {
-      tenantId,
-      requestingUserId: requestingUser.id
-    });
+  async createTenantEmailAddress(
+    tenantId: number, 
+    emailData: CreateTenantEmailAddressDto, 
+    requestingUser: TokenPayload, 
+    ip?: string
+  ) {
+    return tryCatch(async () => {
+      logger.debug('Creating tenant email address', {
+        tenantId,
+        requestingUserId: requestingUser.id
+      });
 
-    // Verify tenant exists and user has access
-    await this.getTenantById(tenantId, requestingUser);
+      // Verify tenant exists and user has access
+      await this.getTenantById(tenantId, requestingUser);
 
-    // Check access permissions for non-SUPER_ADMIN users
-    if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
-      throw new ForbiddenError('Cannot create email address for another tenant');
-    }
-
-    // Check for duplicate email address in this tenant
-    const existingEmail = await prisma.tenantEmailAddress.findFirst({
-      where: {
-        tenant_id: tenantId,
-        email_address: emailData.email_address,
-        is_deleted: false
+      // Check access permissions for non-SUPER_ADMIN users
+      if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
+        throw new ForbiddenError('Cannot create email address for another tenant');
       }
-    });
 
-    if (existingEmail) {
-      throw new ConflictError('Email address already exists for this tenant');
-    }
-
-    // If this is being set as primary, unset other primary emails for the same contact type
-    if (emailData.is_primary) {
-      await prisma.tenantEmailAddress.updateMany({
+      // Check for duplicate email address in this tenant
+      const existingEmail = await prisma.tenantEmailAddress.findFirst({
         where: {
           tenant_id: tenantId,
-          contact_type: emailData.contact_type,
-          is_primary: true,
+          email_address: emailData.email_address,
           is_deleted: false
-        },
+        }
+      });
+
+      if (existingEmail) {
+        throw new ConflictError('Email address already exists for this tenant');
+      }
+
+      // If this is being set as primary, unset other primary emails for the same contact type
+      if (emailData.is_primary) {
+        await prisma.tenantEmailAddress.updateMany({
+          where: {
+            tenant_id: tenantId,
+            contact_type: emailData.contact_type,
+            is_primary: true,
+            is_deleted: false
+          },
+          data: {
+            is_primary: false,
+            updated_by: requestingUser.id,
+            updated_at: new Date(),
+            updated_ip: ip || null
+          }
+        });
+      }
+
+      const newEmailAddress = await prisma.tenantEmailAddress.create({
         data: {
-          is_primary: false,
+          tenant_id: tenantId,
+          email_address: emailData.email_address,
+          contact_type: emailData.contact_type || ContactType.PRIMARY,
+          is_primary: emailData.is_primary || false,
+          is_active: true,
+          is_deleted: false,
+          created_by: requestingUser.id,
           updated_by: requestingUser.id,
-          updated_at: new Date(),
+          created_ip: ip || null,
           updated_ip: ip || null
         }
       });
-    }
 
-    const newEmailAddress = await prisma.tenantEmailAddress.create({
-      data: {
-        tenant_id: tenantId,
-        email_address: emailData.email_address,
-        contact_type: emailData.contact_type || ContactType.PRIMARY,
-        is_primary: emailData.is_primary || false,
-        is_active: true,
-        is_deleted: false,
-        created_by: requestingUser.id,
-        updated_by: requestingUser.id,
-        created_ip: ip || null,
-        updated_ip: ip || null
+      return newEmailAddress;
+    }, {
+      context: {
+        tenantId,
+        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId }
       }
     });
-
-    return newEmailAddress;
   }
 
   /**
@@ -776,77 +866,79 @@ export class TenantService {
    * 
    * @param tenantId Tenant identifier
    * @param requestingUser User requesting the email addresses
-   * @param options Pagination and filtering options
+   * @param params Extended pagination with filters
    * @returns List of tenant email addresses with pagination metadata
    */
   async getAllTenantEmailAddresses(
     tenantId: number,
     requestingUser: TokenPayload,
-    options: {
-      page?: number;
-      limit?: number;
-      sortBy?: string;
-      order?: 'asc' | 'desc';
-      emailType?: string;
-    } = {}
+    params: ExtendedPaginationWithFilters
   ) {
-    logger.debug('Getting all tenant email addresses', {
-      tenantId,
-      requestingUserId: requestingUser.id,
-      options
-    });
+    return tryCatch(async () => {
+      logger.debug('Getting all tenant email addresses', {
+        tenantId,
+        requestingUserId: requestingUser.id,
+        params: {
+          page: params.page,
+          limit: params.limit,
+          filters: Object.keys(params.filters)
+        }
+      });
 
-    // Verify tenant exists and user has access
-    await this.getTenantById(tenantId, requestingUser);
+      // Verify tenant exists and user has access
+      await this.getTenantById(tenantId, requestingUser);
 
-    // Check access permissions for non-SUPER_ADMIN users
-    if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
-      throw new ForbiddenError('Cannot access email addresses for another tenant');
-    }
-
-    // Set default pagination options
-    const page = options.page || 1;
-    const limit = options.limit || 20;
-    const skip = (page - 1) * limit;
-
-    // Build where clause
-    const where: any = {
-      tenant_id: tenantId,
-      is_deleted: false
-    };
-
-    if (options.emailType) {
-      where.contact_type = options.emailType;
-    }
-
-    // Determine sort field and direction
-    const sortField = options.sortBy || 'created_at';
-    const sortOrder = options.order || 'desc';
-
-    // Execute queries using Promise.all for better performance
-    const [emailAddresses, total] = await Promise.all([
-      prisma.tenantEmailAddress.findMany({
-        where,
-        orderBy: {
-          [sortField]: sortOrder
-        },
-        skip,
-        take: limit
-      }),
-      prisma.tenantEmailAddress.count({ where })
-    ]);
-
-    return {
-      items: emailAddresses,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        hasNext: page < Math.ceil(total / limit),
-        hasPrev: page > 1
+      // Check access permissions for non-SUPER_ADMIN users
+      if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
+        throw new ForbiddenError('Cannot access email addresses for another tenant');
       }
-    };
+
+      // Convert filter params to structured DTO
+      const filterDto = this.convertTenantEmailFiltersToDto(params.filters);
+      
+      // Build filters using the structured DTO
+      const filters = this.buildTenantEmailFiltersFromDto(filterDto, tenantId);
+      
+      // Use pagination utilities to build sorting
+      const sorting = this.buildTenantEmailSorting(params);
+      
+      // Get query options using pagination utilities
+      const queryOptions = getPrismaQueryOptions(
+        { page: params.page, limit: params.limit, skip: params.skip },
+        sorting
+      );
+
+      // Execute queries using Promise.all for better performance
+      const [emailAddresses, total] = await Promise.all([
+        prisma.tenantEmailAddress.findMany({
+          where: filters,
+          ...queryOptions
+        }),
+        prisma.tenantEmailAddress.count({ where: filters })
+      ]);
+
+      return {
+        items: emailAddresses,
+        pagination: {
+          page: params.page,
+          limit: params.limit,
+          total,
+          totalPages: Math.ceil(total / params.limit),
+          hasNext: params.page < Math.ceil(total / params.limit),
+          hasPrev: params.page > 1
+        }
+      };
+    }, {
+      context: {
+        tenantId,
+        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId },
+        params: {
+          page: params.page,
+          limit: params.limit,
+          filters: Object.keys(params.filters)
+        }
+      }
+    });
   }
 
   /**
@@ -862,93 +954,101 @@ export class TenantService {
   async updateTenantEmailAddress(
     tenantId: number,
     emailId: number,
-    updateData: any,
+    updateData: UpdateTenantEmailAddressDto,
     requestingUser: TokenPayload,
     ip?: string
   ) {
-    logger.debug('Updating tenant email address', {
-      tenantId,
-      emailId,
-      requestingUserId: requestingUser.id
-    });
+    return tryCatch(async () => {
+      logger.debug('Updating tenant email address', {
+        tenantId,
+        emailId,
+        requestingUserId: requestingUser.id
+      });
 
-    // Verify tenant exists and user has access
-    await this.getTenantById(tenantId, requestingUser);
+      // Verify tenant exists and user has access
+      await this.getTenantById(tenantId, requestingUser);
 
-    // Check access permissions for non-SUPER_ADMIN users
-    if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
-      throw new ForbiddenError('Cannot update email address for another tenant');
-    }
-
-    // Verify email address exists and belongs to the tenant
-    const existingEmail = await prisma.tenantEmailAddress.findFirst({
-      where: {
-        tenant_email_address_id: emailId,
-        tenant_id: tenantId,
-        is_deleted: false
+      // Check access permissions for non-SUPER_ADMIN users
+      if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
+        throw new ForbiddenError('Cannot update email address for another tenant');
       }
-    });
 
-    if (!existingEmail) {
-      throw new NotFoundError('Tenant email address not found', 'TENANT_EMAIL_NOT_FOUND');
-    }
-
-    // Build update data
-    const updatePayload: any = {
-      updated_by: requestingUser.id,
-      updated_at: new Date(),
-      updated_ip: ip || null
-    };
-
-    // Only include fields that are provided in the update data
-    if (updateData.email_address !== undefined) updatePayload.email_address = updateData.email_address;
-    if (updateData.contact_type !== undefined) updatePayload.contact_type = updateData.contact_type;
-    if (updateData.is_primary !== undefined) updatePayload.is_primary = updateData.is_primary;
-
-    // Check for duplicate email address if email is being updated
-    if (updateData.email_address && updateData.email_address !== existingEmail.email_address) {
-      const duplicateEmail = await prisma.tenantEmailAddress.findFirst({
+      // Verify email address exists and belongs to the tenant
+      const existingEmail = await prisma.tenantEmailAddress.findFirst({
         where: {
+          tenant_email_address_id: emailId,
           tenant_id: tenantId,
-          email_address: updateData.email_address,
-          tenant_email_address_id: { not: emailId },
           is_deleted: false
         }
       });
 
-      if (duplicateEmail) {
-        throw new ConflictError('Email address already exists for this tenant');
+      if (!existingEmail) {
+        throw new NotFoundError('Tenant email address not found', 'TENANT_EMAIL_NOT_FOUND');
       }
-    }
 
-    // If this is being set as primary, unset other primary emails for the same contact type
-    if (updateData.is_primary === true) {
-      const contactType = updateData.contact_type || existingEmail.contact_type;
-      await prisma.tenantEmailAddress.updateMany({
+      // Build update data
+      const updatePayload: any = {
+        updated_by: requestingUser.id,
+        updated_at: new Date(),
+        updated_ip: ip || null
+      };
+
+      // Only include fields that are provided in the update data
+      if (updateData.email_address !== undefined) updatePayload.email_address = updateData.email_address;
+      if (updateData.contact_type !== undefined) updatePayload.contact_type = updateData.contact_type;
+      if (updateData.is_primary !== undefined) updatePayload.is_primary = updateData.is_primary;
+
+      // Check for duplicate email address if email is being updated
+      if (updateData.email_address && updateData.email_address !== existingEmail.email_address) {
+        const duplicateEmail = await prisma.tenantEmailAddress.findFirst({
+          where: {
+            tenant_id: tenantId,
+            email_address: updateData.email_address,
+            tenant_email_address_id: { not: emailId },
+            is_deleted: false
+          }
+        });
+
+        if (duplicateEmail) {
+          throw new ConflictError('Email address already exists for this tenant');
+        }
+      }
+
+      // If this is being set as primary, unset other primary emails for the same contact type
+      if (updateData.is_primary === true) {
+        const contactType = updateData.contact_type || existingEmail.contact_type;
+        await prisma.tenantEmailAddress.updateMany({
+          where: {
+            tenant_id: tenantId,
+            contact_type: contactType,
+            is_primary: true,
+            tenant_email_address_id: { not: emailId },
+            is_deleted: false
+          },
+          data: {
+            is_primary: false,
+            updated_by: requestingUser.id,
+            updated_at: new Date(),
+            updated_ip: ip || null
+          }
+        });
+      }
+
+      const updatedEmailAddress = await prisma.tenantEmailAddress.update({
         where: {
-          tenant_id: tenantId,
-          contact_type: contactType,
-          is_primary: true,
-          tenant_email_address_id: { not: emailId },
-          is_deleted: false
+          tenant_email_address_id: emailId
         },
-        data: {
-          is_primary: false,
-          updated_by: requestingUser.id,
-          updated_at: new Date(),
-          updated_ip: ip || null
-        }
+        data: updatePayload
       });
-    }
 
-    const updatedEmailAddress = await prisma.tenantEmailAddress.update({
-      where: {
-        tenant_email_address_id: emailId
-      },
-      data: updatePayload
+      return updatedEmailAddress;
+    }, {
+      context: {
+        tenantId,
+        emailId,
+        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId }
+      }
     });
-
-    return updatedEmailAddress;
   }
 
   /**
@@ -966,50 +1066,319 @@ export class TenantService {
     requestingUser: TokenPayload,
     ip?: string
   ) {
-    logger.debug('Deleting tenant email address', {
-      tenantId,
-      emailId,
-      requestingUserId: requestingUser.id
-    });
+    return tryCatch(async () => {
+      logger.debug('Deleting tenant email address', {
+        tenantId,
+        emailId,
+        requestingUserId: requestingUser.id
+      });
 
-    // Verify tenant exists and user has access
-    await this.getTenantById(tenantId, requestingUser);
+      // Verify tenant exists and user has access
+      await this.getTenantById(tenantId, requestingUser);
 
-    // Check access permissions for non-SUPER_ADMIN users
-    if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
-      throw new ForbiddenError('Cannot delete email address for another tenant');
-    }
+      // Check access permissions for non-SUPER_ADMIN users
+      if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
+        throw new ForbiddenError('Cannot delete email address for another tenant');
+      }
 
-    // Verify email address exists and belongs to the tenant
-    const existingEmail = await prisma.tenantEmailAddress.findFirst({
-      where: {
-        tenant_email_address_id: emailId,
-        tenant_id: tenantId,
-        is_deleted: false
+      // Verify email address exists and belongs to the tenant
+      const existingEmail = await prisma.tenantEmailAddress.findFirst({
+        where: {
+          tenant_email_address_id: emailId,
+          tenant_id: tenantId,
+          is_deleted: false
+        }
+      });
+
+      if (!existingEmail) {
+        throw new NotFoundError('Tenant email address not found', 'TENANT_EMAIL_NOT_FOUND');
+      }
+
+      // Soft delete by updating is_deleted flag
+      await prisma.tenantEmailAddress.update({
+        where: {
+          tenant_email_address_id: emailId
+        },
+        data: {
+          is_deleted: true,
+          is_active: false,
+          deleted_at: new Date(),
+          deleted_by: requestingUser.id,
+          updated_by: requestingUser.id,
+          updated_at: new Date(),
+          updated_ip: ip || null
+        }
+      });
+
+      return { message: 'Tenant email address deleted successfully' };
+    }, {
+      context: {
+        tenantId,
+        emailId,
+        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId }
       }
     });
+  }
 
-    if (!existingEmail) {
-      throw new NotFoundError('Tenant email address not found', 'TENANT_EMAIL_NOT_FOUND');
+  /**
+   * Convert SafeFilterParams to structured tenant DTO
+   */
+  private convertTenantFiltersToDto(filterParams: SafeFilterParams): TenantFilterDto {
+    const dto: TenantFilterDto = {};
+    
+    if (filterParams['search'] && typeof filterParams['search'] === 'string') {
+      dto.search = filterParams['search'];
+    }
+    
+    if (filterParams['status']) {
+      dto.status = typeof filterParams['status'] === 'number' 
+        ? filterParams['status'] 
+        : parseInt(filterParams['status'] as string, 10);
+    }
+    
+    return dto;
+  }
+
+  /**
+   * Convert SafeFilterParams to structured tenant client DTO
+   */
+  private convertTenantClientFiltersToDto(filterParams: SafeFilterParams): TenantClientFilterDto {
+    const dto: TenantClientFilterDto = {};
+    
+    if (filterParams['search'] && typeof filterParams['search'] === 'string') {
+      dto.search = filterParams['search'];
+    }
+    
+    if (filterParams['status'] && typeof filterParams['status'] === 'string') {
+      dto.status = filterParams['status'];
+    }
+    
+    return dto;
+  }
+
+  /**
+   * Convert SafeFilterParams to structured tenant phone DTO
+   */
+  private convertTenantPhoneFiltersToDto(filterParams: SafeFilterParams): TenantPhoneFilterDto {
+    const dto: TenantPhoneFilterDto = {};
+    
+    if (filterParams['contactType']) {
+      dto.phoneType = filterParams['contactType'].toString();
+    }
+    
+    return dto;
+  }
+
+  /**
+   * Convert SafeFilterParams to structured tenant email DTO
+   */
+  private convertTenantEmailFiltersToDto(filterParams: SafeFilterParams): TenantEmailFilterDto {
+    const dto: TenantEmailFilterDto = {};
+    
+    if (filterParams['contactType']) {
+      dto.emailType = filterParams['contactType'].toString();
+    }
+    
+    return dto;
+  }
+
+  /**
+   * Build Prisma filters from structured tenant DTO
+   */
+  private buildTenantFiltersFromDto(filterDto: TenantFilterDto): Record<string, any> {
+    const where: Record<string, any> = {
+      is_deleted: false
+    };
+    
+    if (filterDto.search) {
+      where['tenant_name'] = {
+        contains: filterDto.search,
+        mode: 'insensitive'
+      };
     }
 
-    // Soft delete by updating is_deleted flag
-    await prisma.tenantEmailAddress.update({
-      where: {
-        tenant_email_address_id: emailId
-      },
-      data: {
-        is_deleted: true,
-        is_active: false,
-        deleted_at: new Date(),
-        deleted_by: requestingUser.id,
-        updated_by: requestingUser.id,
-        updated_at: new Date(),
-        updated_ip: ip || null
-      }
-    });
+    if (filterDto.status !== undefined) {
+      where['tenant_status'] = filterDto.status;
+    }
 
-    return { message: 'Tenant email address deleted successfully' };
+    return where;
+  }
+
+  /**
+   * Build Prisma filters from structured tenant client DTO
+   */
+  private buildTenantClientFiltersFromDto(filterDto: TenantClientFilterDto, tenantId: number): Record<string, any> {
+    const where: Record<string, any> = {
+      tenant_id: tenantId,
+      is_deleted: false
+    };
+
+    if (filterDto.search) {
+      where['OR'] = [
+        {
+          full_name: {
+            contains: filterDto.search,
+            mode: 'insensitive'
+          }
+        },
+        {
+          email_address: {
+            contains: filterDto.search,
+            mode: 'insensitive'
+          }
+        }
+      ];
+    }
+
+    if (filterDto.status) {
+      where['client_status'] = filterDto.status;
+    }
+
+    return where;
+  }
+
+  /**
+   * Build Prisma filters from structured tenant phone DTO
+   */
+  private buildTenantPhoneFiltersFromDto(filterDto: TenantPhoneFilterDto, tenantId: number): Record<string, any> {
+    const where: Record<string, any> = {
+      tenant_id: tenantId,
+      is_deleted: false
+    };
+
+    if (filterDto.phoneType) {
+      where['contact_type'] = filterDto.phoneType;
+    }
+
+    return where;
+  }
+
+  /**
+   * Build Prisma filters from structured tenant email DTO
+   */
+  private buildTenantEmailFiltersFromDto(filterDto: TenantEmailFilterDto, tenantId: number): Record<string, any> {
+    const where: Record<string, any> = {
+      tenant_id: tenantId,
+      is_deleted: false
+    };
+
+    if (filterDto.emailType) {
+      where['contact_type'] = filterDto.emailType;
+    }
+
+    return where;
+  }
+
+  /**
+   * Build Prisma sorting from pagination parameters for tenants
+   */
+  private buildTenantSorting(params: ExtendedPaginationWithFilters): Record<string, SortOrder> {
+    const fieldMapping: Record<string, string> = {
+      'tenantId': 'tenant_id',
+      'tenantName': 'tenant_name',
+      'tenantStatus': 'tenant_status',
+      'createdAt': 'created_at',
+      'updatedAt': 'updated_at'
+    };
+
+    if (params.sorting && Object.keys(params.sorting).length > 0) {
+      const mappedSorting: Record<string, SortOrder> = {};
+      Object.entries(params.sorting).forEach(([field, order]) => {
+        const dbField = fieldMapping[field] || field;
+        mappedSorting[dbField] = order;
+      });
+      return mappedSorting;
+    }
+
+    const sortBy = params.sortBy || 'created_at';
+    const sortOrder = params.sortOrder || 'desc';
+    const dbField = fieldMapping[sortBy] || sortBy;
+    
+    return { [dbField]: sortOrder };
+  }
+
+  /**
+   * Build Prisma sorting from pagination parameters for tenant clients
+   */
+  private buildTenantClientSorting(params: ExtendedPaginationWithFilters): Record<string, SortOrder> {
+    const fieldMapping: Record<string, string> = {
+      'clientId': 'client_id',
+      'fullName': 'full_name',
+      'emailAddress': 'email_address',
+      'createdAt': 'created_at',
+      'updatedAt': 'updated_at'
+    };
+
+    if (params.sorting && Object.keys(params.sorting).length > 0) {
+      const mappedSorting: Record<string, SortOrder> = {};
+      Object.entries(params.sorting).forEach(([field, order]) => {
+        const dbField = fieldMapping[field] || field;
+        mappedSorting[dbField] = order;
+      });
+      return mappedSorting;
+    }
+
+    const sortBy = params.sortBy || 'created_at';
+    const sortOrder = params.sortOrder || 'desc';
+    const dbField = fieldMapping[sortBy] || sortBy;
+    
+    return { [dbField]: sortOrder };
+  }
+
+  /**
+   * Build Prisma sorting from pagination parameters for tenant phone numbers
+   */
+  private buildTenantPhoneSorting(params: ExtendedPaginationWithFilters): Record<string, SortOrder> {
+    const fieldMapping: Record<string, string> = {
+      'tenantPhoneNumberId': 'tenant_phone_number_id',
+      'phoneNumber': 'phone_number',
+      'contactType': 'contact_type',
+      'createdAt': 'created_at',
+      'updatedAt': 'updated_at'
+    };
+
+    if (params.sorting && Object.keys(params.sorting).length > 0) {
+      const mappedSorting: Record<string, SortOrder> = {};
+      Object.entries(params.sorting).forEach(([field, order]) => {
+        const dbField = fieldMapping[field] || field;
+        mappedSorting[dbField] = order;
+      });
+      return mappedSorting;
+    }
+
+    const sortBy = params.sortBy || 'created_at';
+    const sortOrder = params.sortOrder || 'desc';
+    const dbField = fieldMapping[sortBy] || sortBy;
+    
+    return { [dbField]: sortOrder };
+  }
+
+  /**
+   * Build Prisma sorting from pagination parameters for tenant email addresses
+   */
+  private buildTenantEmailSorting(params: ExtendedPaginationWithFilters): Record<string, SortOrder> {
+    const fieldMapping: Record<string, string> = {
+      'tenantEmailAddressId': 'tenant_email_address_id',
+      'emailAddress': 'email_address',
+      'contactType': 'contact_type',
+      'createdAt': 'created_at',
+      'updatedAt': 'updated_at'
+    };
+
+    if (params.sorting && Object.keys(params.sorting).length > 0) {
+      const mappedSorting: Record<string, SortOrder> = {};
+      Object.entries(params.sorting).forEach(([field, order]) => {
+        const dbField = fieldMapping[field] || field;
+        mappedSorting[dbField] = order;
+      });
+      return mappedSorting;
+    }
+
+    const sortBy = params.sortBy || 'created_at';
+    const sortOrder = params.sortOrder || 'desc';
+    const dbField = fieldMapping[sortBy] || sortBy;
+    
+    return { [dbField]: sortOrder };
   }
 }
 
