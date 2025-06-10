@@ -18,9 +18,9 @@ The System User domain consists of the following main entities defined in `@shar
 
 ### Key Enums
 
-From `@shared/types/system-users.types.ts`:
+From `@/types/enums`:
 
-- **SystemUserRole**: `SUPER_ADMIN`, `TENANT_ADMIN`
+- **UserType**: `SUPER_ADMIN`, `TENANT_ADMIN`
 - **SystemUserStatus**: `ACTIVE`, `INACTIVE`, `SUSPENDED`, `LOCKED`
 
 ### Base Interfaces
@@ -102,7 +102,7 @@ All entities extend `BaseAuditFields` from `@shared/types/base.types.ts`, provid
 - **Query Parameters**:
   - `page?: number` - Page number (default: 1)
   - `limit?: number` - Items per page (default: 10)
-  - `roleType?: SystemUserRole` - Filter by role
+  - `roleType?: UserType` - Filter by role type (SUPER_ADMIN, TENANT_ADMIN)
   - `status?: SystemUserStatus` - Filter by status
   - `tenantId?: number` - Filter by tenant (SUPER_ADMIN only)
   - `search?: string` - Search in username, full_name, email_address
@@ -110,20 +110,25 @@ All entities extend `BaseAuditFields` from `@shared/types/base.types.ts`, provid
 ```json
 {
   "success": true,
-  "data": {
-    "users": [
-      {
-        "system_user_id": 1,
-        "username": "admin_user",
-        "full_name": "Administrator User",
-        "email_address": "admin@example.com",
-        "role_type": "TENANT_ADMIN",
-        "tenant_id": 123,
-        "system_user_status": "ACTIVE",
-        "last_login_at": "2024-01-01T12:00:00Z"
-      }
-    ],
-    "total": 1
+  "data": [
+    {
+      "system_user_id": 1,
+      "username": "admin_user",
+      "full_name": "Administrator User",
+      "email_address": "admin@example.com",
+      "role_type": "TENANT_ADMIN",
+      "tenant_id": 123,
+      "system_user_status": "ACTIVE",
+      "last_login_at": "2024-01-01T12:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 1,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrev": false
   }
 }
 ```
@@ -187,7 +192,7 @@ All entities extend `BaseAuditFields` from `@shared/types/base.types.ts`, provid
 - Hashed using bcrypt before storage
 
 #### Role Type Validation
-- Must be valid SystemUserRole enum value
+- Must be valid UserType enum value
 - SUPER_ADMIN cannot have tenantId
 - TENANT_ADMIN must have tenantId
 
@@ -198,7 +203,7 @@ All entities extend `BaseAuditFields` from `@shared/types/base.types.ts`, provid
 model SystemUser {
   system_user_id    Int               @id @default(autoincrement())
   tenant_id         Int?              // NULL for SUPER_ADMIN
-  role_type         SystemUserRole    // Direct enum reference
+  role_type         UserType          // Direct enum reference
   username          String            @db.VarChar(50)
   full_name         String            @db.VarChar(255)
   email_address     String            @db.VarChar(255)
@@ -234,7 +239,7 @@ model SystemUser {
 ```prisma
 model Role {
   role_id           Int               @id @default(autoincrement())
-  role_type         SystemUserRole    @unique // Business identifier
+  role_type         UserType          @unique // Business identifier using UserType enum
   role_name         String            @db.VarChar(100)
   role_description  String?           @db.Text
   is_system_role    Boolean           @default(false)
@@ -331,7 +336,7 @@ model UserScreen {
 model RoleScreen {
   role_screen_id    Int               @id @default(autoincrement())
   tenant_id         Int
-  role_type         SystemUserRole    // Direct reference to enum
+  role_type         UserType          // Direct reference to UserType enum
   screen_id         Int
   can_view          Boolean           @default(false)
   can_create        Boolean           @default(false)
@@ -390,6 +395,8 @@ Following `TApiErrorResponse` from `@shared/types/api.types.ts`:
 - **409 CONFLICT**: "Email already exists" (errorCode: "EMAIL_EXISTS")
 - **400 BAD_REQUEST**: "Users cannot delete their own account"
 - **400 BAD_REQUEST**: "Cannot change to TENANT_ADMIN without specifying a tenant"
+- **400 BAD_REQUEST**: "SUPER_ADMIN users cannot be associated with a tenant"
+- **400 BAD_REQUEST**: "TENANT_ADMIN users must be associated with a tenant"
 
 #### Not Found Errors
 - **404 NOT_FOUND**: "System user with ID {userId} not found"
@@ -421,9 +428,14 @@ Following `TApiErrorResponse` from `@shared/types/api.types.ts`:
 // Example from systemUser.service.ts
 async createSystemUser(
   data: CreateSystemUserDto,
-  requestingUser: SystemUser
+  requestingUser: TokenPayload
 ): Promise<SystemUser> {
   return tryCatch(async () => {
+    // Validate requesting user context
+    if (!requestingUser || !requestingUser.user_type) {
+      throw new BadRequestError('Invalid requesting user context');
+    }
+    
     // Authorization checks
     // Validation logic
     // Business rule enforcement
@@ -441,9 +453,9 @@ return tryCatch(async () => {
   context: {
     userId,
     requestingUser: { 
-      id: requestingUser.system_user_id, 
-      role: requestingUser.role_type, 
-      tenantId: requestingUser.tenant_id 
+      id: requestingUser.id, 
+      role: requestingUser.user_type, 
+      tenantId: requestingUser.tenantId 
     }
   }
 });
@@ -454,11 +466,47 @@ return tryCatch(async () => {
 // Using express-validator with custom validation chains
 body('roleType')
   .exists().withMessage('Role type is required')
-  .isIn(Object.values(SystemUserRole)).withMessage('Invalid role type')
+  .isIn(Object.values(UserType)).withMessage('Role type must be a valid UserType')
   .custom((value, { req }) => {
-    // Custom validation logic for business rules
+    const tenantId = req.body.tenantId;
+    // SUPER_ADMIN cannot have a tenantId
+    if (value === UserType.SUPER_ADMIN && tenantId !== undefined && tenantId !== null) {
+      throw new Error('SUPER_ADMIN users cannot be associated with a tenant');
+    }
+    
+    // TENANT_ADMIN must have a tenantId
+    if (value === UserType.TENANT_ADMIN && (tenantId === undefined || tenantId === null)) {
+      throw new Error('TENANT_ADMIN users must be associated with a tenant');
+    }
+    
     return true;
   })
+```
+
+### Controller Implementation
+```typescript
+// Using TokenPayload instead of SystemUser for requesting user
+createSystemUserHandler = createRouteHandler(
+  async (req: Request): Promise<SystemUser> => {
+    if (!req.user) {
+      throw new Error('User not authenticated');
+    }
+
+    const requestingUser = req.user as TokenPayload;
+    
+    // Validate that we have proper user context
+    if (!requestingUser.id || !requestingUser.user_type) {
+      throw new Error('Invalid user context - missing required user information');
+    }
+
+    const userData: CreateSystemUserDto = req.validatedData as CreateSystemUserDto;
+    return this.systemUserService.createSystemUser(userData, requestingUser);
+  },
+  {
+    statusCode: 201,
+    message: 'System user created successfully'
+  }
+);
 ```
 
 ## Import Strategy
@@ -473,13 +521,29 @@ import {
   Screen, 
   UserScreen, 
   RoleScreen,
-  SystemUserRole, 
   SystemUserStatus
 } from '@shared/types/system-users.types';
+import { UserType } from '@/types/enums';
 
 // Internal modules
 import { CreateSystemUserDto } from '@/dtos/user/systemUser.dto';
 import { SystemUserService } from '@/services/systemUser.service';
+import { TokenPayload } from '@/utils/jwt.utils';
 import { authenticate, authorize } from '@/middleware/auth.middleware';
 import { tryCatch } from '@/utils/error-wrapper.utils';
+import { UserType, SystemUserStatus } from '@/types/enums';
 ```
+
+## Entity Relationships
+
+Based on the core entities relationships, the system user domain has the following key foreign key constraints:
+
+- **system_users.tenant_id** → **tenants.tenant_id** (NULL for SUPER_ADMIN)
+- **system_users.role_type** → **roles.role_type** (Direct enum reference)
+- **roles.role_type** → **UserType** enum (Unique business identifier)
+- **user_screens.system_user_id** → **system_users.system_user_id** 
+- **user_screens.tenant_id** → **tenants.tenant_id**
+- **role_screens.role_type** → **roles.role_type**
+- **role_screens.tenant_id** → **tenants.tenant_id**
+
+All entities include comprehensive audit trail relationships where system users can create, update, and delete records with proper foreign key constraints and cascade behaviors.
