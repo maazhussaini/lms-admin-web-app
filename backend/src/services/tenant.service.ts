@@ -439,6 +439,7 @@ export class TenantService {
         tenant_id: tenantId,
         dial_code: phoneData.dial_code,
         phone_number: phoneData.phone_number,
+        iso_country_code: phoneData.iso_country_code || null,
         contact_type: phoneData.contact_type || ContactType.PRIMARY,
         is_primary: phoneData.is_primary || false,
         is_active: true,
@@ -585,6 +586,7 @@ export class TenantService {
     // Only include fields that are provided in the update data
     if (updateData.dial_code !== undefined) updatePayload.dial_code = updateData.dial_code;
     if (updateData.phone_number !== undefined) updatePayload.phone_number = updateData.phone_number;
+    if (updateData.iso_country_code !== undefined) updatePayload.iso_country_code = updateData.iso_country_code;
     if (updateData.contact_type !== undefined) updatePayload.contact_type = updateData.contact_type;
     if (updateData.is_primary !== undefined) updatePayload.is_primary = updateData.is_primary;
 
