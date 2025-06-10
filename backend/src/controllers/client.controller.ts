@@ -15,22 +15,7 @@ import { ApiError } from '@/utils/api-error.utils';
 import { getPaginationFromRequest, getSortParamsFromRequest } from '@/utils/pagination.utils';
 import { TApiSuccessResponse } from '@shared/types/api.types';
 import { TokenPayload } from '@/utils/jwt.utils';
-import { ClientStatus, UserType } from '@/types/enums';
-
-/**
- * Extended Request interface with authenticated user data
- */
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: number;
-    email: string;
-    role: string;
-    user_type: UserType;
-    tenantId: number;
-    permissions?: string[];
-    [key: string]: any;
-  };
-}
+import { ClientStatus } from '@/types/enums';
 
 // Initialize client service
 const clientService = new ClientService();
