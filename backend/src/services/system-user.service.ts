@@ -4,13 +4,14 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { CreateSystemUserDto, UpdateSystemUserDto, SystemUserFilterDto } from '@/dtos/user/systemUser.dto.js';
+import { CreateSystemUserDto, UpdateSystemUserDto, SystemUserFilterDto } from '@/dtos/user/system-user.dto.js';
 import { SystemUser } from '@shared/types/system-users.types';
 import { TokenPayload } from '@/utils/jwt.utils.js';
 import { BadRequestError, ForbiddenError, NotFoundError, ConflictError } from '@/utils/api-error.utils.js';
 import { hashPassword } from '@/utils/password.utils.js';
-import { getPrismaPagination } from '@/utils/pagination.utils.js';
+import { getPrismaQueryOptions, SortOrder } from '@/utils/pagination.utils.js';
 import { tryCatch } from '@/utils/error-wrapper.utils.js';
+import { ExtendedPaginationWithFilters, SafeFilterParams } from '@/utils/async-handler.utils.js';
 import { UserType, SystemUserStatus } from '@/types/enums.js';
 
 /**
@@ -122,7 +123,7 @@ export class SystemUserService {
         throw new NotFoundError(`System user with ID ${userId} not found`);
       }
 
-      // Authorization check - TENANT_ADMIN can only view users in their tenant
+      // Authorization check - TENANT_ADMIN can only view users in their own tenant
       if (
         requestingUser.user_type === UserType.TENANT_ADMIN &&
         user.tenant_id !== requestingUser.tenantId
@@ -140,69 +141,162 @@ export class SystemUserService {
   }
 
   /**
-   * Get all system users with pagination and filtering
+   * Get all system users with pagination and filtering (updated to use DTOs properly)
    */
   async getAllSystemUsers(
-    filter: SystemUserFilterDto = {},
-    page = 1,
-    limit = 10,
+    params: ExtendedPaginationWithFilters,
     requestingUser: TokenPayload
   ): Promise<{ users: SystemUser[]; total: number }> {
     return tryCatch(async () => {
-      // Base filter condition
-      const where: any = {
-        is_deleted: false
-      };
-
-      // Apply tenant isolation for TENANT_ADMIN
-      if (requestingUser.user_type === UserType.TENANT_ADMIN) {
-        where.tenant_id = requestingUser.tenantId;
-      } 
-      // SUPER_ADMIN can filter by tenant if they want
-      else if (filter.tenantId !== undefined) {
-        where.tenant_id = filter.tenantId;
-      }
-
-      // Apply additional filters
-      if (filter.roleType !== undefined) {
-        where.role_type = filter.roleType;
-      }
-
-      if (filter.status !== undefined) {
-        where.system_user_status = filter.status;
-      }
-
-      // Apply search if provided
-      if (filter.search) {
-        where.OR = [
-          { username: { contains: filter.search, mode: 'insensitive' } },
-          { full_name: { contains: filter.search, mode: 'insensitive' } },
-          { email_address: { contains: filter.search, mode: 'insensitive' } }
-        ];
-      }
-
-      // Get pagination params
-      const pagination = getPrismaPagination({ page, limit, skip: (page - 1) * limit });
+      // Convert filter params to structured DTO
+      const filterDto = this.convertFiltersToDto(params.filters);
+      
+      // Build filters using the structured DTO
+      const filters = this.buildSystemUserFiltersFromDto(filterDto, requestingUser);
+      
+      // Use pagination utilities to build sorting
+      const sorting = this.buildSystemUserSorting(params);
+      
+      // Get query options using pagination utilities
+      const queryOptions = getPrismaQueryOptions(
+        { page: params.page, limit: params.limit, skip: params.skip },
+        sorting
+      );
 
       // Execute queries
       const [users, total] = await Promise.all([
         this.prisma.systemUser.findMany({
-          where,
-          ...pagination,
-          orderBy: { created_at: 'desc' }
+          where: filters,
+          ...queryOptions
         }),
-        this.prisma.systemUser.count({ where })
+        this.prisma.systemUser.count({ where: filters })
       ]);
 
       return { users: users as SystemUser[], total };
     }, {
       context: {
-        filter,
-        page,
-        limit,
+        params: {
+          page: params.page,
+          limit: params.limit,
+          filters: Object.keys(params.filters)
+        },
         requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId }
       }
     });
+  }
+
+  /**
+   * Convert SafeFilterParams to structured DTO
+   * This bridges the gap between async handler extraction and service layer
+   */
+  private convertFiltersToDto(filterParams: SafeFilterParams): SystemUserFilterDto {
+    const dto: SystemUserFilterDto = {};
+    
+    // Only include validated filter properties
+    if (filterParams['roleType'] && typeof filterParams['roleType'] === 'string') {
+      dto.roleType = filterParams['roleType'] as UserType;
+    }
+    
+    if (filterParams['status'] && typeof filterParams['status'] === 'string') {
+      dto.status = filterParams['status'] as SystemUserStatus;
+    }
+    
+    if (filterParams['tenantId']) {
+      dto.tenantId = typeof filterParams['tenantId'] === 'number' 
+        ? filterParams['tenantId'] 
+        : parseInt(filterParams['tenantId'] as string, 10);
+    }
+    
+    if (filterParams['search'] && typeof filterParams['search'] === 'string') {
+      dto.search = filterParams['search'];
+    }
+    
+    return dto;
+  }
+
+  /**
+   * Build Prisma filters from structured DTO with proper validation
+   * Centralizes filter logic and tenant isolation using DTOs
+   * 
+   * @future Extract to shared QueryBuilder utility when similar 
+   * filtering logic appears in 3+ services
+   */
+  private buildSystemUserFiltersFromDto(
+    filterDto: SystemUserFilterDto,
+    requestingUser: TokenPayload
+  ): Record<string, any> {
+    // Base filter condition
+    const where: Record<string, any> = {
+      is_deleted: false
+    };
+
+    // Apply tenant isolation for TENANT_ADMIN
+    if (requestingUser.user_type === UserType.TENANT_ADMIN) {
+      where['tenant_id'] = requestingUser.tenantId;
+    } 
+    // SUPER_ADMIN can filter by tenant if specified
+    else if (filterDto.tenantId !== undefined) {
+      where['tenant_id'] = filterDto.tenantId;
+    }
+
+    // Apply filters using validated DTO properties
+    if (filterDto.roleType !== undefined) {
+      where['role_type'] = filterDto.roleType;
+    }
+
+    if (filterDto.status !== undefined) {
+      where['system_user_status'] = filterDto.status;
+    }
+
+    // Apply search filter
+    if (filterDto.search !== undefined && filterDto.search.trim().length > 0) {
+      const searchTerm = filterDto.search.trim();
+      where['OR'] = [
+        { username: { contains: searchTerm, mode: 'insensitive' } },
+        { full_name: { contains: searchTerm, mode: 'insensitive' } },
+        { email_address: { contains: searchTerm, mode: 'insensitive' } }
+      ];
+    }
+
+    return where;
+  }
+
+  /**
+   * Build Prisma sorting from pagination parameters
+   * Centralizes field mapping logic
+   * 
+   * @future Extract field mappings to constants/field-mappings.ts
+   * when supporting multiple entity types
+   */
+  private buildSystemUserSorting(params: ExtendedPaginationWithFilters): Record<string, SortOrder> {
+    // Field mapping from API names to database column names
+    const fieldMapping: Record<string, string> = {
+      'createdAt': 'created_at',
+      'updatedAt': 'updated_at',
+      'fullName': 'full_name',
+      'email': 'email_address',
+      'roleType': 'role_type',
+      'status': 'system_user_status',
+      'tenantId': 'tenant_id',
+      'username': 'username'
+    };
+
+    // Use existing sorting if available
+    if (params.sorting && Object.keys(params.sorting).length > 0) {
+      const mappedSorting: Record<string, SortOrder> = {};
+      Object.entries(params.sorting).forEach(([field, order]) => {
+        const dbField = fieldMapping[field] || field;
+        mappedSorting[dbField] = order;
+      });
+      return mappedSorting;
+    }
+
+    // Fallback to individual sort parameters
+    const sortBy = params.sortBy || 'created_at';
+    const sortOrder = params.sortOrder || 'desc';
+    const dbField = fieldMapping[sortBy] || sortBy;
+    
+    return { [dbField]: sortOrder };
   }
 
   /**

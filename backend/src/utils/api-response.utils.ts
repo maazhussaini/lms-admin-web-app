@@ -102,15 +102,49 @@ export type ErrorCode = typeof ERROR_CODES[keyof typeof ERROR_CODES];
  * @param {string} [correlationId] - Optional request correlation ID for tracing
  * @returns {TApiSuccessResponse<T>} A structured success response
  */
-export const createSuccessResponse = <T>(
+export function createSuccessResponse<T>(
+  data: T,
+  message?: string,
+  statusCode?: HttpStatusCode,
+  correlationId?: string
+): TApiSuccessResponse<T>;
+
+/**
+ * Creates a standardized success response object (with pagination)
+ */
+export function createSuccessResponse<T>(
+  data: T,
+  message: string,
+  statusCode: HttpStatusCode,
+  pagination: TApiSuccessResponse['pagination'],
+  correlationId?: string
+): TApiSuccessResponse<T>;
+
+/**
+ * Implementation of createSuccessResponse
+ */
+export function createSuccessResponse<T>(
   data: T,
   message = 'Success',
   statusCode: HttpStatusCode = HTTP_STATUS_CODES.OK,
-  pagination?: TApiSuccessResponse['pagination'],
+  paginationOrCorrelationId?: TApiSuccessResponse['pagination'] | string,
   correlationId?: string
-): TApiSuccessResponse<T> => {
+): TApiSuccessResponse<T> {
+  // Determine if the fourth parameter is pagination or correlationId
+  let pagination: TApiSuccessResponse['pagination'] | undefined;
+  let finalCorrelationId: string | undefined;
+  
+  if (typeof paginationOrCorrelationId === 'string') {
+    // Fourth parameter is correlationId
+    finalCorrelationId = paginationOrCorrelationId;
+  } else {
+    // Fourth parameter is pagination
+    pagination = paginationOrCorrelationId;
+    finalCorrelationId = correlationId;
+  }
+  
   // Validate correlation ID if provided
-  const validatedCorrelationId = validateCorrelationId(correlationId);
+  const validatedCorrelationId = validateCorrelationId(finalCorrelationId);
   
   const response: TApiSuccessResponse<T> = {
     success: true,
@@ -130,7 +164,7 @@ export const createSuccessResponse = <T>(
   }
 
   return response;
-};
+}
 
 /**
  * Creates a standardized error response object
@@ -225,44 +259,55 @@ export const createPaginatedResponse = <T>(
     pagination: paginationData,
   };
   
-  return createSuccessResponse(
-    listResponse,
-    message,
-    statusCode,
-    paginationData,
-    validatedCorrelationId
-  );
+  // Use the cleaner approach without explicit undefined
+  return createSuccessResponse(listResponse, message, statusCode, validatedCorrelationId);
 };
 
 /**
- * Creates a created (201) response with the newly created resource
- * 
- * @template T - The type of data being returned
- * @param {T} data - The newly created resource
- * @param {string} [message='Resource created successfully'] - The success message
- * @param {string} [correlationId] - Optional request correlation ID for tracing
- * @returns {TApiSuccessResponse<T>} A structured created response
+ * Helper functions for common responses without explicit undefined
+ */
+
+/**
+ * Creates a success response for single items
+ */
+export const createItemResponse = <T>(
+  data: T,
+  message = 'Item retrieved successfully',
+  correlationId?: string
+): TApiSuccessResponse<T> => {
+  return createSuccessResponse(data, message, HTTP_STATUS_CODES.OK, correlationId);
+};
+
+/**
+ * Creates a created response for newly created resources
  */
 export const createCreatedResponse = <T>(
   data: T,
   message = 'Resource created successfully',
   correlationId?: string
 ): TApiSuccessResponse<T> => {
-  return createSuccessResponse(data, message, HTTP_STATUS_CODES.CREATED, undefined, correlationId);
+  return createSuccessResponse(data, message, HTTP_STATUS_CODES.CREATED, correlationId);
 };
 
 /**
- * Creates a no content (204) response for successful operations that don't return data
- * 
- * @param {string} [message='Operation successful'] - The success message
- * @param {string} [correlationId] - Optional request correlation ID for tracing
- * @returns {TApiSuccessResponse<null>} A structured no content response
+ * Creates a success response for updates
  */
-export const createNoContentResponse = (
-  message = 'Operation successful',
+export const createUpdatedResponse = <T>(
+  data: T,
+  message = 'Resource updated successfully',
+  correlationId?: string
+): TApiSuccessResponse<T> => {
+  return createSuccessResponse(data, message, HTTP_STATUS_CODES.OK, correlationId);
+};
+
+/**
+ * Creates a no content response for deletions
+ */
+export const createDeletedResponse = (
+  message = 'Resource deleted successfully',
   correlationId?: string
 ): TApiSuccessResponse<null> => {
-  return createSuccessResponse(null, message, HTTP_STATUS_CODES.NO_CONTENT, undefined, correlationId);
+  return createSuccessResponse(null, message, HTTP_STATUS_CODES.NO_CONTENT, correlationId);
 };
 
 /**

@@ -3,7 +3,7 @@
  * @description Defines data transfer objects for system user management with validation rules
  */
 
-import { body, ValidationChain } from 'express-validator';
+import { body, query, ValidationChain } from 'express-validator';
 import { UserType, SystemUserStatus } from '@/types/enums';
 
 /**
@@ -154,3 +154,72 @@ export const filterSystemUserValidation: ValidationChain[] = [
     .isString().withMessage('Search must be a string')
     .trim()
 ];
+
+/**
+ * Validation chains for query parameters when listing system users
+ */
+export const listSystemUsersValidation: ValidationChain[] = [
+  // Pagination parameters (using query validation instead of body)
+  query('page')
+    .optional()
+    .isInt({ min: 1 }).withMessage('Page must be a positive integer')
+    .toInt(),
+
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
+    .toInt(),
+
+  // Sorting parameters
+  query('sortBy')
+    .optional()
+    .isString().withMessage('Sort by must be a string')
+    .isIn(['createdAt', 'updatedAt', 'fullName', 'email', 'roleType', 'status', 'tenantId', 'username'])
+    .withMessage('Sort by must be a valid field'),
+
+  query('sortOrder')
+    .optional()
+    .isString().withMessage('Sort order must be a string')
+    .isIn(['asc', 'desc']).withMessage('Sort order must be asc or desc'),
+
+  // Filter parameters
+  query('roleType')
+    .optional()
+    .isString().withMessage('Role type must be a string')
+    .isIn(Object.values(UserType)).withMessage('Role type must be a valid UserType'),
+
+  query('status')
+    .optional()
+    .isString().withMessage('Status must be a string')
+    .isIn(Object.values(SystemUserStatus)).withMessage('Status must be a valid SystemUserStatus'),
+
+  query('tenantId')
+    .optional()
+    .isInt({ min: 1 }).withMessage('Tenant ID must be a positive integer')
+    .toInt(),
+
+  query('search')
+    .optional()
+    .isString().withMessage('Search must be a string')
+    .isLength({ min: 1, max: 100 }).withMessage('Search term must be between 1 and 100 characters')
+    .trim()
+];
+
+/**
+ * Enhanced filter DTO with proper typing for validated query parameters
+ */
+export interface SystemUserListQueryDto {
+  // Pagination
+  page?: number;
+  limit?: number;
+  
+  // Sorting
+  sortBy?: 'createdAt' | 'updatedAt' | 'fullName' | 'email' | 'roleType' | 'status' | 'tenantId' | 'username';
+  sortOrder?: 'asc' | 'desc';
+  
+  // Filters
+  roleType?: UserType;
+  status?: SystemUserStatus;
+  tenantId?: number;
+  search?: string;
+}

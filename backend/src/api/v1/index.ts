@@ -9,7 +9,7 @@ import { Router } from 'express';
 import authRoutes from './routes/auth.routes.js';
 import studentAuthRoutes from './routes/student/auth.routes.js';
 import teacherAuthRoutes from './routes/teacher/auth.routes.js';
-import systemUserRoutes from './routes/systemUser.routes.js';
+import systemUserRoutes from './routes/system-user.routes.js';
 import programRoutes from './routes/program.routes';
 import tenantRoutes from './routes/tenant.routes.js';
 import clientRoutes from './routes/client.routes.js';

@@ -3,18 +3,18 @@
  * @description Controller for handling system user CRUD operations
  */
 
-import { Request, Response } from 'express';
-import { SystemUserService } from '@/services/systemUser.service.js';
-import { CreateSystemUserDto, UpdateSystemUserDto, SystemUserFilterDto } from '@/dtos/user/systemUser.dto.js';
+import { SystemUserService } from '@/services/system-user.service.js';
+import { CreateSystemUserDto, UpdateSystemUserDto } from '@/dtos/user/system-user.dto.js';
 import { SystemUser } from '@shared/types/system-users.types';
-import { TokenPayload } from '@/utils/jwt.utils.js';
 import {
   createRouteHandler,
-  createSuccessResponse,
-  asyncHandler
-} from '@/utils/index.js';
+  createListHandler,
+  createUpdateHandler,
+  createDeleteHandler,
+  ExtendedPaginationWithFilters,
+  AuthenticatedRequest
+} from '@/utils/async-handler.utils.js';
 import prisma from '@/config/database.js';
-import { UserType, SystemUserStatus } from '@/types/enums';
 
 export class SystemUserController {
   private systemUserService: SystemUserService;
@@ -26,13 +26,13 @@ export class SystemUserController {
   /**
    * Create a new system user
    */
-  createSystemUserHandler = createRouteHandler(
-    async (req: Request): Promise<SystemUser> => {
+  createSystemUserHandler = createRouteHandler<SystemUser>(
+    async (req: AuthenticatedRequest): Promise<SystemUser> => {
       if (!req.user) {
         throw new Error('User not authenticated');
       }
 
-      const requestingUser = req.user as TokenPayload;
+      const requestingUser = req.user;
       
       // Validate that we have proper user context
       if (!requestingUser.id || !requestingUser.user_type) {
@@ -54,13 +54,13 @@ export class SystemUserController {
   /**
    * Get a system user by ID
    */
-  getSystemUserByIdHandler = createRouteHandler(
-    async (req: Request): Promise<SystemUser> => {
+  getSystemUserByIdHandler = createRouteHandler<SystemUser>(
+    async (req: AuthenticatedRequest): Promise<SystemUser> => {
       if (!req.user) {
         throw new Error('User not authenticated');
       }
 
-      const requestingUser = req.user as TokenPayload;
+      const requestingUser = req.user;
       const userIdParam = req.params['userId'];
       
       if (!userIdParam) {
@@ -79,79 +79,41 @@ export class SystemUserController {
   /**
    * Get all system users with pagination and filtering
    */
-  getAllSystemUsersHandler = asyncHandler(
-    async (req: Request, res: Response): Promise<void> => {
+  getAllSystemUsersHandler = createListHandler<SystemUser>(
+    async (params: ExtendedPaginationWithFilters, req: AuthenticatedRequest) => {
       if (!req.user) {
         throw new Error('User not authenticated');
       }
 
-      const requestingUser = req.user as TokenPayload;
-      const page = parseInt(req.query['page'] as string || '1', 10);
-      const limit = parseInt(req.query['limit'] as string || '10', 10);
-
-      // Extract filter parameters
-      const filter: SystemUserFilterDto = {};
+      const requestingUser = req.user;
       
-      if (req.query['roleType']) {
-        const roleValue = req.query['roleType'] as string;
-        if (Object.values(UserType).includes(roleValue as UserType)) {
-          filter.roleType = roleValue as UserType;
-        }
-      }
-      
-      if (req.query['status']) {
-        const statusValue = req.query['status'] as string;
-        if (Object.values(SystemUserStatus).includes(statusValue as SystemUserStatus)) {
-          filter.status = statusValue as SystemUserStatus;
-        }
-      }
-      
-      if (req.query['tenantId']) {
-        filter.tenantId = parseInt(req.query['tenantId'] as string, 10);
-      }
-      
-      if (req.query['search']) {
-        filter.search = req.query['search'] as string;
-      }
-
+      // Call the service with the params directly - no need to extract filters here
+      // since the service now handles ExtendedPaginationWithFilters
       const { users, total } = await this.systemUserService.getAllSystemUsers(
-        filter,
-        page,
-        limit,
+        params,
         requestingUser
       );
 
-      // Use createSuccessResponse instead to avoid duplicate pagination
-      const paginationMetadata = {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        hasNext: page < Math.ceil(total / limit),
-        hasPrev: page > 1
+      return {
+        items: users,
+        total
       };
-
-      const response = createSuccessResponse(
-        users,
-        'System users retrieved successfully',
-        200,
-        paginationMetadata
-      );
-
-      res.status(200).json(response);
+    },
+    {
+      message: 'System users retrieved successfully'
     }
   );
 
   /**
    * Update a system user
    */
-  updateSystemUserHandler = createRouteHandler(
-    async (req: Request): Promise<SystemUser> => {
+  updateSystemUserHandler = createUpdateHandler<SystemUser>(
+    async (req: AuthenticatedRequest): Promise<SystemUser> => {
       if (!req.user) {
         throw new Error('User not authenticated');
       }
 
-      const requestingUser = req.user as TokenPayload;
+      const requestingUser = req.user;
       const userIdParam = req.params['userId'];
       
       if (!userIdParam) {
@@ -171,13 +133,13 @@ export class SystemUserController {
   /**
    * Delete (soft-delete) a system user
    */
-  deleteSystemUserHandler = createRouteHandler(
-    async (req: Request): Promise<void> => {
+  deleteSystemUserHandler = createDeleteHandler(
+    async (req: AuthenticatedRequest): Promise<void> => {
       if (!req.user) {
         throw new Error('User not authenticated');
       }
 
-      const requestingUser = req.user as TokenPayload;
+      const requestingUser = req.user;
       const userIdParam = req.params['userId'];
       
       if (!userIdParam) {
@@ -187,11 +149,9 @@ export class SystemUserController {
       const userId = parseInt(userIdParam, 10);
 
       await this.systemUserService.deleteSystemUser(userId, requestingUser);
-      return;
     },
     {
-      message: 'System user deleted successfully',
-      statusCode: 204
+      message: 'System user deleted successfully'
     }
   );
 }

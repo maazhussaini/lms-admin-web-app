@@ -16,9 +16,14 @@ import {
 import { asyncHandler } from '@/utils/async-handler.utils';
 import { ApiError } from '@/utils/api-error.utils';
 import { getPaginationFromRequest, getSortParamsFromRequest } from '@/utils/pagination.utils';
-import { TApiSuccessResponse } from '@shared/types/api.types';
 import { TokenPayload } from '@/utils/jwt.utils';
 import logger from '@/config/logger';
+import {
+  createSuccessResponse, 
+  createCreatedResponse,
+  createUpdatedResponse,
+  createPaginatedResponse
+} from '@/utils/api-response.utils';
 
 // Initialize tenant service
 const tenantService = new TenantService();
@@ -54,13 +59,7 @@ export class TenantController {
         req.ip || undefined
       );
       
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 201,
-        message: 'Tenant created successfully',
-        data: tenant,
-        timestamp: new Date().toISOString()
-      };
+      const response = createCreatedResponse(tenant, 'Tenant created successfully');
       
       return res.status(201).json(response);
     }
@@ -91,15 +90,9 @@ export class TenantController {
       const requestingUser = req.user as TokenPayload;
 
       const tenant = await tenantService.getTenantById(tenantId, requestingUser);
-      
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: 'Tenant retrieved successfully',
-        data: tenant,
-        timestamp: new Date().toISOString()
-      };
-      
+
+      const response = createSuccessResponse(tenant, 'Tenant retrieved successfully');
+
       return res.status(200).json(response);
     }
   );
@@ -128,7 +121,8 @@ export class TenantController {
       
       const search = req.query['search'] as string | undefined;
       const status = req.query['status'] ? parseInt(req.query['status'] as string, 10) : undefined;
-        const serviceParams: {
+      
+      const serviceParams: {
         page: number;
         limit: number;
         sortBy?: string;
@@ -147,18 +141,16 @@ export class TenantController {
       
       const result = await tenantService.getAllTenants(serviceParams);
       
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: 'Tenants retrieved successfully',
-        data: result.items,
-        timestamp: new Date().toISOString()
-      };
+      // Use createPaginatedResponse correctly - it expects items array, not wrapped data
+      const response = createPaginatedResponse(
+        result.items,
+        result.pagination.page,
+        result.pagination.limit,
+        result.pagination.total,
+        'Tenants retrieved successfully'
+      );
       
-      return res.status(200).json({
-        ...response,
-        pagination: result.pagination
-      });
+      return res.status(200).json(response);
     }
   );
 
@@ -185,16 +177,38 @@ export class TenantController {
       }
 
       const requestingUser = req.user as TokenPayload;
-
-      const clients = await tenantService.getTenantClients(tenantId, requestingUser);
+      const pagination = getPaginationFromRequest(req);
+      const sortParams = getSortParamsFromRequest(
+        req,
+        'created_at',
+        'desc',
+        ['client_id', 'full_name', 'email_address', 'created_at', 'updated_at']
+      );
+      const sortBy = Object.keys(sortParams)[0] || undefined;
+      const order = Object.values(sortParams)[0] || undefined;
       
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: 'Tenant clients retrieved successfully',
-        data: clients,
-        timestamp: new Date().toISOString()
+      const search = req.query['search'] as string | undefined;
+      const status = req.query['status'] as string | undefined;
+
+      const options: any = {
+        page: pagination.page,
+        limit: pagination.limit
       };
+      if (sortBy) options.sortBy = sortBy;
+      if (order) options.order = order;
+      if (search) options.search = search;
+      if (status) options.status = status;
+
+      const result = await tenantService.getTenantClients(tenantId, requestingUser, options);
+      
+      // Use createPaginatedResponse correctly
+      const response = createPaginatedResponse(
+        result.items,
+        result.pagination.page,
+        result.pagination.limit,
+        result.pagination.total,
+        'Tenant clients retrieved successfully'
+      );
       
       return res.status(200).json(response);
     }
@@ -233,13 +247,7 @@ export class TenantController {
         req.ip || undefined
       );
       
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: 'Tenant updated successfully',
-        data: updatedTenant,
-        timestamp: new Date().toISOString()
-      };
+      const response = createUpdatedResponse(updatedTenant, 'Tenant updated successfully');
       
       return res.status(200).json(response);
     }
@@ -275,13 +283,7 @@ export class TenantController {
         req.ip || undefined
       );
       
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: result.message,
-        data: null,
-        timestamp: new Date().toISOString()
-      };
+      const response = createSuccessResponse(null, result.message);
       
       return res.status(200).json(response);
     }
@@ -322,13 +324,7 @@ export class TenantController {
         req.ip || undefined
       );
       
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 201,
-        message: 'Tenant phone number created successfully',
-        data: phoneNumber,
-        timestamp: new Date().toISOString()
-      };
+      const response = createCreatedResponse(phoneNumber, 'Tenant phone number created successfully');
       
       return res.status(201).json(response);
     }
@@ -357,22 +353,37 @@ export class TenantController {
       }
 
       const requestingUser = req.user as TokenPayload;
+      const pagination = getPaginationFromRequest(req);
+      const sortParams = getSortParamsFromRequest(
+        req,
+        'created_at',
+        'desc',
+        ['tenant_phone_number_id', 'phone_number', 'contact_type', 'created_at', 'updated_at']
+      );
+      const sortBy = Object.keys(sortParams)[0] || undefined;
+      const order = Object.values(sortParams)[0] || undefined;
       const contactType = req.query['contactType'] ? parseInt(req.query['contactType'] as string, 10) : undefined;
 
-      const options: any = {};
+      const options: any = {
+        page: pagination.page,
+        limit: pagination.limit
+      };
+      if (sortBy) options.sortBy = sortBy;
+      if (order) options.order = order;
       if (contactType !== undefined) {
         options.phoneType = contactType.toString();
       }
 
-      const phoneNumbers = await tenantService.getAllTenantPhoneNumbers(tenantId, requestingUser, options);
+      const result = await tenantService.getAllTenantPhoneNumbers(tenantId, requestingUser, options);
       
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: 'Tenant phone numbers retrieved successfully',
-        data: phoneNumbers,
-        timestamp: new Date().toISOString()
-      };
+      // Use createPaginatedResponse correctly
+      const response = createPaginatedResponse(
+        result.items,
+        result.pagination.page,
+        result.pagination.limit,
+        result.pagination.total,
+        'Tenant phone numbers retrieved successfully'
+      );
       
       return res.status(200).json(response);
     }
@@ -430,13 +441,7 @@ export class TenantController {
         req.ip || undefined
       );
       
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: 'Tenant phone number updated successfully',
-        data: updatedPhoneNumber,
-        timestamp: new Date().toISOString()
-      };
+      const response = createUpdatedResponse(updatedPhoneNumber, 'Tenant phone number updated successfully');
       
       return res.status(200).json(response);
     }
@@ -492,13 +497,7 @@ export class TenantController {
         req.ip || undefined
       );
       
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: result.message,
-        data: null,
-        timestamp: new Date().toISOString()
-      };
+      const response = createSuccessResponse(null, result.message);
       
       return res.status(200).json(response);
     }
@@ -539,13 +538,7 @@ export class TenantController {
         req.ip || undefined
       );
       
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 201,
-        message: 'Tenant email address created successfully',
-        data: emailAddress,
-        timestamp: new Date().toISOString()
-      };
+      const response = createCreatedResponse(emailAddress, 'Tenant email address created successfully');
       
       return res.status(201).json(response);
     }
@@ -574,22 +567,37 @@ export class TenantController {
       }
 
       const requestingUser = req.user as TokenPayload;
+      const pagination = getPaginationFromRequest(req);
+      const sortParams = getSortParamsFromRequest(
+        req,
+        'created_at',
+        'desc',
+        ['tenant_email_address_id', 'email_address', 'contact_type', 'created_at', 'updated_at']
+      );
+      const sortBy = Object.keys(sortParams)[0] || undefined;
+      const order = Object.values(sortParams)[0] || undefined;
       const contactType = req.query['contactType'] ? parseInt(req.query['contactType'] as string, 10) : undefined;
 
-      const options: any = {};
+      const options: any = {
+        page: pagination.page,
+        limit: pagination.limit
+      };
+      if (sortBy) options.sortBy = sortBy;
+      if (order) options.order = order;
       if (contactType !== undefined) {
         options.emailType = contactType.toString();
       }
 
-      const emailAddresses = await tenantService.getAllTenantEmailAddresses(tenantId, requestingUser, options);
+      const result = await tenantService.getAllTenantEmailAddresses(tenantId, requestingUser, options);
       
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: 'Tenant email addresses retrieved successfully',
-        data: emailAddresses,
-        timestamp: new Date().toISOString()
-      };
+      // Use createPaginatedResponse correctly
+      const response = createPaginatedResponse(
+        result.items,
+        result.pagination.page,
+        result.pagination.limit,
+        result.pagination.total,
+        'Tenant email addresses retrieved successfully'
+      );
       
       return res.status(200).json(response);
     }
@@ -647,13 +655,7 @@ export class TenantController {
         req.ip || undefined
       );
       
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: 'Tenant email address updated successfully',
-        data: updatedEmailAddress,
-        timestamp: new Date().toISOString()
-      };
+      const response = createUpdatedResponse(updatedEmailAddress, 'Tenant email address updated successfully');
       
       return res.status(200).json(response);
     }
@@ -709,13 +711,7 @@ export class TenantController {
         req.ip || undefined
       );
       
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: result.message,
-        data: null,
-        timestamp: new Date().toISOString()
-      };
+      const response = createSuccessResponse(null, result.message);
       
       return res.status(200).json(response);
     }
