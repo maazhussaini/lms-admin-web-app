@@ -13,7 +13,7 @@ import {
   asyncHandler
 } from '@/utils/index.js';
 import prisma from '@/config/database.js';
-import { SystemUserRole, SystemUserStatus } from '@/types/enums';
+import { UserType, SystemUserStatus } from '@/types/enums';
 
 export class SystemUserController {
   private systemUserService: SystemUserService;
@@ -32,6 +32,12 @@ export class SystemUserController {
       }
 
       const requestingUser = req.user as unknown as SystemUser;
+      
+      // Validate that we have proper user context
+      if (!requestingUser.system_user_id || !requestingUser.role_type) {
+        throw new Error('Invalid user context - missing required user information');
+      }
+
       const userData: CreateSystemUserDto = req.validatedData as CreateSystemUserDto;
 
       const newUser = await this.systemUserService.createSystemUser(userData, requestingUser);
@@ -86,8 +92,8 @@ export class SystemUserController {
       
       if (req.query['roleType']) {
         const roleValue = req.query['roleType'] as string;
-        if (Object.values(SystemUserRole).includes(roleValue as SystemUserRole)) {
-          filter.roleType = roleValue as SystemUserRole;
+        if (Object.values(UserType).includes(roleValue as UserType)) {
+          filter.roleType = roleValue as UserType;
         }
       }
       

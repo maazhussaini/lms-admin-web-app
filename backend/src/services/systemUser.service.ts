@@ -10,7 +10,7 @@ import { BadRequestError, ForbiddenError, NotFoundError, ConflictError } from '@
 import { hashPassword } from '@/utils/password.utils.js';
 import { getPrismaPagination } from '@/utils/pagination.utils.js';
 import { tryCatch } from '@/utils/error-wrapper.utils.js';
-import { SystemUserRole, SystemUserStatus } from '@/types/enums.js';
+import { UserType, SystemUserStatus } from '@/types/enums.js';
 
 /**
  * System user service for managing system-level users
@@ -30,24 +30,38 @@ export class SystemUserService {
     requestingUser: SystemUser
   ): Promise<SystemUser> {
     return tryCatch(async () => {
+      // Validate that we have a requesting user
+      if (!requestingUser || !requestingUser.role_type) {
+        throw new BadRequestError('Invalid requesting user context');
+      }
+
       // Authorization checks
-      if (requestingUser.role_type === SystemUserRole.TENANT_ADMIN) {
+      if (requestingUser.role_type === UserType.TENANT_ADMIN) {
         // Tenant admins can only create users within their own tenant
         if (data.tenantId !== requestingUser.tenant_id) {
           throw new ForbiddenError('You can only create users within your own tenant');
         }
 
         // Tenant admins cannot create SUPER_ADMIN users
-        if (data.roleType === SystemUserRole.SUPER_ADMIN) {
+        if (data.roleType === UserType.SUPER_ADMIN) {
           throw new ForbiddenError('Tenant administrators cannot create super admin users');
         }
+      }
+
+      // Validate role and tenant relationship
+      if (data.roleType === UserType.SUPER_ADMIN && data.tenantId !== undefined && data.tenantId !== null) {
+        throw new BadRequestError('SUPER_ADMIN users cannot be associated with a tenant');
+      }
+
+      if (data.roleType === UserType.TENANT_ADMIN && (!data.tenantId || data.tenantId === null)) {
+        throw new BadRequestError('TENANT_ADMIN users must be associated with a tenant');
       }
 
       // Check uniqueness based on role
       const existingUser = await this.findExistingUser(
         data.username, 
         data.email, 
-        data.roleType === SystemUserRole.SUPER_ADMIN ? null : data.tenantId || null
+        data.roleType === UserType.SUPER_ADMIN ? null : data.tenantId || null
       );
       
       if (existingUser) {
@@ -69,7 +83,7 @@ export class SystemUserService {
           email_address: data.email,
           password_hash: passwordHash,
           role_type: data.roleType,
-          tenant_id: data.roleType === SystemUserRole.SUPER_ADMIN ? null : (data.tenantId || null),
+          tenant_id: data.roleType === UserType.SUPER_ADMIN ? null : (data.tenantId || null),
           system_user_status: data.status || SystemUserStatus.ACTIVE,
           
           // Audit fields
@@ -109,7 +123,7 @@ export class SystemUserService {
 
       // Authorization check - TENANT_ADMIN can only view users in their tenant
       if (
-        requestingUser.role_type === SystemUserRole.TENANT_ADMIN &&
+        requestingUser.role_type === UserType.TENANT_ADMIN &&
         user.tenant_id !== requestingUser.tenant_id
       ) {
         throw new ForbiddenError('You cannot access users from another tenant');
@@ -140,7 +154,7 @@ export class SystemUserService {
       };
 
       // Apply tenant isolation for TENANT_ADMIN
-      if (requestingUser.role_type === SystemUserRole.TENANT_ADMIN) {
+      if (requestingUser.role_type === UserType.TENANT_ADMIN) {
         where.tenant_id = requestingUser.tenant_id;
       } 
       // SUPER_ADMIN can filter by tenant if they want
@@ -212,19 +226,19 @@ export class SystemUserService {
       }
 
       // Authorization checks
-      if (requestingUser.role_type === SystemUserRole.TENANT_ADMIN) {
+      if (requestingUser.role_type === UserType.TENANT_ADMIN) {
         // Tenant admin can only update users in their own tenant
         if (existingUser.tenant_id !== requestingUser.tenant_id) {
           throw new ForbiddenError('You cannot update users from another tenant');
         }
 
         // Tenant admin cannot update SUPER_ADMIN users
-        if (existingUser.role_type === SystemUserRole.SUPER_ADMIN) {
+        if (existingUser.role_type === UserType.SUPER_ADMIN) {
           throw new ForbiddenError('Tenant administrators cannot update super admin users');
         }
 
         // Tenant admin cannot change a user's role to SUPER_ADMIN
-        if (data.roleType === SystemUserRole.SUPER_ADMIN) {
+        if (data.roleType === UserType.SUPER_ADMIN) {
           throw new ForbiddenError('Tenant administrators cannot assign super admin role');
         }
       }
@@ -257,16 +271,16 @@ export class SystemUserService {
       }
 
       // Special handling for role changes (SUPER_ADMIN only)
-      if (data.roleType !== undefined && requestingUser.role_type === SystemUserRole.SUPER_ADMIN) {
+      if (data.roleType !== undefined && requestingUser.role_type === UserType.SUPER_ADMIN) {
         updateData.role_type = data.roleType;
         
         // Handle tenant implications of role change
-        if (data.roleType === SystemUserRole.SUPER_ADMIN && existingUser.tenant_id !== null) {
+        if (data.roleType === UserType.SUPER_ADMIN && existingUser.tenant_id !== null) {
           // Changing to SUPER_ADMIN requires removing tenant association
           updateData.tenant_id = null;
         } 
         // Cannot change to TENANT_ADMIN without specifying a tenant (outside scope of this DTO)
-        else if (data.roleType === SystemUserRole.TENANT_ADMIN && existingUser.tenant_id === null) {
+        else if (data.roleType === UserType.TENANT_ADMIN && existingUser.tenant_id === null) {
           throw new BadRequestError('Cannot change to TENANT_ADMIN without specifying a tenant');
         }
       }
@@ -312,14 +326,14 @@ export class SystemUserService {
       }
 
       // Authorization checks
-      if (requestingUser.role_type === SystemUserRole.TENANT_ADMIN) {
+      if (requestingUser.role_type === UserType.TENANT_ADMIN) {
         // Tenant admin can only delete users in their own tenant
         if (existingUser.tenant_id !== requestingUser.tenant_id) {
           throw new ForbiddenError('You cannot delete users from another tenant');
         }
 
         // Tenant admin cannot delete SUPER_ADMIN users
-        if (existingUser.role_type === SystemUserRole.SUPER_ADMIN) {
+        if (existingUser.role_type === UserType.SUPER_ADMIN) {
           throw new ForbiddenError('Tenant administrators cannot delete super admin users');
         }
       }

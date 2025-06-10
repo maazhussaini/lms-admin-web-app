@@ -4,7 +4,7 @@
  */
 
 import { body, ValidationChain } from 'express-validator';
-import { SystemUserRole, SystemUserStatus } from '@/types/enums';
+import { UserType, SystemUserStatus } from '@/types/enums';
 
 /**
  * DTO interface for creating a new system user
@@ -14,7 +14,7 @@ export interface CreateSystemUserDto {
   fullName: string;
   email: string;
   password: string;
-  roleType: SystemUserRole;
+  roleType: UserType;
   tenantId?: number;
   status?: SystemUserStatus;
 }
@@ -25,7 +25,7 @@ export interface CreateSystemUserDto {
 export interface UpdateSystemUserDto {
   fullName?: string;
   email?: string;
-  roleType?: SystemUserRole;
+  roleType?: UserType;
   status?: SystemUserStatus;
   password?: string;
 }
@@ -34,7 +34,7 @@ export interface UpdateSystemUserDto {
  * DTO interface for filtering system users in list operations
  */
 export interface SystemUserFilterDto {
-  roleType?: SystemUserRole;
+  roleType?: UserType;
   status?: SystemUserStatus;
   tenantId?: number;
   search?: string;
@@ -71,16 +71,16 @@ export const createSystemUserValidation: ValidationChain[] = [
   body('roleType')
     .exists().withMessage('Role type is required')
     .isString().withMessage('Role type must be a string')
-    .isIn(Object.values(SystemUserRole)).withMessage('Role type must be a valid SystemUserRole')
+    .isIn(Object.values(UserType)).withMessage('Role type must be a valid UserType')
     .custom((value, { req }) => {
       const tenantId = req.body.tenantId;
       // SUPER_ADMIN cannot have a tenantId
-      if (value === SystemUserRole.SUPER_ADMIN && tenantId !== undefined && tenantId !== null) {
+      if (value === UserType.SUPER_ADMIN && tenantId !== undefined && tenantId !== null) {
         throw new Error('SUPER_ADMIN users cannot be associated with a tenant');
       }
       
       // TENANT_ADMIN must have a tenantId
-      if (value === SystemUserRole.TENANT_ADMIN && (tenantId === undefined || tenantId === null)) {
+      if (value === UserType.TENANT_ADMIN && (tenantId === undefined || tenantId === null)) {
         throw new Error('TENANT_ADMIN users must be associated with a tenant');
       }
       
@@ -118,7 +118,7 @@ export const updateSystemUserValidation: ValidationChain[] = [
   body('roleType')
     .optional()
     .isString().withMessage('Role type must be a string')
-    .isIn(Object.values(SystemUserRole)).withMessage('Role type must be a valid SystemUserRole'),
+    .isIn(Object.values(UserType)).withMessage('Role type must be a valid UserType'),
 
   body('status')
     .optional()
@@ -138,7 +138,7 @@ export const filterSystemUserValidation: ValidationChain[] = [
   body('roleType')
     .optional()
     .isString().withMessage('Role type must be a string')
-    .isIn(Object.values(SystemUserRole)).withMessage('Role type must be a valid SystemUserRole'),
+    .isIn(Object.values(UserType)).withMessage('Role type must be a valid UserType'),
 
   body('status')
     .optional()

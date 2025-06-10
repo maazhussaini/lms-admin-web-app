@@ -3,8 +3,6 @@
  * @description Standard API response types and authentication structures.
  */
 
-import { SystemUserRole } from './system-users.types';
-
 /**
  * Standard success response structure for all API endpoints
  */
@@ -60,7 +58,7 @@ export interface TAuthResponse {
     full_name: string;
     email: string;
     role: {
-      role_type?: SystemUserRole;      // Only for system users (ADMIN, SUPER_ADMIN)
+      role_type?: UserType;      // Only for system users (ADMIN, SUPER_ADMIN)
       role_name: string;               // Descriptive name for all user types
     };
     tenant_id: number;

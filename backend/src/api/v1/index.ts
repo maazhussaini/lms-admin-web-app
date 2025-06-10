@@ -9,7 +9,7 @@ import { Router } from 'express';
 import authRoutes from './routes/auth.routes.js';
 import studentAuthRoutes from './routes/student/auth.routes.js';
 import teacherAuthRoutes from './routes/teacher/auth.routes.js';
-import userRoutes from './routes/systemUser.routes.js';
+import systemUserRoutes from './routes/systemUser.routes.js';
 import programRoutes from './routes/program.routes';
 import tenantRoutes from './routes/tenant.routes.js';
 import clientRoutes from './routes/client.routes.js';
@@ -30,7 +30,7 @@ router.get('/', (_req, res) => {
         '/api/v1/auth',
         '/api/v1/auth/student',
         '/api/v1/auth/teacher',
-        '/api/v1/users',
+        '/api/v1/system-users',
         '/api/v1/tenants',
         '/api/v1/clients',
         '/api/v1/programs',
@@ -44,7 +44,7 @@ router.get('/', (_req, res) => {
 router.use('/auth', authRoutes);
 router.use('/auth/student', studentAuthRoutes);
 router.use('/auth/teacher', teacherAuthRoutes);
-router.use('/users', userRoutes);
+router.use('/system-users', systemUserRoutes);
 router.use('/tenants', tenantRoutes);
 router.use('/clients', clientRoutes);
 router.use('/programs', programRoutes);

@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The System User Management API provides comprehensive functionality for managing system-level users within the LMS platform. This API handles both SUPER_ADMIN users (global system administrators) and Tenant Admin users (tenant-specific administrators), implementing role-based access control and tenant isolation patterns.
+The System User Management API provides comprehensive functionality for managing system-level users within the LMS platform. This API handles both SUPER_ADMIN users (global system administrators) and TENANT_ADMIN users (tenant-specific administrators), implementing role-based access control and tenant isolation patterns.
 
 ## Data Model Overview
 
@@ -20,8 +20,8 @@ The System User domain consists of the following main entities defined in `@shar
 
 From `@shared/types/system-users.types.ts`:
 
-- **SystemUserRole**: `SUPER_ADMIN (1)`, `TENANT_ADMIN (2)`
-- **SystemUserStatus**: `ACTIVE (1)`, `INACTIVE (2)`, `SUSPENDED (3)`, `LOCKED (4)`
+- **SystemUserRole**: `SUPER_ADMIN`, `TENANT_ADMIN`
+- **SystemUserStatus**: `ACTIVE`, `INACTIVE`, `SUSPENDED`, `LOCKED`
 
 ### Base Interfaces
 
@@ -32,19 +32,23 @@ All entities extend `BaseAuditFields` from `@shared/types/base.types.ts`, provid
 
 ## API Endpoints
 
-### SUPER_ADMIN Operations
+### System User Management
 
-#### Create SuperAdmin User
+#### Create System User
 - **Method**: `POST`
-- **Path**: `/api/v1/superadmin/users`
-- **Description**: Create a new SuperAdmin user (global scope, no tenant)
+- **Path**: `/api/v1/system-users`
+- **Authorization**: SUPER_ADMIN, TENANT_ADMIN
+- **Description**: Create a new system user with proper authorization checks
 - **Request Body**:
 ```json
 {
-  "username": "string",
-  "full_name": "string", 
-  "email_address": "string",
-  "password": "string"
+  "username": "admin_user",
+  "fullName": "Administrator User",
+  "email": "admin@example.com",
+  "password": "SecurePassword123",
+  "roleType": "TENANT_ADMIN",
+  "tenantId": 123,
+  "status": "ACTIVE"
 }
 ```
 - **Response**: `201 Created`
@@ -53,28 +57,55 @@ All entities extend `BaseAuditFields` from `@shared/types/base.types.ts`, provid
   "success": true,
   "data": {
     "system_user_id": 1,
-    "username": "superadmin",
-    "full_name": "System Administrator",
-    "email_address": "admin@system.com",
-    "role_id": 1,
-    "tenant_id": null,
-    "system_user_status": 1,
-    "created_at": "2024-01-01T00:00:00Z"
+    "username": "admin_user",
+    "full_name": "Administrator User",
+    "email_address": "admin@example.com",
+    "role_type": "TENANT_ADMIN",
+    "tenant_id": 123,
+    "system_user_status": "ACTIVE",
+    "created_at": "2024-01-01T00:00:00Z",
+    "is_active": true,
+    "is_deleted": false
   },
-  "message": "SuperAdmin user created successfully"
+  "message": "System user created successfully"
+}
+```
+
+#### Get System User by ID
+- **Method**: `GET`
+- **Path**: `/api/v1/system-users/{userId}`
+- **Authorization**: SUPER_ADMIN, TENANT_ADMIN
+- **Description**: Retrieve a specific system user with proper authorization checks
+- **Response**: `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "system_user_id": 1,
+    "username": "admin_user",
+    "full_name": "Administrator User",
+    "email_address": "admin@example.com",
+    "role_type": "TENANT_ADMIN",
+    "tenant_id": 123,
+    "system_user_status": "ACTIVE",
+    "last_login_at": "2024-01-01T12:00:00Z",
+    "login_attempts": 0
+  }
 }
 ```
 
 #### List All System Users
 - **Method**: `GET`
-- **Path**: `/api/v1/superadmin/users`
-- **Description**: Retrieve all system users across all tenants
+- **Path**: `/api/v1/system-users`
+- **Authorization**: SUPER_ADMIN, TENANT_ADMIN
+- **Description**: Retrieve system users with pagination and filtering (tenant-scoped for TENANT_ADMIN)
 - **Query Parameters**:
   - `page?: number` - Page number (default: 1)
-  - `limit?: number` - Items per page (default: 20)
-  - `role_id?: SystemUserRole` - Filter by role
+  - `limit?: number` - Items per page (default: 10)
+  - `roleType?: SystemUserRole` - Filter by role
   - `status?: SystemUserStatus` - Filter by status
-  - `tenant_id?: number` - Filter by tenant (null for SuperAdmin)
+  - `tenantId?: number` - Filter by tenant (SUPER_ADMIN only)
+  - `search?: string` - Search in username, full_name, email_address
 - **Response**: `200 OK`
 ```json
 {
@@ -83,256 +114,118 @@ All entities extend `BaseAuditFields` from `@shared/types/base.types.ts`, provid
     "users": [
       {
         "system_user_id": 1,
-        "username": "superadmin",
-        "full_name": "System Administrator",
-        "email_address": "admin@system.com",
-        "role_id": 1,
-        "tenant_id": null,
-        "system_user_status": 1,
+        "username": "admin_user",
+        "full_name": "Administrator User",
+        "email_address": "admin@example.com",
+        "role_type": "TENANT_ADMIN",
+        "tenant_id": 123,
+        "system_user_status": "ACTIVE",
         "last_login_at": "2024-01-01T12:00:00Z"
       }
     ],
-    "pagination": {
-      "page": 1,
-      "limit": 20,
-      "total": 1,
-      "total_pages": 1
-    }
+    "total": 1
   }
 }
 ```
 
-#### Update System User Status
+#### Update System User
 - **Method**: `PATCH`
-- **Path**: `/api/v1/superadmin/users/{userId}/status`
-- **Description**: Update system user operational status
+- **Path**: `/api/v1/system-users/{userId}`
+- **Authorization**: SUPER_ADMIN, TENANT_ADMIN
+- **Description**: Update system user with proper authorization and validation
 - **Request Body**:
 ```json
 {
-  "system_user_status": 2
+  "fullName": "Updated Administrator",
+  "email": "updated@example.com",
+  "status": "INACTIVE",
+  "password": "NewSecurePassword123"
 }
 ```
 - **Response**: `200 OK`
 
-### Tenant Admin Operations
-
-#### Create Tenant Admin
-- **Method**: `POST`
-- **Path**: `/api/v1/admin/users`
-- **Description**: Create a new tenant administrator
-- **Request Body**:
-```json
-{
-  "username": "string",
-  "full_name": "string",
-  "email_address": "string", 
-  "password": "string"
-}
-```
-- **Response**: `201 Created`
-
-#### List Tenant Users
-- **Method**: `GET`
-- **Path**: `/api/v1/admin/users`
-- **Description**: Retrieve system users within the current tenant
-- **Query Parameters**:
-  - `page?: number`
-  - `limit?: number`
-  - `status?: SystemUserStatus`
-- **Response**: `200 OK`
-
-#### Update Tenant User
-- **Method**: `PATCH`
-- **Path**: `/api/v1/admin/users/{userId}`
-- **Description**: Update tenant user details
-- **Request Body**:
-```json
-{
-  "full_name?: "string",
-  "email_address?: "string",
-  "system_user_status?: number
-}
-```
-- **Response**: `200 OK`
-
-#### Delete Tenant User
+#### Delete System User
 - **Method**: `DELETE`
-- **Path**: `/api/v1/admin/users/{userId}`
-- **Description**: Soft delete a tenant user
+- **Path**: `/api/v1/system-users/{userId}`
+- **Authorization**: SUPER_ADMIN, TENANT_ADMIN
+- **Description**: Soft delete a system user (users cannot delete themselves)
 - **Response**: `204 No Content`
 
-### Authentication & Session Management
+### Authorization Rules
 
-#### User Login
-- **Method**: `POST`
-- **Path**: `/api/v1/auth/login`
-- **Description**: Authenticate system user and establish session
-- **Request Body**:
-```json
-{
-  "username": "string",
-  "password": "string",
-  "tenant_context?: "string"
-}
-```
-- **Response**: `200 OK`
-```json
-{
-  "success": true,
-  "data": {
-    "access_token": "jwt-token",
-    "refresh_token": "refresh-token",
-    "user": {
-      "system_user_id": 1,
-      "username": "admin",
-      "full_name": "Administrator",
-      "role_id": 2,
-      "tenant_id": 123,
-      "permissions": ["users:read", "users:write"]
-    },
-    "expires_in": 3600
-  }
-}
-```
+#### SUPER_ADMIN Permissions
+- Can create, read, update, and delete any system user
+- Can create both SUPER_ADMIN and TENANT_ADMIN users
+- Can manage users across all tenants
+- Global scope operations
 
-#### Refresh Token
-- **Method**: `POST`
-- **Path**: `/api/v1/auth/refresh`
-- **Description**: Refresh authentication token
-- **Request Body**:
-```json
-{
-  "refresh_token": "string"
-}
-```
-- **Response**: `200 OK`
+#### TENANT_ADMIN Permissions
+- Can only manage users within their own tenant
+- Cannot create SUPER_ADMIN users
+- Cannot manage SUPER_ADMIN users
+- Cannot update user roles to SUPER_ADMIN
+- Tenant-scoped operations only
 
-#### Logout
-- **Method**: `POST`
-- **Path**: `/api/v1/auth/logout`
-- **Description**: Invalidate user session
-- **Response**: `200 OK`
+### Validation Rules
 
-### Permission Management
+#### Username Validation
+- Required field
+- 3-50 characters length
+- String type
+- Unique within tenant scope (global for SUPER_ADMIN)
 
-#### Get User Permissions
-- **Method**: `GET`
-- **Path**: `/api/v1/admin/users/{userId}/permissions`
-- **Description**: Retrieve effective permissions for a user
-- **Response**: `200 OK`
-```json
-{
-  "success": true,
-  "data": {
-    "user_permissions": [
-      {
-        "screen_id": 1,
-        "screen_name": "User Management",
-        "can_view": true,
-        "can_create": true,
-        "can_edit": true,
-        "can_delete": false,
-        "can_export": true
-      }
-    ]
-  }
-}
-```
+#### Email Validation
+- Required field
+- Valid email format (RFC 5322)
+- Maximum 255 characters
+- Unique within tenant scope (global for SUPER_ADMIN)
+- Normalized (gmail_remove_dots: false)
 
-#### Update User Permissions
-- **Method**: `PUT`
-- **Path**: `/api/v1/admin/users/{userId}/permissions`
-- **Description**: Update individual user permissions
-- **Request Body**:
-```json
-{
-  "permissions": [
-    {
-      "screen_id": 1,
-      "can_view": true,
-      "can_create": true,
-      "can_edit": true,
-      "can_delete": false,
-      "can_export": true
-    }
-  ]
-}
-```
-- **Response**: `200 OK`
+#### Password Validation
+- Required for creation
+- 8-100 characters length
+- Hashed using bcrypt before storage
 
-### Role Management
+#### Role Type Validation
+- Must be valid SystemUserRole enum value
+- SUPER_ADMIN cannot have tenantId
+- TENANT_ADMIN must have tenantId
 
-#### List Roles
-- **Method**: `GET`
-- **Path**: `/api/v1/admin/roles`
-- **Description**: Retrieve available system roles
-- **Response**: `200 OK`
-
-#### Get Role Permissions
-- **Method**: `GET`
-- **Path**: `/api/v1/admin/roles/{roleId}/permissions`
-- **Description**: Retrieve default permissions for a role
-- **Response**: `200 OK`
-
-#### Update Role Permissions
-- **Method**: `PUT`
-- **Path**: `/api/v1/admin/roles/{roleId}/permissions`
-- **Description**: Update default role permissions
-- **Request Body**:
-```json
-{
-  "permissions": [
-    {
-      "screen_id": 1,
-      "can_view": true,
-      "can_create": false,
-      "can_edit": false,
-      "can_delete": false,
-      "can_export": false
-    }
-  ]
-}
-```
-- **Response**: `200 OK`
-
-## Prisma Schema Considerations
+## Prisma Schema Implementation
 
 ### SystemUser Model
 ```prisma
 model SystemUser {
   system_user_id    Int               @id @default(autoincrement())
-  tenant_id         Int?              
-  role_id           Int
-  username          String
-  full_name         String
-  email_address     String
-  password_hash     String
+  tenant_id         Int?              // NULL for SUPER_ADMIN
+  role_type         SystemUserRole    // Direct enum reference
+  username          String            @db.VarChar(50)
+  full_name         String            @db.VarChar(255)
+  email_address     String            @db.VarChar(255)
+  password_hash     String            @db.VarChar(255)
   last_login_at     DateTime?
   login_attempts    Int?              @default(0)
-  system_user_status Int              @default(1)
+  system_user_status SystemUserStatus @default(ACTIVE)
   
-  // Audit fields
+  // Audit fields from BaseAuditFields
   is_active         Boolean           @default(true)
   is_deleted        Boolean           @default(false)
   created_at        DateTime          @default(now())
-  created_by        Int
-  created_ip        String
-  updated_at        DateTime?         @updatedAt
+  updated_at        DateTime          @updatedAt
+  created_by        Int?
   updated_by        Int?
-  updated_ip        String?
+  deleted_at        DateTime?
+  deleted_by        Int?
+  created_ip        String?           @db.VarChar(45)
+  updated_ip        String?           @db.VarChar(45)
 
   // Relationships
-  tenant            Tenant?           @relation(fields: [tenant_id], references: [tenant_id])
-  role              Role              @relation(fields: [role_id], references: [role_id])
+  tenant            Tenant?           @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  role              Role              @relation("UserRole", fields: [role_type], references: [role_type], onDelete: Restrict)
   user_screens      UserScreen[]
-  created_records   SystemUser[]      @relation("CreatedBy")
-  updated_records   SystemUser[]      @relation("UpdatedBy")
 
-  // Constraints
-  @@unique([email_address, tenant_id], name: "uq_system_user_email")
-  @@unique([username, tenant_id], name: "uq_system_user_username")
-  @@index([tenant_id, is_active, is_deleted], name: "idx_system_user_tenant_lookup")
-  @@index([role_id, is_active, is_deleted], name: "idx_system_user_superadmin_lookup", where: "tenant_id IS NULL")
+  // ...existing audit relationships...
+
   @@map("system_users")
 }
 ```
@@ -341,23 +234,26 @@ model SystemUser {
 ```prisma
 model Role {
   role_id           Int               @id @default(autoincrement())
-  role_name         String            @unique
-  role_description  String?
+  role_type         SystemUserRole    @unique // Business identifier
+  role_name         String            @db.VarChar(100)
+  role_description  String?           @db.Text
   is_system_role    Boolean           @default(false)
   
   // Audit fields
   is_active         Boolean           @default(true)
   is_deleted        Boolean           @default(false)
   created_at        DateTime          @default(now())
-  created_by        Int
-  created_ip        String
-  updated_at        DateTime?         @updatedAt
+  updated_at        DateTime          @updatedAt
+  created_by        Int?
   updated_by        Int?
-  updated_ip        String?
+  deleted_at        DateTime?
+  deleted_by        Int?
+  created_ip        String?           @db.VarChar(45)
+  updated_ip        String?           @db.VarChar(45)
 
   // Relationships
-  system_users      SystemUser[]
-  role_screens      RoleScreen[]
+  system_users      SystemUser[]      @relation("UserRole")
+  role_screens      RoleScreen[]      @relation("RoleScreenRole")
 
   @@map("roles")
 }
@@ -367,34 +263,31 @@ model Role {
 ```prisma
 model Screen {
   screen_id         Int               @id @default(autoincrement())
-  screen_name       String            @unique
-  screen_description String?
-  route_path        String?           @unique
+  screen_name       String            @db.VarChar(100)
+  screen_description String?          @db.Text
+  route_path        String?           @db.VarChar(255)
   parent_screen_id  Int?
   sort_order        Int?
-  icon_class        String?
+  icon_class        String?           @db.VarChar(100)
   
   // Audit fields
   is_active         Boolean           @default(true)
   is_deleted        Boolean           @default(false)
   created_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
   created_by        Int
-  created_ip        String
-  updated_at        DateTime?         @updatedAt
   updated_by        Int?
-  updated_ip        String?
+  deleted_at        DateTime?
+  deleted_by        Int?
+  created_ip        String?           @db.VarChar(45)
+  updated_ip        String?           @db.VarChar(45)
 
   // Relationships
-  parent_screen     Screen?           @relation("ScreenHierarchy", fields: [parent_screen_id], references: [screen_id])
+  parent_screen     Screen?           @relation("ScreenHierarchy", fields: [parent_screen_id], references: [screen_id], onDelete: SetNull)
   child_screens     Screen[]          @relation("ScreenHierarchy")
   user_screens      UserScreen[]
   role_screens      RoleScreen[]
-  created_by_user   SystemUser        @relation("ScreenCreatedBy", fields: [created_by], references: [system_user_id])
-  updated_by_user   SystemUser?       @relation("ScreenUpdatedBy", fields: [updated_by], references: [system_user_id])
 
-  // Constraints
-  @@index([parent_screen_id, is_active], name: "idx_screen_hierarchy")
-  @@index([is_active, is_deleted], name: "idx_screen_active_lookup")
   @@map("screens")
 }
 ```
@@ -416,23 +309,19 @@ model UserScreen {
   is_active         Boolean           @default(true)
   is_deleted        Boolean           @default(false)
   created_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
   created_by        Int
-  created_ip        String
-  updated_at        DateTime?         @updatedAt
   updated_by        Int?
-  updated_ip        String?
+  deleted_at        DateTime?
+  deleted_by        Int?
+  created_ip        String?           @db.VarChar(45)
+  updated_ip        String?           @db.VarChar(45)
 
   // Relationships
-  tenant            Tenant            @relation(fields: [tenant_id], references: [tenant_id])
-  system_user       SystemUser        @relation(fields: [system_user_id], references: [system_user_id])
-  screen            Screen            @relation(fields: [screen_id], references: [screen_id])
-  created_by_user   SystemUser        @relation("UserScreenCreatedBy", fields: [created_by], references: [system_user_id])
-  updated_by_user   SystemUser?       @relation("UserScreenUpdatedBy", fields: [updated_by], references: [system_user_id])
+  tenant            Tenant            @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  system_user       SystemUser        @relation(fields: [system_user_id], references: [system_user_id], onDelete: Cascade)
+  screen            Screen            @relation(fields: [screen_id], references: [screen_id], onDelete: Cascade)
 
-  // Constraints
-  @@unique([system_user_id, screen_id], name: "uq_user_screen_permission")
-  @@index([tenant_id, is_active, is_deleted], name: "idx_user_screen_tenant_lookup")
-  @@index([system_user_id, screen_id], name: "idx_user_screen_permissions")
   @@map("user_screens")
 }
 ```
@@ -442,7 +331,7 @@ model UserScreen {
 model RoleScreen {
   role_screen_id    Int               @id @default(autoincrement())
   tenant_id         Int
-  role_id           Int
+  role_type         SystemUserRole    // Direct reference to enum
   screen_id         Int
   can_view          Boolean           @default(false)
   can_create        Boolean           @default(false)
@@ -454,36 +343,22 @@ model RoleScreen {
   is_active         Boolean           @default(true)
   is_deleted        Boolean           @default(false)
   created_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
   created_by        Int
-  created_ip        String
-  updated_at        DateTime?         @updatedAt
   updated_by        Int?
-  updated_ip        String?
+  deleted_at        DateTime?
+  deleted_by        Int?
+  created_ip        String?           @db.VarChar(45)
+  updated_ip        String?           @db.VarChar(45)
 
   // Relationships
-  tenant            Tenant            @relation(fields: [tenant_id], references: [tenant_id])
-  role              Role              @relation(fields: [role_id], references: [role_id])
-  screen            Screen            @relation(fields: [screen_id], references: [screen_id])
-  created_by_user   SystemUser        @relation("RoleScreenCreatedBy", fields: [created_by], references: [system_user_id])
-  updated_by_user   SystemUser?       @relation("RoleScreenUpdatedBy", fields: [updated_by], references: [system_user_id])
+  tenant            Tenant            @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
+  role              Role              @relation("RoleScreenRole", fields: [role_type], references: [role_type], onDelete: Cascade)
+  screen            Screen            @relation(fields: [screen_id], references: [screen_id], onDelete: Cascade)
 
-  // Constraints
-  @@unique([role_id, screen_id], name: "uq_role_screen_permission")
-  @@index([tenant_id, is_active, is_deleted], name: "idx_role_screen_tenant_lookup")
-  @@index([role_id, screen_id], name: "idx_role_screen_permissions")
   @@map("role_screens")
 }
 ```
-
-### Key Design Patterns
-
-1. **Conditional Tenant Isolation**: SuperAdmin users have `tenant_id = NULL`, while tenant administrators have a specific `tenant_id`
-2. **Partial Unique Constraints**: Email and username uniqueness enforced differently for SuperAdmin (global) vs. tenant users (tenant-scoped)
-3. **Self-Referencing Audit**: System users can create/update other system users
-4. **Permission Inheritance**: User-specific permissions override role-based permissions
-5. **Hierarchical Screen Structure**: Screens can have parent-child relationships for menu organization
-6. **Granular Permission Control**: Five-level permission matrix (view, create, edit, delete, export) for each screen
-7. **Tenant-Scoped Permissions**: Both user and role permissions are tenant-specific for proper isolation
 
 ## Error Handling
 
@@ -497,69 +372,101 @@ Following `TApiErrorResponse` from `@shared/types/api.types.ts`:
   "message": "Validation error",
   "errorCode": "VALIDATION_ERROR",
   "details": {
-    "field": "email_address",
+    "field": "email",
     "reason": "Email already exists within tenant"
   }
 }
 ```
 
-### Common Error Codes
-- **400**: `VALIDATION_ERROR` - Invalid input data
-- **401**: `UNAUTHORIZED` - Authentication required
-- **403**: `FORBIDDEN` - Insufficient permissions
-- **404**: `USER_NOT_FOUND` - User does not exist
-- **409**: `CONFLICT` - Username/email already exists
-- **422**: `BUSINESS_RULE_VIOLATION` - Business logic constraints
-- **500**: `INTERNAL_ERROR` - Server error
+### Common Error Scenarios
+
+#### Authorization Errors
+- **403 FORBIDDEN**: "You can only create users within your own tenant"
+- **403 FORBIDDEN**: "Tenant administrators cannot create super admin users"
+- **403 FORBIDDEN**: "You cannot access users from another tenant"
+
+#### Validation Errors
+- **409 CONFLICT**: "Username already exists" (errorCode: "USERNAME_EXISTS")
+- **409 CONFLICT**: "Email already exists" (errorCode: "EMAIL_EXISTS")
+- **400 BAD_REQUEST**: "Users cannot delete their own account"
+- **400 BAD_REQUEST**: "Cannot change to TENANT_ADMIN without specifying a tenant"
+
+#### Not Found Errors
+- **404 NOT_FOUND**: "System user with ID {userId} not found"
 
 ## Security Considerations
 
 ### Authentication & Authorization
-- **JWT-based Authentication**: Using `TAuthResponse` structure
-- **Role-Based Access Control (RBAC)**: SuperAdmin vs. Tenant Admin roles
-- **Tenant Isolation**: Strict tenant boundary enforcement except for SuperAdmin
-- **Password Security**: Bcrypt hashing with salt rounds
+- **JWT-based Authentication**: Required for all endpoints
+- **Role-Based Access Control**: SUPER_ADMIN vs TENANT_ADMIN permissions
+- **Tenant Isolation**: Strict enforcement except for SUPER_ADMIN operations
+- **Self-Protection**: Users cannot delete their own accounts
 
 ### Data Protection
-- **Audit Trails**: Comprehensive logging using `BaseAuditFields`
+- **Password Security**: Bcrypt hashing with salt
+- **Audit Trails**: Comprehensive logging using BaseAuditFields
 - **Soft Deletes**: No permanent data deletion
-- **Input Validation**: Email format, username constraints
-- **Rate Limiting**: Login attempt tracking and account lockout
+- **Input Validation**: Comprehensive validation using express-validator
 
-### Permission Model
-- **Hierarchical Permissions**: Role-based defaults with user-specific overrides
-- **Screen-Level Control**: Granular permissions (view, create, edit, delete, export)
-- **Tenant Context**: All operations within tenant boundaries
+### Business Rules
+- **Username Uniqueness**: Scoped by tenant (global for SUPER_ADMIN)
+- **Email Uniqueness**: Scoped by tenant (global for SUPER_ADMIN)  
+- **Role Constraints**: SUPER_ADMIN cannot have tenant_id, TENANT_ADMIN must have tenant_id
+- **Permission Inheritance**: User permissions override role permissions
 
-### Security Constraints
-Based on constraint definitions:
-- Username length: 3-50 characters
-- Full name length: 2-255 characters  
-- Email format validation: RFC 5322 compliance
-- Login attempts limit: 0-10 attempts before lockout
-- Password complexity: Enforced at application level
+## Implementation Patterns
 
-## Naming Conventions
-
-### API Endpoints
-- **Versioning**: `/api/v1/` prefix for all endpoints
-- **Resource Names**: Plural nouns (`users`, `roles`, `permissions`)
-- **Actions**: HTTP verbs for operations
-- **Nested Resources**: `/users/{userId}/permissions`
-
-### Request/Response Bodies
-- **PascalCase**: For JSON properties
-- **Consistent Structure**: Following `TApiSuccessResponse` pattern
-- **Error Handling**: Standardized error response format
-
-### Database Models
-- **snake_case**: For all database columns and table names
-- **Descriptive Names**: Clear entity and relationship naming
-- **Constraint Naming**: Consistent prefix patterns (`uq_`, `idx_`, `fk_`, `chk_`)
-
-### Import Strategy
-All type imports use `@shared/types/` path strategy:
+### Service Layer Pattern
 ```typescript
+// Example from systemUser.service.ts
+async createSystemUser(
+  data: CreateSystemUserDto,
+  requestingUser: SystemUser
+): Promise<SystemUser> {
+  return tryCatch(async () => {
+    // Authorization checks
+    // Validation logic
+    // Business rule enforcement
+    // Database operations
+  }, { context: { requestingUser } });
+}
+```
+
+### Error Wrapping
+```typescript
+// Using tryCatch utility for consistent error handling
+return tryCatch(async () => {
+  // Operation logic
+}, {
+  context: {
+    userId,
+    requestingUser: { 
+      id: requestingUser.system_user_id, 
+      role: requestingUser.role_type, 
+      tenantId: requestingUser.tenant_id 
+    }
+  }
+});
+```
+
+### Validation Middleware
+```typescript
+// Using express-validator with custom validation chains
+body('roleType')
+  .exists().withMessage('Role type is required')
+  .isIn(Object.values(SystemUserRole)).withMessage('Invalid role type')
+  .custom((value, { req }) => {
+    // Custom validation logic for business rules
+    return true;
+  })
+```
+
+## Import Strategy
+
+All imports use configured path aliases:
+
+```typescript
+// Shared types
 import { 
   SystemUser, 
   Role, 
@@ -569,15 +476,10 @@ import {
   SystemUserRole, 
   SystemUserStatus
 } from '@shared/types/system-users.types';
-import { 
-  Tenant 
-} from '@shared/types/tenant.types';
-import { 
-  BaseAuditFields 
-} from '@shared/types/base.types';
-import { 
-  TApiSuccessResponse, 
-  TApiErrorResponse,
-  TAuthResponse 
-} from '@shared/types/api.types';
+
+// Internal modules
+import { CreateSystemUserDto } from '@/dtos/user/systemUser.dto';
+import { SystemUserService } from '@/services/systemUser.service';
+import { authenticate, authorize } from '@/middleware/auth.middleware';
+import { tryCatch } from '@/utils/error-wrapper.utils';
 ```

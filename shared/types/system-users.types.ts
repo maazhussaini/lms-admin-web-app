@@ -1,13 +1,5 @@
 import { BaseAuditFields } from './base.types';
-
-/**
- * System user role enumeration
- * @description Defines system-level roles with proper hierarchy
- */
-export enum SystemUserRole {
-  SUPER_ADMIN = 'SUPER_ADMIN',
-  TENANT_ADMIN = 'TENANT_ADMIN',
-}
+import { UserType } from './api.types';
 
 /**
  * System user status enumeration
@@ -27,7 +19,7 @@ export enum SystemUserStatus {
 export interface SystemUser extends BaseAuditFields {
   system_user_id: number;
   tenant_id?: number | null; // NULL for SuperAdmin, required for others
-  role_type: SystemUserRole;  // Changed from role_id to role_type
+  role_type: UserType;  // Changed from SystemUserRole to UserType
   username: string;
   full_name: string;
   email_address: string;
@@ -43,7 +35,7 @@ export interface SystemUser extends BaseAuditFields {
  */
 export interface Role extends BaseAuditFields {
   role_id: number;                    // Auto-increment primary key
-  role_type: SystemUserRole;          // Business identifier (enum) - renamed from role_id
+  role_type: UserType;                // Business identifier (enum) - changed to UserType
   role_name: string;
   role_description?: string | null;
   is_system_role: boolean; // True for built-in roles
@@ -86,7 +78,7 @@ export interface UserScreen extends BaseAuditFields {
 export interface RoleScreen extends BaseAuditFields {
   role_screen_id: number;
   tenant_id: number;
-  role_type: SystemUserRole;          // Changed from role_id to role_type
+  role_type: UserType;                // Changed from SystemUserRole to UserType
   screen_id: number;
   can_view: boolean;
   can_create: boolean;
@@ -96,8 +88,8 @@ export interface RoleScreen extends BaseAuditFields {
 }
 
 // Type guards for runtime type checking
-export const isSystemUserRole = (value: any): value is SystemUserRole => 
-  Object.values(SystemUserRole).includes(value);
+export const isUserType = (value: any): value is UserType => 
+  Object.values(UserType).includes(value);
 
 export const isSystemUserStatus = (value: any): value is SystemUserStatus => 
   Object.values(SystemUserStatus).includes(value);
@@ -106,10 +98,14 @@ export const isSystemUserStatus = (value: any): value is SystemUserStatus =>
  * Helper function to check if a system user is SuperAdmin
  */
 export const isSuperAdmin = (user: SystemUser): boolean => 
-  user.tenant_id === null && user.role_type === SystemUserRole.SUPER_ADMIN;
+  user.tenant_id === null && user.role_type === UserType.SUPER_ADMIN;
 
 /**
  * Helper function to check if a system user is tenant-specific
  */
 export const isTenantUser = (user: SystemUser): boolean => 
-  user.tenant_id !== null && user.role_type === SystemUserRole.TENANT_ADMIN;
+  user.tenant_id !== null && user.role_type === UserType.TENANT_ADMIN;
+
+// Legacy export for backward compatibility (if needed)
+export const SystemUserRole = UserType;
+export const isSystemUserRole = isUserType;
