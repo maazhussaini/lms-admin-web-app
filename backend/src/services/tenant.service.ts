@@ -418,7 +418,6 @@ export class TenantService {
         }
       });
       
-      return { message: 'Tenant deleted successfully' };
     }, {
       context: {
         tenantId,
