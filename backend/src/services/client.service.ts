@@ -11,7 +11,8 @@ import {
 import { ApiError, NotFoundError, ConflictError, ForbiddenError } from '@/utils/api-error.utils';
 import { TokenPayload } from '@/utils/jwt.utils';
 import { 
-  ClientStatus
+  ClientStatus,
+  UserType
 } from '@/types/enums.js';
 import logger from '@/config/logger';
 
@@ -31,14 +32,14 @@ export class ClientService {
     logger.debug('Creating client', {
       clientData: data,
       requestingUserId: requestingUser.id,
-      requestingUserRole: requestingUser.role,
+      requestingUserRole: requestingUser.user_type,
       requestingUserTenantId: requestingUser.tenantId
     });
 
     // Determine the target tenant ID
     let targetTenantId: number;
     
-    if (requestingUser.role === 'SUPER_ADMIN') {
+    if (requestingUser.user_type === UserType.SUPER_ADMIN) {
       // SUPER_ADMIN can create clients for any tenant using the provided tenant_id
       targetTenantId = data.tenant_id;
       
@@ -110,7 +111,7 @@ export class ClientService {
     });
 
     // Super Admin can access any client
-    if (requestingUser.role === 'SUPER_ADMIN') {
+    if (requestingUser.user_type === UserType.SUPER_ADMIN) {
       const client = await prisma.client.findFirst({
         where: {
           client_id: clientId,
@@ -162,7 +163,7 @@ export class ClientService {
   ) {
     logger.debug('Getting all clients with options', {
       requestingUserId: requestingUser.id,
-      requestingUserRole: requestingUser.role,
+      requestingUserRole: requestingUser.user_type,
       options
     });
 
@@ -175,9 +176,9 @@ export class ClientService {
     let tenantId = requestingUser.tenantId;
     
     // SUPER_ADMIN can override tenant filter with query param
-    if (requestingUser.role === 'SUPER_ADMIN' && options.tenantId) {
+    if (requestingUser.user_type === UserType.SUPER_ADMIN && options.tenantId) {
       tenantId = options.tenantId;
-    } else if (requestingUser.role !== 'SUPER_ADMIN') {
+    } else if (requestingUser.user_type !== UserType.SUPER_ADMIN) {
       // Non-SUPER_ADMIN can only see clients in their tenant
       tenantId = requestingUser.tenantId;
     }
@@ -187,7 +188,7 @@ export class ClientService {
     };
     
     // SUPER_ADMIN can view all clients if no tenantId specified
-    if (requestingUser.role !== 'SUPER_ADMIN' || options.tenantId) {
+    if (requestingUser.user_type !== UserType.SUPER_ADMIN || options.tenantId) {
       where.tenant_id = tenantId;
     }
 
@@ -262,7 +263,7 @@ export class ClientService {
     const existingClient = await this.getClientById(clientId, requestingUser);
 
     // Check access permissions for non-SUPER_ADMIN users
-    if (requestingUser.role !== 'SUPER_ADMIN' && existingClient.tenant_id !== requestingUser.tenantId) {
+    if (requestingUser.user_type !== UserType.SUPER_ADMIN && existingClient.tenant_id !== requestingUser.tenantId) {
       throw new ForbiddenError('Cannot update client from another tenant');
     }
 
@@ -325,7 +326,7 @@ export class ClientService {
     const existingClient = await this.getClientById(clientId, requestingUser);
 
     // Check access permissions for non-SUPER_ADMIN users
-    if (requestingUser.role !== 'SUPER_ADMIN' && existingClient.tenant_id !== requestingUser.tenantId) {
+    if (requestingUser.user_type !== UserType.SUPER_ADMIN && existingClient.tenant_id !== requestingUser.tenantId) {
       throw new ForbiddenError('Cannot delete client from another tenant');
     }
 
@@ -408,7 +409,7 @@ export class ClientService {
     }
 
     // Check access permissions
-    if (requestingUser.role !== 'SUPER_ADMIN') {
+    if (requestingUser.user_type !== UserType.SUPER_ADMIN) {
       // Non-SUPER_ADMIN can only create associations for their own tenant
       if (client.tenant_id !== requestingUser.tenantId || data.tenant_id !== requestingUser.tenantId) {
         throw new ForbiddenError('Cannot create association for another tenant');
@@ -502,7 +503,7 @@ export class ClientService {
     }
 
     // Check access permissions
-    if (requestingUser.role !== 'SUPER_ADMIN') {
+    if (requestingUser.user_type !== UserType.SUPER_ADMIN) {
       // Non-SUPER_ADMIN can only remove associations for their own tenant
       if (association.tenant_id !== requestingUser.tenantId) {
         throw new ForbiddenError('Cannot remove association from another tenant');

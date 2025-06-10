@@ -17,23 +17,8 @@ import { asyncHandler } from '@/utils/async-handler.utils';
 import { ApiError } from '@/utils/api-error.utils';
 import { getPaginationFromRequest, getSortParamsFromRequest } from '@/utils/pagination.utils';
 import { TApiSuccessResponse } from '@shared/types/api.types';
+import { TokenPayload } from '@/utils/jwt.utils';
 import logger from '@/config/logger';
-import { UserType } from '@/types/enums';
-
-/**
- * Extended Request interface with authenticated user data
- */
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: number;
-    email: string;
-    role: string;
-    user_type: UserType;
-    tenantId: number;
-    permissions?: string[];
-    [key: string]: any;
-  };
-}
 
 // Initialize tenant service
 const tenantService = new TenantService();
@@ -48,24 +33,24 @@ export class TenantController {
    * @access Private (SUPER_ADMIN only)
    */
   static createTenantHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       const tenantData = req.body as CreateTenantDto;
+      
+      if (!req.user) {
+        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
+      }
+
+      const requestingUser = req.user as TokenPayload;
       
       logger.debug('Creating tenant', {
         tenantName: tenantData.tenant_name,
-        userId: req.user?.id,
-        role: req.user?.role
+        userId: requestingUser.id,
+        role: requestingUser.role
       });
-      
-      if (!req.user?.id) {
-        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
-      }
-      
-      const userId = req.user.id;
       
       const tenant = await tenantService.createTenant(
         tenantData, 
-        userId, 
+        requestingUser.id, 
         req.ip || undefined
       );
       
@@ -88,7 +73,7 @@ export class TenantController {
    * @access Private (SUPER_ADMIN or own tenant)
    */
   static getTenantByIdHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       const tenantIdParam = req.params['tenantId'];
       if (!tenantIdParam) {
         throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
@@ -103,13 +88,7 @@ export class TenantController {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        user_type: req.user.user_type,
-        tenantId: req.user.tenantId
-      };
+      const requestingUser = req.user as TokenPayload;
 
       const tenant = await tenantService.getTenantById(tenantId, requestingUser);
       
@@ -132,7 +111,7 @@ export class TenantController {
    * @access Private (SUPER_ADMIN or own tenant)
    */
   static getAllTenantsHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
@@ -190,7 +169,7 @@ export class TenantController {
    * @access Private (SUPER_ADMIN or same tenant)
    */
   static getTenantClientsHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       const tenantIdParam = req.params['tenantId'];
       if (!tenantIdParam) {
         throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
@@ -205,13 +184,7 @@ export class TenantController {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        user_type: req.user.user_type,
-        tenantId: req.user.tenantId
-      };
+      const requestingUser = req.user as TokenPayload;
 
       const clients = await tenantService.getTenantClients(tenantId, requestingUser);
       
@@ -234,7 +207,7 @@ export class TenantController {
    * @access Private (SUPER_ADMIN or own tenant admin)
    */
   static updateTenantHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       const tenantIdParam = req.params['tenantId'];
       if (!tenantIdParam) {
         throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
@@ -246,17 +219,14 @@ export class TenantController {
       }
 
       const updateData = req.body as UpdateTenantDto;
-        if (!req.user?.id) {
+      
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        tenantId: req.user.tenantId
-      };
-        const updatedTenant = await tenantService.updateTenant(
+      const requestingUser = req.user as TokenPayload;
+      
+      const updatedTenant = await tenantService.updateTenant(
         tenantId, 
         updateData, 
         requestingUser.id,
@@ -282,7 +252,7 @@ export class TenantController {
    * @access Private (SUPER_ADMIN only)
    */
   static deleteTenantHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       const tenantIdParam = req.params['tenantId'];
       if (!tenantIdParam) {
         throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
@@ -293,14 +263,13 @@ export class TenantController {
         throw new ApiError('Invalid tenant ID', 400, 'INVALID_TENANT_ID');
       }
 
-      if (!req.user?.id) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
-      }      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        tenantId: req.user.tenantId
-      };      const result = await tenantService.deleteTenant(
+      }
+
+      const requestingUser = req.user as TokenPayload;
+
+      const result = await tenantService.deleteTenant(
         tenantId, 
         requestingUser.id, 
         req.ip || undefined
@@ -327,7 +296,7 @@ export class TenantController {
    * @access Private (SUPER_ADMIN, TENANT_ADMIN)
    */
   static createTenantPhoneNumberHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       const tenantIdParam = req.params['tenantId'];
       if (!tenantIdParam) {
         throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
@@ -340,17 +309,11 @@ export class TenantController {
 
       const phoneData = req.body as CreateTenantPhoneNumberDto;
       
-      if (!req.user?.id) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        user_type: req.user.user_type,
-        tenantId: req.user.tenantId
-      };
+      const requestingUser = req.user as TokenPayload;
       
       const phoneNumber = await tenantService.createTenantPhoneNumber(
         tenantId,
@@ -378,7 +341,7 @@ export class TenantController {
    * @access Private (SUPER_ADMIN or same tenant)
    */
   static getAllTenantPhoneNumbersHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       const tenantIdParam = req.params['tenantId'];
       if (!tenantIdParam) {
         throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
@@ -393,13 +356,8 @@ export class TenantController {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        user_type: req.user.user_type,
-        tenantId: req.user.tenantId
-      };      const contactType = req.query['contactType'] ? parseInt(req.query['contactType'] as string, 10) : undefined;
+      const requestingUser = req.user as TokenPayload;
+      const contactType = req.query['contactType'] ? parseInt(req.query['contactType'] as string, 10) : undefined;
 
       const options: any = {};
       if (contactType !== undefined) {
@@ -427,7 +385,7 @@ export class TenantController {
    * @access Private (SUPER_ADMIN, TENANT_ADMIN for own tenant)
    */
   static updateTenantPhoneNumberHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       const tenantIdParam = req.params['tenantId'];
       const phoneNumberIdParam = req.params['phoneNumberId'];
       
@@ -450,26 +408,19 @@ export class TenantController {
         throw new ApiError('Invalid phone number ID', 400, 'INVALID_PHONE_NUMBER_ID');
       }
 
-      if (!req.user?.id) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
       const updateData = req.body as UpdateTenantPhoneNumberDto;
+      const requestingUser = req.user as TokenPayload;
       
       logger.debug('Updating tenant phone number', {
         tenantId,
         phoneNumberId,
-        userId: req.user.id,
-        role: req.user.role
+        userId: requestingUser.id,
+        role: requestingUser.role
       });
-
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        user_type: req.user.user_type,
-        tenantId: req.user.tenantId
-      };
 
       const updatedPhoneNumber = await tenantService.updateTenantPhoneNumber(
         tenantId,
@@ -498,7 +449,7 @@ export class TenantController {
    * @access Private (SUPER_ADMIN, TENANT_ADMIN for own tenant)
    */
   static deleteTenantPhoneNumberHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       const tenantIdParam = req.params['tenantId'];
       const phoneNumberIdParam = req.params['phoneNumberId'];
       
@@ -521,24 +472,18 @@ export class TenantController {
         throw new ApiError('Invalid phone number ID', 400, 'INVALID_PHONE_NUMBER_ID');
       }
 
-      if (!req.user?.id) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
+
+      const requestingUser = req.user as TokenPayload;
       
       logger.debug('Deleting tenant phone number', {
         tenantId,
         phoneNumberId,
-        userId: req.user.id,
-        role: req.user.role
+        userId: requestingUser.id,
+        role: requestingUser.role
       });
-
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        user_type: req.user.user_type,
-        tenantId: req.user.tenantId
-      };
 
       const result = await tenantService.deleteTenantPhoneNumber(
         tenantId,
@@ -568,7 +513,7 @@ export class TenantController {
    * @access Private (SUPER_ADMIN, TENANT_ADMIN)
    */
   static createTenantEmailAddressHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       const tenantIdParam = req.params['tenantId'];
       if (!tenantIdParam) {
         throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
@@ -581,17 +526,11 @@ export class TenantController {
 
       const emailData = req.body as CreateTenantEmailAddressDto;
       
-      if (!req.user?.id) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        user_type: req.user.user_type,
-        tenantId: req.user.tenantId
-      };
+      const requestingUser = req.user as TokenPayload;
       
       const emailAddress = await tenantService.createTenantEmailAddress(
         tenantId,
@@ -619,7 +558,7 @@ export class TenantController {
    * @access Private (SUPER_ADMIN or same tenant)
    */
   static getAllTenantEmailAddressesHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       const tenantIdParam = req.params['tenantId'];
       if (!tenantIdParam) {
         throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
@@ -634,13 +573,8 @@ export class TenantController {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        user_type: req.user.user_type,
-        tenantId: req.user.tenantId
-      };      const contactType = req.query['contactType'] ? parseInt(req.query['contactType'] as string, 10) : undefined;
+      const requestingUser = req.user as TokenPayload;
+      const contactType = req.query['contactType'] ? parseInt(req.query['contactType'] as string, 10) : undefined;
 
       const options: any = {};
       if (contactType !== undefined) {
@@ -668,7 +602,7 @@ export class TenantController {
    * @access Private (SUPER_ADMIN, TENANT_ADMIN for own tenant)
    */
   static updateTenantEmailAddressHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       const tenantIdParam = req.params['tenantId'];
       const emailAddressIdParam = req.params['emailAddressId'];
       
@@ -691,26 +625,19 @@ export class TenantController {
         throw new ApiError('Invalid email address ID', 400, 'INVALID_EMAIL_ADDRESS_ID');
       }
 
-      if (!req.user?.id) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
       const updateData = req.body as UpdateTenantEmailAddressDto;
+      const requestingUser = req.user as TokenPayload;
       
       logger.debug('Updating tenant email address', {
         tenantId,
         emailAddressId,
-        userId: req.user.id,
-        role: req.user.role
+        userId: requestingUser.id,
+        role: requestingUser.role
       });
-
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        user_type: req.user.user_type,
-        tenantId: req.user.tenantId
-      };
 
       const updatedEmailAddress = await tenantService.updateTenantEmailAddress(
         tenantId,
@@ -739,7 +666,7 @@ export class TenantController {
    * @access Private (SUPER_ADMIN, TENANT_ADMIN for own tenant)
    */
   static deleteTenantEmailAddressHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       const tenantIdParam = req.params['tenantId'];
       const emailAddressIdParam = req.params['emailAddressId'];
       
@@ -762,24 +689,18 @@ export class TenantController {
         throw new ApiError('Invalid email address ID', 400, 'INVALID_EMAIL_ADDRESS_ID');
       }
 
-      if (!req.user?.id) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
+
+      const requestingUser = req.user as TokenPayload;
       
       logger.debug('Deleting tenant email address', {
         tenantId,
         emailAddressId,
-        userId: req.user.id,
-        role: req.user.role
+        userId: requestingUser.id,
+        role: requestingUser.role
       });
-
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        user_type: req.user.user_type,
-        tenantId: req.user.tenantId
-      };
 
       const result = await tenantService.deleteTenantEmailAddress(
         tenantId,

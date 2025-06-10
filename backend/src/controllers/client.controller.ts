@@ -14,6 +14,7 @@ import { asyncHandler } from '@/utils/async-handler.utils';
 import { ApiError } from '@/utils/api-error.utils';
 import { getPaginationFromRequest, getSortParamsFromRequest } from '@/utils/pagination.utils';
 import { TApiSuccessResponse } from '@shared/types/api.types';
+import { TokenPayload } from '@/utils/jwt.utils';
 import { ClientStatus, UserType } from '@/types/enums';
 
 /**
@@ -44,20 +45,14 @@ export class ClientController {
    * @access Private (SUPER_ADMIN, TENANT_ADMIN)
    */
   static createClientHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       const clientData = req.body as CreateClientDto;
         
-      if (!req.user?.id) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        user_type: req.user.user_type,
-        tenantId: req.user.tenantId
-      };
+      const requestingUser = req.user as TokenPayload;
       
       const client = await clientService.createClient(
         clientData, 
@@ -84,7 +79,7 @@ export class ClientController {
    * @access Private (SUPER_ADMIN or same tenant)
    */
   static getClientByIdHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       const clientIdParam = req.params['clientId'];
       if (!clientIdParam) {
         throw new ApiError('Client ID is required', 400, 'MISSING_CLIENT_ID');
@@ -99,13 +94,7 @@ export class ClientController {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        user_type: req.user.user_type,
-        tenantId: req.user.tenantId
-      };
+      const requestingUser = req.user as TokenPayload;
 
       const client = await clientService.getClientById(clientId, requestingUser);
       
@@ -128,18 +117,12 @@ export class ClientController {
    * @access Private (SUPER_ADMIN or same tenant)
    */
   static getAllClientsHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        user_type: req.user.user_type,
-        tenantId: req.user.tenantId
-      };
+      const requestingUser = req.user as TokenPayload;
 
       const pagination = getPaginationFromRequest(req);
       const sortParams = getSortParamsFromRequest(
@@ -204,7 +187,7 @@ export class ClientController {
    * @access Private (SUPER_ADMIN, TENANT_ADMIN)
    */
   static updateClientHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       const clientIdParam = req.params['clientId'];
       if (!clientIdParam) {
         throw new ApiError('Client ID is required', 400, 'MISSING_CLIENT_ID');
@@ -217,17 +200,11 @@ export class ClientController {
 
       const updateData = req.body as UpdateClientDto;
       
-      if (!req.user?.id) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        user_type: req.user.user_type,
-        tenantId: req.user.tenantId
-      };
+      const requestingUser = req.user as TokenPayload;
       
       const updatedClient = await clientService.updateClient(
         clientId, 
@@ -255,7 +232,7 @@ export class ClientController {
    * @access Private (SUPER_ADMIN, TENANT_ADMIN)
    */
   static deleteClientHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       const clientIdParam = req.params['clientId'];
       if (!clientIdParam) {
         throw new ApiError('Client ID is required', 400, 'MISSING_CLIENT_ID');
@@ -266,17 +243,11 @@ export class ClientController {
         throw new ApiError('Invalid client ID', 400, 'INVALID_CLIENT_ID');
       }
 
-      if (!req.user?.id) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        user_type: req.user.user_type,
-        tenantId: req.user.tenantId
-      };
+      const requestingUser = req.user as TokenPayload;
 
       const result = await clientService.deleteClient(
         clientId, 
@@ -305,20 +276,14 @@ export class ClientController {
    * @access Private (SUPER_ADMIN, TENANT_ADMIN)
    */
   static createClientTenantAssociationHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       const associationData = req.body as CreateClientTenantDto;
       
-      if (!req.user?.id) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        user_type: req.user.user_type,
-        tenantId: req.user.tenantId
-      };
+      const requestingUser = req.user as TokenPayload;
       
       const association = await clientService.createClientTenantAssociation(
         associationData, 
@@ -345,7 +310,7 @@ export class ClientController {
    * @access Private (SUPER_ADMIN or same tenant)
    */
   static getClientTenantsHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       const clientIdParam = req.params['clientId'];
       if (!clientIdParam) {
         throw new ApiError('Client ID is required', 400, 'MISSING_CLIENT_ID');
@@ -360,13 +325,7 @@ export class ClientController {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        user_type: req.user.user_type,
-        tenantId: req.user.tenantId
-      };
+      const requestingUser = req.user as TokenPayload;
 
       const tenants = await clientService.getClientTenants(clientId, requestingUser);
       
@@ -389,7 +348,7 @@ export class ClientController {
    * @access Private (SUPER_ADMIN, TENANT_ADMIN)
    */
   static removeClientTenantAssociationHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: Request, res: Response) => {
       const associationIdParam = req.params['associationId'];
       if (!associationIdParam) {
         throw new ApiError('Association ID is required', 400, 'MISSING_ASSOCIATION_ID');
@@ -400,17 +359,11 @@ export class ClientController {
         throw new ApiError('Invalid association ID', 400, 'INVALID_ASSOCIATION_ID');
       }
 
-      if (!req.user?.id) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        user_type: req.user.user_type,
-        tenantId: req.user.tenantId
-      };
+      const requestingUser = req.user as TokenPayload;
 
       const result = await clientService.removeClientTenantAssociation(
         associationId, 

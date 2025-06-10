@@ -82,7 +82,7 @@ export class TenantService {
     });
 
     // Super Admin can access any tenant
-    if (requestingUser.role === 'SUPER_ADMIN') {
+    if (requestingUser.user_type === UserType.SUPER_ADMIN) {
       const tenant = await prisma.tenant.findFirst({
         where: {
           tenant_id: tenantId,
@@ -212,7 +212,7 @@ export class TenantService {
     await this.getTenantById(tenantId, requestingUser);
 
     // Check access permissions for non-SUPER_ADMIN users
-    if (requestingUser.role !== 'SUPER_ADMIN' && tenantId !== requestingUser.tenantId) {
+    if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
       throw new ForbiddenError('Cannot access clients for another tenant');
     }
 
@@ -312,8 +312,8 @@ export class TenantService {
       email: 'system@admin.com', 
       role: 'SUPER_ADMIN', 
       tenantId,
-      user_type: UserType.STUDENT
-    });    // Update tenant
+      user_type: UserType.SUPER_ADMIN
+    } as TokenPayload);    // Update tenant
     const updateData: any = {
       updated_by: userId,
       updated_at: new Date(),
@@ -358,8 +358,8 @@ export class TenantService {
       email: 'system@admin.com', 
       role: 'SUPER_ADMIN', 
       tenantId,
-      user_type: UserType.STUDENT
-    });
+      user_type: UserType.SUPER_ADMIN
+    } as TokenPayload);
 
     // Soft delete by updating is_deleted flag
     await prisma.tenant.update({
@@ -398,7 +398,7 @@ export class TenantService {
     await this.getTenantById(tenantId, requestingUser);
 
     // Check access permissions for non-SUPER_ADMIN users
-    if (requestingUser.role !== 'SUPER_ADMIN' && tenantId !== requestingUser.tenantId) {
+    if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
       throw new ForbiddenError('Cannot create phone number for another tenant');
     }
 
@@ -464,7 +464,7 @@ export class TenantService {
     await this.getTenantById(tenantId, requestingUser);
 
     // Check access permissions for non-SUPER_ADMIN users
-    if (requestingUser.role !== 'SUPER_ADMIN' && tenantId !== requestingUser.tenantId) {
+    if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
       throw new ForbiddenError('Cannot access phone numbers for another tenant');
     }
 
@@ -540,7 +540,7 @@ export class TenantService {
     await this.getTenantById(tenantId, requestingUser);
 
     // Check access permissions for non-SUPER_ADMIN users
-    if (requestingUser.role !== 'SUPER_ADMIN' && tenantId !== requestingUser.tenantId) {
+    if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
       throw new ForbiddenError('Cannot update phone number for another tenant');
     }
 
@@ -623,7 +623,7 @@ export class TenantService {
     await this.getTenantById(tenantId, requestingUser);
 
     // Check access permissions for non-SUPER_ADMIN users
-    if (requestingUser.role !== 'SUPER_ADMIN' && tenantId !== requestingUser.tenantId) {
+    if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
       throw new ForbiddenError('Cannot delete phone number for another tenant');
     }
 
@@ -678,7 +678,7 @@ export class TenantService {
     await this.getTenantById(tenantId, requestingUser);
 
     // Check access permissions for non-SUPER_ADMIN users
-    if (requestingUser.role !== 'SUPER_ADMIN' && tenantId !== requestingUser.tenantId) {
+    if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
       throw new ForbiddenError('Cannot create email address for another tenant');
     }
 
@@ -742,7 +742,7 @@ export class TenantService {
     await this.getTenantById(tenantId, requestingUser);
 
     // Check access permissions for non-SUPER_ADMIN users
-    if (requestingUser.role !== 'SUPER_ADMIN' && tenantId !== requestingUser.tenantId) {
+    if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
       throw new ForbiddenError('Cannot access email addresses for another tenant');
     }
 
@@ -818,7 +818,7 @@ export class TenantService {
     await this.getTenantById(tenantId, requestingUser);
 
     // Check access permissions for non-SUPER_ADMIN users
-    if (requestingUser.role !== 'SUPER_ADMIN' && tenantId !== requestingUser.tenantId) {
+    if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
       throw new ForbiddenError('Cannot update email address for another tenant');
     }
 
@@ -898,7 +898,7 @@ export class TenantService {
     await this.getTenantById(tenantId, requestingUser);
 
     // Check access permissions for non-SUPER_ADMIN users
-    if (requestingUser.role !== 'SUPER_ADMIN' && tenantId !== requestingUser.tenantId) {
+    if (requestingUser.user_type !== UserType.SUPER_ADMIN && tenantId !== requestingUser.tenantId) {
       throw new ForbiddenError('Cannot delete email address for another tenant');
     }
 
