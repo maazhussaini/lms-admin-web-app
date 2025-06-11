@@ -12,7 +12,7 @@ import { hashPassword } from '@/utils/password.utils.js';
 import { getPrismaQueryOptions, SortOrder } from '@/utils/pagination.utils.js';
 import { tryCatch } from '@/utils/error-wrapper.utils.js';
 import { ExtendedPaginationWithFilters, SafeFilterParams } from '@/utils/async-handler.utils.js';
-import { UserType, SystemUserStatus } from '@/types/enums.js';
+import { UserType, SystemUserStatus } from '@/types/enums.types.js';
 
 /**
  * System user service for managing system-level users

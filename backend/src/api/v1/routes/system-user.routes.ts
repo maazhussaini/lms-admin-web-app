@@ -12,7 +12,7 @@ import {
   updateSystemUserValidation,
   listSystemUsersValidation 
 } from '@/dtos/user/system-user.dto.js';
-import { UserType } from '@/types/enums.js';
+import { UserType } from '@/types/enums.types.js';
 
 const router = Router();
 

@@ -21,7 +21,7 @@ import {
   listTenantClientsValidation
 } from '@/dtos/tenant/tenant.dto';
 import { param } from 'express-validator';
-import { UserType } from '@/types/enums.js';
+import { UserType } from '@/types/enums.types.js';
 
 const router = Router();
 

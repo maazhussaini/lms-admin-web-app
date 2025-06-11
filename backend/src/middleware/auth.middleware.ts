@@ -8,7 +8,7 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken, TokenPayload, extractTokenFromHeader } from '@/utils/jwt.utils.js';
 import { UnauthorizedError, ForbiddenError } from '@/utils/api-error.utils.js';
 import logger from '@/config/logger.js';
-import { UserType } from '@/types/enums.js';
+import { UserType } from '@/types/enums.types.js';
 
 /**
  * Type-safe interface for request query parameters

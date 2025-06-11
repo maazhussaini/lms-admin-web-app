@@ -4,7 +4,7 @@
  */
 
 import { body, query, ValidationChain } from 'express-validator';
-import { ClientStatus } from '@/types/enums';
+import { ClientStatus } from '@/types/enums.types.js';
 
 /**
  * DTO interface for creating a new client

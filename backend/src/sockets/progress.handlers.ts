@@ -16,7 +16,7 @@ import {
   validateVideoProgressPayload,
   withValidationAndErrorResponse
 } from '@/utils/validation.utils.js';
-import { SocketEventName } from '@/types/enums';
+import { SocketEventName } from '@/types/enums.types.js';
 
 /**
  * Register progress tracking related socket event handlers

@@ -4,7 +4,7 @@
  */
 
 import { body, query, ValidationChain } from 'express-validator';
-import { UserType, SystemUserStatus } from '@/types/enums';
+import { UserType, SystemUserStatus } from '@/types/enums.types.js';
 
 /**
  * DTO interface for creating a new system user

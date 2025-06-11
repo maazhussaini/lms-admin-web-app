@@ -12,7 +12,7 @@ import type { StringValue } from 'ms';
 import env from '@/config/environment.js';
 import { UnauthorizedError } from './api-error.utils.js';
 import logger from '@/config/logger.js';
-import { UserType } from '@/types/enums.js';
+import { UserType } from '@/types/enums.types.js';
 
 /**
  * User payload structure for JWT token

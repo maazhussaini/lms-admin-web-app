@@ -18,7 +18,7 @@ The System User domain consists of the following main entities defined in `@shar
 
 ### Key Enums
 
-From `@/types/enums`:
+From `@/types/enums.types.ts`:
 
 - **UserType**: `SUPER_ADMIN`, `TENANT_ADMIN`
 - **SystemUserStatus**: `ACTIVE`, `INACTIVE`, `SUSPENDED`, `LOCKED`

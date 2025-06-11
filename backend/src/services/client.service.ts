@@ -17,7 +17,7 @@ import { ExtendedPaginationWithFilters, SafeFilterParams } from '@/utils/async-h
 import { 
   ClientStatus,
   UserType
-} from '@/types/enums.js';
+} from '@/types/enums.types.js';
 import logger from '@/config/logger';
 
 // Initialize Prisma client

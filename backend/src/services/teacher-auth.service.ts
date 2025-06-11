@@ -25,7 +25,7 @@ import {
 } from '@/dtos/auth/teacher-auth.dto';
 import crypto from 'crypto';
 import logger from '@/config/logger';
-import { UserType } from '@/types/enums';
+import { UserType } from '@/types/enums.types.js';
 
 // Token blacklist - In production, this would be implemented with Redis
 const TEACHER_TOKEN_BLACKLIST = new Set<string>();
