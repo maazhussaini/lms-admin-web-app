@@ -5,9 +5,10 @@ model Course {
   course_id            Int       @id @default(autoincrement())
   tenant_id            Int
   course_name          String    @db.VarChar(255)
+  course_description   String?   @db.Text
   main_thumbnail_url   String?   @db.Text
   course_status        CourseStatus @default(DRAFT)
-  course_total_hours   Decimal?  @db.Decimal(6, 2)
+  course_total_hours   Decimal?  @db.Decimal(6, 2) // Auto-calculated by backend from sum of video durations
   specialization_id    Int?
   
   // Audit fields

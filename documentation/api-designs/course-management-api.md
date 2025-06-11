@@ -151,9 +151,9 @@ All entities extend `MultiTenantAuditFields` from `@shared/types/base.types.ts`,
 ```json
 {
   "course_name": "Introduction to Programming",
+  "course_description": "A comprehensive introduction to programming concepts and fundamentals using modern programming languages.",
   "main_thumbnail_url": "https://example.com/thumbnail.jpg",
   "course_status": "DRAFT",
-  "course_total_hours": 40.5,
   "specialization_id": 1
 }
 ```
@@ -164,9 +164,10 @@ All entities extend `MultiTenantAuditFields` from `@shared/types/base.types.ts`,
   "data": {
     "course_id": 1,
     "course_name": "Introduction to Programming",
+    "course_description": "A comprehensive introduction to programming concepts and fundamentals using modern programming languages.",
     "main_thumbnail_url": "https://example.com/thumbnail.jpg",
     "course_status": "DRAFT",
-    "course_total_hours": 40.5,
+    "course_total_hours": null,
     "specialization_id": 1,
     "tenant_id": 123,
     "created_at": "2024-01-01T00:00:00Z",
@@ -189,6 +190,7 @@ All entities extend `MultiTenantAuditFields` from `@shared/types/base.types.ts`,
   "data": {
     "course_id": 1,
     "course_name": "Introduction to Programming",
+    "course_description": "A comprehensive introduction to programming concepts and fundamentals using modern programming languages.",
     "course_status": "PUBLISHED",
     "course_total_hours": 40.5,
     "modules": [
@@ -457,8 +459,9 @@ All entities extend `MultiTenantAuditFields` from `@shared/types/base.types.ts`,
 
 ### Course Validation
 - **course_name**: Required, 2-255 characters, string type
+- **course_description**: Optional, max 2000 characters, string type
 - **course_status**: Must be valid CourseStatus enum value
-- **course_total_hours**: Optional, positive decimal number
+- **course_total_hours**: Read-only field, auto-calculated by backend from sum of video durations in course
 - **main_thumbnail_url**: Optional, valid URL format
 - **specialization_id**: Optional, must be valid specialization within tenant
 
@@ -486,9 +489,10 @@ model Course {
   course_id            Int       @id @default(autoincrement())
   tenant_id            Int
   course_name          String    @db.VarChar(255)
+  course_description   String?   @db.Text
   main_thumbnail_url   String?   @db.Text
   course_status        CourseStatus @default(DRAFT)
-  course_total_hours   Decimal?  @db.Decimal(6, 2)
+  course_total_hours   Decimal?  @db.Decimal(6, 2) // Auto-calculated by backend from sum of video durations
   specialization_id    Int?
   
   // Enhanced audit fields
@@ -643,6 +647,7 @@ Following `TApiErrorResponse` from `@shared/types/api.types.ts`:
 - **Video Completion Logic**: Progress calculation and completion threshold validation
 - **Enrollment Prerequisites**: Course access based on enrollment status
 - **Content Availability**: Published status requirements for student access
+- **Course Duration Calculation**: Total hours automatically calculated from sum of video durations when videos are uploaded
 
 ## Implementation Patterns
 

@@ -49,9 +49,10 @@ export interface Specialization extends MultiTenantAuditFields {
 export interface Course extends MultiTenantAuditFields {
   course_id: number;
   course_name: string;
+  course_description?: string | null;
   main_thumbnail_url?: string | null;
   course_status: CourseStatus;
-  course_total_hours?: number | null;
+  course_total_hours?: number | null; // Auto-calculated by backend based on sum of video durations
   specialization_id?: number | null; // Foreign key to Specialization
 }
 
