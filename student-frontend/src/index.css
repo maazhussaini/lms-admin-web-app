@@ -1,0 +1,145 @@
+/* Import fonts first */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* Import Tailwind's base, components, and utilities */
+@import "tailwindcss";
+
+/* Define theme customizations using CSS custom properties */
+@theme {
+  /* Breakpoints (Default Tailwind values shown, add/modify as needed) */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+  /* You can add more custom breakpoints like --breakpoint-3xl: 1920px; */
+
+  /* Colors */
+  /* Main orange palette (primary) */
+  --color-primary-50: #fff7ed;
+  --color-primary-100: #ffedd5;
+  --color-primary-200: #fed7aa;
+  --color-primary-300: #fdba74;
+  --color-primary-400: #fb923c;
+  --color-primary-500: #f97316; /* Base orange */
+  --color-primary-600: #ea580c;
+  --color-primary-700: #c2410c;
+  --color-primary-800: #9a3412;
+  --color-primary-900: #7c2d12;
+  --color-primary-950: #431407;
+
+  /* Supporting colors (secondary) */
+  --color-secondary-50: #f0fdfa;
+  --color-secondary-100: #ccfbf1;
+  --color-secondary-200: #99f6e4;
+  --color-secondary-300: #5eead4;
+  --color-secondary-400: #2dd4bf;
+  --color-secondary-500: #14b8a6;
+  --color-secondary-600: #0d9488;
+  --color-secondary-700: #0f766e;
+  --color-secondary-800: #115e59;
+  --color-secondary-900: #134e4a;
+  --color-secondary-950: #042f2e;
+
+  /* Neutral colors */
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f5f5f5;
+  --color-neutral-200: #e5e5e5;
+  --color-neutral-300: #d4d4d4;
+  --color-neutral-400: #a3a3a3;
+  --color-neutral-500: #737373;
+  --color-neutral-600: #525252;
+  --color-neutral-700: #404040;
+  --color-neutral-800: #262626;
+  --color-neutral-900: #171717;
+  --color-neutral-950: #0a0a0a;
+
+  /* Status colors */
+  --color-success: #22c55e;
+  --color-warning: #eab308;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+
+  /* Fonts */
+  /* Note: Array values are converted to comma-separated strings */
+  --font-sans: 'Inter', 'system-ui', 'sans-serif';
+  --font-heading: 'Poppins', 'sans-serif';
+
+  /* Border Radius */
+  /* Note: DEFAULT key maps to the root name (e.g., --rounded) */
+  --rounded-sm: 0.125rem;
+  --rounded: 0.25rem; /* Default */
+  --rounded-md: 0.375rem;
+  --rounded-lg: 0.5rem;
+  --rounded-xl: 0.75rem;
+  --rounded-2xl: 1rem;
+  --rounded-3xl: 1.5rem;
+  --rounded-full: 9999px;
+
+  /* Box Shadows */
+  /* Note: DEFAULT key maps to the root name (e.g., --shadow) */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1); /* Default */
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+  /* You can add other theme values like spacing, opacity, etc. here */
+  /* Example: --spacing-1: 0.25rem; */
+  /* Example: --opacity-50: 0.5; */
+}
+
+@layer base {
+  html {
+    @apply font-sans; /* Apply the sans font stack globally */
+  }
+  /* You could apply font-heading to headings here too if desired */
+  /* h1, h2, h3, h4, h5, h6 { */
+  /* @apply font-heading; */
+  /* } */
+}
+
+/* Animation for the shimmer effect used in SkeletonLoader component */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Add the shimmer animation to Tailwind utilities */
+@layer utilities {
+  .animate-shimmer {
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+/* Button ripple animation keyframes for enhanced UX */
+@keyframes ripple {
+  to {
+    transform: scale(15);
+    opacity: 0;
+  }
+}
+
+/* Optional: Add custom base styles, component classes, or utility overrides below */
+/* @layer base { */
+/* body { */
+/* @apply font-sans text-neutral-900 bg-neutral-50; */
+/* } */
+/* h1, h2, h3, h4, h5, h6 { */
+/* @apply font-heading; */
+/* } */
+/* } */
+
+/* @layer components { */
+/* .btn-primary { */
+/* @apply bg-primary-500 text-white hover:bg-primary-600 px-4 py-2 rounded; */
+/* } */
+/* } */
+
+/* @layer utilities { */
+/* .text-balance { */
+/* text-wrap: balance; */
+/* } */
+/* } */
