@@ -138,7 +138,7 @@ const Pagination: React.FC<PaginationProps> = ({
         </Button>
         
         {/* Page number buttons */}
-        {pageRange[0] > 1 && (
+        {pageRange.length > 0 && pageRange[0] && pageRange[0] > 1 && (
           <>
             <Button
               variant="ghost"
@@ -148,7 +148,7 @@ const Pagination: React.FC<PaginationProps> = ({
             >
               1
             </Button>
-            {pageRange[0] > 2 && (
+            {pageRange[0] && pageRange[0] > 2 && (
               <span className="px-2 text-neutral-400">...</span>
             )}
           </>
@@ -166,21 +166,24 @@ const Pagination: React.FC<PaginationProps> = ({
           </Button>
         ))}
         
-        {pageRange[pageRange.length - 1] < totalPages && (
-          <>
-            {pageRange[pageRange.length - 1] < totalPages - 1 && (
-              <span className="px-2 text-neutral-400">...</span>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onPageChange(totalPages)}
-              className="hidden sm:flex px-3"
-            >
-              {totalPages}
-            </Button>
-          </>
-        )}
+        {(() => {
+          const lastPage = pageRange.length > 0 ? pageRange[pageRange.length - 1] : undefined;
+          return lastPage && lastPage < totalPages ? (
+            <>
+              {lastPage < totalPages - 1 && (
+                <span className="px-2 text-neutral-400">...</span>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onPageChange(totalPages)}
+                className="hidden sm:flex px-3"
+              >
+                {totalPages}
+              </Button>
+            </>
+          ) : null;
+        })()}
         
         {/* Next page button */}
         <Button

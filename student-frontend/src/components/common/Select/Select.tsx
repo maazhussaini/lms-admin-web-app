@@ -60,7 +60,6 @@ const Select: React.FC<SelectProps> = ({
 }) => {
   // Ensure value is properly controlled
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedValue = e.target.value;
     if (onChange) {
       onChange(e); // Pass the original event
     }

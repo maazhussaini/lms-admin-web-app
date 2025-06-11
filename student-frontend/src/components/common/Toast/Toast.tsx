@@ -55,6 +55,9 @@ const Toast: React.FC<ToastProps> = ({
       
       return () => clearTimeout(timer);
     }
+    
+    // Return undefined for consistency when duration <= 0
+    return undefined;
   }, [duration, onClose]);
   
   // Position classes

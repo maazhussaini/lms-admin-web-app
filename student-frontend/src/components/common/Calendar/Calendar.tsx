@@ -138,6 +138,8 @@ const Calendar: React.FC<CalendarProps> = ({
 
   // Month navigation
   const navigateMonth = (step: number) => {
+    if (!viewDate) return;
+    
     const newDate = new Date(viewDate);
     newDate.setMonth(newDate.getMonth() + step);
     
@@ -179,6 +181,8 @@ const Calendar: React.FC<CalendarProps> = ({
 
   // Handle dropdown changes
   const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (!viewDate) return;
+    
     const newDate = new Date(viewDate);
     newDate.setMonth(parseInt(e.target.value, 10));
     
@@ -190,6 +194,8 @@ const Calendar: React.FC<CalendarProps> = ({
   };
   
   const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (!viewDate) return;
+    
     const newDate = new Date(viewDate);
     newDate.setFullYear(parseInt(e.target.value, 10));
     
@@ -202,6 +208,8 @@ const Calendar: React.FC<CalendarProps> = ({
 
   // Generate days of the month to display
   const daysInMonth = useMemo(() => {
+    if (!viewDate) return [];
+    
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth();
     const firstDay = new Date(year, month, 1);
@@ -281,6 +289,8 @@ const Calendar: React.FC<CalendarProps> = ({
     if (!hoverDate || selectedDates.length !== 1) return false;
     
     const startDate = selectedDates[0];
+    if (!startDate) return false;
+    
     const isAfterStart = date.getTime() >= startDate.getTime();
     const isBeforeHover = date.getTime() <= hoverDate.getTime();
     const isBeforeStart = date.getTime() <= startDate.getTime();
@@ -297,6 +307,8 @@ const Calendar: React.FC<CalendarProps> = ({
     if (selectedDates.length !== 2) return false;
     
     const [start, end] = selectedDates;
+    if (!start || !end) return false;
+    
     return date.getTime() >= start.getTime() && date.getTime() <= end.getTime();
   }, [selectedDates]);
 
@@ -392,7 +404,7 @@ const Calendar: React.FC<CalendarProps> = ({
           <div className="flex space-x-2">
             <select
               className="text-sm font-medium bg-neutral-50 border border-neutral-200 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary-500"
-              value={viewDate.getMonth()}
+              value={viewDate?.getMonth() ?? 0}
               onChange={handleMonthChange}
               aria-label="Select month"
             >
@@ -405,7 +417,7 @@ const Calendar: React.FC<CalendarProps> = ({
             
             <select
               className="text-sm font-medium bg-neutral-50 border border-neutral-200 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary-500"
-              value={viewDate.getFullYear()}
+              value={viewDate?.getFullYear() ?? new Date().getFullYear()}
               onChange={handleYearChange}
               aria-label="Select year"
             >
@@ -418,7 +430,7 @@ const Calendar: React.FC<CalendarProps> = ({
           </div>
         ) : (
           <h2 className="text-base font-medium text-neutral-800">
-            {viewDate.toLocaleDateString('default', { month: 'long', year: 'numeric' })}
+            {viewDate?.toLocaleDateString('default', { month: 'long', year: 'numeric' }) ?? ''}
           </h2>
         )}
         

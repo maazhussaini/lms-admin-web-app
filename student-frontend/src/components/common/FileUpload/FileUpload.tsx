@@ -1,7 +1,5 @@
 import React, { forwardRef, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Button from '@/components/common/Button';
-import StateDisplay from '@/components/common/StateDisplay';
 import Spinner from '@/components/common/Spinner';
 
 export interface FileUploadProps {
@@ -96,7 +94,6 @@ const FileUpload = forwardRef<HTMLInputElement, FileUploadProps>(
       error,
       multiple = false,
       maxSize,
-      value,
       onChange,
       className = '',
       dragText = 'Drag & drop files here, or click to browse',
@@ -122,7 +119,6 @@ const FileUpload = forwardRef<HTMLInputElement, FileUploadProps>(
     // State for drag events and selected files
     const [isDragging, setIsDragging] = useState(false);
     const [filePreviewUrls, setFilePreviewUrls] = useState<string[]>([]);
-    const [uploadStatus, setUploadStatus] = useState<'idle' | 'error' | 'success'>('idle');
     
     // Handle file selection
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,16 +128,13 @@ const FileUpload = forwardRef<HTMLInputElement, FileUploadProps>(
         // Validate file sizes
         if (maxSize) {
           for (let i = 0; i < files.length; i++) {
-            if (files[i].size > maxSize) {
-              setUploadStatus('error');
+            const file = files[i];
+            if (file && file.size > maxSize) {
               if (onChange) onChange(null);
               return;
             }
           }
         }
-        
-        // Set success state
-        setUploadStatus('success');
         
         // For images, create a data URL and pass it back to the parent
         const file = files[0]; // Use only the first file if multiple
@@ -211,7 +204,8 @@ const FileUpload = forwardRef<HTMLInputElement, FileUploadProps>(
         let filesTooLarge = false;
         if (maxSize) {
           for (let i = 0; i < files.length; i++) {
-            if (files[i].size > maxSize) {
+            const file = files[i];
+            if (file && file.size > maxSize) {
               filesTooLarge = true;
               break;
             }
@@ -219,14 +213,16 @@ const FileUpload = forwardRef<HTMLInputElement, FileUploadProps>(
         }
         
         if (filesTooLarge) {
-          setUploadStatus('error');
           return;
         }
         
         // Add files to the DataTransfer object
         const maxFiles = multiple ? files.length : 1;
         for (let i = 0; i < maxFiles; i++) {
-          dt.items.add(files[i]);
+          const file = files[i];
+          if (file) {
+            dt.items.add(file);
+          }
         }
         
         // Set the file input's files
@@ -236,9 +232,6 @@ const FileUpload = forwardRef<HTMLInputElement, FileUploadProps>(
           const event = new Event('change', { bubbles: true });
           fileInputRef.current.dispatchEvent(event);
         }
-        
-        // Set success state
-        setUploadStatus('success');
         
         // For images, create a data URL and pass it back to the parent
         const file = files[0]; // Use only the first file if multiple
@@ -279,63 +272,6 @@ const FileUpload = forwardRef<HTMLInputElement, FileUploadProps>(
       else return (bytes / 1073741824).toFixed(1) + ' GB';
     };
     
-    // Clear selected files
-    const handleClearFiles = () => {
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-        
-        // Reset status
-        setUploadStatus('idle');
-        
-        // Call onChange handler with null
-        if (onChange) onChange(null);
-        
-        // Clear previews
-        filePreviewUrls.forEach(url => URL.revokeObjectURL(url));
-        setFilePreviewUrls([]);
-      }
-    };
-    
-    // Animation variants
-    const containerVariants = {
-      hidden: { opacity: 0, scale: 0.95 },
-      visible: { 
-        opacity: 1, 
-        scale: 1,
-        transition: { duration: 0.3 }
-      },
-      hover: {
-        scale: isDragging ? 1.03 : 1,
-        boxShadow: isDragging ? "0 4px 12px rgba(0, 0, 0, 0.1)" : "none"
-      }
-    };
-    
-    const iconVariants = {
-      idle: { y: 0 },
-      drag: { 
-        y: [0, -10, 0], 
-        transition: { 
-          repeat: Infinity,
-          duration: 1.5,
-          ease: "easeInOut" 
-        } 
-      }
-    };
-    
-    const fileStatusVariants = {
-      hidden: { opacity: 0, height: 0 },
-      visible: { 
-        opacity: 1, 
-        height: 'auto',
-        transition: { duration: 0.3 } 
-      },
-      exit: {
-        opacity: 0,
-        height: 0,
-        transition: { duration: 0.3 }
-      }
-    };
-    
     return (
       <div className={`${fullWidth ? 'w-full' : ''} h-full flex flex-col`}>
         {label && (
@@ -360,7 +296,18 @@ const FileUpload = forwardRef<HTMLInputElement, FileUploadProps>(
           initial="hidden"
           animate="visible"
           whileHover={!disabled && !isLoading ? "hover" : ""}
-          variants={containerVariants}
+          variants={{
+            hidden: { opacity: 0, scale: 0.95 },
+            visible: { 
+              opacity: 1, 
+              scale: 1,
+              transition: { duration: 0.3 }
+            },
+            hover: {
+              scale: isDragging ? 1.03 : 1,
+              boxShadow: isDragging ? "0 4px 12px rgba(0, 0, 0, 0.1)" : "none"
+            }
+          }}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
@@ -386,7 +333,17 @@ const FileUpload = forwardRef<HTMLInputElement, FileUploadProps>(
               <>
                 <motion.div 
                   className="flex justify-center"
-                  variants={iconVariants}
+                  variants={{
+                    idle: { y: 0 },
+                    drag: { 
+                      y: [0, -10, 0], 
+                      transition: { 
+                        repeat: Infinity,
+                        duration: 1.5,
+                        ease: "easeInOut" 
+                      } 
+                    }
+                  }}
                   animate={isDragging ? "drag" : "idle"}
                 >
                   <svg

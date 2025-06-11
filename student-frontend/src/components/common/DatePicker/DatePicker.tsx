@@ -210,11 +210,13 @@ const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
         // This is a basic implementation and might need adjustments based on format
         const parts = value.split(/[-/]/);
         
+        if (parts.length < 3) return null;
+        
         if (dateFormat.indexOf('MM') === 0) {
           // MM/dd/yyyy format
-          const month = parseInt(parts[0], 10) - 1;
-          const day = parseInt(parts[1], 10);
-          const year = parseInt(parts[2], 10);
+          const month = parseInt(parts[0] || '0', 10) - 1;
+          const day = parseInt(parts[1] || '0', 10);
+          const year = parseInt(parts[2] || '0', 10);
           
           if (isNaN(month) || isNaN(day) || isNaN(year)) return null;
           
@@ -228,9 +230,9 @@ const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
           return date;
         } else if (dateFormat.indexOf('dd') === 0) {
           // dd/MM/yyyy format
-          const day = parseInt(parts[0], 10);
-          const month = parseInt(parts[1], 10) - 1;
-          const year = parseInt(parts[2], 10);
+          const day = parseInt(parts[0] || '0', 10);
+          const month = parseInt(parts[1] || '0', 10) - 1;
+          const year = parseInt(parts[2] || '0', 10);
           
           if (isNaN(month) || isNaN(day) || isNaN(year)) return null;
           
@@ -244,9 +246,9 @@ const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
           return date;
         } else if (dateFormat.indexOf('yyyy') === 0) {
           // yyyy/MM/dd format
-          const year = parseInt(parts[0], 10);
-          const month = parseInt(parts[1], 10) - 1;
-          const day = parseInt(parts[2], 10);
+          const year = parseInt(parts[0] || '0', 10);
+          const month = parseInt(parts[1] || '0', 10) - 1;
+          const day = parseInt(parts[2] || '0', 10);
           
           if (isNaN(month) || isNaN(day) || isNaN(year)) return null;
           

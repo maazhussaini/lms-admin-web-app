@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle, AlertCircle, Info, AlertTriangle, X } from 'lucide-react';
+import { IoCheckmarkCircle, IoAlertCircle, IoInformationCircle, IoWarning, IoClose } from 'react-icons/io5';
 
 type AlertType = 'success' | 'error' | 'info' | 'warning';
 
@@ -22,31 +22,31 @@ export const Alert: React.FC<AlertProps> = ({
         return {
           bgColor: 'bg-success/10',
           textColor: 'text-success',
-          icon: <CheckCircle className="h-5 w-5 text-success" />,
+          icon: <IoCheckmarkCircle className="h-5 w-5 text-success" />,
         };
       case 'error':
         return {
           bgColor: 'bg-error/10',
           textColor: 'text-error',
-          icon: <AlertCircle className="h-5 w-5 text-error" />,
+          icon: <IoAlertCircle className="h-5 w-5 text-error" />,
         };
       case 'info':
         return {
           bgColor: 'bg-info/10',
           textColor: 'text-info',
-          icon: <Info className="h-5 w-5 text-info" />,
+          icon: <IoInformationCircle className="h-5 w-5 text-info" />,
         };
       case 'warning':
         return {
           bgColor: 'bg-warning/10',
           textColor: 'text-warning',
-          icon: <AlertTriangle className="h-5 w-5 text-warning" />,
+          icon: <IoWarning className="h-5 w-5 text-warning" />,
         };
       default:
         return {
           bgColor: 'bg-info/10',
           textColor: 'text-info',
-          icon: <Info className="h-5 w-5 text-info" />,
+          icon: <IoInformationCircle className="h-5 w-5 text-info" />,
         };
     }
   };
@@ -70,7 +70,7 @@ export const Alert: React.FC<AlertProps> = ({
           aria-label="Close"
         >
           <span className="sr-only">Close</span>
-          <X className="h-5 w-5" />
+          <IoClose className="h-5 w-5" />
         </button>
       )}
     </div>
