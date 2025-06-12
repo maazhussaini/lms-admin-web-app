@@ -2,6 +2,9 @@ import React from 'react';
 import { RouteObject } from 'react-router-dom';
 import { AuthGuard, PublicOnlyGuard, LayoutGuard } from './guards';
 
+// Import the actual LoginPage component
+const LoginPage = React.lazy(() => import('@/pages/LoginPage'));
+
 // Dummy components for development purposes
 const DummyComponent = ({ pageName }: { pageName: string }) => (
   <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
@@ -79,7 +82,7 @@ const LoadingFallback = () => (
 );
 
 /**
- * Route configuration with dummy components
+ * Route configuration with actual login page
  */
 export const routes: RouteObject[] = [
   // Public routes (login, registration, etc.)
@@ -90,7 +93,7 @@ export const routes: RouteObject[] = [
         path: 'login',
         element: (
           <React.Suspense fallback={<LoadingFallback />}>
-            <DummyComponent pageName="Login" />
+            <LoginPage />
           </React.Suspense>
         ),
       },

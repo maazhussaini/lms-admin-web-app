@@ -23,7 +23,7 @@ export const loginStudent = async (
   tenantContext?: string
 ): Promise<TAuthResponse> => {
   const authResponse = await apiClient.post<TAuthResponse>(
-    '/student/auth/login', 
+    '/auth/student/login', 
     { email_address: email, password, tenant_context: tenantContext },
     { withAuth: false }
   );
@@ -45,7 +45,7 @@ export const logoutStudent = async (): Promise<void> => {
     // Call logout API if we have a token
     const token = getAccessToken();
     if (token) {
-      await apiClient.post('/student/auth/logout', {});
+      await apiClient.post('/auth/student/logout', {});
     }
   } catch (error) {
     console.error('Logout error:', error);
@@ -61,7 +61,7 @@ export const logoutStudent = async (): Promise<void> => {
  */
 export const requestPasswordReset = async (email: string): Promise<void> => {
   await apiClient.post(
-    '/student/auth/forgot-password', 
+    '/auth/student/forgot-password', 
     { email_address: email },
     { withAuth: false }
   );
@@ -72,7 +72,7 @@ export const requestPasswordReset = async (email: string): Promise<void> => {
  */
 export const resetPassword = async (token: string, newPassword: string): Promise<void> => {
   await apiClient.post(
-    '/student/auth/reset-password',
+    '/auth/student/reset-password',
     { token, newPassword },
     { withAuth: false }
   );

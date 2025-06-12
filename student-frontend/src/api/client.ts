@@ -4,7 +4,7 @@ import { getStoredAuthToken, refreshAuthToken } from '@/services/authService';
 /**
  * API configuration
  */
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1'; // Fixed: Changed from 3001 to 3000
 const API_TIMEOUT = 30000; // 30 seconds
 
 /**

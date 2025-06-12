@@ -49,16 +49,47 @@ const limiter = rateLimit({
   ),
 });
 
+// Configure CORS to allow frontend applications
+const corsOrigins = [
+  'http://localhost:5173', // Student frontend dev server
+  'http://localhost:3000', // Admin frontend dev server (if any)
+  'http://localhost:4173', // Student frontend preview server
+  env.CORS_ORIGIN, // Environment-specified origins
+].filter(Boolean); // Remove any undefined values
+
 // Apply global middleware
 app.use(requestId);
 app.use(requestLogger);
 app.use(helmet());
 app.use(cors({
-  origin: env.CORS_ORIGIN,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list
+    if (corsOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // In development, allow localhost with any port
+    if (env.NODE_ENV === 'development' && origin.includes('localhost')) {
+      return callback(null, true);
+    }
+    
+    callback(new Error('Not allowed by CORS'));
+  },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Correlation-ID', 'X-Request-ID'],
-  exposedHeaders: ['X-Correlation-ID'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Correlation-ID', 
+    'X-Request-ID',
+    'X-Tenant-Context',
+    'Cache-Control'
+  ],
+  exposedHeaders: ['X-Correlation-ID', 'X-Request-ID'],
   credentials: true,
+  optionsSuccessStatus: 200,
 }));
 app.use(compression());
 app.use(bodyParser.json({ limit: '10mb' }));
