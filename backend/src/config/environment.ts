@@ -141,7 +141,7 @@ export const env: EnvironmentConfig = {
   
   // JWT
   JWT_SECRET: requireEnv('JWT_SECRET'),
-  JWT_EXPIRES_IN: getEnv('JWT_EXPIRES_IN') || '1h',
+  JWT_EXPIRES_IN: getEnv('JWT_EXPIRES_IN') || (validateNodeEnv(getEnv('NODE_ENV')) === 'development' ? '2h' : '15m'),
   JWT_REFRESH_SECRET: requireEnv('JWT_REFRESH_SECRET'),
   JWT_REFRESH_EXPIRES_IN: getEnv('JWT_REFRESH_EXPIRES_IN') || '7d',
   JWT_ISSUER: getEnv('JWT_ISSUER') || 'lms-admin',

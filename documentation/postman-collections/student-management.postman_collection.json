@@ -1,0 +1,1583 @@
+{
+	"info": {
+		"_postman_id": "41db2fce-6011-4e3e-9579-ca575c45a6c2",
+		"name": "Student Management",
+		"description": "Comprehensive collection for managing students, their contact information, devices, and self-service operations in the Learning Management System (LMS). These endpoints handle student profile management, contact information, device tracking, and enrollment management with proper multi-tenant isolation and role-based access controls.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18401003",
+		"_collection_link": "https://advanced-lms.postman.co/workspace/Advanced-LMS~aec907d2-83c0-42e5-8afd-53346d974465/collection/18401003-41db2fce-6011-4e3e-9579-ca575c45a6c2?action=share&source=collection_link&creator=18401003"
+	},
+	"item": [
+		{
+			"name": "SuperAdmin Operations",
+			"item": [
+				{
+					"name": "Login as SuperAdmin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has access token', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.tokens.access_token).to.exist;",
+									"    pm.environment.set('superAdminAccessToken', jsonData.data.tokens.access_token);",
+									"    pm.environment.set('accessToken', jsonData.data.tokens.access_token);",
+									"    pm.environment.set('superAdminUserId', jsonData.data.user.id);",
+									"    pm.environment.set('superAdminRole', jsonData.data.user.role.role_type);",
+									"    pm.environment.set('superAdminTenantId', jsonData.data.user.tenant_id);",
+									"});",
+									"",
+									"pm.test('User has SuperAdmin role', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.user.role.role_type).to.eql('SUPER_ADMIN');",
+									"    pm.expect(jsonData.data.user.user_type).to.eql('SUPER_ADMIN');",
+									"    pm.expect(jsonData.data.user.tenant_id).to.eql(0);",
+									"});",
+									"",
+									"pm.test('Response structure is valid', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data.user).to.have.property('username');",
+									"    pm.expect(jsonData.data.user).to.have.property('email');",
+									"    pm.expect(jsonData.data.tokens).to.have.property('refresh_token');",
+									"    pm.expect(jsonData.data.permissions).to.include('*');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.environment.set('Admin@123456', 'admin@lms.example.com');"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email_address\": \"{{superadmin_email}}\",\n    \"password\": \"{{superadmin_password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Authenticate as a SuperAdmin user to perform privileged student operations."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Student",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Student created successfully', function () {",
+									"    pm.response.to.have.status(201);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.true;",
+									"    pm.expect(responseJson.data).to.have.property('student_id');",
+									"    pm.expect(responseJson.data).to.have.property('full_name');",
+									"    pm.expect(responseJson.data).to.have.property('username');",
+									"    pm.expect(responseJson.data).to.have.property('student_status');",
+									"    pm.expect(responseJson.data.full_name).to.eql(pm.environment.get('new_student_name'));",
+									"    pm.expect(responseJson.data.username).to.eql(pm.environment.get('new_student_username'));",
+									"    ",
+									"    // Store created student ID for subsequent tests",
+									"    pm.environment.set('created_student_id', responseJson.data.student_id);",
+									"    pm.environment.set('created_student_tenant_id', responseJson.data.tenant_id);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generate dynamic student data",
+									"const timestamp = Date.now();",
+									"const randomNum = Math.floor(Math.random() * 1000);",
+									"",
+									"pm.environment.set('new_student_name', `John Michael Doe ${randomNum}`);",
+									"pm.environment.set('new_student_first_name', 'John');",
+									"pm.environment.set('new_student_middle_name', 'Michael');",
+									"pm.environment.set('new_student_last_name', `Doe${randomNum}`);",
+									"pm.environment.set('new_student_username', `johndoe${randomNum}`);",
+									"pm.environment.set('new_student_email', `john.doe${randomNum}@example.com`);",
+									"pm.environment.set('new_student_password', 'Student@123');",
+									"pm.environment.set('student_country_id', 21);",
+									"pm.environment.set('student_state_id', 11);",
+									"pm.environment.set('student_city_id', 1);",
+									"pm.environment.set('student_address', '123 Student Street, Anytown, USA');",
+									"pm.environment.set('student_zip_code', '12345');",
+									"pm.environment.set('student_age', 20);",
+									"pm.environment.set('student_gender', 'MALE');",
+									"pm.environment.set('student_status', 'ACTIVE');",
+									"pm.environment.set('student_referral_type', 'ONLINE');"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"tenant_id\": 3,\n    \"full_name\": \"{{new_student_name}}\",\n    \"first_name\": \"{{new_student_first_name}}\",\n    \"middle_name\": \"{{new_student_middle_name}}\",\n    \"last_name\": \"{{new_student_last_name}}\",\n    \"email_address\": \"{{new_student_email}}\",\n    \"username\": \"{{new_student_username}}\",\n    \"password\": \"{{new_student_password}}\",\n    \"country_id\": {{student_country_id}},\n    \"state_id\": {{student_state_id}},\n    \"city_id\": {{student_city_id}},\n    \"address\": \"{{student_address}}\",\n    \"date_of_birth\": \"2000-01-15\",\n    \"profile_picture_url\": \"https://example.com/profile.jpg\",\n    \"zip_code\": \"{{student_zip_code}}\",\n    \"age\": {{student_age}},\n    \"gender\": \"{{student_gender}}\",\n    \"student_status\": \"{{student_status}}\",\n    \"referral_type\": \"{{student_referral_type}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/students",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"students"
+							]
+						},
+						"description": "Create a new student with comprehensive profile information."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Students",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Students retrieved successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.true;",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"    pm.expect(responseJson.pagination).to.have.property('total');",
+									"    pm.expect(responseJson.pagination).to.have.property('page');",
+									"    pm.expect(responseJson.pagination).to.have.property('limit');",
+									"    ",
+									"    // Check if our created student is in the list",
+									"    const createdStudentId = parseInt(pm.environment.get('created_student_id'));",
+									"    const studentFound = responseJson.data.find(s => s.student_id === createdStudentId);",
+									"    if (studentFound) {",
+									"        pm.expect(studentFound).to.have.property('full_name');",
+									"        pm.expect(studentFound).to.have.property('username');",
+									"        pm.expect(studentFound).to.have.property('student_status');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/students?page=1&limit=10&sortBy=created_at&sortOrder=desc",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"students"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "sortBy",
+									"value": "created_at"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc"
+								}
+							]
+						},
+						"description": "Get all students with pagination and sorting. SuperAdmin can view students from all tenants."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Student by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Student retrieved successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.true;",
+									"    pm.expect(responseJson.data).to.have.property('student_id');",
+									"    pm.expect(responseJson.data).to.have.property('full_name');",
+									"    pm.expect(responseJson.data).to.have.property('username');",
+									"    pm.expect(responseJson.data).to.have.property('student_status');",
+									"    pm.expect(responseJson.data).to.have.property('primary_email');",
+									"    ",
+									"    const expectedStudentId = parseInt(pm.environment.get('created_student_id'));",
+									"    pm.expect(responseJson.data.student_id).to.eql(expectedStudentId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/students/{{created_student_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"students",
+								"{{created_student_id}}"
+							]
+						},
+						"description": "Get a specific student by ID. SuperAdmin can access any student."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Student",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Student updated successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.true;",
+									"    pm.expect(responseJson.data).to.have.property('student_id');",
+									"    pm.expect(responseJson.data).to.have.property('full_name');",
+									"    pm.expect(responseJson.data.full_name).to.eql(pm.environment.get('updated_student_name'));",
+									"    pm.expect(responseJson.data.student_status).to.eql(pm.environment.get('updated_student_status'));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generate updated student data",
+									"const randomNum = Math.floor(Math.random() * 1000);",
+									"pm.environment.set('updated_student_name', `John Updated Doe ${randomNum}`);",
+									"pm.environment.set('updated_student_status', 'ACTIVE');",
+									"pm.environment.set('updated_student_address', '456 Updated Address Street');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"full_name\": \"{{updated_student_name}}\",\n    \"student_status\": \"{{updated_student_status}}\",\n    \"address\": \"{{updated_student_address}}\",\n    \"profile_picture_url\": \"https://example.com/new-profile.jpg\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/students/{{created_student_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"students",
+								"{{created_student_id}}"
+							]
+						},
+						"description": "Update student profile information."
+					},
+					"response": []
+				},
+				{
+					"name": "Search Students",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Student search successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.true;",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"    ",
+									"    // Check if search results contain our search term",
+									"    const searchTerm = pm.environment.get('student_search_term');",
+									"    if (responseJson.data.length > 0) {",
+									"        const foundMatch = responseJson.data.some(student => ",
+									"            student.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||",
+									"            student.username.toLowerCase().includes(searchTerm.toLowerCase())",
+									"        );",
+									"        pm.expect(foundMatch).to.be.true;",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.environment.set('student_search_term', 'john');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/students?search={{student_search_term}}&page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"students"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "{{student_search_term}}"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Search for students by name, username, or email."
+					},
+					"response": []
+				},
+				{
+					"name": "Filter Students by Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Student filter by status successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.true;",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"    ",
+									"    // Check if all returned students have the filtered status",
+									"    const filterStatus = pm.environment.get('student_filter_status');",
+									"    if (responseJson.data.length > 0) {",
+									"        const allHaveStatus = responseJson.data.every(student => ",
+									"            student.student_status === filterStatus",
+									"        );",
+									"        pm.expect(allHaveStatus).to.be.true;",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.environment.set('student_filter_status', 'ACTIVE');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/students?status={{student_filter_status}}&page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"students"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "{{student_filter_status}}"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Filter students by status (ACTIVE, SUSPENDED, etc.)."
+					},
+					"response": []
+				},
+				{
+					"name": "Filter Students by Gender and Age Range",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Student filter by gender and age successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.true;",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"    ",
+									"    // Check if results match the filter criteria",
+									"    const filterGender = pm.environment.get('student_filter_gender');",
+									"    const minAge = parseInt(pm.environment.get('student_min_age'));",
+									"    const maxAge = parseInt(pm.environment.get('student_max_age'));",
+									"    ",
+									"    if (responseJson.data.length > 0) {",
+									"        responseJson.data.forEach(student => {",
+									"            if (student.gender) {",
+									"                pm.expect(student.gender).to.eql(filterGender);",
+									"            }",
+									"            if (student.age) {",
+									"                pm.expect(student.age).to.be.within(minAge, maxAge);",
+									"            }",
+									"        });",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.environment.set('student_filter_gender', 'MALE');",
+									"pm.environment.set('student_min_age', 18);",
+									"pm.environment.set('student_max_age', 25);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/students?gender={{student_filter_gender}}&age_min={{student_min_age}}&age_max={{student_max_age}}&page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"students"
+							],
+							"query": [
+								{
+									"key": "gender",
+									"value": "{{student_filter_gender}}"
+								},
+								{
+									"key": "age_min",
+									"value": "{{student_min_age}}"
+								},
+								{
+									"key": "age_max",
+									"value": "{{student_max_age}}"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Filter students by gender and age range."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Second Student for Testing",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Second student created successfully', function () {",
+									"    pm.response.to.have.status(201);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.true;",
+									"    pm.expect(responseJson.data).to.have.property('student_id');",
+									"    ",
+									"    // Store second student ID for deletion testing",
+									"    pm.environment.set('second_student_id', responseJson.data.student_id);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generate dynamic data for second student",
+									"const timestamp = Date.now();",
+									"const randomNum = Math.floor(Math.random() * 1000) + 1000;",
+									"",
+									"pm.environment.set('second_student_name', `Jane Sarah Smith ${randomNum}`);",
+									"pm.environment.set('second_student_first_name', 'Jane');",
+									"pm.environment.set('second_student_middle_name', 'Sarah');",
+									"pm.environment.set('second_student_last_name', `Smith${randomNum}`);",
+									"pm.environment.set('second_student_username', `janesmith${randomNum}`);",
+									"pm.environment.set('second_student_email', `jane.smith${randomNum}@example.com`);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"tenant_id\": 3,\n    \"full_name\": \"{{second_student_name}}\",\n    \"first_name\": \"{{second_student_first_name}}\",\n    \"middle_name\": \"{{second_student_middle_name}}\",\n    \"last_name\": \"{{second_student_last_name}}\",\n    \"email_address\": \"{{second_student_email}}\",\n    \"username\": \"{{second_student_username}}\",\n    \"password\": \"Student@456\",\n    \"country_id\": 21,\n    \"state_id\": 11,\n    \"city_id\": 1,\n    \"address\": \"789 Oak Avenue, Another City, USA\",\n    \"date_of_birth\": \"1999-05-20\",\n    \"zip_code\": \"54321\",\n    \"age\": 24,\n    \"gender\": \"FEMALE\",\n    \"student_status\": \"ACTIVE\",\n    \"referral_type\": \"REFERRAL\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/students",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"students"
+							]
+						},
+						"description": "Create a second student for deletion testing."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Student (Soft Delete)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Student deleted successfully', function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/students/{{second_student_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"students",
+								"{{second_student_id}}"
+							]
+						},
+						"description": "Soft delete a student. Only SuperAdmin and TenantAdmin can delete students."
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Deleted Student Not Found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Deleted student not found', function () {",
+									"    pm.response.to.have.status(404);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.false;",
+									"    pm.expect(responseJson.errorCode).to.eql('STUDENT_NOT_FOUND');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/students/{{second_student_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"students",
+								"{{second_student_id}}"
+							]
+						},
+						"description": "Verify that a deleted student cannot be retrieved."
+					},
+					"response": []
+				}
+			],
+			"description": "Operations that can be performed by users with the SuperAdmin role."
+		},
+		{
+			"name": "TenantAdmin Operations",
+			"item": [
+				{
+					"name": "Login as TenantAdmin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has access token', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.tokens.access_token).to.exist;",
+									"    pm.environment.set('tenantAdminAccessToken', jsonData.data.tokens.access_token);",
+									"    pm.environment.set('tenantAdminUserId', jsonData.data.user.id);",
+									"    pm.environment.set('tenantAdminRole', jsonData.data.user.role.role_type);",
+									"    pm.environment.set('tenantAdminTenantId', jsonData.data.user.tenant_id);",
+									"});",
+									"",
+									"pm.test('User has TenantAdmin role', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.user.role.role_type).to.eql('TENANT_ADMIN');",
+									"    pm.expect(jsonData.data.user.user_type).to.eql('TENANT_ADMIN');",
+									"    pm.expect(jsonData.data.user.tenant_id).to.not.be.null;",
+									"    pm.expect(jsonData.data.user.tenant_id).to.be.greaterThan(0);",
+									"});",
+									"",
+									"pm.test('Response structure is valid', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data.user).to.have.property('username');",
+									"    pm.expect(jsonData.data.user).to.have.property('email');",
+									"    pm.expect(jsonData.data.tokens).to.have.property('refresh_token');",
+									"    pm.expect(jsonData.data.permissions).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.environment.set('SecurePassword@123', 'tenantadmin.1749543828307@lms.com');"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email_address\": \"{{tenant_admin_email}}\",\n    \"password\": \"{{tenant_admin_password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Authenticate as a TenantAdmin user to perform tenant-specific student operations."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Student in Own Tenant",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('TenantAdmin student created successfully', function () {",
+									"    pm.response.to.have.status(201);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.true;",
+									"    pm.expect(responseJson.data).to.have.property('student_id');",
+									"    pm.expect(responseJson.data).to.have.property('tenant_id');",
+									"    ",
+									"    // Verify student is created in the correct tenant",
+									"    const expectedTenantId = parseInt(pm.environment.get('tenantAdminTenantId'));",
+									"    pm.expect(responseJson.data.tenant_id).to.eql(expectedTenantId);",
+									"    ",
+									"    // Store tenant admin student ID",
+									"    pm.environment.set('tenant_admin_student_id', responseJson.data.student_id);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generate dynamic student data for tenant admin",
+									"const randomNum = Math.floor(Math.random() * 1000) + 2000;",
+									"",
+									"pm.environment.set('tenant_admin_student_name', `Alice Johnson ${randomNum}`);",
+									"pm.environment.set('tenant_admin_student_username', `alicejohnson${randomNum}`);",
+									"pm.environment.set('tenant_admin_student_email', `alice.johnson${randomNum}@example.com`);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{tenantAdminAccessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"full_name\": \"{{tenant_admin_student_name}}\",\n    \"first_name\": \"Alice\",\n    \"last_name\": \"Johnson\",\n    \"email_address\": \"{{tenant_admin_student_email}}\",\n    \"username\": \"{{tenant_admin_student_username}}\",\n    \"password\": \"Student@789\",\n    \"country_id\": 21,\n    \"state_id\": 11,\n    \"city_id\": 1,\n    \"address\": \"456 Maple Street, Tenant City, USA\",\n    \"age\": 22,\n    \"gender\": \"FEMALE\",\n    \"student_status\": \"ACTIVE\",\n    \"referral_type\": \"CAMPUS_VISIT\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/students",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"students"
+							]
+						},
+						"description": "TenantAdmin can create students within their own tenant."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Students in Own Tenant",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('TenantAdmin can access own tenant students', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.true;",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"    ",
+									"    // Verify all students belong to the tenant admin's tenant",
+									"    const expectedTenantId = parseInt(pm.environment.get('tenantAdminTenantId'));",
+									"    if (responseJson.data.length > 0) {",
+									"        responseJson.data.forEach(student => {",
+									"            pm.expect(student.tenant_id).to.eql(expectedTenantId);",
+									"        });",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{tenantAdminAccessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/students?page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"students"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "TenantAdmin can view students in their own tenant only."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Student in Own Tenant",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('TenantAdmin student update successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.true;",
+									"    pm.expect(responseJson.data).to.have.property('student_id');",
+									"    pm.expect(responseJson.data.full_name).to.eql(pm.environment.get('tenant_admin_updated_name'));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.environment.set('tenant_admin_updated_name', 'Alice Updated Johnson');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{tenantAdminAccessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"full_name\": \"{{tenant_admin_updated_name}}\",\n    \"address\": \"789 Updated Avenue, New Address, USA\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/students/{{tenant_admin_student_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"students",
+								"{{tenant_admin_student_id}}"
+							]
+						},
+						"description": "TenantAdmin can update students in their own tenant."
+					},
+					"response": []
+				},
+				{
+					"name": "Try to Access Student from Other Tenant (Forbidden)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('TenantAdmin cannot access other tenant student', function () {",
+									"    pm.response.to.have.status(404);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.false;",
+									"    pm.expect(responseJson.errorCode).to.eql('STUDENT_NOT_FOUND');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{tenantAdminAccessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/students/{{created_student_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"students",
+								"{{created_student_id}}"
+							]
+						},
+						"description": "TenantAdmin should not be able to access students from other tenants."
+					},
+					"response": []
+				}
+			],
+			"description": "Operations that can be performed by users with the TenantAdmin role."
+		},
+		{
+			"name": "Student Self-Service Operations",
+			"item": [
+				{
+					"name": "Student Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success true and authentication data\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    ",
+									"    // Test success flag",
+									"    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+									"    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+									"    pm.expect(jsonData.message).to.eql(\"Student login successful\", \"Message should indicate successful login\");",
+									"    ",
+									"    // Test data object",
+									"    pm.expect(jsonData.data).to.be.an('object', \"Data should be an object\");",
+									"    ",
+									"    // Test user information",
+									"    pm.expect(jsonData.data).to.have.property('user');",
+									"    pm.expect(jsonData.data.user).to.have.property('id');",
+									"    pm.expect(jsonData.data.user).to.have.property('username');",
+									"    pm.expect(jsonData.data.user).to.have.property('full_name');",
+									"    pm.expect(jsonData.data.user).to.have.property('email');",
+									"    pm.expect(jsonData.data.user).to.have.property('tenant_id');",
+									"    pm.expect(jsonData.data.user).to.have.property('user_type');",
+									"    pm.expect(jsonData.data.user.user_type).to.eql('STUDENT');",
+									"    ",
+									"    // Test tokens",
+									"    pm.expect(jsonData.data).to.have.property('tokens');",
+									"    pm.expect(jsonData.data.tokens).to.have.property('access_token');",
+									"    pm.expect(jsonData.data.tokens).to.have.property('refresh_token');",
+									"    pm.expect(jsonData.data.tokens).to.have.property('expires_in');",
+									"    pm.expect(jsonData.data.tokens).to.have.property('token_type');",
+									"    pm.expect(jsonData.data.tokens.token_type).to.eql('Bearer');",
+									"    ",
+									"    // Test permissions",
+									"    pm.expect(jsonData.data).to.have.property('permissions');",
+									"    pm.expect(jsonData.data.permissions).to.be.an('array');",
+									"    ",
+									"    // Store tokens for subsequent requests",
+									"    pm.environment.set(\"studentAccessToken\", jsonData.data.tokens.access_token);",
+									"    pm.environment.set(\"studentRefreshToken\", jsonData.data.tokens.refresh_token);",
+									"    pm.environment.set(\"studentId\", jsonData.data.user.id);",
+									"    pm.environment.set(\"studentTenantId\", jsonData.data.user.tenant_id);",
+									"    ",
+									"    console.log(`Logged in successfully as student ${jsonData.data.user.username} (${jsonData.data.user.full_name})`);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Use environment variables for credentials or set defaults",
+									"if (!pm.environment.get('student_email')) {",
+									"    pm.environment.set('student_email', 'alice.johnson2925@example.com');",
+									"}",
+									"",
+									"if (!pm.environment.get('student_password')) {",
+									"    pm.environment.set('student_password', 'Student@789');",
+									"}",
+									"",
+									"// Optional: Generate tenant context if needed",
+									"if (!pm.environment.get('student_tenant_context') && pm.environment.get('generate_tenant')) {",
+									"    pm.environment.set('student_tenant_context', Math.floor(Math.random() * 3) + 1);",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email_address\": \"{{student_email}}\",\n    \"password\": \"{{student_password}}\",\n    \"tenant_context\": \"3\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/student/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"student",
+								"login"
+							]
+						},
+						"description": "Authenticate as a student to access self-service operations."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Own Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Student profile retrieved successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.true;",
+									"    pm.expect(responseJson.data).to.have.property('student_id');",
+									"    pm.expect(responseJson.data).to.have.property('full_name');",
+									"    pm.expect(responseJson.data).to.have.property('primary_email');",
+									"    ",
+									"    // Verify it's the correct student",
+									"    const expectedStudentId = parseInt(pm.environment.get('created_student_id'));",
+									"    pm.expect(responseJson.data.student_id).to.eql(expectedStudentId);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{studentAccessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/student/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"student",
+								"profile"
+							]
+						},
+						"description": "Student can view their own profile information."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Own Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Student profile updated successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.true;",
+									"    pm.expect(responseJson.data).to.have.property('student_id');",
+									"    pm.expect(responseJson.data.address).to.eql(pm.environment.get('student_updated_address'));",
+									"    pm.expect(responseJson.data.profile_picture_url).to.eql(pm.environment.get('student_updated_profile_pic'));",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generate updated profile data",
+									"pm.environment.set('student_updated_address', '999 Self-Service Street, Updated City, USA');",
+									"pm.environment.set('student_updated_profile_pic', 'https://example.com/student-updated-profile.jpg');"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{studentAccessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"address\": \"{{student_updated_address}}\",\n    \"profile_picture_url\": \"{{student_updated_profile_pic}}\",\n    \"zip_code\": \"99999\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/student/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"student",
+								"profile"
+							]
+						},
+						"description": "Student can update their own profile information (limited fields)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Own Enrollments",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Student enrollments retrieved successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.true;",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"    pm.expect(responseJson.pagination).to.have.property('total');",
+									"    ",
+									"    // Data might be empty if student is not enrolled in any courses",
+									"    if (responseJson.data.length > 0) {",
+									"        responseJson.data.forEach(enrollment => {",
+									"            pm.expect(enrollment).to.have.property('enrollment_id');",
+									"            pm.expect(enrollment).to.have.property('course_id');",
+									"            pm.expect(enrollment).to.have.property('enrollment_status');",
+									"        });",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{studentAccessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/students/profile/enrollments?page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"students",
+								"profile",
+								"enrollments"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Student can view their own course enrollments."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Own Progress",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Student progress retrieved successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.true;",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"    ",
+									"    // Data might be empty if student has no progress",
+									"    if (responseJson.data.length > 0) {",
+									"        responseJson.data.forEach(progress => {",
+									"            pm.expect(progress).to.have.property('course_id');",
+									"            pm.expect(progress).to.have.property('completion_percentage');",
+									"            pm.expect(progress).to.have.property('status');",
+									"        });",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{studentAccessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/students/profile/progress",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"students",
+								"profile",
+								"progress"
+							]
+						},
+						"description": "Student can view their learning progress across courses."
+					},
+					"response": []
+				},
+				{
+					"name": "Try to Access Another Student (Forbidden)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Student cannot access another student profile', function () {",
+									"    pm.response.to.have.status(403);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.false;",
+									"    pm.expect(responseJson.errorCode).to.eql('ACCESS_DENIED');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{studentAccessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/students/999999",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"students",
+								"999999"
+							]
+						},
+						"description": "Student should not be able to access other students' profiles."
+					},
+					"response": []
+				},
+				{
+					"name": "Logout Student",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response indicates successful logout\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    ",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"    pm.expect(jsonData.statusCode).to.eql(200);",
+									"    pm.expect(jsonData.message).to.eql(\"Student logout successful\");",
+									"    pm.expect(jsonData.data).to.be.null;",
+									"    ",
+									"    // Clear student tokens from environment",
+									"    console.log(\"Student logged out successfully, clearing tokens\");",
+									"    pm.environment.unset(\"studentAccessToken\");",
+									"    pm.environment.unset(\"studentRefreshToken\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{studentAccessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/student/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"student",
+								"logout"
+							]
+						},
+						"description": "Student can logout and invalidate their session."
+					},
+					"response": []
+				}
+			],
+			"description": "Operations that students can perform on their own profiles."
+		}
+	]
+}

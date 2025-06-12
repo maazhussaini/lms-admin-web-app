@@ -13,17 +13,27 @@ const logFormat = env.IS_PRODUCTION
   ? winston.format.combine(
       winston.format.timestamp(),
       winston.format.json()
-    )  : winston.format.combine(
+    )
+  : winston.format.combine(
       winston.format.colorize(),
       winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-      winston.format.printf(
-        (info) => `${info['timestamp']} ${info.level}: ${info.message}`
-      )
+      winston.format.printf((info) => {
+        const { timestamp, level, message, ...meta } = info;
+        let logMessage = `${timestamp} ${level}: ${message}`;
+        
+        // Add metadata in development for better debugging
+        if (Object.keys(meta).length > 0) {
+          logMessage += ` ${JSON.stringify(meta, null, 2)}`;
+        }
+        
+        return logMessage;
+      })
     );
 
-// Create Winston logger instance
+// Create Winston logger instance with appropriate log level
 const logger = winston.createLogger({
-  level: env.LOG_LEVEL,
+  // Use debug level in development, or the configured level in production
+  level: env.IS_PRODUCTION ? (env.LOG_LEVEL || 'info') : 'debug',
   format: logFormat,
   defaultMeta: { service: 'lms-backend' },
   transports: [
@@ -50,7 +60,8 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction): 
   res.on('finish', () => {
     const duration = Date.now() - start;
     const message = `${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms`;
-      // Create type-safe metadata object with only defined values
+    
+    // Create type-safe metadata object with only defined values
     const metadata: RequestLogMetadata = {
       requestId: req.id,
       method: req.method,
