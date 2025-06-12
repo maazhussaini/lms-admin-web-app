@@ -5,12 +5,14 @@ import { UserType } from './api.types';
  * System user status enumeration
  * @description Operational status of system users
  */
-export enum SystemUserStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  SUSPENDED = 'SUSPENDED',
-  LOCKED = 'LOCKED',
-}
+export const SystemUserStatus = {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE',
+  SUSPENDED: 'SUSPENDED',
+  LOCKED: 'LOCKED',
+} as const;
+
+export type SystemUserStatus = typeof SystemUserStatus[keyof typeof SystemUserStatus];
 
 /**
  * Represents a system user with conditional tenant isolation

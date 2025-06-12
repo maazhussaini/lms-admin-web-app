@@ -1,74 +1,86 @@
 import { MultiTenantAuditFields } from './base.types';
 
 /**
- * Enum for report types
+ * Report types
  */
-export enum ReportType {
-  COURSE_PERFORMANCE = 'COURSE_PERFORMANCE',
-  USER_ENGAGEMENT = 'USER_ENGAGEMENT',
-  SYSTEM_USAGE = 'SYSTEM_USAGE',
-  ASSESSMENT_SUMMARY = 'ASSESSMENT_SUMMARY',
-  VIDEO_ANALYTICS = 'VIDEO_ANALYTICS',
-  CUSTOM = 'CUSTOM',
-}
+export const ReportType = {
+  COURSE_PERFORMANCE: 'COURSE_PERFORMANCE',
+  USER_ENGAGEMENT: 'USER_ENGAGEMENT',
+  SYSTEM_USAGE: 'SYSTEM_USAGE',
+  ASSESSMENT_SUMMARY: 'ASSESSMENT_SUMMARY',
+  VIDEO_ANALYTICS: 'VIDEO_ANALYTICS',
+  CUSTOM: 'CUSTOM',
+} as const;
+
+export type ReportType = typeof ReportType[keyof typeof ReportType];
 
 /**
- * Enum for report status
+ * Report status
  */
-export enum ReportStatus {
-  DRAFT = 'DRAFT',
-  SCHEDULED = 'SCHEDULED',
-  GENERATING = 'GENERATING',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-  CANCELLED = 'CANCELLED',
-}
+export const ReportStatus = {
+  DRAFT: 'DRAFT',
+  SCHEDULED: 'SCHEDULED',
+  GENERATING: 'GENERATING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export type ReportStatus = typeof ReportStatus[keyof typeof ReportStatus];
 
 /**
- * Enum for metric types
+ * Metric types
  */
-export enum MetricType {
-  COUNT = 'COUNT',
-  PERCENTAGE = 'PERCENTAGE',
-  AVERAGE = 'AVERAGE',
-  SUM = 'SUM',
-  RATIO = 'RATIO',
-  TREND = 'TREND',
-}
+export const MetricType = {
+  COUNT: 'COUNT',
+  PERCENTAGE: 'PERCENTAGE',
+  AVERAGE: 'AVERAGE',
+  SUM: 'SUM',
+  RATIO: 'RATIO',
+  TREND: 'TREND',
+} as const;
+
+export type MetricType = typeof MetricType[keyof typeof MetricType];
 
 /**
- * Enum for time granularity
+ * Time granularity
  */
-export enum TimeGranularity {
-  HOURLY = 'HOURLY',
-  DAILY = 'DAILY',
-  WEEKLY = 'WEEKLY',
-  MONTHLY = 'MONTHLY',
-  QUARTERLY = 'QUARTERLY',
-  YEARLY = 'YEARLY',
-}
+export const TimeGranularity = {
+  HOURLY: 'HOURLY',
+  DAILY: 'DAILY',
+  WEEKLY: 'WEEKLY',
+  MONTHLY: 'MONTHLY',
+  QUARTERLY: 'QUARTERLY',
+  YEARLY: 'YEARLY',
+} as const;
+
+export type TimeGranularity = typeof TimeGranularity[keyof typeof TimeGranularity];
 
 /**
- * Enum for widget types
+ * Widget types
  */
-export enum WidgetType {
-  CHART = 'CHART',
-  TABLE = 'TABLE',
-  METRIC_CARD = 'METRIC_CARD',
-  PROGRESS_BAR = 'PROGRESS_BAR',
-  MAP = 'MAP',
-  TIMELINE = 'TIMELINE',
-}
+export const WidgetType = {
+  CHART: 'CHART',
+  TABLE: 'TABLE',
+  METRIC_CARD: 'METRIC_CARD',
+  PROGRESS_BAR: 'PROGRESS_BAR',
+  MAP: 'MAP',
+  TIMELINE: 'TIMELINE',
+} as const;
+
+export type WidgetType = typeof WidgetType[keyof typeof WidgetType];
 
 /**
- * Enum for export formats
+ * Export formats
  */
-export enum ExportFormat {
-  PDF = 'PDF',
-  EXCEL = 'EXCEL',
-  CSV = 'CSV',
-  JSON = 'JSON',
-}
+export const ExportFormat = {
+  PDF: 'PDF',
+  EXCEL: 'EXCEL',
+  CSV: 'CSV',
+  JSON: 'JSON',
+} as const;
+
+export type ExportFormat = typeof ExportFormat[keyof typeof ExportFormat];
 
 /**
  * Aggregated course performance metrics

@@ -41,12 +41,14 @@ export interface TApiErrorResponse {
  * User type enumeration for authentication
  * @description Distinguishes between different categories of users in the system
  */
-export enum UserType {
-  STUDENT = 'STUDENT',
-  TEACHER = 'TEACHER',
-  TENANT_ADMIN = 'TENANT_ADMIN',
-  SUPER_ADMIN = 'SUPER_ADMIN'
-}
+export const UserType = {
+  STUDENT: 'STUDENT',
+  TEACHER: 'TEACHER',
+  TENANT_ADMIN: 'TENANT_ADMIN',
+  SUPER_ADMIN: 'SUPER_ADMIN'
+} as const;
+
+export type UserType = typeof UserType[keyof typeof UserType];
 
 /**
  * Authentication response structure

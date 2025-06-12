@@ -4,50 +4,58 @@ import { MultiTenantAuditFields, MinimalAuditFields } from './base.types';
  * Gender enumeration
  * @description Represents the gender of a student
  */
-export enum Gender {
-  MALE = 'MALE',
-  FEMALE = 'FEMALE',
-}
+export const Gender = {
+  MALE: 'MALE',
+  FEMALE: 'FEMALE',
+} as const;
+
+export type Gender = typeof Gender[keyof typeof Gender];
 
 /**
  * Student status enumeration
  * @description Represents the lifecycle status of a student
  */
-export enum StudentStatus {
-  ACTIVE = 'ACTIVE',
-  ALUMNI = 'ALUMNI',
-  DROPOUT = 'DROPOUT',
-  ACCOUNT_FREEZED = 'ACCOUNT_FREEZED',
-  BLACKLISTED = 'BLACKLISTED',
-  SUSPENDED = 'SUSPENDED',
-  DEACTIVATED = 'DEACTIVATED',
-}
+export const StudentStatus = {
+  ACTIVE: 'ACTIVE',
+  ALUMNI: 'ALUMNI',
+  DROPOUT: 'DROPOUT',
+  ACCOUNT_FREEZED: 'ACCOUNT_FREEZED',
+  BLACKLISTED: 'BLACKLISTED',
+  SUSPENDED: 'SUSPENDED',
+  DEACTIVATED: 'DEACTIVATED',
+} as const;
+
+export type StudentStatus = typeof StudentStatus[keyof typeof StudentStatus];
 
 /**
  * Device type enumeration
  * @description Represents the type of device used by a student
  */
-export enum DeviceType {
-  IOS = 'IOS',
-  ANDROID = 'ANDROID',
-  WEB = 'WEB',
-  DESKTOP = 'DESKTOP',
-}
+export const DeviceType = {
+  IOS: 'IOS',
+  ANDROID: 'ANDROID',
+  WEB: 'WEB',
+  DESKTOP: 'DESKTOP',
+} as const;
+
+export type DeviceType = typeof DeviceType[keyof typeof DeviceType];
 
 /**
  * Enrollment status enumeration
  * @description Represents the lifecycle status of a student's enrollment in a course
  */
-export enum EnrollmentStatus {
-  PENDING = 'PENDING',
-  ACTIVE = 'ACTIVE',
-  COMPLETED = 'COMPLETED',
-  DROPPED = 'DROPPED',
-  SUSPENDED = 'SUSPENDED',
-  EXPELLED = 'EXPELLED',
-  TRANSFERRED = 'TRANSFERRED',
-  DEFERRED = 'DEFERRED',
-}
+export const EnrollmentStatus = {
+  PENDING: 'PENDING',
+  ACTIVE: 'ACTIVE',
+  COMPLETED: 'COMPLETED',
+  DROPPED: 'DROPPED',
+  SUSPENDED: 'SUSPENDED',
+  EXPELLED: 'EXPELLED',
+  TRANSFERRED: 'TRANSFERRED',
+  DEFERRED: 'DEFERRED',
+} as const;
+
+export type EnrollmentStatus = typeof EnrollmentStatus[keyof typeof EnrollmentStatus];
 
 /**
  * Represents a country with minimal audit fields

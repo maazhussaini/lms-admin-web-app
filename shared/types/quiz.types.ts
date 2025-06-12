@@ -4,45 +4,53 @@ import { MultiTenantAuditFields } from './base.types';
  * Quiz status enumeration
  * @description Defines the lifecycle status of a quiz
  */
-export enum QuizStatus {
-  DRAFT = 'DRAFT',
-  PUBLISHED = 'PUBLISHED',
-  GRADING_IN_PROGRESS = 'GRADING_IN_PROGRESS',
-  GRADED = 'GRADED',
-  ARCHIVED = 'ARCHIVED',
-}
+export const QuizStatus = {
+  DRAFT: 'DRAFT',
+  PUBLISHED: 'PUBLISHED',
+  GRADING_IN_PROGRESS: 'GRADING_IN_PROGRESS',
+  GRADED: 'GRADED',
+  ARCHIVED: 'ARCHIVED',
+} as const;
+
+export type QuizStatus = typeof QuizStatus[keyof typeof QuizStatus];
 
 /**
  * Quiz question type enumeration
  * @description Types of quiz questions available
  */
-export enum QuizQuestionType {
-  MULTIPLE_CHOICE_SINGLE_ANSWER = 'MULTIPLE_CHOICE_SINGLE_ANSWER',
-  MULTIPLE_CHOICE_MULTIPLE_ANSWERS = 'MULTIPLE_CHOICE_MULTIPLE_ANSWERS',
-  TRUE_FALSE = 'TRUE_FALSE',
-  SHORT_ANSWER_ESSAY = 'SHORT_ANSWER_ESSAY',
-}
+export const QuizQuestionType = {
+  MULTIPLE_CHOICE_SINGLE_ANSWER: 'MULTIPLE_CHOICE_SINGLE_ANSWER',
+  MULTIPLE_CHOICE_MULTIPLE_ANSWERS: 'MULTIPLE_CHOICE_MULTIPLE_ANSWERS',
+  TRUE_FALSE: 'TRUE_FALSE',
+  SHORT_ANSWER_ESSAY: 'SHORT_ANSWER_ESSAY',
+} as const;
+
+export type QuizQuestionType = typeof QuizQuestionType[keyof typeof QuizQuestionType];
 
 /**
  * Quiz attempt status enumeration
  * @description Status of a student's quiz attempt
  */
-export enum QuizAttemptStatus {
-  NOT_STARTED = 'NOT_STARTED',
-  IN_PROGRESS = 'IN_PROGRESS',
-  SUBMITTED = 'SUBMITTED',
-  GRADED = 'GRADED',
-}
+export const QuizAttemptStatus = {
+  NOT_STARTED: 'NOT_STARTED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  SUBMITTED: 'SUBMITTED',
+  GRADED: 'GRADED',
+} as const;
+
+export type QuizAttemptStatus = typeof QuizAttemptStatus[keyof typeof QuizAttemptStatus];
 
 /**
  * Reference table enumeration for quiz mappings
  * @description Entities that can have quizzes mapped to them
  */
-export enum QuizReferenceTable {
-  COURSE = 'COURSE',
-  COURSE_MODULE = 'COURSE_MODULE',
-  COURSE_TOPIC = 'COURSE_TOPIC',
-}
+export const QuizReferenceTable = {
+  COURSE: 'COURSE',
+  COURSE_MODULE: 'COURSE_MODULE',
+  COURSE_TOPIC: 'COURSE_TOPIC',
+} as const;
+
+export type QuizReferenceTable = typeof QuizReferenceTable[keyof typeof QuizReferenceTable];
 
 /**
  * Represents a quiz with multi-tenant isolation

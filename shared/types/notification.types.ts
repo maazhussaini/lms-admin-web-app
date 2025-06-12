@@ -5,86 +5,100 @@ import { DeviceType } from './student.types';
  * Notification type enumeration
  * @description Types of notifications available in the system
  */
-export enum NotificationType {
-  ANNOUNCEMENT = 'ANNOUNCEMENT',
-  ASSIGNMENT_DUE = 'ASSIGNMENT_DUE',
-  QUIZ_AVAILABLE = 'QUIZ_AVAILABLE',
-  GRADE_POSTED = 'GRADE_POSTED',
-  COURSE_UPDATE = 'COURSE_UPDATE',
-  SYSTEM_ALERT = 'SYSTEM_ALERT',
-  ENROLLMENT_CONFIRMATION = 'ENROLLMENT_CONFIRMATION',
-  DEADLINE_REMINDER = 'DEADLINE_REMINDER',
-}
+export const NotificationType = {
+  ANNOUNCEMENT: 'ANNOUNCEMENT',
+  ASSIGNMENT_DUE: 'ASSIGNMENT_DUE',
+  QUIZ_AVAILABLE: 'QUIZ_AVAILABLE',
+  GRADE_POSTED: 'GRADE_POSTED',
+  COURSE_UPDATE: 'COURSE_UPDATE',
+  SYSTEM_ALERT: 'SYSTEM_ALERT',
+  ENROLLMENT_CONFIRMATION: 'ENROLLMENT_CONFIRMATION',
+  DEADLINE_REMINDER: 'DEADLINE_REMINDER',
+} as const;
+
+export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
 
 /**
  * Notification priority enumeration
  * @description Priority levels for notifications
  */
-export enum NotificationPriority {
-  LOW = 'LOW',
-  NORMAL = 'NORMAL',
-  HIGH = 'HIGH',
-  URGENT = 'URGENT',
-}
+export const NotificationPriority = {
+  LOW: 'LOW',
+  NORMAL: 'NORMAL',
+  HIGH: 'HIGH',
+  URGENT: 'URGENT',
+} as const;
+
+export type NotificationPriority = typeof NotificationPriority[keyof typeof NotificationPriority];
 
 /**
  * Delivery status enumeration
  * @description Status of notification delivery
  */
-export enum DeliveryStatus {
-  PENDING = 'PENDING',
-  DELIVERED = 'DELIVERED',
-  FAILED = 'FAILED',
-  READ = 'READ',
-  DISMISSED = 'DISMISSED',
-}
+export const DeliveryStatus = {
+  PENDING: 'PENDING',
+  DELIVERED: 'DELIVERED',
+  FAILED: 'FAILED',
+  READ: 'READ',
+  DISMISSED: 'DISMISSED',
+} as const;
+
+export type DeliveryStatus = typeof DeliveryStatus[keyof typeof DeliveryStatus];
 
 /**
  * Delivery channel enumeration
  * @description Available delivery channels for notifications
  */
-export enum DeliveryChannel {
-  IN_APP = 'IN_APP',
-  EMAIL = 'EMAIL',
-  PUSH = 'PUSH',
-  SMS = 'SMS',
-}
+export const DeliveryChannel = {
+  IN_APP: 'IN_APP',
+  EMAIL: 'EMAIL',
+  PUSH: 'PUSH',
+  SMS: 'SMS',
+} as const;
+
+export type DeliveryChannel = typeof DeliveryChannel[keyof typeof DeliveryChannel];
 
 /**
  * Template type enumeration
  * @description Types of notification templates
  */
-export enum TemplateType {
-  EMAIL_HTML = 'EMAIL_HTML',
-  EMAIL_TEXT = 'EMAIL_TEXT',
-  PUSH = 'PUSH',
-  IN_APP = 'IN_APP',
-}
+export const TemplateType = {
+  EMAIL_HTML: 'EMAIL_HTML',
+  EMAIL_TEXT: 'EMAIL_TEXT',
+  PUSH: 'PUSH',
+  IN_APP: 'IN_APP',
+} as const;
+
+export type TemplateType = typeof TemplateType[keyof typeof TemplateType];
 
 /**
  * Recipient type enumeration
  * @description Types of notification recipients
  */
-export enum RecipientType {
-  STUDENT = 'STUDENT',
-  TEACHER = 'TEACHER',
-  SYSTEM_USER = 'SYSTEM_USER',
-  ALL_STUDENTS = 'ALL_STUDENTS',
-  ALL_TEACHERS = 'ALL_TEACHERS',
-  COURSE_ENROLLMENTS = 'COURSE_ENROLLMENTS',
-}
+export const RecipientType = {
+  STUDENT: 'STUDENT',
+  TEACHER: 'TEACHER',
+  SYSTEM_USER: 'SYSTEM_USER',
+  ALL_STUDENTS: 'ALL_STUDENTS',
+  ALL_TEACHERS: 'ALL_TEACHERS',
+  COURSE_ENROLLMENTS: 'COURSE_ENROLLMENTS',
+} as const;
+
+export type RecipientType = typeof RecipientType[keyof typeof RecipientType];
 
 /**
  * Email send status enumeration
  * @description Status of email sending attempts
  */
-export enum EmailSendStatus {
-  PENDING = 'PENDING',
-  SENT = 'SENT',
-  FAILED = 'FAILED',
-  BOUNCED = 'BOUNCED',
-  DELIVERED = 'DELIVERED',
-}
+export const EmailSendStatus = {
+  PENDING: 'PENDING',
+  SENT: 'SENT',
+  FAILED: 'FAILED',
+  BOUNCED: 'BOUNCED',
+  DELIVERED: 'DELIVERED',
+} as const;
+
+export type EmailSendStatus = typeof EmailSendStatus[keyof typeof EmailSendStatus];
 
 /**
  * Represents a notification with multi-tenant isolation

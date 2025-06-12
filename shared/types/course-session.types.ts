@@ -4,23 +4,27 @@ import { MultiTenantAuditFields } from './base.types';
  * Course session status enumeration
  * @description Defines the lifecycle status of a course session
  */
-export enum CourseSessionStatus {
-  DRAFT = 'DRAFT',
-  PUBLISHED = 'PUBLISHED',
-  EXPIRED = 'EXPIRED',
-}
+export const CourseSessionStatus = {
+  DRAFT: 'DRAFT',
+  PUBLISHED: 'PUBLISHED',
+  EXPIRED: 'EXPIRED',
+} as const;
+
+export type CourseSessionStatus = typeof CourseSessionStatus[keyof typeof CourseSessionStatus];
 
 /**
  * Session enrollment status enumeration
  * @description Defines the enrollment status for course session enrollments
  */
-export enum SessionEnrollmentStatus {
-  PENDING = 'PENDING',
-  ENROLLED = 'ENROLLED',
-  DROPPED = 'DROPPED',
-  COMPLETED = 'COMPLETED',
-  EXPELLED = 'EXPELLED',
-}
+export const SessionEnrollmentStatus = {
+  PENDING: 'PENDING',
+  ENROLLED: 'ENROLLED',
+  DROPPED: 'DROPPED',
+  COMPLETED: 'COMPLETED',
+  EXPELLED: 'EXPELLED',
+} as const;
+
+export type SessionEnrollmentStatus = typeof SessionEnrollmentStatus[keyof typeof SessionEnrollmentStatus];
 
 /**
  * Represents a course session with multi-tenant isolation
