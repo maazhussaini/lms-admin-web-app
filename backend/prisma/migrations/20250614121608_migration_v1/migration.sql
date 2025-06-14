@@ -1,107 +1,125 @@
 -- CreateEnum
-CREATE TYPE "SystemUserRole" AS ENUM ('1', '2');
+CREATE TYPE "ReportType" AS ENUM ('COURSE_PERFORMANCE', 'USER_ENGAGEMENT', 'SYSTEM_USAGE', 'ASSESSMENT_SUMMARY', 'VIDEO_ANALYTICS', 'CUSTOM');
 
 -- CreateEnum
-CREATE TYPE "SystemUserStatus" AS ENUM ('1', '2', '3', '4');
+CREATE TYPE "ReportStatus" AS ENUM ('DRAFT', 'SCHEDULED', 'GENERATING', 'COMPLETED', 'FAILED', 'CANCELLED');
 
 -- CreateEnum
-CREATE TYPE "TenantStatus" AS ENUM ('1', '2', '3', '4', '5');
+CREATE TYPE "MetricType" AS ENUM ('COUNT', 'PERCENTAGE', 'AVERAGE', 'SUM', 'RATIO', 'TREND');
 
 -- CreateEnum
-CREATE TYPE "ClientStatus" AS ENUM ('1', '2', '3', '4');
+CREATE TYPE "TimeGranularity" AS ENUM ('HOURLY', 'DAILY', 'WEEKLY', 'MONTHLY', 'QUARTERLY', 'YEARLY');
 
 -- CreateEnum
-CREATE TYPE "ContactType" AS ENUM ('1', '2', '3', '4');
+CREATE TYPE "WidgetType" AS ENUM ('CHART', 'TABLE', 'METRIC_CARD', 'PROGRESS_BAR', 'MAP', 'TIMELINE');
 
 -- CreateEnum
-CREATE TYPE "QuizStatus" AS ENUM ('1', '2', '3', '4', '5');
+CREATE TYPE "ExportFormat" AS ENUM ('PDF', 'EXCEL', 'CSV', 'JSON');
 
 -- CreateEnum
-CREATE TYPE "QuizQuestionType" AS ENUM ('1', '2', '3', '4');
+CREATE TYPE "AssignmentType" AS ENUM ('FILE_UPLOA');
 
 -- CreateEnum
-CREATE TYPE "QuizAttemptStatus" AS ENUM ('1', '2', '3', '4');
+CREATE TYPE "AssignmentStatus" AS ENUM ('DRAFT', 'PUBLISHED', 'GRADING_IN_PROGRESS', 'GRADED', 'ARCHIVED');
 
 -- CreateEnum
-CREATE TYPE "QuizReferenceTable" AS ENUM ('1', '2', '3');
+CREATE TYPE "SubmissionStatus" AS ENUM ('PENDING', 'NOT_SUBMITTED', 'SUBMITTED', 'LATE_SUBMISSION', 'GRADED', 'RESUBMITTED');
 
 -- CreateEnum
-CREATE TYPE "AssignmentType" AS ENUM ('1');
+CREATE TYPE "UploadStatus" AS ENUM ('PENDING', 'UPLOADING', 'COMPLETED', 'FAILED', 'CANCELLED');
 
 -- CreateEnum
-CREATE TYPE "AssignmentStatus" AS ENUM ('1', '2', '3', '4', '5');
+CREATE TYPE "AssignmentReferenceTable" AS ENUM ('COURSE', 'COURSE_MODULE', 'COURSE_TOPIC');
 
 -- CreateEnum
-CREATE TYPE "SubmissionStatus" AS ENUM ('1', '2', '3', '4', '5');
+CREATE TYPE "BunnyVideoStatus" AS ENUM ('UPLOADING', 'PROCESSING', 'FINISHED', 'FAILED', 'CANCELLED');
 
 -- CreateEnum
-CREATE TYPE "AssignmentReferenceTable" AS ENUM ('1', '2', '3');
+CREATE TYPE "BunnyVideoQuality" AS ENUM ('AUTO', 'P240', 'P360', 'P480', 'P720', 'P1080', 'P1440', 'P2160');
 
 -- CreateEnum
-CREATE TYPE "UploadStatus" AS ENUM ('1', '2', '3', '4', '5');
+CREATE TYPE "BunnyDrmProvider" AS ENUM ('WIDEVINE', 'PLAYREADY', 'FAIRPLAY');
 
 -- CreateEnum
-CREATE TYPE "Gender" AS ENUM ('1', '2');
+CREATE TYPE "BunnyWebhookEvent" AS ENUM ('VIDEO_UPLOADED', 'VIDEO_ENCODED', 'VIDEO_FAILED', 'VIDEO_DELETED', 'PURGE_COMPLETED');
 
 -- CreateEnum
-CREATE TYPE "StudentStatusName" AS ENUM ('1', '2', '3', '4', '5', '6', '7');
+CREATE TYPE "BunnyCdnRegion" AS ENUM ('GLOBAL', 'US_EAST', 'US_WEST', 'EUROPE', 'ASIA', 'OCEANIA');
 
 -- CreateEnum
-CREATE TYPE "DeviceType" AS ENUM ('1', '2', '3', '4');
+CREATE TYPE "BunnyEncodingPreset" AS ENUM ('FAST', 'BALANCED', 'QUALITY', 'CUSTOM');
 
 -- CreateEnum
-CREATE TYPE "EnrollmentStatus" AS ENUM ('1', '2', '3', '4', '5', '6', '7', '8');
+CREATE TYPE "CourseSessionStatus" AS ENUM ('DRAFT', 'PUBLISHED', 'EXPIRED');
 
 -- CreateEnum
-CREATE TYPE "CourseStatus" AS ENUM ('1', '2', '3', '4');
+CREATE TYPE "SessionEnrollmentStatus" AS ENUM ('PENDING', 'ENROLLED', 'DROPPED', 'COMPLETED', 'EXPELLED');
 
 -- CreateEnum
-CREATE TYPE "VideoUploadStatus" AS ENUM ('1', '2', '3', '4', '5');
+CREATE TYPE "VideoUploadStatus" AS ENUM ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELLED');
 
 -- CreateEnum
-CREATE TYPE "CourseSessionStatus" AS ENUM ('1', '2', '3');
+CREATE TYPE "CourseStatus" AS ENUM ('DRAFT', 'PUBLISHED', 'ARCHIVED', 'SUSPENDED');
 
 -- CreateEnum
-CREATE TYPE "SessionEnrollmentStatus" AS ENUM ('1', '2', '3', '4');
+CREATE TYPE "NotificationType" AS ENUM ('ANNOUNCEMENT', 'ASSIGNMENT_DUE', 'QUIZ_AVAILABLE', 'GRADE_POSTED', 'COURSE_UPDATE', 'SYSTEM_ALERT', 'ENROLLMENT_CONFIRMATION', 'DEADLINE_REMINDER');
 
 -- CreateEnum
-CREATE TYPE "NotificationType" AS ENUM ('1', '2', '3', '4', '5', '6', '7', '8');
+CREATE TYPE "NotificationPriority" AS ENUM ('LOW', 'NORMAL', 'HIGH', 'URGENT');
 
 -- CreateEnum
-CREATE TYPE "NotificationPriority" AS ENUM ('1', '2', '3', '4');
+CREATE TYPE "DeliveryStatus" AS ENUM ('PENDING', 'DELIVERED', 'FAILED', 'READ', 'DISMISSED');
 
 -- CreateEnum
-CREATE TYPE "DeliveryStatus" AS ENUM ('1', '2', '3', '4', '5');
+CREATE TYPE "DeliveryChannel" AS ENUM ('IN_APP', 'EMAIL', 'PUSH', 'SMS');
 
 -- CreateEnum
-CREATE TYPE "DeliveryChannel" AS ENUM ('1', '2', '3', '4');
+CREATE TYPE "TemplateType" AS ENUM ('EMAIL_HTML', 'EMAIL_TEXT', 'PUSH', 'IN_APP');
 
 -- CreateEnum
-CREATE TYPE "TemplateType" AS ENUM ('1', '2', '3', '4');
+CREATE TYPE "RecipientType" AS ENUM ('STUDENT', 'TEACHER', 'SYSTEM_USER', 'ALL_STUDENTS', 'ALL_TEACHERS', 'COURSE_ENROLLMENTS');
 
 -- CreateEnum
-CREATE TYPE "RecipientType" AS ENUM ('1', '2', '3', '4', '5', '6');
+CREATE TYPE "EmailSendStatus" AS ENUM ('PENDING', 'SENT', 'FAILED', 'BOUNCED', 'DELIVERED');
 
 -- CreateEnum
-CREATE TYPE "EmailSendStatus" AS ENUM ('1', '2', '3', '4', '5');
+CREATE TYPE "QuizStatus" AS ENUM ('DRAFT', 'PUBLISHED', 'GRADING_IN_PROGRESS', 'GRADED', 'ARCHIVED');
 
 -- CreateEnum
-CREATE TYPE "ReportType" AS ENUM ('1', '2', '3', '4', '5', '6');
+CREATE TYPE "QuizQuestionType" AS ENUM ('MULTIPLE_CHOICE_SINGLE_ANSWER', 'MULTIPLE_CHOICE_MULTIPLE_ANSWERS', 'TRUE_FALSE', 'SHORT_ANSWER_ESSAY');
 
 -- CreateEnum
-CREATE TYPE "ReportStatus" AS ENUM ('1', '2', '3', '4', '5', '6');
+CREATE TYPE "QuizAttemptStatus" AS ENUM ('NOT_STARTED', 'IN_PROGRESS', 'SUBMITTED', 'GRADED');
 
 -- CreateEnum
-CREATE TYPE "MetricType" AS ENUM ('1', '2', '3', '4', '5', '6');
+CREATE TYPE "QuizReferenceTable" AS ENUM ('COURSE', 'COURSE_MODULE', 'COURSE_TOPIC');
 
 -- CreateEnum
-CREATE TYPE "TimeGranularity" AS ENUM ('1', '2', '3', '4', '5', '6');
+CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE');
 
 -- CreateEnum
-CREATE TYPE "WidgetType" AS ENUM ('1', '2', '3', '4', '5', '6');
+CREATE TYPE "StudentStatus" AS ENUM ('ACTIVE', 'ALUMNI', 'DROPOUT', 'ACCOUNT_FREEZED', 'BLACKLISTED', 'SUSPENDED', 'DEACTIVATED');
 
 -- CreateEnum
-CREATE TYPE "ExportFormat" AS ENUM ('1', '2', '3', '4');
+CREATE TYPE "DeviceType" AS ENUM ('IOS', 'ANDROID', 'WEB', 'DESKTOP');
+
+-- CreateEnum
+CREATE TYPE "EnrollmentStatus" AS ENUM ('PENDING', 'ACTIVE', 'COMPLETED', 'DROPPED', 'SUSPENDED', 'EXPELLED', 'TRANSFERRED', 'DEFERRED');
+
+-- CreateEnum
+CREATE TYPE "SystemUserRole" AS ENUM ('SUPER_ADMIN', 'TENANT_ADMIN');
+
+-- CreateEnum
+CREATE TYPE "SystemUserStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'SUSPENDED', 'LOCKED');
+
+-- CreateEnum
+CREATE TYPE "TenantStatus" AS ENUM ('ACTIVE', 'SUSPENDED', 'TRIAL', 'EXPIRED', 'CANCELLED');
+
+-- CreateEnum
+CREATE TYPE "ClientStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'SUSPENDED', 'TERMINATED');
+
+-- CreateEnum
+CREATE TYPE "ContactType" AS ENUM ('PRIMARY', 'SECONDARY', 'EMERGENCY', 'BILLING');
 
 -- CreateTable
 CREATE TABLE "tenants" (
@@ -111,7 +129,7 @@ CREATE TABLE "tenants" (
     "logo_url_dark" VARCHAR(500),
     "favicon_url" VARCHAR(500),
     "theme" JSONB,
-    "tenant_status" "TenantStatus" NOT NULL DEFAULT '1',
+    "tenant_status" "TenantStatus" NOT NULL DEFAULT 'ACTIVE',
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_deleted" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -134,7 +152,7 @@ CREATE TABLE "clients" (
     "dial_code" VARCHAR(20),
     "phone_number" VARCHAR(20),
     "address" VARCHAR(500),
-    "client_status" "ClientStatus" NOT NULL DEFAULT '1',
+    "client_status" "ClientStatus" NOT NULL DEFAULT 'ACTIVE',
     "tenant_id" INTEGER NOT NULL,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_deleted" BOOLEAN NOT NULL DEFAULT false,
@@ -216,6 +234,7 @@ CREATE TABLE "client_tenants" (
 -- CreateTable
 CREATE TABLE "roles" (
     "role_id" SERIAL NOT NULL,
+    "role_type" "SystemUserRole" NOT NULL,
     "role_name" VARCHAR(100) NOT NULL,
     "role_description" TEXT,
     "is_system_role" BOOLEAN NOT NULL DEFAULT false,
@@ -260,14 +279,14 @@ CREATE TABLE "screens" (
 CREATE TABLE "system_users" (
     "system_user_id" SERIAL NOT NULL,
     "tenant_id" INTEGER,
-    "role_id" INTEGER NOT NULL,
+    "role_type" "SystemUserRole" NOT NULL,
     "username" VARCHAR(50) NOT NULL,
     "full_name" VARCHAR(255) NOT NULL,
     "email_address" VARCHAR(255) NOT NULL,
     "password_hash" VARCHAR(255) NOT NULL,
     "last_login_at" TIMESTAMP(3),
     "login_attempts" INTEGER DEFAULT 0,
-    "system_user_status" "SystemUserStatus" NOT NULL DEFAULT '1',
+    "system_user_status" "SystemUserStatus" NOT NULL DEFAULT 'ACTIVE',
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_deleted" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -311,7 +330,7 @@ CREATE TABLE "user_screens" (
 CREATE TABLE "role_screens" (
     "role_screen_id" SERIAL NOT NULL,
     "tenant_id" INTEGER NOT NULL,
-    "role_id" INTEGER NOT NULL,
+    "role_type" "SystemUserRole" NOT NULL,
     "screen_id" INTEGER NOT NULL,
     "can_view" BOOLEAN NOT NULL DEFAULT false,
     "can_create" BOOLEAN NOT NULL DEFAULT false,
@@ -570,7 +589,7 @@ CREATE TABLE "students" (
     "username" VARCHAR(50) NOT NULL,
     "password_hash" VARCHAR(255) NOT NULL,
     "last_login_at" TIMESTAMP(3),
-    "student_status" "StudentStatusName" NOT NULL,
+    "student_status" "StudentStatus" NOT NULL DEFAULT 'ACTIVE',
     "referral_type" VARCHAR(100),
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_deleted" BOOLEAN NOT NULL DEFAULT false,
@@ -662,7 +681,7 @@ CREATE TABLE "courses" (
     "tenant_id" INTEGER NOT NULL,
     "course_name" VARCHAR(255) NOT NULL,
     "main_thumbnail_url" TEXT,
-    "course_status" "CourseStatus" NOT NULL,
+    "course_status" "CourseStatus" NOT NULL DEFAULT 'DRAFT',
     "course_total_hours" DECIMAL(6,2),
     "specialization_id" INTEGER,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
@@ -733,7 +752,7 @@ CREATE TABLE "course_videos" (
     "thumbnail_url" TEXT,
     "duration_seconds" INTEGER,
     "position" INTEGER,
-    "upload_status" "VideoUploadStatus",
+    "upload_status" "VideoUploadStatus" DEFAULT 'PENDING',
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_deleted" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -778,7 +797,7 @@ CREATE TABLE "enrollments" (
     "student_id" INTEGER NOT NULL,
     "institute_id" INTEGER NOT NULL,
     "teacher_id" INTEGER,
-    "enrollment_status" "EnrollmentStatus" NOT NULL,
+    "enrollment_status" "EnrollmentStatus" NOT NULL DEFAULT 'PENDING',
     "enrolled_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "expected_completion_date" TIMESTAMP(3),
     "actual_completion_date" TIMESTAMP(3),
@@ -881,7 +900,7 @@ CREATE TABLE "course_sessions" (
     "tenant_id" INTEGER NOT NULL,
     "teacher_id" INTEGER NOT NULL,
     "course_id" INTEGER NOT NULL,
-    "course_session_status" "CourseSessionStatus" NOT NULL,
+    "course_session_status" "CourseSessionStatus" NOT NULL DEFAULT 'DRAFT',
     "session_name" VARCHAR(255) NOT NULL,
     "session_description" TEXT,
     "start_date" TIMESTAMP(3) NOT NULL,
@@ -913,7 +932,7 @@ CREATE TABLE "course_session_enrollments" (
     "student_id" INTEGER NOT NULL,
     "enrolled_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "dropped_at" TIMESTAMP(3),
-    "enrollment_status" "SessionEnrollmentStatus" NOT NULL DEFAULT '1',
+    "enrollment_status" "SessionEnrollmentStatus" NOT NULL DEFAULT 'PENDING',
     "completion_percentage" INTEGER NOT NULL DEFAULT 0,
     "final_grade" INTEGER,
     "completion_date" TIMESTAMP(3),
@@ -996,7 +1015,7 @@ CREATE TABLE "quizzes" (
     "allow_retake" BOOLEAN NOT NULL DEFAULT false,
     "randomize_questions" BOOLEAN NOT NULL DEFAULT false,
     "due_date" TIMESTAMP(3),
-    "status" "QuizStatus" NOT NULL DEFAULT '1',
+    "status" "QuizStatus" NOT NULL DEFAULT 'DRAFT',
     "instructions" TEXT,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_deleted" BOOLEAN NOT NULL DEFAULT false,
@@ -1017,7 +1036,7 @@ CREATE TABLE "quiz_mappings" (
     "quiz_mapping_id" SERIAL NOT NULL,
     "tenant_id" INTEGER NOT NULL,
     "quiz_id" INTEGER NOT NULL,
-    "reference_table_id" "QuizReferenceTable" NOT NULL,
+    "reference_table_type" "QuizReferenceTable" NOT NULL,
     "reference_id" INTEGER NOT NULL,
     "teacher_id" INTEGER NOT NULL,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
@@ -1164,7 +1183,7 @@ CREATE TABLE "assignments" (
     "teacher_id" INTEGER NOT NULL,
     "assignment_name" VARCHAR(255) NOT NULL,
     "assignment_description" TEXT,
-    "assignment_type" "AssignmentType" NOT NULL DEFAULT '1',
+    "assignment_type" "AssignmentType" NOT NULL DEFAULT 'FILE_UPLOA',
     "total_marks" DECIMAL(6,2) NOT NULL,
     "passing_marks" DECIMAL(6,2),
     "due_date" TIMESTAMP(3) NOT NULL,
@@ -1172,7 +1191,7 @@ CREATE TABLE "assignments" (
     "max_file_size_mb" INTEGER,
     "allowed_file_types" TEXT,
     "max_attempts" INTEGER,
-    "status" "AssignmentStatus" NOT NULL DEFAULT '1',
+    "status" "AssignmentStatus" NOT NULL DEFAULT 'DRAFT',
     "instructions" TEXT,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_deleted" BOOLEAN NOT NULL DEFAULT false,
@@ -1193,7 +1212,7 @@ CREATE TABLE "assignment_mappings" (
     "assignment_mapping_id" SERIAL NOT NULL,
     "tenant_id" INTEGER NOT NULL,
     "assignment_id" INTEGER NOT NULL,
-    "reference_table_id" "AssignmentReferenceTable" NOT NULL,
+    "reference_table_type" "AssignmentReferenceTable" NOT NULL,
     "reference_id" INTEGER NOT NULL,
     "teacher_id" INTEGER NOT NULL,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
@@ -1218,7 +1237,7 @@ CREATE TABLE "student_assignments" (
     "student_id" INTEGER NOT NULL,
     "attempt_number" INTEGER NOT NULL,
     "submission_date" TIMESTAMP(3),
-    "submission_status" "SubmissionStatus" NOT NULL,
+    "submission_status" "SubmissionStatus" NOT NULL DEFAULT 'PENDING',
     "grade" DECIMAL(6,2),
     "percentage" DECIMAL(5,2),
     "feedback" TEXT,
@@ -1249,7 +1268,7 @@ CREATE TABLE "assignment_submission_files" (
     "file_url" TEXT NOT NULL,
     "file_size_bytes" INTEGER,
     "mime_type" VARCHAR(128),
-    "upload_status_id" "UploadStatus" DEFAULT '1',
+    "upload_status" "UploadStatus" DEFAULT 'PENDING',
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_deleted" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1271,7 +1290,7 @@ CREATE TABLE "notifications" (
     "title" VARCHAR(255) NOT NULL,
     "message" TEXT NOT NULL,
     "notification_type" "NotificationType" NOT NULL,
-    "priority" "NotificationPriority" NOT NULL DEFAULT '2',
+    "priority" "NotificationPriority" NOT NULL DEFAULT 'NORMAL',
     "sender_id" INTEGER,
     "category_id" INTEGER,
     "scheduled_at" TIMESTAMP(3),
@@ -1330,7 +1349,7 @@ CREATE TABLE "notification_deliveries" (
     "recipient_id" INTEGER NOT NULL,
     "recipient_type" "RecipientType" NOT NULL,
     "delivery_channel" "DeliveryChannel" NOT NULL,
-    "delivery_status" "DeliveryStatus" NOT NULL DEFAULT '1',
+    "delivery_status" "DeliveryStatus" NOT NULL DEFAULT 'PENDING',
     "delivered_at" TIMESTAMP(3),
     "read_at" TIMESTAMP(3),
     "dismissed_at" TIMESTAMP(3),
@@ -1361,7 +1380,7 @@ CREATE TABLE "email_queues" (
     "subject" VARCHAR(255) NOT NULL,
     "body_html" TEXT,
     "body_text" TEXT,
-    "send_status" "EmailSendStatus" NOT NULL DEFAULT '1',
+    "send_status" "EmailSendStatus" NOT NULL DEFAULT 'PENDING',
     "send_attempts" INTEGER NOT NULL DEFAULT 0,
     "last_attempt_at" TIMESTAMP(3),
     "sent_at" TIMESTAMP(3),
@@ -1436,6 +1455,9 @@ CREATE TABLE "push_notification_devices" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "uq_tenants_tenant_name" ON "tenants"("tenant_name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "roles_role_type_key" ON "roles"("role_type");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "course_session_settings_course_session_id_key" ON "course_session_settings"("course_session_id");
@@ -1525,7 +1547,7 @@ ALTER TABLE "screens" ADD CONSTRAINT "screens_deleted_by_fkey" FOREIGN KEY ("del
 ALTER TABLE "system_users" ADD CONSTRAINT "system_users_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "system_users" ADD CONSTRAINT "system_users_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("role_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "system_users" ADD CONSTRAINT "system_users_role_type_fkey" FOREIGN KEY ("role_type") REFERENCES "roles"("role_type") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "system_users" ADD CONSTRAINT "system_users_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -1558,7 +1580,7 @@ ALTER TABLE "user_screens" ADD CONSTRAINT "user_screens_deleted_by_fkey" FOREIGN
 ALTER TABLE "role_screens" ADD CONSTRAINT "role_screens_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "role_screens" ADD CONSTRAINT "role_screens_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("role_id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "role_screens" ADD CONSTRAINT "role_screens_role_type_fkey" FOREIGN KEY ("role_type") REFERENCES "roles"("role_type") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "role_screens" ADD CONSTRAINT "role_screens_screen_id_fkey" FOREIGN KEY ("screen_id") REFERENCES "screens"("screen_id") ON DELETE CASCADE ON UPDATE CASCADE;
