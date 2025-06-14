@@ -25,6 +25,7 @@ import {
 } from '@/dtos/auth/student-auth.dto';
 import crypto from 'crypto';
 import logger from '@/config/logger';
+import { UserType } from '@/types/enums.types.js';
 
 // Token blacklist - In production, this would be implemented with Redis
 const STUDENT_TOKEN_BLACKLIST = new Set<string>();
@@ -107,6 +108,7 @@ export class StudentAuthService {
       id: student.student_id,
       email: primaryEmail || student.username,
       role: 'STUDENT',
+      user_type: UserType.STUDENT,
       tenantId: student.tenant_id,
       permissions
     };
@@ -120,11 +122,11 @@ export class StudentAuthService {
         full_name: student.full_name,
         email: primaryEmail || student.username,
         role: {
-          role_id: 0, // Students don't have traditional roles like admins
+          // No role_type for students as they don't use SystemUserRole
           role_name: 'STUDENT'
         },
         tenant_id: student.tenant_id,
-        user_type: 'STUDENT'
+        user_type: UserType.STUDENT
       },
       tokens: {
         access_token: tokens.accessToken,
@@ -185,6 +187,7 @@ export class StudentAuthService {
         id: student.student_id,
         email: primaryEmail || student.username,
         role: 'STUDENT',
+        user_type: UserType.STUDENT,
         tenantId: student.tenant_id,
         permissions
       };
@@ -206,11 +209,11 @@ export class StudentAuthService {
           full_name: student.full_name,
           email: primaryEmail || student.username,
           role: {
-            role_id: 0,
+            // No role_type for students as they don't use SystemUserRole
             role_name: 'STUDENT'
           },
           tenant_id: student.tenant_id,
-          user_type: 'STUDENT'
+          user_type: UserType.STUDENT
         },
         tokens: {
           access_token: tokens.accessToken,

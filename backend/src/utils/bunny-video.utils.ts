@@ -25,7 +25,7 @@ import {
   BunnyCdnPurgeRequest,
   BunnyCdnPurgeResponse
 } from '@shared/types/bunny.types';
-import { BunnyVideoStatus } from '@/types/enums';
+import { BunnyVideoStatus } from '@/types/enums.types.js';
 
 /**
  * Type-safe metadata interface for video uploads

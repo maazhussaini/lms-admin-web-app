@@ -6,7 +6,14 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { ApiError } from './api-error.utils.js';
-import { createSuccessResponse, createPaginatedResponse, createCreatedResponse, HTTP_STATUS_CODES } from './api-response.utils.js';
+import { 
+  createSuccessResponse, 
+  createPaginatedResponse, 
+  createCreatedResponse,
+  createDeletedResponse,
+  HTTP_STATUS_CODES, 
+  HttpStatusCode
+} from './api-response.utils.js';
 import { wrapError } from './error-wrapper.utils.js';
 import { 
   PaginationParams, 
@@ -15,26 +22,73 @@ import {
   getSortParamsFromRequest,
   createPaginatedApiResponse 
 } from './pagination.utils.js';
-import { TApiSuccessResponse } from '@shared/types';
+import { TApiSuccessResponse } from '@shared/types/api.types.js';
+import { TokenPayload } from './jwt.utils.js';
 
 /**
- * Type definition for an async Express route handler
+ * Extended Request interface with user and correlation ID
+ * Note: id is required in Express.Request, so we keep it as required here
+ */
+export interface AuthenticatedRequest extends Request {
+  user?: TokenPayload;
+  id: string; // Correlation ID - required as per Express.Request interface
+}
+
+/**
+ * Type definition for an async Express route handler with proper typing
  */
 export type AsyncRouteHandler<T = unknown> = (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) => Promise<T>;
 
 /**
- * Options for configuring the async handler
+ * Options for configuring the async handler with strict typing
  */
 export interface AsyncHandlerOptions {
   /** Whether to wrap non-ApiError exceptions using wrapError utility (default: true) */
-  wrapErrors?: boolean;
+  readonly wrapErrors?: boolean;
   /** Whether to log errors before passing to middleware (default: true) */
-  logErrors?: boolean;
+  readonly logErrors?: boolean;
 }
+
+/**
+ * Type guard to check if request has user property
+ * Enhanced with null checking for better safety
+ */
+const hasUser = (req: Request): req is Request & { user: TokenPayload } => {
+  return 'user' in req && req.user !== undefined && req.user !== null;
+};
+
+/**
+ * Type guard to check if request has correlation ID
+ * Enhanced with proper string validation
+ */
+const hasCorrelationId = (req: Request): req is Request & { id: string } => {
+  return 'id' in req && typeof req.id === 'string' && req.id.length > 0;
+};
+
+/**
+ * Safely extract correlation ID from request
+ */
+const getCorrelationId = (req: Request): string | undefined => {
+  return hasCorrelationId(req) ? req.id : undefined;
+};
+
+/**
+ * Safely extract user context for logging
+ */
+const getUserContext = (req: Request): { userId?: number; tenantId?: number } => {
+  if (!hasUser(req)) {
+    return {};
+  }
+  
+  return {
+    userId: req.user.id,
+    tenantId: req.user.tenantId
+  };
+};
 
 /**
  * Wraps an async Express route handler to automatically catch errors
@@ -52,7 +106,7 @@ export const asyncHandler = <T = unknown>(
   
   return (req: Request, res: Response, next: NextFunction): void => {
     // Use Promise.resolve to handle both synchronous and asynchronous functions
-    Promise.resolve(fn(req, res, next))
+    Promise.resolve(fn(req as AuthenticatedRequest, res, next))
       .catch((error: unknown) => {
         // Don't process errors if headers already sent
         if (res.headersSent) {
@@ -60,13 +114,15 @@ export const asyncHandler = <T = unknown>(
         }
         
         if (wrapErrors && !(error instanceof ApiError)) {
+          const userContext = getUserContext(req);
+          const correlationId = getCorrelationId(req);
+          
           error = wrapError(error, { 
             context: { 
               path: req.path, 
-              method: req.method, 
-              userId: (req as any).user?.id, 
-              tenantId: (req as any).user?.tenantId,
-              requestId: (req as any).id // Include request/correlation ID if available
+              method: req.method,
+              ...userContext,
+              ...(correlationId && { requestId: correlationId })
             },
             logError: logErrors
           });
@@ -77,25 +133,17 @@ export const asyncHandler = <T = unknown>(
 };
 
 /**
- * Options for routes that send success responses
+ * Options for routes that send success responses with strict typing
  */
 export interface RouteHandlerOptions extends AsyncHandlerOptions {
   /** Default success status code (default: 200) */
-  statusCode?: number;
+  readonly statusCode?: HttpStatusCode;
   /** Default success message (varies by handler type) */
-  message?: string;
+  readonly message?: string;
   /** Use simplified pagination response format (items as data) instead of TListResponse format (default: false) */
-  useSimplePagination?: boolean;
+  readonly useSimplePagination?: boolean;
 }
 
-/**
- * Creates a route handler that automatically formats successful responses
- * using the standard API response format
- * 
- * @param fn Handler function that returns data to include in the response
- * @param options Configuration options
- * @returns Express route handler
- */
 /**
  * Creates a route handler that automatically formats successful responses
  * using the standard API response format
@@ -105,18 +153,18 @@ export interface RouteHandlerOptions extends AsyncHandlerOptions {
  * @returns Express route handler
  */
 export const createRouteHandler = <T = unknown>(
-  fn: (req: Request, res: Response, next: NextFunction) => Promise<T>,
+  fn: (req: AuthenticatedRequest, res: Response, next: NextFunction) => Promise<T>,
   options: RouteHandlerOptions = {}
 ): ((req: Request, res: Response, next: NextFunction) => void) => {
   const { 
-    statusCode = 200, 
+    statusCode = HTTP_STATUS_CODES.OK, 
     message = 'Success',
     wrapErrors = true,
     logErrors = true
   } = options;
   
   return asyncHandler(
-    async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    async (req: AuthenticatedRequest, res: Response, _next: NextFunction): Promise<void> => {
       // Allow returning null/undefined to indicate "no content"
       const data = await fn(req, res, _next);
       
@@ -125,28 +173,23 @@ export const createRouteHandler = <T = unknown>(
         return;
       }
       
-      // Handle null/undefined as 204 No Content
-      if (data === null || data === undefined) {        // Format the response using our standard format but with 204 status
-        const response: TApiSuccessResponse<null> = createSuccessResponse(
-          null,
-          message,
-          HTTP_STATUS_CODES.NO_CONTENT,
-          undefined, // pagination
-          (req as any).id // correlation ID
-        );
-        
-        res.status(204).json(response);
+      const correlationId = getCorrelationId(req);
+      
+      // Handle null/undefined as 204 No Content using the proper utility
+      if (data === null || data === undefined) {
+        const response = createDeletedResponse(message, correlationId);
+        res.status(HTTP_STATUS_CODES.NO_CONTENT).json(response);
         return;
       }
       
-      // Format the response using our standard format
-      const response: TApiSuccessResponse<T> = createSuccessResponse(
-        data,
-        message,
-        HTTP_STATUS_CODES.OK,
-        undefined, // pagination
-        (req as any).id // correlation ID
-      );
+      // Determine which response utility to use based on status code
+      let response: TApiSuccessResponse<T>;
+      
+      if (statusCode === HTTP_STATUS_CODES.CREATED) {
+        response = createCreatedResponse(data, message, correlationId);
+      } else {
+        response = createSuccessResponse(data, message, statusCode, correlationId);
+      }
       
       res.status(statusCode).json(response);
     },
@@ -155,27 +198,79 @@ export const createRouteHandler = <T = unknown>(
 };
 
 /**
- * Extended pagination parameters interface for async handlers
+ * Extended pagination parameters interface for async handlers with strict typing
  * Extends the base PaginationParams with additional sorting and filtering options
  */
 export interface ExtendedPaginationParams extends PaginationParams {
   /** Sort field name from query string */
-  sortBy?: string | undefined;
+  readonly sortBy?: string | undefined;
   /** Sort order from query string */
-  sortOrder?: SortOrder | undefined;
+  readonly sortOrder?: SortOrder;
   /** Parsed sorting object for Prisma queries */
-  sorting?: Record<string, SortOrder> | undefined;
-  /** Additional filter parameters from query string */
-  [key: string]: any;
+  readonly sorting?: Readonly<Record<string, SortOrder>>;
+}
+
+/**
+ * Safe filter parameters with proper typing
+ */
+export interface SafeFilterParams {
+  readonly [key: string]: string | number | boolean | readonly (string | number | boolean)[];
+}
+
+/**
+ * Combined parameters interface for type safety
+ */
+export interface ExtendedPaginationWithFilters extends ExtendedPaginationParams {
+  readonly filters: SafeFilterParams;
 }
 
 /**
  * Type for a function that returns a list of items with total count
+ * Enhanced with proper typing for safety
  */
 export type ListFunction<T> = (
-  params: ExtendedPaginationParams,
-  req: Request
-) => Promise<{ items: T[]; total: number }>;
+  params: ExtendedPaginationWithFilters,
+  req: AuthenticatedRequest
+) => Promise<{ readonly items: readonly T[]; readonly total: number }>;
+
+/**
+ * Safely extract filter parameters from query
+ */
+const extractSafeFilters = (query: Request['query']): SafeFilterParams => {
+  const filters: Record<string, string | number | boolean | readonly (string | number | boolean)[]> = {};
+  const excludeKeys = ['page', 'limit', 'sortBy', 'order', 'sortOrder'];
+  
+  Object.entries(query).forEach(([key, value]) => {
+    if (excludeKeys.includes(key) || value === undefined || value === null || value === '') {
+      return;
+    }
+    
+    if (typeof value === 'string') {
+      // Try to parse as number or boolean
+      if (/^\d+$/.test(value)) {
+        filters[key] = parseInt(value, 10);
+      } else if (value === 'true') {
+        filters[key] = true;
+      } else if (value === 'false') {
+        filters[key] = false;
+      } else {
+        filters[key] = value;
+      }
+    } else if (Array.isArray(value)) {
+      // Handle array values safely
+      filters[key] = value.filter(v => typeof v === 'string').map(v => {
+        if (/^\d+$/.test(v)) return parseInt(v, 10);
+        if (v === 'true') return true;
+        if (v === 'false') return false;
+        return v;
+      });
+    } else if (typeof value === 'number' || typeof value === 'boolean') {
+      filters[key] = value;
+    }
+  });
+  
+  return filters;
+};
 
 /**
  * Creates a paginated list endpoint handler with standardized response format
@@ -184,7 +279,7 @@ export type ListFunction<T> = (
  * @param options Configuration options
  * @returns Express route handler
  */
-export const createListHandler = <T = any>(
+export const createListHandler = <T>(
   listFn: ListFunction<T>,
   options: RouteHandlerOptions = {}
 ): (req: Request, res: Response, next: NextFunction) => void => {
@@ -194,8 +289,9 @@ export const createListHandler = <T = any>(
     wrapErrors = true,
     logErrors = true
   } = options;
-    return asyncHandler(
-    async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+  
+  return asyncHandler(
+    async (req: AuthenticatedRequest, res: Response, _next: NextFunction): Promise<void> => {
       // Extract pagination parameters using utility function
       const pagination = getPaginationFromRequest(req, 1, 10, 100);
       
@@ -204,24 +300,31 @@ export const createListHandler = <T = any>(
       
       // Safely extract query parameters with proper type checking
       const sortBy = typeof req.query['sortBy'] === 'string' ? req.query['sortBy'] : undefined;
-      const sortOrder = (typeof req.query['sortOrder'] === 'string' ? req.query['sortOrder'] as SortOrder : undefined) || 'desc';
+      const sortOrderQuery = req.query['sortOrder'];
+      const sortOrder: SortOrder = (typeof sortOrderQuery === 'string' && 
+        (sortOrderQuery === 'asc' || sortOrderQuery === 'desc')) ? sortOrderQuery : 'desc';
       
-      // Collect all query params for filtering and build extended params
-      const params: ExtendedPaginationParams = {
+      // Extract safe filters
+      const filters = extractSafeFilters(req.query);
+      
+      // Collect all parameters with proper typing
+      const params: ExtendedPaginationWithFilters = {
         ...pagination,
         sortBy,
         sortOrder,
         sorting,
-        ...req.query
-      };
+        filters
+      } as const;
       
       // Call the list function with parameters
       const { items, total } = await listFn(params, req);
       
-      // Create response using either format based on options
+      const correlationId = getCorrelationId(req);
+      
+      // Create response using the appropriate utility from api-response.utils.ts
       const response = useSimplePagination
         ? createPaginatedApiResponse(
-            items,
+            [...items], // Convert readonly array to mutable for response
             pagination.page,
             pagination.limit,
             total,
@@ -229,21 +332,21 @@ export const createListHandler = <T = any>(
             HTTP_STATUS_CODES.OK
           )
         : createPaginatedResponse(
-            items,
+            [...items], // Convert readonly array to mutable for response
             pagination.page,
             pagination.limit,
             total,
             message,
             HTTP_STATUS_CODES.OK,
-            (req as any).id // correlation ID
+            correlationId
           );
       
-      // Add correlation ID to simple pagination response if needed
-      if (useSimplePagination && (req as any).id) {
-        (response as any).correlationId = (req as any).id;
+      // Add correlation ID to simple pagination response if needed and not already present
+      if (useSimplePagination && correlationId && !('correlationId' in response)) {
+        (response as any).correlationId = correlationId;
       }
       
-      res.status(200).json(response);
+      res.status(HTTP_STATUS_CODES.OK).json(response);
     },
     { wrapErrors, logErrors }
   );
@@ -256,8 +359,8 @@ export const createListHandler = <T = any>(
  * @param options Configuration options
  * @returns Express route handler
  */
-export const createResourceHandler = <T = unknown>(
-  createFn: (req: Request, res: Response, next: NextFunction) => Promise<T>,
+export const createResourceHandler = <T>(
+  createFn: (req: AuthenticatedRequest, res: Response, next: NextFunction) => Promise<T>,
   options: RouteHandlerOptions = {}
 ): ((req: Request, res: Response, next: NextFunction) => void) => {
   const { 
@@ -267,7 +370,7 @@ export const createResourceHandler = <T = unknown>(
   } = options;
   
   return asyncHandler(
-    async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    async (req: AuthenticatedRequest, res: Response, _next: NextFunction): Promise<void> => {
       const data = await createFn(req, res, _next);
       
       // If response is already sent, don't do anything
@@ -275,20 +378,16 @@ export const createResourceHandler = <T = unknown>(
         return;
       }
       
-      // Format the response using our created response format (201)
-      const response = createCreatedResponse(
-        data,
-        message,
-        (req as any).id // correlation ID
-      );
+      const correlationId = getCorrelationId(req);
       
-      res.status(201).json(response);
+      // Use the proper created response utility
+      const response = createCreatedResponse(data, message, correlationId);
+      
+      res.status(HTTP_STATUS_CODES.CREATED).json(response);
     },
     { wrapErrors, logErrors }
   );
 };
-
-export default asyncHandler;
 
 /**
  * Creates a simple success handler that returns a message without data
@@ -301,33 +400,30 @@ export default asyncHandler;
  */
 export const createMessageHandler = (
   message: string,
-  statusCode = 200,
+  statusCode: HttpStatusCode = HTTP_STATUS_CODES.OK,
   options: AsyncHandlerOptions = {}
-) => {
-  return createRouteHandler(
-    async () => null,
-    { ...options, statusCode, message }
-  );
-};
-
-/**
- * Creates a handler for update operations that returns the updated resource
- * 
- * @param updateFn Function that performs the update and returns the updated resource
- * @param options Configuration options
- * @returns Express route handler
- */
-export const createUpdateHandler = <T = unknown>(
-  updateFn: (req: Request, res: Response, next: NextFunction) => Promise<T>,
-  options: RouteHandlerOptions = {}
 ): ((req: Request, res: Response, next: NextFunction) => void) => {
-  const { message = 'Resource updated successfully', ...restOptions } = options;
-  
-  return createRouteHandler(updateFn, { 
-    ...restOptions, 
-    message, 
-    statusCode: 200 
-  });
+  return asyncHandler(
+    async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+      // If response is already sent, don't do anything
+      if (res.headersSent) {
+        return;
+      }
+      
+      const correlationId = getCorrelationId(req);
+      
+      // Use the proper success response utility
+      const response = createSuccessResponse(
+        null, 
+        message, 
+        statusCode, 
+        correlationId
+      );
+      
+      res.status(statusCode).json(response);
+    },
+    options
+  );
 };
 
 /**
@@ -338,16 +434,53 @@ export const createUpdateHandler = <T = unknown>(
  * @returns Express route handler
  */
 export const createDeleteHandler = (
-  deleteFn: (req: Request, res: Response, next: NextFunction) => Promise<void>,
+  deleteFn: (req: AuthenticatedRequest, res: Response, next: NextFunction) => Promise<void>,
   options: RouteHandlerOptions = {}
 ): ((req: Request, res: Response, next: NextFunction) => void) => {
-  const { message = 'Resource deleted successfully', ...restOptions } = options;
+  const { message = 'Resource deleted successfully', wrapErrors, logErrors } = options;
   
-  return createRouteHandler(
-    async (req: Request, res: Response, next: NextFunction): Promise<null> => {
+  return asyncHandler(
+    async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
       await deleteFn(req, res, next);
-      return null; // This will result in 204 No Content
+      
+      // If response is already sent, don't do anything
+      if (res.headersSent) {
+        return;
+      }
+      
+      const correlationId = getCorrelationId(req);
+      
+      // Use the proper deleted response utility
+      const response = createDeletedResponse(message, correlationId);
+      
+      res.status(HTTP_STATUS_CODES.NO_CONTENT).json(response);
     },
-    { ...restOptions, message }
+    { 
+      wrapErrors: wrapErrors ?? true, 
+      logErrors: logErrors ?? true 
+    }
   );
 };
+
+/**
+ * Creates a handler for update operations that returns the updated resource
+ * 
+ * @param updateFn Function that performs the update and returns the updated resource
+ * @param options Configuration options
+ * @returns Express route handler
+ */
+export const createUpdateHandler = <T>(
+  updateFn: (req: AuthenticatedRequest, res: Response, next: NextFunction) => Promise<T>,
+  options: RouteHandlerOptions = {}
+): ((req: Request, res: Response, next: NextFunction) => void) => {
+  const { message = 'Resource updated successfully', ...restOptions } = options;
+  
+  return createRouteHandler(updateFn, { 
+    ...restOptions, 
+    message, 
+    statusCode: HTTP_STATUS_CODES.OK 
+  });
+};
+
+// Export type guards for use in other modules
+export { hasUser, hasCorrelationId, getCorrelationId, getUserContext };

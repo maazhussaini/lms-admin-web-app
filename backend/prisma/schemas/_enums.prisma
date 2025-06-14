@@ -518,3 +518,20 @@ enum ContactType {
   EMERGENCY @map("EMERGENCY")
   BILLING @map("BILLING")
 }
+
+/**
+ * User Type Enums
+ * @description Defines user types for authentication and authorization purposes
+ *
+ */
+
+/**
+ * User type enumeration for authentication
+ * @description Distinguishes between different categories of users in the system
+ */
+enum UserType {
+  STUDENT @map("STUDENT")
+  TEACHER @map("TEACHER")
+  TENANT_ADMIN @map("TENANT_ADMIN")
+  SUPER_ADMIN @map("SUPER_ADMIN")
+}

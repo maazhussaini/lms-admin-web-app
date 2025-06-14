@@ -8,13 +8,18 @@ import { ClientController } from '@/controllers/client.controller';
 import { authenticate, authorize } from '@/middleware/auth.middleware';
 import { validate } from '@/middleware/validation.middleware';
 import { 
-  CreateClientDto,
-  UpdateClientDto,
-  CreateClientTenantDto
+  createClientValidation,
+  updateClientValidation,
+  listClientsValidation,
+  createClientTenantValidation
 } from '@/dtos/client/client.dto';
-import { param, query } from 'express-validator';
+import { param } from 'express-validator';
+import { UserType } from '@/types/enums.types.js';
 
 const router = Router();
+
+// Apply authentication to all routes
+router.use(authenticate);
 
 // ==================== CLIENT MANAGEMENT ROUTES ====================
 
@@ -25,9 +30,8 @@ const router = Router();
  */
 router.post(
   '/',
-  authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
-  validate(CreateClientDto.validate()),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
+  validate(createClientValidation),
   ClientController.createClientHandler
 );
 
@@ -38,39 +42,7 @@ router.post(
  */
 router.get(
   '/',
-  authenticate,
-  validate([
-    query('page')
-      .optional()
-      .isInt({ min: 1 })
-      .withMessage('Page must be a positive integer'),
-    query('limit')
-      .optional()
-      .isInt({ min: 1, max: 100 })
-      .withMessage('Limit must be between 1 and 100'),
-    query('search')
-      .optional()
-      .isString()
-      .trim()
-      .isLength({ max: 255 })
-      .withMessage('Search term cannot exceed 255 characters'),
-    query('tenantId')
-      .optional()
-      .isInt({ min: 1 })
-      .withMessage('Tenant ID must be a positive integer'),
-    query('status')
-      .optional()
-      .isInt({ min: 1, max: 4 })
-      .withMessage('Status must be a valid client status (1-4)'),
-    query('sortBy')
-      .optional()
-      .isIn(['client_id', 'full_name', 'email_address', 'client_status', 'created_at', 'updated_at'])
-      .withMessage('Invalid sort field'),
-    query('order')
-      .optional()
-      .isIn(['asc', 'desc'])
-      .withMessage('Order must be asc or desc')
-  ]),
+  validate(listClientsValidation),
   ClientController.getAllClientsHandler
 );
 
@@ -81,11 +53,11 @@ router.get(
  */
 router.get(
   '/:clientId',
-  authenticate,
   validate([
     param('clientId')
       .isInt({ min: 1 })
       .withMessage('Client ID must be a positive integer')
+      .toInt()
   ]),
   ClientController.getClientByIdHandler
 );
@@ -97,13 +69,13 @@ router.get(
  */
 router.patch(
   '/:clientId',
-  authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('clientId')
       .isInt({ min: 1 })
-      .withMessage('Client ID must be a positive integer'),
-    ...UpdateClientDto.validate()
+      .withMessage('Client ID must be a positive integer')
+      .toInt(),
+    ...updateClientValidation
   ]),
   ClientController.updateClientHandler
 );
@@ -115,12 +87,12 @@ router.patch(
  */
 router.delete(
   '/:clientId',
-  authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('clientId')
       .isInt({ min: 1 })
       .withMessage('Client ID must be a positive integer')
+      .toInt()
   ]),
   ClientController.deleteClientHandler
 );
@@ -134,9 +106,8 @@ router.delete(
  */
 router.post(
   '/tenant-associations',
-  authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
-  validate(CreateClientTenantDto.validate()),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
+  validate(createClientTenantValidation),
   ClientController.createClientTenantAssociationHandler
 );
 
@@ -147,11 +118,11 @@ router.post(
  */
 router.get(
   '/:clientId/tenants',
-  authenticate,
   validate([
     param('clientId')
       .isInt({ min: 1 })
       .withMessage('Client ID must be a positive integer')
+      .toInt()
   ]),
   ClientController.getClientTenantsHandler
 );
@@ -163,12 +134,12 @@ router.get(
  */
 router.delete(
   '/tenant-associations/:associationId',
-  authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('associationId')
       .isInt({ min: 1 })
       .withMessage('Association ID must be a positive integer')
+      .toInt()
   ]),
   ClientController.removeClientTenantAssociationHandler
 );

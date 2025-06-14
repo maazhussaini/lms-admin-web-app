@@ -10,6 +10,7 @@ import { authorize } from '@/middleware/auth.middleware';
 import { validate } from '@/middleware/validation.middleware';
 import { CreateProgramDto, UpdateProgramDto } from '@/dtos/course/program.dto';
 import { param } from 'express-validator';
+import { UserType } from '@/types/enums.types.js';
 
 const router = Router();
 
@@ -21,7 +22,7 @@ const router = Router();
 router.post(
   '/',
   authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate(CreateProgramDto.validate()),
   ProgramController.createProgramHandler
 );
@@ -61,7 +62,7 @@ router.get(
 router.patch(
   '/:programId',
   authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('programId')
       .isInt({ min: 1 })
@@ -79,7 +80,7 @@ router.patch(
 router.delete(
   '/:programId',
   authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('programId')
       .isInt({ min: 1 })

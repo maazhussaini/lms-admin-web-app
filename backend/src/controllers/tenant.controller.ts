@@ -3,7 +3,6 @@
  * @description Controller for handling tenant management HTTP requests
  */
 
-import { Request, Response } from 'express';
 import { TenantService } from '@/services/tenant.service';
 import { 
   CreateTenantDto, 
@@ -13,25 +12,16 @@ import {
   UpdateTenantPhoneNumberDto,
   UpdateTenantEmailAddressDto
 } from '@/dtos/tenant/tenant.dto';
-import { asyncHandler } from '@/utils/async-handler.utils';
+import { 
+  createRouteHandler,
+  createListHandler,
+  createUpdateHandler,
+  createDeleteHandler,
+  ExtendedPaginationWithFilters,
+  AuthenticatedRequest
+} from '@/utils/async-handler.utils';
 import { ApiError } from '@/utils/api-error.utils';
-import { getPaginationFromRequest, getSortParamsFromRequest } from '@/utils/pagination.utils';
-import { TApiSuccessResponse } from '@shared/types/api.types';
 import logger from '@/config/logger';
-
-/**
- * Extended Request interface with authenticated user data
- */
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: number;
-    email: string;
-    role: string;
-    tenantId: number;
-    permissions?: string[];
-    [key: string]: any;
-  };
-}
 
 // Initialize tenant service
 const tenantService = new TenantService();
@@ -45,37 +35,30 @@ export class TenantController {
    * @route POST /api/v1/tenants
    * @access Private (SUPER_ADMIN only)
    */
-  static createTenantHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
-      const tenantData = req.body as CreateTenantDto;
+  static createTenantHandler = createRouteHandler(
+    async (req: AuthenticatedRequest) => {
+      if (!req.user) {
+        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
+      }
+
+      const tenantData = req.validatedData as CreateTenantDto;
+      const requestingUser = req.user;
       
       logger.debug('Creating tenant', {
         tenantName: tenantData.tenant_name,
-        userId: req.user?.id,
-        role: req.user?.role
+        userId: requestingUser.id,
+        role: requestingUser.role
       });
       
-      if (!req.user?.id) {
-        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
-      }
-      
-      const userId = req.user.id;
-      
-      const tenant = await tenantService.createTenant(
+      return await tenantService.createTenant(
         tenantData, 
-        userId, 
+        requestingUser.id, 
         req.ip || undefined
       );
-      
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 201,
-        message: 'Tenant created successfully',
-        data: tenant,
-        timestamp: new Date().toISOString()
-      };
-      
-      return res.status(201).json(response);
+    },
+    {
+      statusCode: 201,
+      message: 'Tenant created successfully'
     }
   );
 
@@ -85,8 +68,8 @@ export class TenantController {
    * @route GET /api/v1/tenants/:tenantId
    * @access Private (SUPER_ADMIN or own tenant)
    */
-  static getTenantByIdHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+  static getTenantByIdHandler = createRouteHandler(
+    async (req: AuthenticatedRequest) => {
       const tenantIdParam = req.params['tenantId'];
       if (!tenantIdParam) {
         throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
@@ -101,24 +84,12 @@ export class TenantController {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        tenantId: req.user.tenantId
-      };
+      const requestingUser = req.user;
 
-      const tenant = await tenantService.getTenantById(tenantId, requestingUser);
-      
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: 'Tenant retrieved successfully',
-        data: tenant,
-        timestamp: new Date().toISOString()
-      };
-      
-      return res.status(200).json(response);
+      return await tenantService.getTenantById(tenantId, requestingUser);
+    },
+    {
+      message: 'Tenant retrieved successfully'
     }
   );
 
@@ -126,54 +97,61 @@ export class TenantController {
    * Get all tenants with pagination, sorting, and filtering
    * 
    * @route GET /api/v1/tenants
-   * @access Private (SUPER_ADMIN or own tenant)   */  static getAllTenantsHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+   * @access Private (SUPER_ADMIN or own tenant)
+   */
+  static getAllTenantsHandler = createListHandler(
+    async (params: ExtendedPaginationWithFilters, req: AuthenticatedRequest) => {
       if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const pagination = getPaginationFromRequest(req);      const sortParams = getSortParamsFromRequest(
-        req, 
-        'created_at', 
-        'desc', 
-        ['tenant_id', 'tenant_name', 'tenant_status', 'created_at', 'updated_at']
-      );
-      const sortBy = Object.keys(sortParams)[0] || undefined;
-      const order = Object.values(sortParams)[0] || undefined;
+      // Call the service with the params directly - service now handles ExtendedPaginationWithFilters
+      const result = await tenantService.getAllTenants(params);
       
-      const search = req.query['search'] as string | undefined;
-      const status = req.query['status'] ? parseInt(req.query['status'] as string, 10) : undefined;
-        const serviceParams: {
-        page: number;
-        limit: number;
-        sortBy?: string;
-        order?: 'asc' | 'desc';
-        search?: string;
-        status?: number;
-      } = {
-        page: pagination.page,
-        limit: pagination.limit
+      return {
+        items: result.items,
+        total: result.pagination.total
       };
+    },
+    {
+      message: 'Tenants retrieved successfully'
+    }
+  );
+
+  /**
+   * Get all clients for a tenant
+   * 
+   * @route GET /api/v1/tenants/:tenantId/clients
+   * @access Private (SUPER_ADMIN or same tenant)
+   */
+  static getTenantClientsHandler = createListHandler(
+    async (params: ExtendedPaginationWithFilters, req: AuthenticatedRequest) => {
+      const tenantIdParam = req.params['tenantId'];
+      if (!tenantIdParam) {
+        throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
+      }
       
-      if (sortBy) serviceParams.sortBy = sortBy;
-      if (order) serviceParams.order = order;
-      if (search) serviceParams.search = search;
-      if (status !== undefined) serviceParams.status = status;
+      const tenantId = parseInt(tenantIdParam, 10);
+      if (isNaN(tenantId)) {
+        throw new ApiError('Invalid tenant ID', 400, 'INVALID_TENANT_ID');
+      }
+
+      if (!req.user) {
+        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
+      }
+
+      const requestingUser = req.user;
+
+      // Call the service with the params directly - service now handles ExtendedPaginationWithFilters
+      const result = await tenantService.getTenantClients(tenantId, requestingUser, params);
       
-      const result = await tenantService.getAllTenants(serviceParams);
-      
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: 'Tenants retrieved successfully',
-        data: result.items,
-        timestamp: new Date().toISOString()
+      return {
+        items: result.items,
+        total: result.pagination.total
       };
-      
-      return res.status(200).json({
-        ...response,
-        pagination: result.pagination
-      });
+    },
+    {
+      message: 'Tenant clients retrieved successfully'
     }
   );
 
@@ -183,8 +161,8 @@ export class TenantController {
    * @route PATCH /api/v1/tenants/:tenantId
    * @access Private (SUPER_ADMIN or own tenant admin)
    */
-  static updateTenantHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+  static updateTenantHandler = createUpdateHandler(
+    async (req: AuthenticatedRequest) => {
       const tenantIdParam = req.params['tenantId'];
       if (!tenantIdParam) {
         throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
@@ -195,33 +173,23 @@ export class TenantController {
         throw new ApiError('Invalid tenant ID', 400, 'INVALID_TENANT_ID');
       }
 
-      const updateData = req.body as UpdateTenantDto;
-        if (!req.user?.id) {
+      const updateData = req.validatedData as UpdateTenantDto;
+      
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        tenantId: req.user.tenantId
-      };
-        const updatedTenant = await tenantService.updateTenant(
+      const requestingUser = req.user;
+      
+      return await tenantService.updateTenant(
         tenantId, 
         updateData, 
         requestingUser.id,
         req.ip || undefined
       );
-      
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: 'Tenant updated successfully',
-        data: updatedTenant,
-        timestamp: new Date().toISOString()
-      };
-      
-      return res.status(200).json(response);
+    },
+    {
+      message: 'Tenant updated successfully'
     }
   );
 
@@ -231,8 +199,8 @@ export class TenantController {
    * @route DELETE /api/v1/tenants/:tenantId
    * @access Private (SUPER_ADMIN only)
    */
-  static deleteTenantHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+  static deleteTenantHandler = createDeleteHandler(
+    async (req: AuthenticatedRequest): Promise<void> => {
       const tenantIdParam = req.params['tenantId'];
       if (!tenantIdParam) {
         throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
@@ -243,28 +211,20 @@ export class TenantController {
         throw new ApiError('Invalid tenant ID', 400, 'INVALID_TENANT_ID');
       }
 
-      if (!req.user?.id) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
-      }      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        tenantId: req.user.tenantId
-      };      const result = await tenantService.deleteTenant(
+      }
+
+      const requestingUser = req.user;
+
+      await tenantService.deleteTenant(
         tenantId, 
         requestingUser.id, 
         req.ip || undefined
       );
-      
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: result.message,
-        data: null,
-        timestamp: new Date().toISOString()
-      };
-      
-      return res.status(200).json(response);
+    },
+    {
+      message: 'Tenant deleted successfully'
     }
   );
 
@@ -276,8 +236,8 @@ export class TenantController {
    * @route POST /api/v1/tenants/:tenantId/phone-numbers
    * @access Private (SUPER_ADMIN, TENANT_ADMIN)
    */
-  static createTenantPhoneNumberHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+  static createTenantPhoneNumberHandler = createRouteHandler(
+    async (req: AuthenticatedRequest) => {
       const tenantIdParam = req.params['tenantId'];
       if (!tenantIdParam) {
         throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
@@ -288,35 +248,24 @@ export class TenantController {
         throw new ApiError('Invalid tenant ID', 400, 'INVALID_TENANT_ID');
       }
 
-      const phoneData = req.body as CreateTenantPhoneNumberDto;
+      const phoneData = req.validatedData as CreateTenantPhoneNumberDto;
       
-      if (!req.user?.id) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        tenantId: req.user.tenantId
-      };
+      const requestingUser = req.user;
       
-      const phoneNumber = await tenantService.createTenantPhoneNumber(
+      return await tenantService.createTenantPhoneNumber(
         tenantId,
         phoneData, 
         requestingUser, 
         req.ip || undefined
       );
-      
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 201,
-        message: 'Tenant phone number created successfully',
-        data: phoneNumber,
-        timestamp: new Date().toISOString()
-      };
-      
-      return res.status(201).json(response);
+    },
+    {
+      statusCode: 201,
+      message: 'Tenant phone number created successfully'
     }
   );
 
@@ -326,8 +275,8 @@ export class TenantController {
    * @route GET /api/v1/tenants/:tenantId/phone-numbers
    * @access Private (SUPER_ADMIN or same tenant)
    */
-  static getAllTenantPhoneNumbersHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+  static getAllTenantPhoneNumbersHandler = createListHandler(
+    async (params: ExtendedPaginationWithFilters, req: AuthenticatedRequest) => {
       const tenantIdParam = req.params['tenantId'];
       if (!tenantIdParam) {
         throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
@@ -342,29 +291,18 @@ export class TenantController {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        tenantId: req.user.tenantId
-      };      const contactType = req.query['contactType'] ? parseInt(req.query['contactType'] as string, 10) : undefined;
+      const requestingUser = req.user;
 
-      const options: any = {};
-      if (contactType !== undefined) {
-        options.phoneType = contactType.toString();
-      }
-
-      const phoneNumbers = await tenantService.getAllTenantPhoneNumbers(tenantId, requestingUser, options);
+      // Call the service with the params directly - service now handles ExtendedPaginationWithFilters
+      const result = await tenantService.getAllTenantPhoneNumbers(tenantId, requestingUser, params);
       
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: 'Tenant phone numbers retrieved successfully',
-        data: phoneNumbers,
-        timestamp: new Date().toISOString()
+      return {
+        items: result.items,
+        total: result.pagination.total
       };
-      
-      return res.status(200).json(response);
+    },
+    {
+      message: 'Tenant phone numbers retrieved successfully'
     }
   );
 
@@ -374,8 +312,8 @@ export class TenantController {
    * @route PATCH /api/v1/tenants/:tenantId/phone-numbers/:phoneNumberId
    * @access Private (SUPER_ADMIN, TENANT_ADMIN for own tenant)
    */
-  static updateTenantPhoneNumberHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+  static updateTenantPhoneNumberHandler = createUpdateHandler(
+    async (req: AuthenticatedRequest) => {
       const tenantIdParam = req.params['tenantId'];
       const phoneNumberIdParam = req.params['phoneNumberId'];
       
@@ -398,43 +336,30 @@ export class TenantController {
         throw new ApiError('Invalid phone number ID', 400, 'INVALID_PHONE_NUMBER_ID');
       }
 
-      if (!req.user?.id) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const updateData = req.body as UpdateTenantPhoneNumberDto;
+      const updateData = req.validatedData as UpdateTenantPhoneNumberDto;
+      const requestingUser = req.user;
       
       logger.debug('Updating tenant phone number', {
         tenantId,
         phoneNumberId,
-        userId: req.user.id,
-        role: req.user.role
+        userId: requestingUser.id,
+        role: requestingUser.role
       });
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        tenantId: req.user.tenantId
-      };
-
-      const updatedPhoneNumber = await tenantService.updateTenantPhoneNumber(
+      return await tenantService.updateTenantPhoneNumber(
         tenantId,
         phoneNumberId,
         updateData,
         requestingUser,
         req.ip || undefined
       );
-      
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: 'Tenant phone number updated successfully',
-        data: updatedPhoneNumber,
-        timestamp: new Date().toISOString()
-      };
-      
-      return res.status(200).json(response);
+    },
+    {
+      message: 'Tenant phone number updated successfully'
     }
   );
 
@@ -444,8 +369,8 @@ export class TenantController {
    * @route DELETE /api/v1/tenants/:tenantId/phone-numbers/:phoneNumberId
    * @access Private (SUPER_ADMIN, TENANT_ADMIN for own tenant)
    */
-  static deleteTenantPhoneNumberHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+  static deleteTenantPhoneNumberHandler = createDeleteHandler(
+    async (req: AuthenticatedRequest): Promise<void> => {
       const tenantIdParam = req.params['tenantId'];
       const phoneNumberIdParam = req.params['phoneNumberId'];
       
@@ -468,40 +393,28 @@ export class TenantController {
         throw new ApiError('Invalid phone number ID', 400, 'INVALID_PHONE_NUMBER_ID');
       }
 
-      if (!req.user?.id) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
+
+      const requestingUser = req.user;
       
       logger.debug('Deleting tenant phone number', {
         tenantId,
         phoneNumberId,
-        userId: req.user.id,
-        role: req.user.role
+        userId: requestingUser.id,
+        role: requestingUser.role
       });
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        tenantId: req.user.tenantId
-      };
-
-      const result = await tenantService.deleteTenantPhoneNumber(
+      await tenantService.deleteTenantPhoneNumber(
         tenantId,
         phoneNumberId,
         requestingUser,
         req.ip || undefined
       );
-      
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: result.message,
-        data: null,
-        timestamp: new Date().toISOString()
-      };
-      
-      return res.status(200).json(response);
+    },
+    {
+      message: 'Tenant phone number deleted successfully'
     }
   );
 
@@ -513,8 +426,8 @@ export class TenantController {
    * @route POST /api/v1/tenants/:tenantId/email-addresses
    * @access Private (SUPER_ADMIN, TENANT_ADMIN)
    */
-  static createTenantEmailAddressHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+  static createTenantEmailAddressHandler = createRouteHandler(
+    async (req: AuthenticatedRequest) => {
       const tenantIdParam = req.params['tenantId'];
       if (!tenantIdParam) {
         throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
@@ -525,35 +438,24 @@ export class TenantController {
         throw new ApiError('Invalid tenant ID', 400, 'INVALID_TENANT_ID');
       }
 
-      const emailData = req.body as CreateTenantEmailAddressDto;
+      const emailData = req.validatedData as CreateTenantEmailAddressDto;
       
-      if (!req.user?.id) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        tenantId: req.user.tenantId
-      };
+      const requestingUser = req.user;
       
-      const emailAddress = await tenantService.createTenantEmailAddress(
+      return await tenantService.createTenantEmailAddress(
         tenantId,
         emailData, 
         requestingUser, 
         req.ip || undefined
       );
-      
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 201,
-        message: 'Tenant email address created successfully',
-        data: emailAddress,
-        timestamp: new Date().toISOString()
-      };
-      
-      return res.status(201).json(response);
+    },
+    {
+      statusCode: 201,
+      message: 'Tenant email address created successfully'
     }
   );
 
@@ -563,8 +465,8 @@ export class TenantController {
    * @route GET /api/v1/tenants/:tenantId/email-addresses
    * @access Private (SUPER_ADMIN or same tenant)
    */
-  static getAllTenantEmailAddressesHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+  static getAllTenantEmailAddressesHandler = createListHandler(
+    async (params: ExtendedPaginationWithFilters, req: AuthenticatedRequest) => {
       const tenantIdParam = req.params['tenantId'];
       if (!tenantIdParam) {
         throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
@@ -579,29 +481,18 @@ export class TenantController {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        tenantId: req.user.tenantId
-      };      const contactType = req.query['contactType'] ? parseInt(req.query['contactType'] as string, 10) : undefined;
+      const requestingUser = req.user;
 
-      const options: any = {};
-      if (contactType !== undefined) {
-        options.emailType = contactType.toString();
-      }
-
-      const emailAddresses = await tenantService.getAllTenantEmailAddresses(tenantId, requestingUser, options);
+      // Call the service with the params directly - service now handles ExtendedPaginationWithFilters
+      const result = await tenantService.getAllTenantEmailAddresses(tenantId, requestingUser, params);
       
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: 'Tenant email addresses retrieved successfully',
-        data: emailAddresses,
-        timestamp: new Date().toISOString()
+      return {
+        items: result.items,
+        total: result.pagination.total
       };
-      
-      return res.status(200).json(response);
+    },
+    {
+      message: 'Tenant email addresses retrieved successfully'
     }
   );
 
@@ -611,8 +502,8 @@ export class TenantController {
    * @route PATCH /api/v1/tenants/:tenantId/email-addresses/:emailAddressId
    * @access Private (SUPER_ADMIN, TENANT_ADMIN for own tenant)
    */
-  static updateTenantEmailAddressHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+  static updateTenantEmailAddressHandler = createUpdateHandler(
+    async (req: AuthenticatedRequest) => {
       const tenantIdParam = req.params['tenantId'];
       const emailAddressIdParam = req.params['emailAddressId'];
       
@@ -635,43 +526,30 @@ export class TenantController {
         throw new ApiError('Invalid email address ID', 400, 'INVALID_EMAIL_ADDRESS_ID');
       }
 
-      if (!req.user?.id) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      const updateData = req.body as UpdateTenantEmailAddressDto;
+      const updateData = req.validatedData as UpdateTenantEmailAddressDto;
+      const requestingUser = req.user;
       
       logger.debug('Updating tenant email address', {
         tenantId,
         emailAddressId,
-        userId: req.user.id,
-        role: req.user.role
+        userId: requestingUser.id,
+        role: requestingUser.role
       });
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        tenantId: req.user.tenantId
-      };
-
-      const updatedEmailAddress = await tenantService.updateTenantEmailAddress(
+      return await tenantService.updateTenantEmailAddress(
         tenantId,
         emailAddressId,
         updateData,
         requestingUser,
         req.ip || undefined
       );
-      
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: 'Tenant email address updated successfully',
-        data: updatedEmailAddress,
-        timestamp: new Date().toISOString()
-      };
-      
-      return res.status(200).json(response);
+    },
+    {
+      message: 'Tenant email address updated successfully'
     }
   );
 
@@ -681,8 +559,8 @@ export class TenantController {
    * @route DELETE /api/v1/tenants/:tenantId/email-addresses/:emailAddressId
    * @access Private (SUPER_ADMIN, TENANT_ADMIN for own tenant)
    */
-  static deleteTenantEmailAddressHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+  static deleteTenantEmailAddressHandler = createDeleteHandler(
+    async (req: AuthenticatedRequest): Promise<void> => {
       const tenantIdParam = req.params['tenantId'];
       const emailAddressIdParam = req.params['emailAddressId'];
       
@@ -705,40 +583,28 @@ export class TenantController {
         throw new ApiError('Invalid email address ID', 400, 'INVALID_EMAIL_ADDRESS_ID');
       }
 
-      if (!req.user?.id) {
+      if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
+
+      const requestingUser = req.user;
       
       logger.debug('Deleting tenant email address', {
         tenantId,
         emailAddressId,
-        userId: req.user.id,
-        role: req.user.role
+        userId: requestingUser.id,
+        role: requestingUser.role
       });
 
-      const requestingUser = {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        tenantId: req.user.tenantId
-      };
-
-      const result = await tenantService.deleteTenantEmailAddress(
+      await tenantService.deleteTenantEmailAddress(
         tenantId,
         emailAddressId,
         requestingUser,
         req.ip || undefined
       );
-      
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: result.message,
-        data: null,
-        timestamp: new Date().toISOString()
-      };
-      
-      return res.status(200).json(response);
+    },
+    {
+      message: 'Tenant email address deleted successfully'
     }
   );
 }

@@ -4,35 +4,41 @@ import { MultiTenantAuditFields } from './base.types';
  * Tenant status enumeration
  * @description Defines the operational status of a tenant in the system
  */
-export enum TenantStatus {
-  ACTIVE = 'ACTIVE',
-  SUSPENDED = 'SUSPENDED',
-  TRIAL = 'TRIAL',
-  EXPIRED = 'EXPIRED',
-  CANCELLED = 'CANCELLED',
-}
+export const TenantStatus = {
+  ACTIVE: 'ACTIVE',
+  SUSPENDED: 'SUSPENDED',
+  TRIAL: 'TRIAL',
+  EXPIRED: 'EXPIRED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export type TenantStatus = typeof TenantStatus[keyof typeof TenantStatus];
 
 /**
  * Client status enumeration
  * @description Defines the operational status of a client
  */
-export enum ClientStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  SUSPENDED = 'SUSPENDED',
-  TERMINATED = 'TERMINATED',
-}
+export const ClientStatus = {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE',
+  SUSPENDED: 'SUSPENDED',
+  TERMINATED: 'TERMINATED',
+} as const;
+
+export type ClientStatus = typeof ClientStatus[keyof typeof ClientStatus];
 
 /**
  * Contact type enumeration
  * @description Categorizes different types of contact information
  */
-export enum ContactType {
-  PRIMARY = 'PRIMARY',
-  SECONDARY = 'SECONDARY',
-  EMERGENCY = 'EMERGENCY',
-  BILLING = 'BILLING',
-}
+export const ContactType = {
+  PRIMARY: 'PRIMARY',
+  SECONDARY: 'SECONDARY',
+  EMERGENCY: 'EMERGENCY',
+  BILLING: 'BILLING',
+} as const;
+
+export type ContactType = typeof ContactType[keyof typeof ContactType];
 
 /**
  * Represents a client entity

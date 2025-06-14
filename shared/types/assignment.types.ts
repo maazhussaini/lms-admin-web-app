@@ -4,56 +4,66 @@ import { MultiTenantAuditFields } from './base.types';
  * Assignment type enumeration
  * @description Types of assignments available
  */
-export enum AssignmentType {
-  FILE_UPLOAD = 'FILE_UPLOAD'
-}
+export const AssignmentType = {
+  FILE_UPLOAD: 'FILE_UPLOAD'
+} as const;
+
+export type AssignmentType = typeof AssignmentType[keyof typeof AssignmentType];
 
 /**
  * Assignment status enumeration
  * @description Defines the lifecycle status of an assignment
  */
-export enum AssignmentStatus {
-  DRAFT = 'DRAFT',
-  PUBLISHED = 'PUBLISHED',
-  GRADING_IN_PROGRESS = 'GRADING_IN_PROGRESS',
-  GRADED = 'GRADED',
-  ARCHIVED = 'ARCHIVED',
-}
+export const AssignmentStatus = {
+  DRAFT: 'DRAFT',
+  PUBLISHED: 'PUBLISHED',
+  GRADING_IN_PROGRESS: 'GRADING_IN_PROGRESS',
+  GRADED: 'GRADED',
+  ARCHIVED: 'ARCHIVED',
+} as const;
+
+export type AssignmentStatus = typeof AssignmentStatus[keyof typeof AssignmentStatus];
 
 /**
  * Submission status enumeration
  * @description Status of a student's assignment submission
  */
-export enum SubmissionStatus {
-  PENDING = 'PENDING',
-  NOT_SUBMITTED = 'NOT_SUBMITTED',
-  SUBMITTED = 'SUBMITTED',
-  LATE_SUBMISSION = 'LATE_SUBMISSION',
-  GRADED = 'GRADED',
-  RESUBMITTED = 'RESUBMITTED',
-}
+export const SubmissionStatus = {
+  PENDING: 'PENDING',
+  NOT_SUBMITTED: 'NOT_SUBMITTED',
+  SUBMITTED: 'SUBMITTED',
+  LATE_SUBMISSION: 'LATE_SUBMISSION',
+  GRADED: 'GRADED',
+  RESUBMITTED: 'RESUBMITTED',
+} as const;
+
+export type SubmissionStatus = typeof SubmissionStatus[keyof typeof SubmissionStatus];
 
 /**
  * Upload status enumeration
  * @description Status of file upload for assignment submissions
  */
-export enum UploadStatus {
-  PENDING = 'PENDING',
-  UPLOADING = 'UPLOADING',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-  CANCELLED = 'CANCELLED',
-}
+export const UploadStatus = {
+  PENDING: 'PENDING',
+  UPLOADING: 'UPLOADING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export type UploadStatus = typeof UploadStatus[keyof typeof UploadStatus];
 
 /**
  * Reference table enumeration for assignment mappings
  * @description Entities that can have assignments mapped to them
  */
-export enum AssignmentReferenceTable {
-  COURSE = 'COURSE',
-  COURSE_MODULE = 'COURSE_MODULE',
-  COURSE_TOPIC = 'COURSE_TOPIC',
-}
+export const AssignmentReferenceTable = {
+  COURSE: 'COURSE',
+  COURSE_MODULE: 'COURSE_MODULE',
+  COURSE_TOPIC: 'COURSE_TOPIC',
+} as const;
+
+export type AssignmentReferenceTable = typeof AssignmentReferenceTable[keyof typeof AssignmentReferenceTable];
 
 /**
  * Represents an assignment with multi-tenant isolation

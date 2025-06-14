@@ -15,7 +15,7 @@ import {
   validateCourseUpdatePayload,
   withValidationAndErrorResponse
 } from '@/utils/validation.utils.js';
-import { SocketEventName } from '@/types/enums';
+import { SocketEventName } from '@/types/enums.types.js';
 
 /**
  * Register course related socket event handlers

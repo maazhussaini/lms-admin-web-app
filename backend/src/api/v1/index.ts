@@ -9,10 +9,12 @@ import { Router } from 'express';
 import authRoutes from './routes/auth.routes.js';
 import studentAuthRoutes from './routes/student/auth.routes.js';
 import teacherAuthRoutes from './routes/teacher/auth.routes.js';
-import userRoutes from './routes/systemUser.routes.js';
+import systemUserRoutes from './routes/system-user.routes.js';
 import programRoutes from './routes/program.routes';
 import tenantRoutes from './routes/tenant.routes.js';
 import clientRoutes from './routes/client.routes.js';
+import studentRoutes from './routes/student.routes.js';
+import studentProfileRoutes from './routes/student-profile.routes';
 
 // Create router
 const router = Router();
@@ -30,10 +32,12 @@ router.get('/', (_req, res) => {
         '/api/v1/auth',
         '/api/v1/auth/student',
         '/api/v1/auth/teacher',
-        '/api/v1/users',
+        '/api/v1/system-users',
         '/api/v1/tenants',
         '/api/v1/clients',
         '/api/v1/programs',
+        '/api/v1/students',
+        '/api/v1/student',
       ]
     },
     timestamp: new Date().toISOString(),
@@ -44,9 +48,11 @@ router.get('/', (_req, res) => {
 router.use('/auth', authRoutes);
 router.use('/auth/student', studentAuthRoutes);
 router.use('/auth/teacher', teacherAuthRoutes);
-router.use('/users', userRoutes);
+router.use('/system-users', systemUserRoutes);
 router.use('/tenants', tenantRoutes);
 router.use('/clients', clientRoutes);
 router.use('/programs', programRoutes);
+router.use('/students', studentRoutes);
+router.use('/student', studentProfileRoutes);
 
 export default router;

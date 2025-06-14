@@ -3,8 +3,6 @@
  * @description Standard API response types and authentication structures.
  */
 
-import { SystemUserRole } from './system-users.types';
-
 /**
  * Standard success response structure for all API endpoints
  */
@@ -40,6 +38,19 @@ export interface TApiErrorResponse {
 }
 
 /**
+ * User type enumeration for authentication
+ * @description Distinguishes between different categories of users in the system
+ */
+export const UserType = {
+  STUDENT: 'STUDENT',
+  TEACHER: 'TEACHER',
+  TENANT_ADMIN: 'TENANT_ADMIN',
+  SUPER_ADMIN: 'SUPER_ADMIN'
+} as const;
+
+export type UserType = typeof UserType[keyof typeof UserType];
+
+/**
  * Authentication response structure
  */
 export interface TAuthResponse {
@@ -49,11 +60,11 @@ export interface TAuthResponse {
     full_name: string;
     email: string;
     role: {
-      role_type: SystemUserRole;       // Changed from role_id to role_type
-      role_name: string;
+      role_type?: UserType;      // Only for system users (ADMIN, SUPER_ADMIN)
+      role_name: string;               // Descriptive name for all user types
     };
     tenant_id: number;
-    user_type: 'STUDENT' | 'TEACHER' | 'ADMIN' | 'SUPER_ADMIN';
+    user_type: UserType;               // Changed to use UserType enum
   };
   tokens: {
     access_token: string;

@@ -1,7 +1,7 @@
 // Role model - defines system roles for access control
 model Role {
   role_id           Int               @id @default(autoincrement())
-  role_type         SystemUserRole    @unique
+  role_type         UserType          @unique
   role_name         String            @db.VarChar(100)
   role_description  String?           @db.Text
   is_system_role    Boolean           @default(false)
@@ -66,7 +66,7 @@ model Screen {
 model SystemUser {
   system_user_id    Int               @id @default(autoincrement())
   tenant_id         Int?              
-  role_type         SystemUserRole
+  role_type         UserType
   username          String            @db.VarChar(50)
   full_name         String            @db.VarChar(255)
   email_address     String            @db.VarChar(255)
@@ -290,7 +290,7 @@ model UserScreen {
 model RoleScreen {
   role_screen_id    Int               @id @default(autoincrement())
   tenant_id         Int
-  role_type         SystemUserRole
+  role_type         UserType
   screen_id         Int
   can_view          Boolean           @default(false)
   can_create        Boolean           @default(false)

@@ -4,24 +4,28 @@ import { MultiTenantAuditFields } from './base.types';
  * Video upload status enumeration
  * @description Represents the lifecycle of a video upload
  */
-export enum VideoUploadStatus {
-  PENDING = 'PENDING',
-  PROCESSING = 'PROCESSING',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-  CANCELLED = 'CANCELLED',
-}
+export const VideoUploadStatus = {
+  PENDING: 'PENDING',
+  PROCESSING: 'PROCESSING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export type VideoUploadStatus = typeof VideoUploadStatus[keyof typeof VideoUploadStatus];
 
 /**
  * Course status enumeration
  * @description Represents the lifecycle status of a course
  */
-export enum CourseStatus {
-  DRAFT = 'DRAFT',
-  PUBLISHED = 'PUBLISHED',
-  ARCHIVED = 'ARCHIVED',
-  SUSPENDED = 'SUSPENDED',
-}
+export const CourseStatus = {
+  DRAFT: 'DRAFT',
+  PUBLISHED: 'PUBLISHED',
+  ARCHIVED: 'ARCHIVED',
+  SUSPENDED: 'SUSPENDED',
+} as const;
+
+export type CourseStatus = typeof CourseStatus[keyof typeof CourseStatus];
 
 /**
  * Represents a program with multi-tenant isolation
@@ -49,9 +53,10 @@ export interface Specialization extends MultiTenantAuditFields {
 export interface Course extends MultiTenantAuditFields {
   course_id: number;
   course_name: string;
+  course_description?: string | null;
   main_thumbnail_url?: string | null;
   course_status: CourseStatus;
-  course_total_hours?: number | null;
+  course_total_hours?: number | null; // Auto-calculated by backend based on sum of video durations
   specialization_id?: number | null; // Foreign key to Specialization
 }
 
@@ -138,10 +143,3 @@ export interface StudentCourseProgress extends MultiTenantAuditFields {
   is_course_completed: boolean;
   completion_date?: Date | string | null;
 }
-
-// Type guards for runtime type checking
-export const isVideoUploadStatus = (value: any): value is VideoUploadStatus => 
-  Object.values(VideoUploadStatus).includes(value);
-
-export const isCourseStatus = (value: any): value is CourseStatus => 
-  Object.values(CourseStatus).includes(value);

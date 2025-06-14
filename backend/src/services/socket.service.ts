@@ -10,7 +10,7 @@ import {
   CourseUpdatePayload
 } from '@shared/types/notification.types';
 import logger from '@/config/logger.js';
-import { SocketEventName } from '@/types/enums';
+import { SocketEventName } from '@/types/enums.types.js';
 
 /**
  * Get the global Socket.IO server instance

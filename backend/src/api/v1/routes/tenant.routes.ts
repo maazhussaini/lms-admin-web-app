@@ -9,16 +9,24 @@ import { TenantController } from '@/controllers/tenant.controller';
 import { authenticate, authorize } from '@/middleware/auth.middleware';
 import { validate } from '@/middleware/validation.middleware';
 import { 
-  CreateTenantDto, 
-  UpdateTenantDto,
-  CreateTenantPhoneNumberDto,
-  UpdateTenantPhoneNumberDto,
-  CreateTenantEmailAddressDto,
-  UpdateTenantEmailAddressDto
+  createTenantValidation, 
+  updateTenantValidation,
+  listTenantsValidation,
+  createTenantPhoneNumberValidation,
+  updateTenantPhoneNumberValidation,
+  listTenantPhoneNumbersValidation,
+  createTenantEmailAddressValidation,
+  updateTenantEmailAddressValidation,
+  listTenantEmailAddressesValidation,
+  listTenantClientsValidation
 } from '@/dtos/tenant/tenant.dto';
-import { param, query } from 'express-validator';
+import { param } from 'express-validator';
+import { UserType } from '@/types/enums.types.js';
 
 const router = Router();
+
+// Apply authentication to all routes
+router.use(authenticate);
 
 // ==================== TENANT MANAGEMENT ROUTES ====================
 
@@ -29,9 +37,8 @@ const router = Router();
  */
 router.post(
   '/',
-  authenticate,
-  authorize(['SUPER_ADMIN']),
-  validate(CreateTenantDto.validate()),
+  authorize([UserType.SUPER_ADMIN]),
+  validate(createTenantValidation),
   TenantController.createTenantHandler
 );
 
@@ -42,35 +49,7 @@ router.post(
  */
 router.get(
   '/',
-  authenticate,
-  validate([
-    query('page')
-      .optional()
-      .isInt({ min: 1 })
-      .withMessage('Page must be a positive integer'),
-    query('limit')
-      .optional()
-      .isInt({ min: 1, max: 100 })
-      .withMessage('Limit must be between 1 and 100'),
-    query('search')
-      .optional()
-      .isString()
-      .trim()
-      .isLength({ max: 255 })
-      .withMessage('Search term cannot exceed 255 characters'),
-    query('status')
-      .optional()
-      .isInt({ min: 1, max: 5 })
-      .withMessage('Status must be a valid tenant status (1-5)'),
-    query('sortBy')
-      .optional()
-      .isIn(['tenant_id', 'tenant_name', 'tenant_status', 'created_at', 'updated_at'])
-      .withMessage('Invalid sort field'),
-    query('order')
-      .optional()
-      .isIn(['asc', 'desc'])
-      .withMessage('Order must be asc or desc')
-  ]),
+  validate(listTenantsValidation),
   TenantController.getAllTenantsHandler
 );
 
@@ -81,11 +60,11 @@ router.get(
  */
 router.get(
   '/:tenantId',
-  authenticate,
   validate([
     param('tenantId')
       .isInt({ min: 1 })
       .withMessage('Tenant ID must be a positive integer')
+      .toInt()
   ]),
   TenantController.getTenantByIdHandler
 );
@@ -97,13 +76,13 @@ router.get(
  */
 router.patch(
   '/:tenantId',
-  authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('tenantId')
       .isInt({ min: 1 })
-      .withMessage('Tenant ID must be a positive integer'),
-    ...UpdateTenantDto.validate()
+      .withMessage('Tenant ID must be a positive integer')
+      .toInt(),
+    ...updateTenantValidation
   ]),
   TenantController.updateTenantHandler
 );
@@ -115,17 +94,17 @@ router.patch(
  */
 router.delete(
   '/:tenantId',
-  authenticate,
-  authorize(['SUPER_ADMIN']),
+  authorize([UserType.SUPER_ADMIN]),
   validate([
     param('tenantId')
       .isInt({ min: 1 })
       .withMessage('Tenant ID must be a positive integer')
+      .toInt()
   ]),
   TenantController.deleteTenantHandler
 );
 
-// ==================== TENANT CONTACT INFORMATION ROUTES ====================
+// ==================== TENANT PHONE NUMBER ROUTES ====================
 
 /**
  * @route POST /api/v1/tenants/:tenantId/phone-numbers
@@ -134,13 +113,13 @@ router.delete(
  */
 router.post(
   '/:tenantId/phone-numbers',
-  authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('tenantId')
       .isInt({ min: 1 })
-      .withMessage('Tenant ID must be a positive integer'),
-    ...CreateTenantPhoneNumberDto.validate()
+      .withMessage('Tenant ID must be a positive integer')
+      .toInt(),
+    ...createTenantPhoneNumberValidation
   ]),
   TenantController.createTenantPhoneNumberHandler
 );
@@ -152,19 +131,12 @@ router.post(
  */
 router.get(
   '/:tenantId/phone-numbers',
-  authenticate,
   validate([
     param('tenantId')
       .isInt({ min: 1 })
-      .withMessage('Tenant ID must be a positive integer'),
-    query('contactType')
-      .optional()
-      .isInt({ min: 1, max: 4 })
-      .withMessage('Contact type must be a valid type (1-4)'),
-    query('isPrimary')
-      .optional()
-      .isBoolean()
-      .withMessage('isPrimary must be a boolean')
+      .withMessage('Tenant ID must be a positive integer')
+      .toInt(),
+    ...listTenantPhoneNumbersValidation
   ]),
   TenantController.getAllTenantPhoneNumbersHandler
 );
@@ -176,16 +148,17 @@ router.get(
  */
 router.patch(
   '/:tenantId/phone-numbers/:phoneNumberId',
-  authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('tenantId')
       .isInt({ min: 1 })
-      .withMessage('Tenant ID must be a positive integer'),
+      .withMessage('Tenant ID must be a positive integer')
+      .toInt(),
     param('phoneNumberId')
       .isInt({ min: 1 })
-      .withMessage('Phone number ID must be a positive integer'),
-    ...UpdateTenantPhoneNumberDto.validate()
+      .withMessage('Phone number ID must be a positive integer')
+      .toInt(),
+    ...updateTenantPhoneNumberValidation
   ]),
   TenantController.updateTenantPhoneNumberHandler
 );
@@ -197,18 +170,21 @@ router.patch(
  */
 router.delete(
   '/:tenantId/phone-numbers/:phoneNumberId',
-  authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('tenantId')
       .isInt({ min: 1 })
-      .withMessage('Tenant ID must be a positive integer'),
+      .withMessage('Tenant ID must be a positive integer')
+      .toInt(),
     param('phoneNumberId')
       .isInt({ min: 1 })
       .withMessage('Phone number ID must be a positive integer')
+      .toInt()
   ]),
   TenantController.deleteTenantPhoneNumberHandler
 );
+
+// ==================== TENANT EMAIL ADDRESS ROUTES ====================
 
 /**
  * @route POST /api/v1/tenants/:tenantId/email-addresses
@@ -217,13 +193,13 @@ router.delete(
  */
 router.post(
   '/:tenantId/email-addresses',
-  authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('tenantId')
       .isInt({ min: 1 })
-      .withMessage('Tenant ID must be a positive integer'),
-    ...CreateTenantEmailAddressDto.validate()
+      .withMessage('Tenant ID must be a positive integer')
+      .toInt(),
+    ...createTenantEmailAddressValidation
   ]),
   TenantController.createTenantEmailAddressHandler
 );
@@ -235,19 +211,12 @@ router.post(
  */
 router.get(
   '/:tenantId/email-addresses',
-  authenticate,
   validate([
     param('tenantId')
       .isInt({ min: 1 })
-      .withMessage('Tenant ID must be a positive integer'),
-    query('contactType')
-      .optional()
-      .isInt({ min: 1, max: 4 })
-      .withMessage('Contact type must be a valid type (1-4)'),
-    query('isPrimary')
-      .optional()
-      .isBoolean()
-      .withMessage('isPrimary must be a boolean')
+      .withMessage('Tenant ID must be a positive integer')
+      .toInt(),
+    ...listTenantEmailAddressesValidation
   ]),
   TenantController.getAllTenantEmailAddressesHandler
 );
@@ -259,16 +228,17 @@ router.get(
  */
 router.patch(
   '/:tenantId/email-addresses/:emailAddressId',
-  authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('tenantId')
       .isInt({ min: 1 })
-      .withMessage('Tenant ID must be a positive integer'),
+      .withMessage('Tenant ID must be a positive integer')
+      .toInt(),
     param('emailAddressId')
       .isInt({ min: 1 })
-      .withMessage('Email address ID must be a positive integer'),
-    ...UpdateTenantEmailAddressDto.validate()
+      .withMessage('Email address ID must be a positive integer')
+      .toInt(),
+    ...updateTenantEmailAddressValidation
   ]),
   TenantController.updateTenantEmailAddressHandler
 );
@@ -280,18 +250,21 @@ router.patch(
  */
 router.delete(
   '/:tenantId/email-addresses/:emailAddressId',
-  authenticate,
-  authorize(['SUPER_ADMIN', 'TENANT_ADMIN']),
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   validate([
     param('tenantId')
       .isInt({ min: 1 })
-      .withMessage('Tenant ID must be a positive integer'),
+      .withMessage('Tenant ID must be a positive integer')
+      .toInt(),
     param('emailAddressId')
       .isInt({ min: 1 })
       .withMessage('Email address ID must be a positive integer')
+      .toInt()
   ]),
   TenantController.deleteTenantEmailAddressHandler
 );
+
+// ==================== TENANT CLIENT ROUTES ====================
 
 /**
  * @route GET /api/v1/tenants/:tenantId/clients
@@ -301,11 +274,12 @@ router.delete(
  */
 router.get(
   '/:tenantId/clients',
-  authenticate,
   validate([
     param('tenantId')
       .isInt({ min: 1 })
       .withMessage('Tenant ID must be a positive integer')
+      .toInt(),
+    ...listTenantClientsValidation
   ]),
   TenantController.getTenantClientsHandler
 );

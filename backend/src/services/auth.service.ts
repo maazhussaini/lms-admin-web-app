@@ -24,7 +24,7 @@ import {
 } from '@/dtos/auth/auth.dto';
 import crypto from 'crypto';
 import logger from '@/config/logger';
-import { SystemUserRole } from '@/types/enums';
+import { SystemUserRole, UserType } from '@/types/enums.types.js';
 
 // Token blacklist - In production, this would be implemented with Redis
 const TOKEN_BLACKLIST = new Set<string>();
@@ -86,7 +86,7 @@ export class AuthService {
     }
 
     // Check tenant context for SUPER_ADMIN users
-    if (user.role_id === SystemUserRole.SUPER_ADMIN && tenant_context) {
+    if (user.role_type === SystemUserRole.SUPER_ADMIN && tenant_context) {
       const tenant = await this.prisma.tenant.findFirst({
         where: {
           OR: [
@@ -123,6 +123,7 @@ export class AuthService {
       id: user.system_user_id,
       email: user.email_address,
       role: user.role.role_name,
+      user_type: user.role_type as UserType, // Use enum for role type
       tenantId: user.tenant_id || 0, // 0 is a special case for SUPER_ADMIN with no tenant
       permissions
     };
@@ -136,11 +137,11 @@ export class AuthService {
         full_name: user.full_name,
         email: user.email_address,
         role: {
-          role_id: user.role_id,
+          role_type: user.role_type as UserType,  // System users have role_type
           role_name: user.role.role_name
         },
         tenant_id: user.tenant_id || 0,
-        user_type: user.role_id === SystemUserRole.SUPER_ADMIN ? 'SUPER_ADMIN' : 'ADMIN'
+        user_type: user.role_type === UserType.SUPER_ADMIN ? UserType.SUPER_ADMIN : UserType.TENANT_ADMIN
       },
       tokens: {
         access_token: tokens.accessToken,
@@ -199,6 +200,7 @@ export class AuthService {
         id: user.system_user_id,
         email: user.email_address,
         role: user.role.role_name,
+        user_type: user.role_type as UserType, // Use enum for role type
         tenantId: user.tenant_id || 0,
         permissions
       };
@@ -220,11 +222,11 @@ export class AuthService {
           full_name: user.full_name,
           email: user.email_address,
           role: {
-            role_id: user.role_id,
+            role_type: user.role_type as UserType,  // System users have role_type
             role_name: user.role.role_name
           },
           tenant_id: user.tenant_id || 0,
-          user_type: user.role_id === SystemUserRole.SUPER_ADMIN ? 'SUPER_ADMIN' : 'ADMIN'
+          user_type: user.role_type === UserType.SUPER_ADMIN ? UserType.SUPER_ADMIN : UserType.TENANT_ADMIN
         },
         tokens: {
           access_token: tokens.accessToken,
@@ -423,7 +425,7 @@ export class AuthService {
 
       const roleScreens = await this.prisma.roleScreen.findMany({
         where: {
-          role_id: user.role_id,
+          role_type: user.role_type,
           tenant_id: tenantId,
           is_active: true,
           is_deleted: false

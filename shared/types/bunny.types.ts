@@ -9,69 +9,81 @@ import { BaseAuditFields } from './base.types';
 /**
  * Bunny.net video processing and upload status
  */
-export enum BunnyVideoStatus {
-  UPLOADING = 'UPLOADING',
-  PROCESSING = 'PROCESSING',
-  FINISHED = 'FINISHED',
-  FAILED = 'FAILED',
-  CANCELLED = 'CANCELLED',
-}
+export const BunnyVideoStatus = {
+  UPLOADING: 'UPLOADING',
+  PROCESSING: 'PROCESSING',
+  FINISHED: 'FINISHED',
+  FAILED: 'FAILED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export type BunnyVideoStatus = typeof BunnyVideoStatus[keyof typeof BunnyVideoStatus];
 
 /**
  * Bunny.net video quality/resolution options
  */
-export enum BunnyVideoQuality {
-  AUTO = 'AUTO',
-  P240 = 'P240',
-  P360 = 'P360',
-  P480 = 'P480',
-  P720 = 'P720',
-  P1080 = 'P1080',
-  P1440 = 'P1440',
-  P2160 = 'P2160',
-}
+export const BunnyVideoQuality = {
+  AUTO: 'AUTO',
+  P240: 'P240',
+  P360: 'P360',
+  P480: 'P480',
+  P720: 'P720',
+  P1080: 'P1080',
+  P1440: 'P1440',
+  P2160: 'P2160',
+} as const;
+
+export type BunnyVideoQuality = typeof BunnyVideoQuality[keyof typeof BunnyVideoQuality];
 
 /**
  * DRM provider types supported by Bunny.net
  */
-export enum BunnyDrmProvider {
-  WIDEVINE = 'WIDEVINE',
-  PLAYREADY = 'PLAYREADY',
-  FAIRPLAY = 'FAIRPLAY',
-}
+export const BunnyDrmProvider = {
+  WIDEVINE: 'WIDEVINE',
+  PLAYREADY: 'PLAYREADY',
+  FAIRPLAY: 'FAIRPLAY',
+} as const;
+
+export type BunnyDrmProvider = typeof BunnyDrmProvider[keyof typeof BunnyDrmProvider];
 
 /**
  * Bunny.net webhook event types
  */
-export enum BunnyWebhookEvent {
-  VIDEO_UPLOADED = 'VIDEO_UPLOADED',
-  VIDEO_ENCODED = 'VIDEO_ENCODED',
-  VIDEO_FAILED = 'VIDEO_FAILED',
-  VIDEO_DELETED = 'VIDEO_DELETED',
-  PURGE_COMPLETED = 'PURGE_COMPLETED',
-}
+export const BunnyWebhookEvent = {
+  VIDEO_UPLOADED: 'VIDEO_UPLOADED',
+  VIDEO_ENCODED: 'VIDEO_ENCODED',
+  VIDEO_FAILED: 'VIDEO_FAILED',
+  VIDEO_DELETED: 'VIDEO_DELETED',
+  PURGE_COMPLETED: 'PURGE_COMPLETED',
+} as const;
+
+export type BunnyWebhookEvent = typeof BunnyWebhookEvent[keyof typeof BunnyWebhookEvent];
 
 /**
  * Bunny.net CDN regions/zones
  */
-export enum BunnyCdnRegion {
-  GLOBAL = 'GLOBAL',
-  US_EAST = 'US_EAST',
-  US_WEST = 'US_WEST',
-  EUROPE = 'EUROPE',
-  ASIA = 'ASIA',
-  OCEANIA = 'OCEANIA',
-}
+export const BunnyCdnRegion = {
+  GLOBAL: 'GLOBAL',
+  US_EAST: 'US_EAST',
+  US_WEST: 'US_WEST',
+  EUROPE: 'EUROPE',
+  ASIA: 'ASIA',
+  OCEANIA: 'OCEANIA',
+} as const;
+
+export type BunnyCdnRegion = typeof BunnyCdnRegion[keyof typeof BunnyCdnRegion];
 
 /**
  * Video encoding preset options
  */
-export enum BunnyEncodingPreset {
-  FAST = 'FAST',
-  BALANCED = 'BALANCED',
-  QUALITY = 'QUALITY',
-  CUSTOM = 'CUSTOM',
-}
+export const BunnyEncodingPreset = {
+  FAST: 'FAST',
+  BALANCED: 'BALANCED',
+  QUALITY: 'QUALITY',
+  CUSTOM: 'CUSTOM',
+} as const;
+
+export type BunnyEncodingPreset = typeof BunnyEncodingPreset[keyof typeof BunnyEncodingPreset];
 
 /**
  * Response from Bunny.net after video upload
