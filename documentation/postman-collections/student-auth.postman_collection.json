@@ -97,7 +97,7 @@
                     "raw": "{\n    \"email_address\": \"{{student_email}}\",\n    \"password\": \"{{student_password}}\"{{#student_tenant_context}},\n    \"tenant_context\": \"{{student_tenant_context}}\"{{/student_tenant_context}}\n}"
                 },
                 "url": {
-                    "raw": "{{base_url}}/student/auth/login",
+                    "raw": "{{base_url}}/auth/student/login",
                     "host": [
                         "{{base_url}}"
                     ],
@@ -160,7 +160,7 @@
                     "raw": "{\n    \"email_address\": \"{{invalid_student_email}}\",\n    \"password\": \"{{invalid_student_password}}\"\n}"
                 },
                 "url": {
-                    "raw": "{{base_url}}/student/auth/login",
+                    "raw": "{{base_url}}/auth/student/login",
                     "host": [
                         "{{base_url}}"
                     ],
@@ -220,7 +220,7 @@
                     "raw": "{\n    \"email_address\": \"not-an-email\",\n    \"password\": \"\"\n}"
                 },
                 "url": {
-                    "raw": "{{base_url}}/student/auth/login",
+                    "raw": "{{base_url}}/auth/student/login",
                     "host": [
                         "{{base_url}}"
                     ],
@@ -293,7 +293,7 @@
                     "raw": "{\n    \"refreshToken\": \"{{studentRefreshToken}}\"\n}"
                 },
                 "url": {
-                    "raw": "{{base_url}}/student/auth/refresh",
+                    "raw": "{{base_url}}/auth/student/refresh",
                     "host": [
                         "{{base_url}}"
                     ],
@@ -355,7 +355,7 @@
                     "raw": "{\n    \"refreshToken\": \"{{invalid_student_refresh_token}}\"\n}"
                 },
                 "url": {
-                    "raw": "{{base_url}}/student/auth/refresh",
+                    "raw": "{{base_url}}/auth/student/refresh",
                     "host": [
                         "{{base_url}}"
                     ],
@@ -481,7 +481,7 @@
                     "raw": "{\n    \"email_address\": \"{{student_email}}\"\n}"
                 },
                 "url": {
-                    "raw": "{{base_url}}/student/auth/forgot-password",
+                    "raw": "{{base_url}}/auth/student/forgot-password",
                     "host": [
                         "{{base_url}}"
                     ],
@@ -541,7 +541,7 @@
                     "raw": "{\n    \"email_address\": \"not-an-email-address\"\n}"
                 },
                 "url": {
-                    "raw": "{{base_url}}/student/auth/forgot-password",
+                    "raw": "{{base_url}}/auth/student/forgot-password",
                     "host": [
                         "{{base_url}}"
                     ],
@@ -626,7 +626,7 @@
                     "raw": "{\n    \"token\": \"{{student_reset_token}}\",\n    \"newPassword\": \"{{new_student_password}}\"\n}"
                 },
                 "url": {
-                    "raw": "{{base_url}}/student/auth/reset-password",
+                    "raw": "{{base_url}}/auth/student/reset-password",
                     "host": [
                         "{{base_url}}"
                     ],
@@ -699,7 +699,7 @@
                     "raw": "{\n    \"token\": \"{{student_reset_token}}\",\n    \"newPassword\": \"{{weak_password}}\"\n}"
                 },
                 "url": {
-                    "raw": "{{base_url}}/student/auth/reset-password",
+                    "raw": "{{base_url}}/auth/student/reset-password",
                     "host": [
                         "{{base_url}}"
                     ],
@@ -756,7 +756,7 @@
                 "method": "POST",
                 "header": [],
                 "url": {
-                    "raw": "{{base_url}}/student/auth/logout",
+                    "raw": "{{base_url}}/auth/student/logout",
                     "host": [
                         "{{base_url}}"
                     ],

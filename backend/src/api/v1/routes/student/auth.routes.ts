@@ -1,5 +1,5 @@
 /**
- * @file api/v1/routes/student/auth.routes.ts
+ * @file api/v1/routes/auth/student.routes.ts
  * @description Authentication routes for student users
  */
 
@@ -51,7 +51,7 @@ const passwordResetRateLimiter = rateLimit({
 });
 
 /**
- * @route POST /api/v1/student/auth/login
+ * @route POST /api/v1/auth/student/login
  * @desc Authenticate student user and get tokens
  * @access Public
  */
@@ -63,7 +63,7 @@ router.post(
 );
 
 /**
- * @route POST /api/v1/student/auth/refresh
+ * @route POST /api/v1/auth/student/refresh
  * @desc Refresh access token using refresh token
  * @access Public
  */
@@ -74,7 +74,7 @@ router.post(
 );
 
 /**
- * @route POST /api/v1/student/auth/logout
+ * @route POST /api/v1/auth/student/logout
  * @desc Logout student and invalidate tokens
  * @access Private
  */
@@ -85,7 +85,7 @@ router.post(
 );
 
 /**
- * @route POST /api/v1/student/auth/forgot-password
+ * @route POST /api/v1/auth/student/forgot-password
  * @desc Request password reset link
  * @access Public
  */
@@ -97,7 +97,7 @@ router.post(
 );
 
 /**
- * @route POST /api/v1/student/auth/reset-password
+ * @route POST /api/v1/auth/student/reset-password
  * @desc Reset password with token
  * @access Public
  */

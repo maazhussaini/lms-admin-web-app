@@ -17,7 +17,7 @@ const studentAuthService = new StudentAuthService(prisma);
 export class StudentAuthController {
   /**
    * Handle student login
-   * @route POST /api/v1/student/auth/login
+   * @route POST /api/v1/auth/student/login
    */
   static loginHandler = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const loginData = req.validatedData || req.body;
@@ -37,7 +37,7 @@ export class StudentAuthController {
 
   /**
    * Handle token refresh
-   * @route POST /api/v1/student/auth/refresh
+   * @route POST /api/v1/auth/student/refresh
    */
   static refreshTokenHandler = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const refreshData = req.validatedData || req.body;
@@ -57,7 +57,7 @@ export class StudentAuthController {
 
   /**
    * Handle student logout
-   * @route POST /api/v1/student/auth/logout
+   * @route POST /api/v1/auth/student/logout
    */
   static logoutHandler = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     if (!req.user || !req.user.id) {
@@ -88,7 +88,7 @@ export class StudentAuthController {
 
   /**
    * Handle forgot password request
-   * @route POST /api/v1/student/auth/forgot-password
+   * @route POST /api/v1/auth/student/forgot-password
    */
   static forgotPasswordHandler = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const forgotPasswordData = req.validatedData || req.body;
@@ -109,7 +109,7 @@ export class StudentAuthController {
 
   /**
    * Handle password reset
-   * @route POST /api/v1/student/auth/reset-password
+   * @route POST /api/v1/auth/student/reset-password
    */
   static resetPasswordHandler = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const resetPasswordData = req.validatedData || req.body;
