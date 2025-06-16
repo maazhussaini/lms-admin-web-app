@@ -8,6 +8,7 @@ import { RouteAccess } from '@/types/security.types';
 
 /**
  * Route security configuration mapping
+ * Updated to match current routing implementation
  */
 const ROUTE_SECURITY_CONFIG: Record<string, RouteAccess> = {
   // Public routes (no authentication required)
@@ -31,23 +32,18 @@ const ROUTE_SECURITY_CONFIG: Record<string, RouteAccess> = {
     requiresAuth: false,
     isPublic: true,
   },
-  '/help': {
+  '/unauthorized': {
     allowedUserTypes: [],
     requiresAuth: false,
     isPublic: true,
   },
-  '/privacy': {
-    allowedUserTypes: [],
-    requiresAuth: false,
-    isPublic: true,
-  },
-  '/terms': {
+  '/404': {
     allowedUserTypes: [],
     requiresAuth: false,
     isPublic: true,
   },
 
-  // Student-only routes
+  // Student-only protected routes
   '/dashboard': {
     allowedUserTypes: [UserType.STUDENT],
     requiresAuth: true,
@@ -58,7 +54,7 @@ const ROUTE_SECURITY_CONFIG: Record<string, RouteAccess> = {
     requiresAuth: true,
     requiredPermissions: ['profile:view'],
   },
-  '/profile/edit': {
+  '/settings': {
     allowedUserTypes: [UserType.STUDENT],
     requiresAuth: true,
     requiredPermissions: ['profile:edit'],
@@ -68,12 +64,12 @@ const ROUTE_SECURITY_CONFIG: Record<string, RouteAccess> = {
     requiresAuth: true,
     requiredPermissions: ['courses:view'],
   },
-  '/courses/:id': {
+  '/courses/:courseId': {
     allowedUserTypes: [UserType.STUDENT],
     requiresAuth: true,
     requiredPermissions: ['courses:view'],
   },
-  '/courses/:id/lectures/:lectureId': {
+  '/courses/:courseId/lectures/:lectureId': {
     allowedUserTypes: [UserType.STUDENT],
     requiresAuth: true,
     requiredPermissions: ['courses:view', 'lectures:view'],
@@ -83,20 +79,10 @@ const ROUTE_SECURITY_CONFIG: Record<string, RouteAccess> = {
     requiresAuth: true,
     requiredPermissions: ['assignments:view'],
   },
-  '/assignments/:id': {
-    allowedUserTypes: [UserType.STUDENT],
-    requiresAuth: true,
-    requiredPermissions: ['assignments:view'],
-  },
   '/quizzes': {
     allowedUserTypes: [UserType.STUDENT],
     requiresAuth: true,
     requiredPermissions: ['quizzes:view'],
-  },
-  '/quizzes/:id': {
-    allowedUserTypes: [UserType.STUDENT],
-    requiresAuth: true,
-    requiredPermissions: ['quizzes:take'],
   },
   '/grades': {
     allowedUserTypes: [UserType.STUDENT],
@@ -107,28 +93,6 @@ const ROUTE_SECURITY_CONFIG: Record<string, RouteAccess> = {
     allowedUserTypes: [UserType.STUDENT],
     requiresAuth: true,
     requiredPermissions: ['notifications:view'],
-  },
-  '/settings': {
-    allowedUserTypes: [UserType.STUDENT],
-    requiresAuth: true,
-    requiredPermissions: ['profile:view'],
-  },
-
-  // Error and utility routes
-  '/unauthorized': {
-    allowedUserTypes: [],
-    requiresAuth: false,
-    isPublic: true,
-  },
-  '/not-found': {
-    allowedUserTypes: [],
-    requiresAuth: false,
-    isPublic: true,
-  },
-  '/server-error': {
-    allowedUserTypes: [],
-    requiresAuth: false,
-    isPublic: true,
   },
 };
 
