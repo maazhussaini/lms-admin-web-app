@@ -5,12 +5,12 @@ import { UserType } from '@shared/types/api.types';
 import { 
   UserTypeGuards, 
   SecurityValidators,
-  securityManager,
+  SecurityManager,
   RouteProtection
 } from '@/utils/securityUtils';
 import { 
   getAllowedUserTypes, 
-  getRequiredPermissions,
+  getRoutePermissions,
   isPublicRoute,
   routeRequiresAuth
 } from '@/config/routeConfig';
@@ -46,12 +46,13 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
 
       try {
         const currentPath = location.pathname;
+        const securityManager = SecurityManager.getInstance();
         
         // Get route-specific security configuration
         const isPublic = isPublicRoute(currentPath);
         const needsAuth = routeRequiresAuth(currentPath);
         const routeAllowedTypes = getAllowedUserTypes(currentPath);
-        const routeRequiredPermissions = getRequiredPermissions(currentPath);
+        const routeRequiredPermissions = getRoutePermissions(currentPath);
 
         // Merge props with route config (props take precedence)
         const finalRequiredPermissions = requiredPermissions.length > 0 
@@ -170,9 +171,11 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
   // Show loading while security check is pending
   if (isLoading || securityCheck === 'pending') {
     return (
-      <div className="page-loading">
-        <div className="loading-spinner" />
-        <p>Verifying access...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Verifying access...</p>
+        </div>
       </div>
     );
   }
@@ -213,9 +216,11 @@ export const PublicOnlyGuard: React.FC = () => {
   // Show loading while authentication check is in progress
   if (isLoading) {
     return (
-      <div className="page-loading">
-        <div className="loading-spinner" />
-        <p>Loading...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -241,6 +246,7 @@ export const LayoutGuard: React.FC<{
     // Initialize session monitoring for authenticated users
     if (isAuthenticated && user && UserTypeGuards.isStudent(user.user_type)) {
       // Update security context
+      const securityManager = SecurityManager.getInstance();
       securityManager.setSecurityContext({
         userType: user.user_type,
         userId: user.id,
@@ -253,9 +259,11 @@ export const LayoutGuard: React.FC<{
 
   if (isLoading) {
     return (
-      <div className="page-loading">
-        <div className="loading-spinner" />
-        <p>Loading...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
       </div>
     );
   }

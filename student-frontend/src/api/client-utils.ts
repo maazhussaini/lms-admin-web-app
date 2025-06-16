@@ -4,9 +4,14 @@
  */
 
 import { TApiErrorResponse, TApiSuccessResponse } from '@shared/types/api.types';
-import { getStoredAuthToken, refreshAuthToken } from '@/services/authService';
-import { interceptorManager } from './interceptors';
-import { apiLogger } from './logger';
+import { 
+  IApiAuthProvider,
+  IApiLogger, 
+  IInterceptorManager, 
+  apiEvents, 
+  API_EVENTS 
+} from '@/api/interfaces';
+import { ApiError, TimeoutError } from '@/types/auth.types';
 
 /**
  * API configuration constants
@@ -24,34 +29,68 @@ export interface BaseApiClientOptions {
   timeout?: number;
 }
 
-/**
- * Error with API response details
- */
-export class ApiError extends Error {
-  statusCode: number;
-  errorCode?: string;
-  details?: Record<string, string[]>;
-  correlationId?: string;
+// Re-export errors from auth types
+export { ApiError, TimeoutError };
 
-  constructor(response: TApiErrorResponse) {
-    super(response.message);
-    this.name = 'ApiError';
-    this.statusCode = response.statusCode;
-    this.errorCode = response.errorCode;
-    this.details = response.details;
-    this.correlationId = response.correlationId;
+/**
+ * Dependency injection container for API utilities
+ */
+class ApiDependencies {
+  private static instance: ApiDependencies;
+  private authProvider: IApiAuthProvider | null = null;
+  private logger: IApiLogger | null = null;
+  private interceptorManager: IInterceptorManager | null = null;
+
+  private constructor() {}
+
+  static getInstance(): ApiDependencies {
+    if (!ApiDependencies.instance) {
+      ApiDependencies.instance = new ApiDependencies();
+    }
+    return ApiDependencies.instance;
+  }
+
+  setAuthProvider(provider: IApiAuthProvider): void {
+    this.authProvider = provider;
+  }
+
+  setLogger(logger: IApiLogger): void {
+    this.logger = logger;
+  }
+
+  setInterceptorManager(manager: IInterceptorManager): void {
+    this.interceptorManager = manager;
+  }
+
+  getAuthProvider(): IApiAuthProvider | null {
+    return this.authProvider;
+  }
+
+  getLogger(): IApiLogger | null {
+    return this.logger;
+  }
+
+  getInterceptorManager(): IInterceptorManager | null {
+    return this.interceptorManager;
   }
 }
 
+const dependencies = ApiDependencies.getInstance();
+
 /**
- * Timeout error for fetch requests
+ * Dependency injection setters
  */
-export class TimeoutError extends Error {
-  constructor(timeout: number) {
-    super(`Request timed out after ${timeout}ms`);
-    this.name = 'TimeoutError';
-  }
-}
+export const setAuthProvider = (provider: IApiAuthProvider): void => {
+  dependencies.setAuthProvider(provider);
+};
+
+export const setApiLogger = (logger: IApiLogger): void => {
+  dependencies.setLogger(logger);
+};
+
+export const setInterceptorManager = (manager: IInterceptorManager): void => {
+  dependencies.setInterceptorManager(manager);
+};
 
 /**
  * Create an abort controller with timeout
@@ -87,9 +126,12 @@ export const mergeSignals = (...signals: AbortSignal[]): AbortSignal => {
  * Add authentication headers to request
  */
 export const addAuthHeaders = async (headers: Headers): Promise<Headers> => {
-  const token = await getStoredAuthToken();
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+  const authProvider = dependencies.getAuthProvider();
+  if (authProvider) {
+    const token = await authProvider.getAuthToken();
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
   }
   return headers;
 };
@@ -137,20 +179,18 @@ export const processResponseWithMeta = async <T>(response: Response): Promise<TA
 };
 
 /**
- * Handle authentication errors
+ * Handle authentication errors using the auth provider
  */
 export const handleAuthError = async (error: ApiError): Promise<boolean> => {
-  if (error.statusCode === 401 && error.errorCode === 'TOKEN_EXPIRED') {
+  const authProvider = dependencies.getAuthProvider();
+  if (authProvider && error.statusCode === 401 && error.errorCode === 'TOKEN_EXPIRED') {
     try {
-      // Attempt to refresh the token
-      await refreshAuthToken();
-      return true; // Token refreshed successfully
+      return await authProvider.onAuthError(error);
     } catch (refreshError) {
-      // Token refresh failed
       return false;
     }
   }
-  return false; // Not an auth error or couldn't be handled
+  return false;
 };
 
 /**
@@ -165,10 +205,14 @@ export const fetchWithTimeout = async <T>(
 
   // Generate correlation ID for this request
   const correlationId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  let startTime = Date.now();
   
   try {
-    // Process request through interceptors
-    const processedOptions = await interceptorManager.processRequest(fetchOptions, url);
+    // Process request through interceptors if available
+    const interceptorManager = dependencies.getInterceptorManager();
+    const processedOptions = interceptorManager 
+      ? await interceptorManager.processRequest(fetchOptions, url)
+      : fetchOptions;
     
     // Add correlation ID to headers
     const headers = new Headers(processedOptions.headers);
@@ -176,12 +220,21 @@ export const fetchWithTimeout = async <T>(
       headers.set('X-Correlation-ID', correlationId);
     }
     
-    // Create request log info
-    const requestLogInfo = apiLogger.createRequestLogInfo(url, { ...processedOptions, headers }, correlationId);
-    const startTime = Date.now();
+    // Emit request start event
+    apiEvents.emit(API_EVENTS.REQUEST_START, {
+      url,
+      options: { ...processedOptions, headers },
+      correlationId,
+      timestamp: new Date().toISOString()
+    });
     
-    // Log the request
-    apiLogger.logRequest(requestLogInfo);
+    // Log the request if logger is available
+    const logger = dependencies.getLogger();
+    if (logger) {
+      const requestLogInfo = logger.createRequestLogInfo(url, { ...processedOptions, headers }, correlationId);
+      startTime = Date.now();
+      logger.logRequest(requestLogInfo);
+    }
 
     // Merge the abort signal
     const signal = options.signal 
@@ -194,47 +247,76 @@ export const fetchWithTimeout = async <T>(
     // Calculate duration
     const duration = Date.now() - startTime;
     
-    // Process response through interceptors if it's a success response
-    if (result && typeof result === 'object' && 'success' in result && result.success) {
-      const processedResponse = await interceptorManager.processResponse(result as any);
-      
-      // Log the response
-      const responseLogInfo = apiLogger.createResponseLogInfo(processedResponse, correlationId);
-      responseLogInfo.duration = duration;
-      apiLogger.logResponse(responseLogInfo, requestLogInfo);
-      
-      return processedResponse as T;
+    // Process response through interceptors if available and it's a success response
+    let finalResult: T = result;
+    if (interceptorManager && result && typeof result === 'object' && 'success' in result && (result as any).success) {
+      const processed = await interceptorManager.processResponse(result as any);
+      finalResult = processed as T;
     }
     
-    return result;
+    // Emit success event
+    apiEvents.emit(API_EVENTS.REQUEST_SUCCESS, {
+      url,
+      response: finalResult,
+      correlationId,
+      duration
+    });
+    
+    // Log the response if logger is available
+    if (logger && result && typeof result === 'object' && 'success' in result) {
+      const responseLogInfo = logger.createResponseLogInfo(result, correlationId);
+      responseLogInfo.duration = duration;
+      logger.logResponse(responseLogInfo);
+    }
+    
+    return finalResult;
   } catch (error) {
-    const duration = Date.now() - (Date.now() - timeout); // Approximate duration
+    const duration = Date.now() - startTime;
     
     if (error instanceof DOMException && error.name === 'AbortError') {
       const timeoutError = new TimeoutError(timeout);
       
-      // Log timeout error
-      const errorInfo = {
-        statusCode: 408,
-        errorCode: 'TIMEOUT',
-        message: timeoutError.message,
+      // Emit error event
+      apiEvents.emit(API_EVENTS.REQUEST_ERROR, {
+        url,
+        error: timeoutError,
         correlationId,
-        timestamp: new Date().toISOString(),
         duration
-      };
-      apiLogger.logError(errorInfo);
+      });
+      
+      // Log timeout error if logger is available
+      const logger = dependencies.getLogger();
+      if (logger) {
+        const errorInfo = logger.createErrorLogInfo(timeoutError as any, correlationId);
+        errorInfo.duration = duration;
+        logger.logError(errorInfo);
+      }
       
       throw timeoutError;
     }
     
     if (error instanceof ApiError) {
-      // Log API error
-      const errorLogInfo = apiLogger.createErrorLogInfo(error, correlationId);
-      errorLogInfo.duration = duration;
-      apiLogger.logError(errorLogInfo);
+      // Process error through interceptors if available
+      const interceptorManager = dependencies.getInterceptorManager();
+      if (interceptorManager) {
+        await interceptorManager.processError(error);
+      }
       
-      // Process error through interceptors
-      await interceptorManager.processError(error);
+      // Emit error event
+      apiEvents.emit(API_EVENTS.REQUEST_ERROR, {
+        url,
+        error,
+        correlationId,
+        duration
+      });
+      
+      // Log API error if logger is available
+      const logger = dependencies.getLogger();
+      if (logger) {
+        const errorLogInfo = logger.createErrorLogInfo(error, correlationId);
+        errorLogInfo.duration = duration;
+        logger.logError(errorLogInfo);
+      }
     }
     
     throw error;

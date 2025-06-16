@@ -3,23 +3,13 @@
  * @description Request and response interceptors for consistent API handling
  */
 
-import { ApiError } from './client';
 import { TApiSuccessResponse } from '@shared/types/api.types';
-
-/**
- * Request interceptor function type
- */
-export type RequestInterceptor = (config: RequestInit, url: string) => RequestInit | Promise<RequestInit>;
-
-/**
- * Response interceptor function type
- */
-export type ResponseInterceptor = <T>(response: TApiSuccessResponse<T>) => TApiSuccessResponse<T> | Promise<TApiSuccessResponse<T>>;
-
-/**
- * Error interceptor function type
- */
-export type ErrorInterceptor = (error: ApiError) => Promise<never> | ApiError | Promise<ApiError>;
+import { 
+  IInterceptorManager, 
+  IRequestInterceptor, 
+  IResponseInterceptor, 
+  IErrorInterceptor 
+} from '@/api/interfaces';
 
 /**
  * Interceptor configuration
@@ -33,27 +23,27 @@ export interface InterceptorConfig {
  * Request interceptor with configuration
  */
 export interface RequestInterceptorWithConfig extends InterceptorConfig {
-  interceptor: RequestInterceptor;
+  interceptor: IRequestInterceptor;
 }
 
 /**
  * Response interceptor with configuration
  */
 export interface ResponseInterceptorWithConfig extends InterceptorConfig {
-  interceptor: ResponseInterceptor;
+  interceptor: IResponseInterceptor;
 }
 
 /**
  * Error interceptor with configuration
  */
 export interface ErrorInterceptorWithConfig extends InterceptorConfig {
-  interceptor: ErrorInterceptor;
+  interceptor: IErrorInterceptor;
 }
 
 /**
- * API Interceptor Manager
+ * API Interceptor Manager Implementation
  */
-export class ApiInterceptorManager {
+export class ApiInterceptorManager implements IInterceptorManager {
   private requestInterceptors: RequestInterceptorWithConfig[] = [];
   private responseInterceptors: ResponseInterceptorWithConfig[] = [];
   private errorInterceptors: ErrorInterceptorWithConfig[] = [];
@@ -62,7 +52,7 @@ export class ApiInterceptorManager {
    * Add a request interceptor
    */
   addRequestInterceptor(
-    interceptor: RequestInterceptor,
+    interceptor: IRequestInterceptor,
     config: InterceptorConfig = { id: `req_${Date.now()}`, priority: 0 }
   ): string {
     const interceptorWithConfig: RequestInterceptorWithConfig = {
@@ -80,7 +70,7 @@ export class ApiInterceptorManager {
    * Add a response interceptor
    */
   addResponseInterceptor(
-    interceptor: ResponseInterceptor,
+    interceptor: IResponseInterceptor,
     config: InterceptorConfig = { id: `res_${Date.now()}`, priority: 0 }
   ): string {
     const interceptorWithConfig: ResponseInterceptorWithConfig = {
@@ -98,7 +88,7 @@ export class ApiInterceptorManager {
    * Add an error interceptor
    */
   addErrorInterceptor(
-    interceptor: ErrorInterceptor,
+    interceptor: IErrorInterceptor,
     config: InterceptorConfig = { id: `err_${Date.now()}`, priority: 0 }
   ): string {
     const interceptorWithConfig: ErrorInterceptorWithConfig = {
@@ -185,13 +175,13 @@ export class ApiInterceptorManager {
   /**
    * Process error through all error interceptors
    */
-  async processError(error: ApiError): Promise<never> {
+  async processError(error: any): Promise<never> {
     let processedError = error;
     
     for (const { interceptor } of this.errorInterceptors) {
       try {
         const result = await Promise.resolve(interceptor(processedError));
-        if (result instanceof ApiError) {
+        if (result instanceof Error) {
           processedError = result;
         }
       } catch (interceptorError) {

@@ -4,7 +4,9 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { apiClient, apiClientWithMeta, ApiError, PaginatedResponseResult } from '@/api';
+import { apiClient, apiClientWithMeta } from '@/api';
+import { ApiError } from '@/types/auth.types';
+import { PaginatedResponseResult } from '@/api/response-utils';
 
 /**
  * Base constraint for API data types

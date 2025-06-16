@@ -1,387 +1,172 @@
 /**
- * @file components/ErrorBoundary/ApiErrorBoundary.tsx
- * @description Modern functional API error boundary using react-error-boundary
+ * @file ApiErrorBoundary.tsx
+ * @description API-specific error boundary for handling API-related errors
  */
 
-import React, { ReactNode, useCallback, useEffect, useState, ErrorInfo } from 'react';
-import { ErrorBoundary, withErrorBoundary, useErrorBoundary } from 'react-error-boundary';
-import { ApiError } from '@/api/client';
-import { TApiErrorResponse } from '@shared/types/api.types';
+import React from 'react';
+import { QueryErrorResetBoundary } from '@tanstack/react-query';
+import { ErrorBoundary } from 'react-error-boundary';
+import { ApiError } from '@/types/auth.types';
 
-/**
- * Props for the API Error Boundary
- */
 interface ApiErrorBoundaryProps {
-  children: ReactNode;
-  fallback?: (error: ApiError, retry: () => void) => ReactNode;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
-  enableRetry?: boolean;
-  maxRetries?: number;
-  retryDelay?: number;
-  resetKeys?: Array<string | number>;
-  onReset?: (details: { reason: 'imperative-api' | 'keys' }) => void;
+  children: React.ReactNode;
 }
 
 /**
- * Props for the fallback component (follows react-error-boundary pattern)
+ * API Error Display Component
  */
-interface FallbackProps {
-  error: Error;
-  resetErrorBoundary: () => void;
-}
-
-/**
- * Extended fallback props with our custom options
- */
-interface ApiErrorFallbackProps extends FallbackProps {
-  enableRetry?: boolean;
-  maxRetries?: number;
-}
-
-/**
- * Hook for managing retry logic
- */
-function useRetryLogic(maxRetries: number = 3, retryDelay: number = 1000) {
-  const [retryCount, setRetryCount] = useState(0);
-  const [isRetrying, setIsRetrying] = useState(false);
-
-  const retry = useCallback((resetErrorBoundary: () => void) => {
-    if (retryCount >= maxRetries) {
-      console.warn('Maximum retry attempts reached');
-      return;
-    }
-
-    setIsRetrying(true);
-    setRetryCount(prev => prev + 1);
-
-    // Exponential backoff
-    const delay = retryDelay * Math.pow(2, retryCount);
-    
-    setTimeout(() => {
-      setIsRetrying(false);
-      resetErrorBoundary();
-    }, delay);
-  }, [retryCount, maxRetries, retryDelay]);
-
-  const reset = useCallback(() => {
-    setRetryCount(0);
-    setIsRetrying(false);
-  }, []);
-
-  return { retryCount, isRetrying, retry, reset };
-}
-
-/**
- * Hook for error classification and user-friendly messages
- */
-function useErrorClassification(error: ApiError) {
-  const isNetworkError = error.statusCode >= 500 || error.statusCode === 0;
-  const isValidationError = error.statusCode === 422;
-  const isNotFoundError = error.statusCode === 404;
-
-  const getErrorMessage = useCallback(() => {
+const ApiErrorDisplay: React.FC<{ 
+  error: ApiError; 
+  resetError: () => void;
+}> = ({ error, resetError }) => {
+  const getErrorMessage = () => {
     switch (error.statusCode) {
-      case 400:
-        return 'The request contains invalid data. Please check your input and try again.';
       case 401:
-        return 'You need to log in to access this resource.';
+        return 'Your session has expired. Please log in again.';
       case 403:
-        return 'You don\'t have permission to access this resource.';
+        return 'You do not have permission to access this resource.';
       case 404:
-        return 'The requested resource could not be found.';
-      case 409:
-        return 'There was a conflict with the current state of the resource.';
-      case 422:
-        return 'The submitted data could not be processed. Please check the form below.';
+        return 'The requested resource was not found.';
       case 429:
-        return 'Too many requests. Please wait a moment before trying again.';
+        return 'Too many requests. Please try again later.';
       case 500:
-        return 'An internal server error occurred. Our team has been notified.';
-      case 502:
-      case 503:
-        return 'The service is temporarily unavailable. Please try again later.';
+        return 'Server error. Please try again later.';
       default:
         return error.message || 'An unexpected error occurred.';
     }
-  }, [error]);
-
-  const getErrorIcon = useCallback(() => {
-    if (isNetworkError) return '🌐';
-    if (error.statusCode === 401 || error.statusCode === 403) return '🔒';
-    if (isNotFoundError) return '🔍';
-    if (isValidationError) return '📝';
-    return '⚠️';
-  }, [isNetworkError, isNotFoundError, isValidationError, error.statusCode]);
-
-  const getErrorTitle = useCallback(() => {
-    if (isNetworkError) return 'Connection Error';
-    if (error.statusCode === 401 || error.statusCode === 403) return 'Access Denied';
-    if (isNotFoundError) return 'Not Found';
-    if (isValidationError) return 'Validation Error';
-    return 'Something Went Wrong';
-  }, [isNetworkError, isNotFoundError, isValidationError, error.statusCode]);
-
-  return {
-    isNetworkError,
-    isValidationError,
-    isNotFoundError,
-    getErrorMessage,
-    getErrorIcon,
-    getErrorTitle
   };
-}
 
-/**
- * Component for rendering validation errors
- */
-function ValidationErrors({ details }: { details: Record<string, string[]> }) {
-  const errors = Object.entries(details).flatMap(([field, messages]) =>
-    messages.map(message => ({ field, message }))
-  );
-
-  if (errors.length === 0) return null;
-
-  return (
-    <div className="mb-4 p-3 bg-error-50 border border-error-200 rounded-md">
-      <h4 className="text-sm font-medium text-error-800 mb-2">
-        Please fix the following issues:
-      </h4>
-      <ul className="text-sm text-error-700 space-y-1">
-        {errors.map((error, index) => (
-          <li key={index} className="flex">
-            <span className="font-medium mr-1">{error.field}:</span>
-            <span>{error.message}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-/**
- * Component for development error details
- */
-function DevelopmentErrorDetails({ error }: { error: ApiError }) {
-  if (!import.meta.env.DEV) return null;
+  const getErrorIcon = () => {
+    switch (error.statusCode) {
+      case 401:
+        return '🔒';
+      case 403:
+        return '🚫';
+      case 404:
+        return '🔍';
+      case 429:
+        return '⏱️';
+      case 500:
+        return '🛠️';
+      default:
+        return '⚠️';
+    }
+  };
 
   return (
-    <details className="mt-4 text-left">
-      <summary className="cursor-pointer text-sm text-neutral-600 hover:text-neutral-800">
-        Technical Details
-      </summary>
-      <pre className="mt-2 p-3 bg-neutral-100 rounded text-xs overflow-auto max-h-40 text-neutral-800">
-        {JSON.stringify({
-          statusCode: error.statusCode,
-          errorCode: error.errorCode,
-          message: error.message,
-          details: error.details,
-          correlationId: error.correlationId,
-          stack: error.stack
-        }, null, 2)}
-      </pre>
-    </details>
-  );
-}
-
-/**
- * Default error fallback component
- */
-function ApiErrorFallback({ 
-  error, 
-  resetErrorBoundary,
-  enableRetry = true,
-  maxRetries = 3 
-}: ApiErrorFallbackProps) {
-  const { retryCount, isRetrying, retry, reset } = useRetryLogic(maxRetries);
-  
-  // Convert generic Error to ApiError if needed
-  const apiError = error instanceof ApiError 
-    ? error 
-    : new ApiError({
-        success: false,
-        statusCode: 500,
-        message: error.message || 'An unexpected error occurred',
-        errorCode: 'UNKNOWN_ERROR',
-        timestamp: new Date().toISOString()
-      } as TApiErrorResponse);
-
-  const {
-    isNetworkError,
-    getErrorMessage,
-    getErrorIcon,
-    getErrorTitle
-  } = useErrorClassification(apiError);
-
-  const canRetry = enableRetry && retryCount < maxRetries && isNetworkError;
-
-  const handleRetry = useCallback(() => {
-    retry(resetErrorBoundary);
-  }, [retry, resetErrorBoundary]);
-
-  const handleReset = useCallback(() => {
-    reset();
-    resetErrorBoundary();
-  }, [reset, resetErrorBoundary]);
-
-  // Reset retry count when error boundary resets
-  useEffect(() => {
-    return () => reset();
-  }, [reset]);
-
-  return (
-    <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-4" role="alert">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
-        <div className="text-center mb-4">
-          <div className="text-4xl mb-2">
-            {getErrorIcon()}
-          </div>
-          
-          <h2 className="text-xl font-semibold text-neutral-900 mb-2">
-            {getErrorTitle()}
-          </h2>
-          
-          <p className="text-neutral-600 mb-4">
-            {getErrorMessage()}
-          </p>
-          
-          {apiError.correlationId && (
-            <p className="text-xs text-neutral-500 mb-4 font-mono">
-              Reference ID: {apiError.correlationId}
-            </p>
-          )}
-        </div>
+    <div className="min-h-[400px] flex items-center justify-center p-4">
+      <div className="max-w-md w-full text-center">
+        <div className="text-6xl mb-4">{getErrorIcon()}</div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          {error.statusCode >= 500 ? 'Server Error' : 'Request Error'}
+        </h3>
+        <p className="text-gray-600 mb-6">{getErrorMessage()}</p>
         
-        {apiError.details && <ValidationErrors details={apiError.details} />}
-        
-        <div className="flex flex-col gap-2">
-          {canRetry && (
-            <button 
-              onClick={handleRetry}
-              disabled={isRetrying || retryCount >= maxRetries}
-              className="w-full bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isRetrying 
-                ? 'Retrying...' 
-                : `Retry ${retryCount > 0 ? `(${retryCount}/${maxRetries})` : ''}`
-              }
-            </button>
-          )}
-          
-          <button 
-            onClick={handleReset} 
-            className="w-full bg-neutral-200 text-neutral-900 py-2 px-4 rounded-md hover:bg-neutral-300 transition-colors"
+        {import.meta.env.DEV && (
+          <details className="mb-6 text-left">
+            <summary className="cursor-pointer text-sm font-medium text-red-600 mb-2">
+              Technical Details
+            </summary>
+            <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded">
+              <p><strong>Status:</strong> {error.statusCode}</p>
+              <p><strong>Code:</strong> {error.errorCode || 'N/A'}</p>
+              <p><strong>Correlation ID:</strong> {error.correlationId || 'N/A'}</p>
+              {error.details && (
+                <div className="mt-2">
+                  <strong>Details:</strong>
+                  <pre className="mt-1 text-xs">
+                    {JSON.stringify(error.details, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
+          </details>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={resetError}
+            className="flex-1 py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
           >
-            Go Back
+            Try Again
           </button>
           
-          <DevelopmentErrorDetails error={apiError} />
+          {error.statusCode === 401 && (
+            <button
+              onClick={() => window.location.href = '/login'}
+              className="flex-1 py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              Login
+            </button>
+          )}
         </div>
       </div>
     </div>
   );
-}
+};
 
 /**
- * Modern functional API Error Boundary component
+ * API Error Boundary Component
  */
-export function ApiErrorBoundary({
-  children,
-  fallback,
-  onError,
-  enableRetry = true,
-  maxRetries = 3,
-  resetKeys = [],
-  onReset
-}: ApiErrorBoundaryProps) {
-  // Create fallback render function
-  const fallbackRender = useCallback(({ error, resetErrorBoundary }: FallbackProps) => {
-    // If custom fallback is provided and error is ApiError, use it
-    if (fallback && error instanceof ApiError) {
-      return fallback(error, resetErrorBoundary);
-    }
-
-    // Otherwise use default fallback
-    return (
-      <ApiErrorFallback 
-        error={error}
-        resetErrorBoundary={resetErrorBoundary}
-        enableRetry={enableRetry}
-        maxRetries={maxRetries}
-      />
-    );
-  }, [fallback, enableRetry, maxRetries]);
-
-  // Handle errors with proper logging and type compatibility
-  const handleError = useCallback((error: Error, errorInfo: ErrorInfo) => {
-    // Convert to ApiError if needed for logging
-    const apiError = error instanceof ApiError 
-      ? error 
-      : new ApiError({
-          success: false,
-          statusCode: 500,
-          message: error.message || 'An unexpected error occurred',
-          errorCode: 'UNKNOWN_ERROR',
-          timestamp: new Date().toISOString()
-        } as TApiErrorResponse);
-
-    // Log the error
-    console.error('API Error caught by boundary:', {
-      error: apiError,
-      errorInfo: {
-        componentStack: errorInfo.componentStack || 'No component stack available'
-      },
-      correlationId: apiError.correlationId,
-      timestamp: new Date().toISOString()
-    });
-
-    // Call custom error handler if provided
-    if (onError) {
-      onError(error, errorInfo);
-    }
-  }, [onError]);
-
+export const ApiErrorBoundary: React.FC<ApiErrorBoundaryProps> = ({ children }) => {
   return (
-    <ErrorBoundary
-      fallbackRender={fallbackRender}
-      onError={handleError}
-      resetKeys={resetKeys}
-      onReset={onReset}
-    >
-      {children}
-    </ErrorBoundary>
+    <QueryErrorResetBoundary>
+      {({ reset }) => (
+        <ErrorBoundary
+          onError={(error) => {
+            if (error instanceof ApiError) {
+              console.error('API Error:', {
+                status: error.statusCode,
+                code: error.errorCode,
+                message: error.message,
+                correlationId: error.correlationId,
+              });
+            }
+          }}
+          fallbackRender={({ error, resetErrorBoundary }) => {
+            if (error instanceof ApiError) {
+              return (
+                <ApiErrorDisplay 
+                  error={error} 
+                  resetError={() => {
+                    reset();
+                    resetErrorBoundary();
+                  }} 
+                />
+              );
+            }
+            
+            // Fallback for non-API errors
+            return (
+              <div className="min-h-[400px] flex items-center justify-center p-4">
+                <div className="max-w-md w-full text-center">
+                  <div className="text-6xl mb-4">❌</div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Unexpected Error
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    An unexpected error occurred. Please try again.
+                  </p>
+                  <button
+                    onClick={() => {
+                      reset();
+                      resetErrorBoundary();
+                    }}
+                    className="py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              </div>
+            );
+          }}
+        >
+          {children}
+        </ErrorBoundary>
+      )}
+    </QueryErrorResetBoundary>
   );
-}
+};
 
-/**
- * HOC to wrap components with API error boundary
- */
-export function withApiErrorBoundary<P extends object>(
-  Component: React.ComponentType<P>,
-  errorBoundaryProps?: Omit<ApiErrorBoundaryProps, 'children'>
-) {
-  return withErrorBoundary(Component, {
-    fallbackRender: ({ error, resetErrorBoundary }: FallbackProps) => (
-      <ApiErrorFallback 
-        error={error}
-        resetErrorBoundary={resetErrorBoundary}
-        enableRetry={errorBoundaryProps?.enableRetry}
-        maxRetries={errorBoundaryProps?.maxRetries}
-      />
-    ),
-    onError: errorBoundaryProps?.onError,
-    resetKeys: errorBoundaryProps?.resetKeys,
-    onReset: errorBoundaryProps?.onReset
-  });
-}
-
-/**
- * Hook to throw errors to the nearest error boundary
- * Uses react-error-boundary's useErrorBoundary hook
- */
-export function useApiErrorBoundary() {
-  const { showBoundary } = useErrorBoundary();
-  
-  return useCallback((error: Error | ApiError) => {
-    showBoundary(error);
-  }, [showBoundary]);
-}
+// Export for convenience
+export { default as ErrorBoundary } from '@/components/common/ErrorBoundary/ErrorBoundary';

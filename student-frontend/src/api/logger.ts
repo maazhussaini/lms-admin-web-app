@@ -3,8 +3,14 @@
  * @description Enhanced API request/response logging utilities
  */
 
-import { ApiError } from './client';
+import { ApiError } from '@/types/auth.types';
 import { TApiSuccessResponse } from '@shared/types/api.types';
+import { 
+  IApiLogger, 
+  IRequestInfo, 
+  IResponseInfo, 
+  IErrorInfo 
+} from '@/api/interfaces';
 
 /**
  * Log levels for API operations
@@ -99,9 +105,9 @@ export interface ErrorLogInfo {
 }
 
 /**
- * API Logger class
+ * API Logger class implementing the interface
  */
-export class ApiLogger {
+export class ApiLogger implements IApiLogger {
   private config: ApiLoggerConfig;
   private requestTimings = new Map<string, number>();
 
@@ -217,7 +223,7 @@ export class ApiLogger {
   /**
    * Log API request
    */
-  logRequest(info: RequestLogInfo): void {
+  logRequest(info: IRequestInfo): void {
     if (!this.isEnabled(LogLevel.DEBUG)) return;
 
     const timestamp = this.formatTimestamp(info.timestamp);
@@ -258,7 +264,7 @@ export class ApiLogger {
   /**
    * Log API response
    */
-  logResponse(info: ResponseLogInfo, _originalRequest?: RequestLogInfo): void {
+  logResponse(info: IResponseInfo, _originalRequest?: IRequestInfo): void {
     if (!this.isEnabled(LogLevel.DEBUG)) return;
 
     const timestamp = this.formatTimestamp(info.timestamp);
@@ -306,7 +312,7 @@ export class ApiLogger {
   /**
    * Log API error
    */
-  logError(info: ErrorLogInfo, originalRequest?: RequestLogInfo): void {
+  logError(info: IErrorInfo, originalRequest?: IRequestInfo): void {
     if (!this.isEnabled(LogLevel.ERROR)) return;
 
     const timestamp = this.formatTimestamp(info.timestamp);
@@ -405,7 +411,7 @@ export class ApiLogger {
     url: string,
     init: RequestInit,
     correlationId?: string
-  ): RequestLogInfo {
+  ): IRequestInfo {
     const headers = init.headers ? Object.fromEntries(new Headers(init.headers).entries()) : {};
     
     let body: any;
@@ -433,7 +439,7 @@ export class ApiLogger {
   createResponseLogInfo<T>(
     response: TApiSuccessResponse<T>,
     correlationId?: string
-  ): ResponseLogInfo {
+  ): IResponseInfo {
     return {
       statusCode: response.statusCode,
       data: response.data,
@@ -448,7 +454,7 @@ export class ApiLogger {
   createErrorLogInfo(
     error: ApiError,
     correlationId?: string
-  ): ErrorLogInfo {
+  ): IErrorInfo {
     return {
       statusCode: error.statusCode,
       errorCode: error.errorCode,

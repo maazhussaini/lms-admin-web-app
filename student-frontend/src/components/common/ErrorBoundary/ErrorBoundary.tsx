@@ -1,187 +1,118 @@
+/**
+ * @file ErrorBoundary.tsx
+ * @description React Error Boundary component for graceful error handling
+ */
+
 import React from 'react';
-import { motion } from 'framer-motion';
-import Card from '@/components/common/Card';
-import Button from '@/components/common/Button';
-import StateDisplay from '@/components/common/StateDisplay';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
-  
-  /**
-   * Optional function to handle retry/refresh action
-   * @default window.location.reload
-   */
-  onReset?: () => void;
-  
-  /**
-   * Optional fallback component to display instead of the default error UI
-   */
-  fallback?: React.ReactNode;
+  fallback?: React.ComponentType<{ error?: Error; resetError: () => void }>;
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
 }
 
 interface ErrorBoundaryState {
   hasError: boolean;
-  error: Error | null;
+  error?: Error;
+  errorInfo?: React.ErrorInfo;
 }
 
 /**
- * Error Boundary component to gracefully handle runtime errors
- * Enhanced with animations and improved UI
+ * Default error fallback component
  */
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+const DefaultErrorFallback: React.FC<{ error?: Error; resetError: () => void }> = ({ 
+  error, 
+  resetError 
+}) => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="max-w-md w-full space-y-8">
+      <div className="text-center">
+        <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+          Oops! Something went wrong
+        </h2>
+        <p className="mt-2 text-sm text-gray-600">
+          We apologize for the inconvenience. Please try refreshing the page.
+        </p>
+        {import.meta.env.DEV && error && (
+          <details className="mt-4 text-left">
+            <summary className="cursor-pointer text-sm font-medium text-red-600">
+              Error Details (Development)
+            </summary>
+            <pre className="mt-2 text-xs text-red-500 bg-red-50 p-4 rounded overflow-auto">
+              {error.stack}
+            </pre>
+          </details>
+        )}
+      </div>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <button
+          onClick={resetError}
+          className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+        >
+          Try Again
+        </button>
+        <button
+          onClick={() => window.location.reload()}
+          className="group relative w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+        >
+          Refresh Page
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+/**
+ * Error Boundary Component
+ */
+export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, error: null };
-    this.handleReset = this.handleReset.bind(this);
+    this.state = { hasError: false };
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
+    return {
+      hasError: true,
+      error,
+    };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // You can log error info to an error reporting service here
-    console.error('ErrorBoundary caught an error', error, errorInfo);
+    this.setState({
+      error,
+      errorInfo,
+    });
+
+    // Log error to console in development
+    if (import.meta.env.DEV) {
+      console.error('ErrorBoundary caught an error:', error, errorInfo);
+    }
+
+    // Call optional error handler
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
+
+    // TODO: Log error to monitoring service in production
+    // Example: errorReportingService.captureException(error, { extra: errorInfo });
   }
 
-  handleReset() {
-    const { onReset } = this.props;
-    
-    this.setState({ hasError: false, error: null });
-    
-    if (onReset) {
-      onReset();
-    } else {
-      window.location.reload();
-    }
-  }
+  resetError = () => {
+    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+  };
 
   render() {
-    const { hasError, error } = this.state;
-    const { children, fallback } = this.props;
-    
-    if (!hasError) {
-      return children;
+    if (this.state.hasError) {
+      const FallbackComponent = this.props.fallback || DefaultErrorFallback;
+      return (
+        <FallbackComponent 
+          error={this.state.error} 
+          resetError={this.resetError}
+        />
+      );
     }
-    
-    if (fallback) {
-      return fallback;
-    }
 
-    // Animation variants for the error UI elements
-    const containerVariants = {
-      hidden: { opacity: 0 },
-      visible: {
-        opacity: 1,
-        transition: {
-          when: "beforeChildren",
-          staggerChildren: 0.2
-        }
-      }
-    };
-
-    const itemVariants = {
-      hidden: { y: 20, opacity: 0 },
-      visible: { y: 0, opacity: 1, transition: { duration: 0.5 } }
-    };
-
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-50">
-        <motion.div
-          className="w-full max-w-2xl px-4"
-          initial="hidden"
-          animate="visible"
-          variants={containerVariants}
-        >
-          <motion.div variants={itemVariants}>
-            <StateDisplay 
-              label="Application Error" 
-              state="error" 
-              size="lg"
-            />
-          </motion.div>
-          
-          <motion.div variants={itemVariants} className="mt-4">
-            <Card 
-              title={
-                <div className="flex items-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-error mr-2"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                    />
-                  </svg>
-                  <span>Something went wrong</span>
-                </div>
-              }
-              footer={
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    onClick={this.handleReset}
-                    variant="primary"
-                    leftIcon={
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                        />
-                      </svg>
-                    }
-                    animationVariant="emphatic"
-                  >
-                    Try Again
-                  </Button>
-                </div>
-              }
-            >
-              <div className="space-y-4">
-                <p className="text-neutral-600">
-                  We apologize for the inconvenience. The application encountered an unexpected error.
-                </p>
-
-                {error && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    transition={{ duration: 0.3, delay: 0.5 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="text-sm font-medium text-neutral-700 mb-1">Error details:</div>
-                    <pre className="bg-neutral-100 border border-neutral-200 p-3 rounded text-xs text-neutral-800 max-w-full overflow-x-auto">
-                      {error.message || 'Unknown error'}
-                      {error.stack && (
-                        <>
-                          <br />
-                          <br />
-                          {error.stack.split('\n').slice(1, 4).join('\n')}
-                        </>
-                      )}
-                    </pre>
-                  </motion.div>
-                )}
-              </div>
-            </Card>
-          </motion.div>
-        </motion.div>
-      </div>
-    );
+    return this.props.children;
   }
 }
-
-export default ErrorBoundary;

@@ -11,6 +11,7 @@ import {
   retryWithAuth,
   addAuthHeaders
 } from './client-utils';
+import { IApiClient } from '@/api/interfaces';
 
 /**
  * Interface for API client options
@@ -21,9 +22,9 @@ export interface ApiClientOptions extends BaseApiClientOptions {}
 export { ApiError, TimeoutError };
 
 /**
- * API client with authentication and error handling
+ * API client implementation
  */
-export const apiClient = {
+class ApiClientImpl implements IApiClient {
   /**
    * Send GET request
    */
@@ -39,7 +40,7 @@ export const apiClient = {
       const response = await fetchWithTimeout<TApiSuccessResponse<T>>(url, requestOptions);
       return response.data;
     });
-  },
+  }
 
   /**
    * Send POST request
@@ -57,7 +58,7 @@ export const apiClient = {
       const response = await fetchWithTimeout<TApiSuccessResponse<T>>(url, requestOptions);
       return response.data;
     });
-  },
+  }
 
   /**
    * Send PUT request
@@ -75,7 +76,7 @@ export const apiClient = {
       const response = await fetchWithTimeout<TApiSuccessResponse<T>>(url, requestOptions);
       return response.data;
     });
-  },
+  }
 
   /**
    * Send DELETE request
@@ -92,7 +93,7 @@ export const apiClient = {
       const response = await fetchWithTimeout<TApiSuccessResponse<T>>(url, requestOptions);
       return response.data;
     });
-  },
+  }
 
   /**
    * Upload file
@@ -120,4 +121,10 @@ export const apiClient = {
       return response.data;
     });
   }
-};
+}
+
+// Create client instance
+const apiClientInstance = new ApiClientImpl();
+
+// Export the client interface, not implementation
+export const apiClient: IApiClient = apiClientInstance;

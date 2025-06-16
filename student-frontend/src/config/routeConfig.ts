@@ -1,202 +1,264 @@
 /**
  * @file routeConfig.ts
- * @description Centralized route configuration with security definitions
+ * @description Route-based security configuration for the LMS student frontend
  */
 
 import { UserType } from '@shared/types/api.types';
 import { RouteAccess } from '@/types/security.types';
 
 /**
- * Route security configuration
+ * Route security configuration mapping
  */
-export const ROUTE_SECURITY_CONFIG: Record<string, RouteAccess> = {
+const ROUTE_SECURITY_CONFIG: Record<string, RouteAccess> = {
   // Public routes (no authentication required)
+  '/': {
+    allowedUserTypes: [],
+    requiresAuth: false,
+    isPublic: true,
+  },
   '/login': {
     allowedUserTypes: [],
     requiresAuth: false,
-    isPublic: true
+    isPublic: true,
   },
   '/forgot-password': {
     allowedUserTypes: [],
     requiresAuth: false,
-    isPublic: true
+    isPublic: true,
   },
   '/reset-password': {
     allowedUserTypes: [],
     requiresAuth: false,
-    isPublic: true
+    isPublic: true,
+  },
+  '/help': {
+    allowedUserTypes: [],
+    requiresAuth: false,
+    isPublic: true,
+  },
+  '/privacy': {
+    allowedUserTypes: [],
+    requiresAuth: false,
+    isPublic: true,
+  },
+  '/terms': {
+    allowedUserTypes: [],
+    requiresAuth: false,
+    isPublic: true,
   },
 
-  // Student-only protected routes
+  // Student-only routes
   '/dashboard': {
     allowedUserTypes: [UserType.STUDENT],
     requiresAuth: true,
-    requiredPermissions: ['dashboard:view']
+    requiredPermissions: ['dashboard:view'],
   },
   '/profile': {
     allowedUserTypes: [UserType.STUDENT],
     requiresAuth: true,
-    requiredPermissions: ['profile:view']
+    requiredPermissions: ['profile:view'],
   },
   '/profile/edit': {
     allowedUserTypes: [UserType.STUDENT],
     requiresAuth: true,
-    requiredPermissions: ['profile:edit']
+    requiredPermissions: ['profile:edit'],
   },
-  
-  // Course-related routes
   '/courses': {
     allowedUserTypes: [UserType.STUDENT],
     requiresAuth: true,
-    requiredPermissions: ['courses:view']
+    requiredPermissions: ['courses:view'],
   },
   '/courses/:id': {
     allowedUserTypes: [UserType.STUDENT],
     requiresAuth: true,
-    requiredPermissions: ['courses:view']
+    requiredPermissions: ['courses:view'],
   },
-  '/courses/:id/modules': {
+  '/courses/:id/lectures/:lectureId': {
     allowedUserTypes: [UserType.STUDENT],
     requiresAuth: true,
-    requiredPermissions: ['courses:view', 'modules:view']
+    requiredPermissions: ['courses:view', 'lectures:view'],
   },
-  '/courses/:id/assignments': {
-    allowedUserTypes: [UserType.STUDENT],
-    requiresAuth: true,
-    requiredPermissions: ['courses:view', 'assignments:view']
-  },
-  '/courses/:id/quizzes': {
-    allowedUserTypes: [UserType.STUDENT],
-    requiresAuth: true,
-    requiredPermissions: ['courses:view', 'quizzes:view']
-  },
-
-  // Assignment routes
   '/assignments': {
     allowedUserTypes: [UserType.STUDENT],
     requiresAuth: true,
-    requiredPermissions: ['assignments:view']
+    requiredPermissions: ['assignments:view'],
   },
   '/assignments/:id': {
     allowedUserTypes: [UserType.STUDENT],
     requiresAuth: true,
-    requiredPermissions: ['assignments:view']
+    requiredPermissions: ['assignments:view'],
   },
-  '/assignments/:id/submit': {
-    allowedUserTypes: [UserType.STUDENT],
-    requiresAuth: true,
-    requiredPermissions: ['assignments:submit']
-  },
-
-  // Quiz routes
   '/quizzes': {
     allowedUserTypes: [UserType.STUDENT],
     requiresAuth: true,
-    requiredPermissions: ['quizzes:view']
+    requiredPermissions: ['quizzes:view'],
   },
   '/quizzes/:id': {
     allowedUserTypes: [UserType.STUDENT],
     requiresAuth: true,
-    requiredPermissions: ['quizzes:view']
+    requiredPermissions: ['quizzes:take'],
   },
-  '/quizzes/:id/attempt': {
-    allowedUserTypes: [UserType.STUDENT],
-    requiresAuth: true,
-    requiredPermissions: ['quizzes:attempt']
-  },
-
-  // Grade routes
   '/grades': {
     allowedUserTypes: [UserType.STUDENT],
     requiresAuth: true,
-    requiredPermissions: ['grades:view']
+    requiredPermissions: ['grades:view'],
   },
-
-  // Notification routes
   '/notifications': {
     allowedUserTypes: [UserType.STUDENT],
     requiresAuth: true,
-    requiredPermissions: ['notifications:view']
+    requiredPermissions: ['notifications:view'],
+  },
+  '/settings': {
+    allowedUserTypes: [UserType.STUDENT],
+    requiresAuth: true,
+    requiredPermissions: ['profile:view'],
   },
 
-  // Error pages (accessible to all authenticated users)
+  // Error and utility routes
   '/unauthorized': {
-    allowedUserTypes: [UserType.STUDENT, UserType.TEACHER, UserType.TENANT_ADMIN, UserType.SUPER_ADMIN],
-    requiresAuth: false
+    allowedUserTypes: [],
+    requiresAuth: false,
+    isPublic: true,
   },
-  '/404': {
-    allowedUserTypes: [UserType.STUDENT, UserType.TEACHER, UserType.TENANT_ADMIN, UserType.SUPER_ADMIN],
-    requiresAuth: false
-  }
+  '/not-found': {
+    allowedUserTypes: [],
+    requiresAuth: false,
+    isPublic: true,
+  },
+  '/server-error': {
+    allowedUserTypes: [],
+    requiresAuth: false,
+    isPublic: true,
+  },
 };
 
 /**
- * Default permissions for student users
+ * Default route configuration for routes not explicitly defined
  */
-export const DEFAULT_STUDENT_PERMISSIONS = [
-  'dashboard:view',
-  'profile:view',
-  'profile:edit',
-  'courses:view',
-  'modules:view',
-  'assignments:view',
-  'assignments:submit',
-  'quizzes:view',
-  'quizzes:attempt',
-  'grades:view',
-  'notifications:view'
-];
+const DEFAULT_ROUTE_CONFIG: RouteAccess = {
+  allowedUserTypes: [UserType.STUDENT],
+  requiresAuth: true,
+  requiredPermissions: [],
+};
 
 /**
- * Get route security configuration
+ * Get security configuration for a specific route
+ * @param path - The route path to check
+ * @returns Route access configuration
  */
-export const getRouteSecurityConfig = (path: string): RouteAccess | null => {
-  // Direct match first
+export const getRouteSecurityConfig = (path: string): RouteAccess => {
+  // Exact match first
   if (ROUTE_SECURITY_CONFIG[path]) {
     return ROUTE_SECURITY_CONFIG[path];
   }
 
-  // Pattern matching for dynamic routes
-  for (const [pattern, config] of Object.entries(ROUTE_SECURITY_CONFIG)) {
-    if (pattern.includes(':')) {
-      const regex = new RegExp('^' + pattern.replace(/:[^/]+/g, '[^/]+') + '$');
-      if (regex.test(path)) {
-        return config;
-      }
+  // Check for parameterized routes
+  const normalizedPath = normalizePath(path);
+  for (const [configPath, config] of Object.entries(ROUTE_SECURITY_CONFIG)) {
+    if (matchesParameterizedRoute(normalizedPath, configPath)) {
+      return config;
     }
   }
 
-  return null;
+  // Return default configuration
+  return DEFAULT_ROUTE_CONFIG;
 };
 
 /**
- * Check if route requires authentication
+ * Normalize path by removing query parameters and hash
+ * @param path - Original path
+ * @returns Normalized path
  */
-export const routeRequiresAuth = (path: string): boolean => {
-  const config = getRouteSecurityConfig(path);
-  return config ? config.requiresAuth : true; // Default to requiring auth
+const normalizePath = (path: string): string => {
+  return path.split('?')[0]?.split('#')[0] || path;
 };
 
 /**
- * Check if route is public
+ * Check if a path matches a parameterized route pattern
+ * @param actualPath - The actual route path
+ * @param configPath - The configured route pattern (with :param syntax)
+ * @returns Whether the paths match
+ */
+const matchesParameterizedRoute = (actualPath: string, configPath: string): boolean => {
+  // Convert route pattern to regex
+  const regexPattern = configPath
+    .replace(/:[^/]+/g, '[^/]+') // Replace :param with [^/]+
+    .replace(/\//g, '\\/'); // Escape forward slashes
+
+  const regex = new RegExp(`^${regexPattern}$`);
+  return regex.test(actualPath);
+};
+
+/**
+ * Get all available route patterns
+ * @returns Array of configured route patterns
+ */
+export const getAvailableRoutes = (): string[] => {
+  return Object.keys(ROUTE_SECURITY_CONFIG);
+};
+
+/**
+ * Check if a route is public (no authentication required)
+ * @param path - The route path to check
+ * @returns Whether the route is public
  */
 export const isPublicRoute = (path: string): boolean => {
   const config = getRouteSecurityConfig(path);
-  return config ? config.isPublic === true : false;
+  return config.isPublic === true;
 };
 
 /**
- * Get allowed user types for route
+ * Get required permissions for a route
+ * @param path - The route path to check
+ * @returns Array of required permission strings
+ */
+export const getRoutePermissions = (path: string): string[] => {
+  const config = getRouteSecurityConfig(path);
+  return config.requiredPermissions || [];
+};
+
+/**
+ * Get allowed user types for a route
+ * @param path - The route path to check
+ * @returns Array of allowed user types
  */
 export const getAllowedUserTypes = (path: string): UserType[] => {
   const config = getRouteSecurityConfig(path);
-  return config ? config.allowedUserTypes : [];
+  return config.allowedUserTypes;
 };
 
 /**
- * Get required permissions for route
+ * Student-specific route patterns for validation
  */
-export const getRequiredPermissions = (path: string): string[] => {
+export const STUDENT_ROUTE_PATTERNS = [
+  '/dashboard',
+  '/profile',
+  '/courses',
+  '/assignments',
+  '/quizzes',
+  '/grades',
+  '/notifications',
+  '/settings',
+];
+
+/**
+ * Check if a route is intended for students
+ * @param path - The route path to check
+ * @returns Whether the route is for students
+ */
+export const isStudentRoute = (path: string): boolean => {
+  const normalizedPath = normalizePath(path);
+  return STUDENT_ROUTE_PATTERNS.some(pattern => 
+    normalizedPath.startsWith(pattern)
+  );
+};
+
+/**
+ * Check if a route requires authentication
+ * @param path - The route path to check
+ * @returns Whether the route requires authentication
+ */
+export const routeRequiresAuth = (path: string): boolean => {
   const config = getRouteSecurityConfig(path);
-  return config ? config.requiredPermissions || [] : [];
+  return config.requiresAuth;
 };

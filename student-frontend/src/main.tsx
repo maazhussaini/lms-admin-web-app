@@ -29,7 +29,7 @@ if (!securityUtils.isSecureContext()) {
   console.warn('Application is not running in a secure context (HTTPS). Token security may be compromised.');
 }
 
-// Initialize the API system with interceptors and logging
+// Initialize the API system with interceptors and auth provider
 initializeApi();
 
 createRoot(document.getElementById('root')!).render(

@@ -5,35 +5,18 @@
  */
 
 import { jwtDecode } from 'jwt-decode';
-import { apiClient } from '@/api/client';
-import { TRefreshTokenResponse } from '@shared/types/api.types';
+import { 
+  ITokenManager, 
+  DecodedToken, 
+  SecurityLevel, 
+  TokenStorageConfig 
+} from '@/types/auth.types';
 
 // Storage keys
 const ACCESS_TOKEN_KEY = 'student_access_token';
 const REFRESH_TOKEN_KEY = 'student_refresh_token';
 const TOKEN_EXPIRY_KEY = 'student_token_expiry';
 const STORAGE_CONFIG_KEY = 'student_storage_config';
-
-/**
- * Storage strategy types
- */
-export type StorageStrategy = 'localStorage' | 'sessionStorage' | 'memory';
-
-/**
- * Security level configuration
- */
-export type SecurityLevel = 'low' | 'medium' | 'high';
-
-/**
- * Token storage configuration
- */
-export interface TokenStorageConfig {
-  strategy: StorageStrategy;
-  securityLevel: SecurityLevel;
-  encryptTokens: boolean;
-  autoCleanup: boolean;
-  maxAge?: number; // in milliseconds
-}
 
 /**
  * Default storage configuration
@@ -45,20 +28,6 @@ const DEFAULT_CONFIG: TokenStorageConfig = {
   autoCleanup: true,
   maxAge: 24 * 60 * 60 * 1000, // 24 hours
 };
-
-// Token structure interface for type safety
-interface DecodedToken {
-  exp: number;
-  iat: number;
-  id: number;
-  email: string;
-  tenantId: number;
-  role: string;
-  user_type: string;
-  permissions?: string[];
-  type: 'access' | 'refresh';
-  [key: string]: any;
-}
 
 /**
  * In-memory storage for high security mode
@@ -333,6 +302,166 @@ class StorageManager {
   }
 }
 
+/**
+ * Token manager implementation
+ */
+class TokenManager implements ITokenManager {
+  private storageManager: StorageManager;
+
+  constructor(config: TokenStorageConfig = DEFAULT_CONFIG) {
+    this.storageManager = new StorageManager(config);
+  }
+
+  async storeAccessToken(token: string, expiresIn: number): Promise<void> {
+    await this.storageManager.setItem(ACCESS_TOKEN_KEY, token);
+    
+    // Calculate and store token expiry timestamp
+    const expiryTime = Date.now() + expiresIn * 1000;
+    await this.storageManager.setItem(TOKEN_EXPIRY_KEY, expiryTime.toString());
+  }
+
+  async storeRefreshToken(token: string): Promise<void> {
+    await this.storageManager.setItem(REFRESH_TOKEN_KEY, token);
+  }
+
+  async getAccessToken(): Promise<string | null> {
+    return await this.storageManager.getItem(ACCESS_TOKEN_KEY);
+  }
+
+  async getRefreshToken(): Promise<string | null> {
+    return await this.storageManager.getItem(REFRESH_TOKEN_KEY);
+  }
+
+  async isTokenValid(): Promise<boolean> {
+    const token = await this.getAccessToken();
+    if (!token) return false;
+    
+    try {
+      const decoded = jwtDecode<DecodedToken>(token);
+      const currentTime = Date.now() / 1000;
+      
+      // Check if token has expired
+      if (decoded.exp < currentTime) {
+        return false;
+      }
+      
+      // Verify this is an access token, not a refresh token
+      if (decoded.type !== 'access') {
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return false;
+    }
+  }
+
+  async isTokenExpiringSoon(thresholdSeconds = 300): Promise<boolean> {
+    const token = await this.getAccessToken();
+    if (!token) return false;
+    
+    try {
+      const decoded = jwtDecode<DecodedToken>(token);
+      const currentTime = Date.now() / 1000;
+      const timeUntilExpiry = decoded.exp - currentTime;
+      
+      return timeUntilExpiry > 0 && timeUntilExpiry <= thresholdSeconds;
+    } catch (error) {
+      console.error('Error checking token expiry:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Refresh token using external refresh function
+   * This breaks the circular dependency by accepting a refresh function
+   */
+  async refreshToken(refreshFn?: () => Promise<{ success: boolean; error?: string }>): Promise<{ success: boolean; error?: string }> {
+    if (!refreshFn) {
+      return { success: false, error: 'No refresh function provided' };
+    }
+
+    try {
+      return await refreshFn();
+    } catch (error) {
+      console.error('Failed to refresh token:', error);
+      await this.clearTokens();
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error refreshing token'
+      };
+    }
+  }
+
+  async clearTokens(): Promise<void> {
+    this.storageManager.clear();
+  }
+
+  /**
+   * Decode access token without verification
+   * @warning This does not verify the token signature, only decodes the payload
+   * @returns Decoded token payload or null if invalid
+   */
+  async decodeToken(): Promise<DecodedToken | null> {
+    const token = await this.getAccessToken();
+    if (!token) return null;
+    
+    try {
+      return jwtDecode<DecodedToken>(token);
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get permissions from the current token
+   * @returns Array of permission strings or empty array if none
+   */
+  async getTokenPermissions(): Promise<string[]> {
+    const decoded = await this.decodeToken();
+    return decoded?.permissions || [];
+  }
+
+  /**
+   * Extract user ID from token
+   * @returns User ID from token or null if not found
+   */
+  async getUserIdFromToken(): Promise<number | null> {
+    const decoded = await this.decodeToken();
+    return decoded?.id || null;
+  }
+
+  /**
+   * Extract tenant ID from token
+   * @returns Tenant ID from token or null if not found
+   */
+  async getTenantIdFromToken(): Promise<number | null> {
+    const decoded = await this.decodeToken();
+    return decoded?.tenantId || null;
+  }
+
+  /**
+   * Get token remaining time in seconds
+   * @returns Seconds until token expires or 0 if expired/invalid
+   */
+  async getTokenRemainingTime(): Promise<number> {
+    const token = await this.getAccessToken();
+    if (!token) return 0;
+    
+    try {
+      const decoded = jwtDecode<DecodedToken>(token);
+      const currentTime = Date.now() / 1000;
+      const remaining = decoded.exp - currentTime;
+      
+      return remaining > 0 ? Math.floor(remaining) : 0;
+    } catch (error) {
+      return 0;
+    }
+  }
+}
+
 // Global storage manager instance
 let storageManager = new StorageManager();
 
@@ -365,161 +494,52 @@ export const initializeTokenStorage = (): void => {
   }
 };
 
-/**
- * Store access token in configured storage
- * @param token Access token string
- * @param expiresIn Expiration time in seconds
- */
-export const storeAccessToken = async (token: string, expiresIn: number): Promise<void> => {
-  await storageManager.setItem(ACCESS_TOKEN_KEY, token);
-  
-  // Calculate and store token expiry timestamp
-  const expiryTime = Date.now() + expiresIn * 1000;
-  await storageManager.setItem(TOKEN_EXPIRY_KEY, expiryTime.toString());
-};
+// Create default token manager instance
+const defaultTokenManager = new TokenManager();
 
 /**
- * Store refresh token in configured storage
- * @param token Refresh token string
+ * Export factory function instead of direct instance
  */
-export const storeRefreshToken = async (token: string): Promise<void> => {
-  await storageManager.setItem(REFRESH_TOKEN_KEY, token);
+export const createTokenManager = (config?: TokenStorageConfig): ITokenManager => {
+  return new TokenManager(config);
 };
 
-/**
- * Get access token from configured storage
- * @returns Access token string or null if not found
- */
-export const getAccessToken = async (): Promise<string | null> => {
-  return await storageManager.getItem(ACCESS_TOKEN_KEY);
-};
+// Export functions that use the default instance
+export const storeAccessToken = (token: string, expiresIn: number) => 
+  defaultTokenManager.storeAccessToken(token, expiresIn);
 
-/**
- * Get refresh token from configured storage
- * @returns Refresh token string or null if not found
- */
-export const getRefreshToken = async (): Promise<string | null> => {
-  return await storageManager.getItem(REFRESH_TOKEN_KEY);
-};
+export const storeRefreshToken = (token: string) => 
+  defaultTokenManager.storeRefreshToken(token);
 
-/**
- * Get token expiration timestamp
- * @returns Expiration timestamp or null if not found
- */
-export const getTokenExpiry = async (): Promise<number | null> => {
-  const expiry = await storageManager.getItem(TOKEN_EXPIRY_KEY);
-  return expiry ? parseInt(expiry, 10) : null;
-};
+export const getAccessToken = () => 
+  defaultTokenManager.getAccessToken();
 
-/**
- * Check if access token is valid and not expired
- * @returns Boolean indicating if token is valid
- */
-export const isTokenValid = async (): Promise<boolean> => {
-  const token = await getAccessToken();
-  if (!token) return false;
-  
-  try {
-    const decoded = jwtDecode<DecodedToken>(token);
-    const currentTime = Date.now() / 1000;
-    
-    // Check if token has expired
-    if (decoded.exp < currentTime) {
-      return false;
-    }
-    
-    // Verify this is an access token, not a refresh token
-    if (decoded.type !== 'access') {
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Error decoding token:', error);
-    return false;
-  }
-};
+export const getRefreshToken = () => 
+  defaultTokenManager.getRefreshToken();
 
-/**
- * Check if token is about to expire within the given threshold
- * @param thresholdSeconds Time in seconds to consider token as about to expire
- * @returns Boolean indicating if token needs refresh
- */
-export const isTokenExpiringSoon = async (thresholdSeconds = 300): Promise<boolean> => {
-  const token = await getAccessToken();
-  if (!token) return false;
-  
-  try {
-    const decoded = jwtDecode<DecodedToken>(token);
-    const currentTime = Date.now() / 1000;
-    const timeUntilExpiry = decoded.exp - currentTime;
-    
-    return timeUntilExpiry > 0 && timeUntilExpiry <= thresholdSeconds;
-  } catch (error) {
-    console.error('Error checking token expiry:', error);
-    return false;
-  }
-};
+export const isTokenValid = () => 
+  defaultTokenManager.isTokenValid();
 
-/**
- * Decode access token without verification
- * @warning This does not verify the token signature, only decodes the payload
- * @returns Decoded token payload or null if invalid
- */
-export const decodeToken = async (): Promise<DecodedToken | null> => {
-  const token = await getAccessToken();
-  if (!token) return null;
-  
-  try {
-    return jwtDecode<DecodedToken>(token);
-  } catch (error) {
-    console.error('Error decoding token:', error);
-    return null;
-  }
-};
+export const isTokenExpiringSoon = (thresholdSeconds?: number) => 
+  defaultTokenManager.isTokenExpiringSoon(thresholdSeconds);
 
-/**
- * Refresh the access token using refresh token
- * @returns Object containing success status and optional error message
- */
-export const refreshToken = async (): Promise<{ success: boolean; error?: string }> => {
-  const refreshToken = await getRefreshToken();
-  
-  if (!refreshToken) {
-    return { success: false, error: 'No refresh token available' };
-  }
-  
-  try {
-    // Call the API to refresh the token
-    const response = await apiClient.post<TRefreshTokenResponse>(
-      '/auth/student/refresh',
-      { refreshToken },
-      { withAuth: false }
-    );
-    
-    // Store the new access token
-    await storeAccessToken(response.access_token, response.expires_in);
-    
-    return { success: true };
-  } catch (error) {
-    console.error('Failed to refresh token:', error);
-    
-    // Clear tokens on refresh failure
-    await clearTokens();
-    
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error refreshing token'
-    };
-  }
-};
+export const clearTokens = () => 
+  defaultTokenManager.clearTokens();
 
-/**
- * Clear all authentication tokens from storage
- */
-export const clearTokens = async (): Promise<void> => {
-  storageManager.clear();
-};
+export const decodeToken = () => 
+  defaultTokenManager.decodeToken();
+
+export const getTokenPermissions = () => 
+  defaultTokenManager.getTokenPermissions();
+
+export const getUserIdFromToken = () => 
+  defaultTokenManager.getUserIdFromToken();
+
+export const getTenantIdFromToken = () => 
+  defaultTokenManager.getTenantIdFromToken();
+
+export const getTokenRemainingTime = () => 
+  defaultTokenManager.getTokenRemainingTime();
 
 /**
  * Initialize token refresh interceptor
@@ -533,9 +553,9 @@ export const initTokenRefreshInterceptor = (
   const intervalId = window.setInterval(async () => {
     if (await isTokenExpiringSoon()) {
       console.log('Token is expiring soon, refreshing...');
-      const result = await refreshToken();
-      
-      if (result.success && refreshCallback) {
+      // Note: This would need to be connected to the actual refresh function
+      // from the auth service when the system is properly wired up
+      if (refreshCallback) {
         refreshCallback();
       }
     }
@@ -547,52 +567,6 @@ export const initTokenRefreshInterceptor = (
       window.clearInterval(intervalId);
     }
   };
-};
-
-/**
- * Get permissions from the current token
- * @returns Array of permission strings or empty array if none
- */
-export const getTokenPermissions = async (): Promise<string[]> => {
-  const decoded = await decodeToken();
-  return decoded?.permissions || [];
-};
-
-/**
- * Extract user ID from token
- * @returns User ID from token or null if not found
- */
-export const getUserIdFromToken = async (): Promise<number | null> => {
-  const decoded = await decodeToken();
-  return decoded?.id || null;
-};
-
-/**
- * Extract tenant ID from token
- * @returns Tenant ID from token or null if not found
- */
-export const getTenantIdFromToken = async (): Promise<number | null> => {
-  const decoded = await decodeToken();
-  return decoded?.tenantId || null;
-};
-
-/**
- * Get token remaining time in seconds
- * @returns Seconds until token expires or 0 if expired/invalid
- */
-export const getTokenRemainingTime = async (): Promise<number> => {
-  const token = await getAccessToken();
-  if (!token) return 0;
-  
-  try {
-    const decoded = jwtDecode<DecodedToken>(token);
-    const currentTime = Date.now() / 1000;
-    const remaining = decoded.exp - currentTime;
-    
-    return remaining > 0 ? Math.floor(remaining) : 0;
-  } catch (error) {
-    return 0;
-  }
 };
 
 /**
