@@ -6,19 +6,17 @@
 import React, { useState, useEffect } from 'react';
 import { 
   apiClient, 
-  apiClientWithMeta, 
-  apiPatterns, 
-  PaginatedResponseResult,
-  interceptorManager,
-  commonInterceptors,
-  ApiError
+  apiClientWithMeta
 } from '@/api';
+import { PaginatedResponseResult } from '@/api/response-utils';
+import { interceptorManager, commonInterceptors } from '@/api/interceptors';
+import { ApiError } from '@/types/auth.types';
 import { 
   useApiList, 
   useApiCreate, 
   useApiDelete 
 } from '@/hooks/useApi';
-import { ApiErrorBoundary } from '@/components/APIErrorBoundary/ApiErrorBoundary';
+import { ApiErrorBoundary } from '@/components/common/APIErrorBoundary/ApiErrorBoundary';
 
 // Example types (replace with your actual types)
 interface Course {
@@ -52,7 +50,7 @@ export const BasicApiExample: React.FC = () => {
       // Using the original API client - just returns data
       const courseData = await apiClient.get<Course>(`/courses/${courseId}`);
       setCourse(courseData);
-    } catch (err) {
+    } catch (err: unknown) {
       if (err instanceof ApiError) {
         setError(err.message);
         console.log('Error details:', {
@@ -140,7 +138,7 @@ export const EnhancedApiExample: React.FC = () => {
 };
 
 /**
- * Example 3: Paginated Data with API Patterns
+ * Example 3: Paginated Data with Enhanced Client
  */
 export const PaginatedApiExample: React.FC = () => {
   const [paginatedData, setPaginatedData] = useState<PaginatedResponseResult<Course> | null>(null);
@@ -151,13 +149,15 @@ export const PaginatedApiExample: React.FC = () => {
     setLoading(true);
     
     try {
-      // Using API patterns for common operations
-      const result = await apiPatterns.getList<Course>('/courses', {
-        page,
-        limit: 10,
+      // Using enhanced client for paginated data
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: '10',
         sortBy: 'createdAt',
         order: 'desc'
       });
+      
+      const result = await apiClientWithMeta.getPaginated<Course>(`/courses?${queryParams}`);
       
       setPaginatedData(result);
       setCurrentPage(page);
@@ -435,13 +435,7 @@ export const InterceptorExample: React.FC = () => {
  */
 export const ApiUsageExamples: React.FC = () => {
   return (
-    <ApiErrorBoundary
-      enableRetry={true}
-      maxRetries={3}
-      onError={(error, errorInfo) => {
-        console.error('API Error in examples:', error, errorInfo);
-      }}
-    >
+    <ApiErrorBoundary>
       <div className="container mx-auto p-4">
         <h1 className="text-2xl font-bold mb-6">Enhanced API Usage Examples</h1>
         
