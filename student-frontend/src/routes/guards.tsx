@@ -1,77 +1,54 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { UserType } from '@shared/types/api.types';
+import { UserTypeGuards, SecurityManager } from '@/utils/securityUtils';
 import { 
-  UserTypeGuards, 
-  SecurityValidators,
-  securityManager,
-  RouteProtection
-} from '@/utils/securityUtils';
-import { 
-  getAllowedUserTypes, 
-  getRequiredPermissions,
-  isPublicRoute,
-  routeRequiresAuth
+  isPublicRoute, 
+  getAllowedUserTypes,
+  getRoutePermissions 
 } from '@/config/routeConfig';
 
 /**
- * Properties for the AuthGuard component
+ * Loading component for guard checks
  */
-interface AuthGuardProps {
-  requiredPermissions?: string[];
-  allowedUserTypes?: UserType[];
-  requiresAuth?: boolean;
-}
+const GuardLoading: React.FC<{ message?: string }> = ({ message = "Loading..." }) => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+      <p className="mt-4 text-gray-600">{message}</p>
+    </div>
+  </div>
+);
 
 /**
- * Enhanced guard for protected routes with comprehensive security checks
+ * Enhanced student guard with comprehensive security checks
+ * - Handles authentication check  
+ * - Validates user is a student
+ * - Checks route-specific permissions
+ * - Sets up security context
+ * - Manages session validation
  */
-export const AuthGuard: React.FC<AuthGuardProps> = ({ 
-  requiredPermissions = [], 
-  allowedUserTypes = [],
-  requiresAuth = true 
-}) => {
-  const { isAuthenticated, isLoading, permissions, user } = useAuth();
+export const StudentGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading, user, permissions } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [securityCheck, setSecurityCheck] = useState<'pending' | 'passed' | 'failed'>('pending');
 
   useEffect(() => {
     const performSecurityCheck = async () => {
-      // Only check after loading is complete
-      if (isLoading) {
-        return;
-      }
+      if (isLoading) return;
 
       try {
         const currentPath = location.pathname;
         
-        // Get route-specific security configuration
-        const isPublic = isPublicRoute(currentPath);
-        const needsAuth = routeRequiresAuth(currentPath);
-        const routeAllowedTypes = getAllowedUserTypes(currentPath);
-        const routeRequiredPermissions = getRequiredPermissions(currentPath);
-
-        // Merge props with route config (props take precedence)
-        const finalRequiredPermissions = requiredPermissions.length > 0 
-          ? requiredPermissions 
-          : routeRequiredPermissions;
-        const finalAllowedUserTypes = allowedUserTypes.length > 0 
-          ? allowedUserTypes 
-          : routeAllowedTypes;
-        const finalRequiresAuth = requiresAuth !== undefined 
-          ? requiresAuth 
-          : needsAuth;
-
-        // Public routes - allow access
-        if (isPublic) {
+        // Check if route is public (shouldn't be for StudentGuard, but safety check)
+        if (isPublicRoute(currentPath)) {
           setSecurityCheck('passed');
           return;
         }
 
         // Authentication check
-        if (finalRequiresAuth && !isAuthenticated) {
+        if (!isAuthenticated) {
           navigate('/login', { 
             replace: true, 
             state: { returnUrl: currentPath + location.search } 
@@ -81,219 +58,128 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
         }
 
         // User type validation
-        if (isAuthenticated && user) {
-          // Verify user is a student (this is student frontend)
-          if (!UserTypeGuards.isStudent(user.user_type)) {
-            console.error('Non-student user attempted to access student portal:', {
-              userType: user.user_type,
-              userId: user.id,
+        if (!user || !UserTypeGuards.isStudent(user.user_type)) {
+          console.warn('Non-student user attempting to access student portal:', user?.user_type);
+          navigate('/unauthorized', { replace: true });
+          setSecurityCheck('failed');
+          return;
+        }
+
+        // Route-specific security checks
+        const routeAllowedTypes = getAllowedUserTypes(currentPath);
+        const routeRequiredPermissions = getRoutePermissions(currentPath);
+
+        // Check allowed user types for this route
+        if (routeAllowedTypes.length > 0 && !routeAllowedTypes.includes(user.user_type)) {
+          console.warn('User type not allowed for route:', {
+            userType: user.user_type,
+            allowedTypes: routeAllowedTypes,
+            path: currentPath
+          });
+          navigate('/unauthorized', { replace: true });
+          setSecurityCheck('failed');
+          return;
+        }
+
+        // Check required permissions for this route  
+        if (routeRequiredPermissions.length > 0) {
+          const hasRequiredPermissions = routeRequiredPermissions.every(
+            permission => permissions.includes(permission)
+          );
+          
+          if (!hasRequiredPermissions) {
+            console.warn('Insufficient permissions for route:', {
+              userPermissions: permissions,
+              requiredPermissions: routeRequiredPermissions,
               path: currentPath
             });
             navigate('/unauthorized', { replace: true });
             setSecurityCheck('failed');
             return;
           }
+        }
 
-          // Update security context
-          securityManager.setSecurityContext({
-            userType: user.user_type,
-            userId: user.id,
-            tenantId: user.tenant_id,
-            sessionId: `session_${user.id}_${Date.now()}`,
-            lastActivity: new Date()
+        // Set up security context for authenticated student
+        const securityManager = SecurityManager.getInstance();
+        securityManager.setSecurityContext({
+          userType: user.user_type,
+          userId: user.id,
+          tenantId: user.tenant_id,
+          sessionId: `session_${user.id}_${Date.now()}`,
+          lastActivity: new Date()
+        });
+
+        // Session validation
+        if (!securityManager.validateAndUpdateSession()) {
+          console.warn('Session expired or invalid');
+          navigate('/login', { 
+            replace: true, 
+            state: { returnUrl: currentPath + location.search } 
           });
-
-          // Check allowed user types if specified
-          if (finalAllowedUserTypes.length > 0) {
-            if (!SecurityValidators.isUserTypeAllowed(user.user_type, finalAllowedUserTypes)) {
-              console.warn('User type not allowed for route:', {
-                userType: user.user_type,
-                allowedTypes: finalAllowedUserTypes,
-                path: currentPath
-              });
-              navigate('/unauthorized', { replace: true });
-              setSecurityCheck('failed');
-              return;
-            }
-          }
-
-          // Check required permissions
-          if (finalRequiredPermissions.length > 0) {
-            if (!SecurityValidators.hasPermission(permissions, finalRequiredPermissions)) {
-              console.warn('Insufficient permissions for route:', {
-                userPermissions: permissions,
-                requiredPermissions: finalRequiredPermissions,
-                path: currentPath
-              });
-              navigate('/unauthorized', { replace: true });
-              setSecurityCheck('failed');
-              return;
-            }
-          }
-
-          // Session validation
-          if (!securityManager.validateAndUpdateSession()) {
-            console.warn('Session expired or invalid');
-            navigate('/login', { 
-              replace: true, 
-              state: { returnUrl: currentPath + location.search } 
-            });
-            setSecurityCheck('failed');
-            return;
-          }
+          setSecurityCheck('failed');
+          return;
         }
 
         setSecurityCheck('passed');
       } catch (error) {
         console.error('Security check failed:', error);
         setSecurityCheck('failed');
-        
-        // Redirect based on error type
-        const redirectPath = RouteProtection.getUnauthorizedRedirectPath(user?.user_type || null);
-        navigate(redirectPath, { replace: true });
+        navigate('/unauthorized', { replace: true });
       }
     };
 
     performSecurityCheck();
-  }, [
-    isAuthenticated, 
-    isLoading, 
-    navigate, 
-    location, 
-    permissions, 
-    requiredPermissions, 
-    allowedUserTypes, 
-    requiresAuth,
-    user
-  ]);
+  }, [isAuthenticated, isLoading, user, permissions, navigate, location]);
 
-  // Show loading while security check is pending
+  // Show loading while checking authentication
   if (isLoading || securityCheck === 'pending') {
-    return (
-      <div className="page-loading">
-        <div className="loading-spinner" />
-        <p>Verifying access...</p>
-      </div>
-    );
+    return <GuardLoading message="Verifying access..." />;
   }
 
-  // Security check failed - this should not render as useEffect handles redirect
+  // Security check failed
   if (securityCheck === 'failed') {
     return null;
   }
 
-  // Security check passed - render protected content
-  return <Outlet />;
+  // Render protected content - use children instead of Outlet since we're not using nested routes
+  return <>{children}</>;
 };
 
 /**
- * Enhanced guard for public routes - redirects to dashboard if already authenticated as student
+ * Simplified public-only guard that works with render props pattern
+ * - Redirects authenticated students to dashboard
  */
-export const PublicOnlyGuard: React.FC = () => {
+export const PublicOnlyGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated && user) {
-      // Verify this is a student user
+    if (isLoading) return;
+
+    if (isAuthenticated && user) {
       if (UserTypeGuards.isStudent(user.user_type)) {
-        // Get the return URL from location state or default to dashboard
+        // Get return URL or default to dashboard
         const state = location.state as { returnUrl?: string } | undefined;
         const returnUrl = state?.returnUrl || '/dashboard';
         navigate(returnUrl, { replace: true });
       } else {
-        // Non-student users should not be here
-        console.warn('Non-student user in student portal:', user.user_type);
+        // Non-student users shouldn't be here
         navigate('/unauthorized', { replace: true });
       }
     }
-  }, [isAuthenticated, isLoading, navigate, location, user]);
+  }, [isAuthenticated, isLoading, user, navigate, location]);
 
-  // Show loading while authentication check is in progress
+  // Show loading while checking
   if (isLoading) {
-    return (
-      <div className="page-loading">
-        <div className="loading-spinner" />
-        <p>Loading...</p>
-      </div>
-    );
+    return <GuardLoading />;
   }
 
   // Only render for non-authenticated users
   if (!isAuthenticated) {
-    return <Outlet />;
+    return <>{children}</>;
   }
 
-  // This should not actually render as the useEffect will redirect
+  // Authenticated users will be redirected
   return null;
-};
-
-/**
- * Enhanced layout guard - ensures consistent layout for protected routes with security context
- */
-export const LayoutGuard: React.FC<{ 
-  layout: React.ComponentType<{ children: React.ReactNode }> 
-}> = ({ layout: Layout }) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
-
-  useEffect(() => {
-    // Initialize session monitoring for authenticated users
-    if (isAuthenticated && user && UserTypeGuards.isStudent(user.user_type)) {
-      // Update security context
-      securityManager.setSecurityContext({
-        userType: user.user_type,
-        userId: user.id,
-        tenantId: user.tenant_id,
-        sessionId: `session_${user.id}_${Date.now()}`,
-        lastActivity: new Date()
-      });
-    }
-  }, [isAuthenticated, user]);
-
-  if (isLoading) {
-    return (
-      <div className="page-loading">
-        <div className="loading-spinner" />
-        <p>Loading...</p>
-      </div>
-    );
-  }
-
-  // Render the layout with child routes for authenticated students
-  if (isAuthenticated && user && UserTypeGuards.isStudent(user.user_type)) {
-    return (
-      <Layout>
-        <Outlet />
-      </Layout>
-    );
-  }
-
-  return null;
-};
-
-/**
- * Student-only guard - strict validation for student-specific routes
- */
-export const StudentOnlyGuard: React.FC<AuthGuardProps> = (props) => {
-  return (
-    <AuthGuard
-      {...props}
-      allowedUserTypes={[UserType.STUDENT]}
-      requiresAuth={true}
-    />
-  );
-};
-
-/**
- * Permission-based guard - validates specific permissions
- */
-export const PermissionGuard: React.FC<{ permissions: string[] }> = ({ permissions }) => {
-  return (
-    <AuthGuard
-      requiredPermissions={permissions}
-      allowedUserTypes={[UserType.STUDENT]}
-      requiresAuth={true}
-    />
-  );
 };

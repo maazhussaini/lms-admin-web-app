@@ -1,12 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { TAuthResponse, UserType } from '@shared/types/api.types';
 import { 
-  loginStudent, 
-  logoutStudent, 
   getStoredAuthData, 
   checkIsAuthenticated,
-  refreshAuthToken
+  clearAuthData
 } from '@/services/authService';
+import { apiEvents, API_EVENTS } from '@/api/interfaces';
 
 /**
  * Authentication context state interface
@@ -76,17 +75,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setPermissions(authData.permissions || []);
             setIsAuthenticated(true);
           } else {
-            // If auth data is missing but token is valid, refresh token
-            await refreshAuthToken();
-            const refreshedAuthData = await getStoredAuthData();
-            
-            if (refreshedAuthData) {
-              setUser(refreshedAuthData.user);
-              setPermissions(refreshedAuthData.permissions || []);
-              setIsAuthenticated(true);
-            } else {
-              setIsAuthenticated(false);
-            }
+            // If auth data is missing, clear everything
+            await clearAuthData();
+            setIsAuthenticated(false);
           }
         } else {
           setIsAuthenticated(false);
@@ -94,23 +85,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (err) {
         console.error('Auth initialization error:', err);
         setIsAuthenticated(false);
+        await clearAuthData();
       } finally {
         setIsLoading(false);
       }
     };
 
     initAuth();
+
+    // Listen for auth events to stay in sync
+    const handleAuthError = () => {
+      setIsAuthenticated(false);
+      setUser(null);
+      setPermissions([]);
+      setError('Authentication failed');
+    };
+
+    apiEvents.on(API_EVENTS.AUTH_ERROR, handleAuthError);
+
+    return () => {
+      apiEvents.off(API_EVENTS.AUTH_ERROR, handleAuthError);
+    };
   }, []);
 
   /**
-   * Login function
+   * Login function - uses dynamic import to avoid circular dependency
    */
   const login = async (email: string, password: string, tenantContext?: string) => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const authResponse = await loginStudent(email, password, tenantContext);
+      // Dynamic import to avoid circular dependency
+      const { getAuthService } = await import('@/api');
+      const authService = getAuthService();
+      const authResponse = await authService.login(email, password, tenantContext);
       
       // Verify this is a student account
       if (authResponse.user.user_type !== UserType.STUDENT) {
@@ -130,12 +139,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   /**
-   * Logout function
+   * Logout function - uses dynamic import to avoid circular dependency
    */
   const logout = async () => {
     try {
       setIsLoading(true);
-      await logoutStudent();
+      // Dynamic import to avoid circular dependency
+      const { getAuthService } = await import('@/api');
+      const authService = getAuthService();
+      await authService.logout();
     } catch (err) {
       console.error('Logout error:', err);
     } finally {

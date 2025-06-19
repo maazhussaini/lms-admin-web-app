@@ -1,3 +1,8 @@
+/**
+ * @file ErrorBoundary.tsx
+ * @description React Error Boundary component for graceful error handling with enhanced animations
+ */
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import Card from '@/components/common/Card';

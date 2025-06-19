@@ -113,11 +113,11 @@ const StateDisplay: React.FC<StateDisplayProps> = ({
     lg: 'text-base px-3 py-1.5',
   };
 
-  // Dot size classes
+  // Dot size classes - ensuring perfect circles with consistent sizing
   const dotSizeClasses = {
-    sm: 'w-1.5 h-1.5',
-    md: 'w-2 h-2',
-    lg: 'w-2.5 h-2.5',
+    sm: 'w-2 h-2 flex-shrink-0',
+    md: 'w-2.5 h-2.5 flex-shrink-0',
+    lg: 'w-3 h-3 flex-shrink-0',
   };
   
   // Animation variants based on animation prop
@@ -170,7 +170,7 @@ const StateDisplay: React.FC<StateDisplayProps> = ({
         <Spinner 
           size={spinnerSize} 
           variant={state === 'loading' ? 'primary' : 'neutral'} 
-          className="mr-1.5"
+          className="mr-1.5 flex-shrink-0"
           animation="spin"
           speed="fast"
         />
@@ -181,6 +181,7 @@ const StateDisplay: React.FC<StateDisplayProps> = ({
             ${currentState.dot} 
             rounded-full 
             mr-1.5
+            block
           `}
           animate={{ 
             scale: [1, 1.2, 1],

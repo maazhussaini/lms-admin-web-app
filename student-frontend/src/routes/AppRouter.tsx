@@ -4,11 +4,15 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { queryClient } from '@/store/queryClient';
 import { AuthProvider } from '@/context/AuthContext';
-import { routes } from './routes';
 import { Helmet } from 'react-helmet-async';
+import { PublicRoutes } from './PublicRoutes';
+import { ProtectedRoutes } from './ProtectedRoutes';
 
 /**
- * Map route configuration to React Router elements
+ * Simplified main application router
+ * - Clear separation between public and protected routes
+ * - Integrated with QueryClient and AuthProvider
+ * - Consistent error boundaries and loading states
  */
 const AppRouter: React.FC = () => {
   return (
@@ -21,53 +25,28 @@ const AppRouter: React.FC = () => {
           </Helmet>
           
           <React.Suspense fallback={
-            <div className="app-loading">
-              <div className="loading-spinner" />
+            <div className="min-h-screen flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+              <p className="mt-4 text-gray-600">Loading...</p>
             </div>
           }>
             <Routes>
-              {/* Default route - redirect to dashboard */}
+              {/* Default redirect */}
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               
-              {/* Map all routes from configuration */}
-              {routes.map((route, index) => {
-                const RouteElement = () => {
-                  if (route.element) {
-                    return route.element;
-                  }
-                  
-                  // Default case for any route without element
-                  return <Navigate to="/404" replace />;
-                };
-                
-                return (
-                  <Route 
-                    key={index}
-                    path={route.path} 
-                    element={<RouteElement />}
-                  >
-                    {route.children?.map((childRoute, childIndex) => (
-                      <Route
-                        key={`${index}-${childIndex}`}
-                        path={childRoute.path}
-                        element={childRoute.element}
-                      >
-                        {childRoute.children?.map((grandChild, grandChildIndex) => (
-                          <Route
-                            key={`${index}-${childIndex}-${grandChildIndex}`}
-                            path={grandChild.path}
-                            element={grandChild.element}
-                          />
-                        ))}
-                      </Route>
-                    ))}
-                  </Route>
-                );
-              })}
+              {/* Public routes - direct paths only */}
+              <Route path="/login" element={<PublicRoutes />} />
+              <Route path="/forgot-password" element={<PublicRoutes />} />
+              <Route path="/reset-password" element={<PublicRoutes />} />
+              <Route path="/unauthorized" element={<PublicRoutes />} />
+              <Route path="/404" element={<PublicRoutes />} />
+              
+              {/* All other routes are protected */}
+              <Route path="/*" element={<ProtectedRoutes />} />
             </Routes>
           </React.Suspense>
           
-          {/* Show React Query Devtools only in development */}
+          {/* React Query Devtools */}
           {process.env.NODE_ENV === 'development' && (
             <ReactQueryDevtools initialIsOpen={false} position="bottom" />
           )}
