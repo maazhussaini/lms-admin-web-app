@@ -116,9 +116,9 @@ The API system follows a **layered architecture** with clear separation of conce
 ├─────────────────────────────────────────┤
 │          Custom Hooks (useApi)          │
 ├─────────────────────────────────────────┤
-│         API Client Layer               │
+│         API Client Layer                │
 │  ┌─────────────┐  ┌─────────────────┐   │
-│  │ apiClient   │  │ apiClientWithMeta│   │
+│  │ apiClient   │  │apiClientWithMeta│   │
 │  └─────────────┘  └─────────────────┘   │
 ├─────────────────────────────────────────┤
 │            Interceptors                 │
@@ -128,7 +128,7 @@ The API system follows a **layered architecture** with clear separation of conce
 ├─────────────────────────────────────────┤
 │         Authentication Provider         │
 ├─────────────────────────────────────────┤
-│            Fetch + Utils               │
+│            Fetch + Utils                │
 └─────────────────────────────────────────┘
 ```
 
@@ -445,21 +445,21 @@ apiLogger.logError(errorInfo);
 ```
 src/
 ├── api/                    # API client and utilities
-│   ├── client.ts          # Standard API client
+│   ├── client.ts           # Standard API client
 │   ├── client-with-meta.ts # Enhanced client
-│   ├── interceptors.ts    # Request/response interceptors
-│   └── response-utils.ts  # Response processing utilities
-├── components/            # Reusable UI components
-│   ├── common/           # Generic components
-│   └── feature-specific/ # Domain components
-├── context/              # React contexts
-├── hooks/                # Custom React hooks
-├── pages/                # Page components
-├── routes/               # Routing configuration
-├── services/             # Business logic services
-├── types/                # TypeScript definitions
-├── utils/                # Utility functions
-└── config/               # Configuration files
+│   ├── interceptors.ts     # Request/response interceptors
+│   └── response-utils.ts   # Response processing utilities
+├── components/             # Reusable UI components
+│   ├── common/             # Generic components
+│   └── feature-specific/   # Domain components
+├── context/                # React contexts
+├── hooks/                  # Custom React hooks
+├── pages/                  # Page components
+├── routes/                 # Routing configuration
+├── services/               # Business logic services
+├── types/                  # TypeScript definitions
+├── utils/                  # Utility functions
+└── config/                 # Configuration files
 ```
 
 ### Development Scripts
