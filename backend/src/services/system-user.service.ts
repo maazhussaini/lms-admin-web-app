@@ -37,6 +37,21 @@ export class SystemUserService {
         throw new BadRequestError('Invalid requesting user context');
       }
 
+      // Validate tenant existence if tenantId is provided
+      if (data.tenantId) {
+        const tenant = await this.prisma.tenant.findUnique({
+          where: {
+            tenant_id: data.tenantId,
+            is_deleted: false,
+            is_active: true
+          }
+        });
+
+        if (!tenant) {
+          throw new BadRequestError('Invalid tenant ID provided');
+        }
+      }
+
       // Authorization checks
       if (requestingUser.user_type === UserType.TENANT_ADMIN) {
         // Tenant admins can only create users within their own tenant
@@ -51,11 +66,9 @@ export class SystemUserService {
       }
 
       // Validate role and tenant relationship
-      if (data.roleType === UserType.SUPER_ADMIN && data.tenantId !== undefined && data.tenantId !== null) {
-        throw new BadRequestError('SUPER_ADMIN users cannot be associated with a tenant');
-      }
-
-      if (data.roleType === UserType.TENANT_ADMIN && (!data.tenantId || data.tenantId === null)) {
+      if (data.roleType === UserType.SUPER_ADMIN) {
+        data.tenantId = null; // SUPER_ADMIN users should not have a tenant
+      } else if (data.roleType === UserType.TENANT_ADMIN && !data.tenantId) {
         throw new BadRequestError('TENANT_ADMIN users must be associated with a tenant');
       }
 
@@ -77,7 +90,7 @@ export class SystemUserService {
       // Hash the password
       const passwordHash = await hashPassword(data.password);
 
-      // Create the system user
+      // Create the system user with validated tenant_id
       const newUser = await this.prisma.systemUser.create({
         data: {
           username: data.username,
@@ -85,12 +98,10 @@ export class SystemUserService {
           email_address: data.email,
           password_hash: passwordHash,
           role_type: data.roleType,
-          tenant_id: data.roleType === UserType.SUPER_ADMIN ? null : (data.tenantId || null),
+          tenant_id: data.tenantId,
           system_user_status: data.status || SystemUserStatus.ACTIVE,
-          
-          // Audit fields
           created_by: requestingUser.id,
-          created_ip: '127.0.0.1', // This should be passed from the controller
+          created_ip: '127.0.0.1',
           is_active: true,
           is_deleted: false
         }
