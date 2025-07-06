@@ -131,3 +131,6 @@ dist
 
 # .github
 .github
+
+# public directory
+public

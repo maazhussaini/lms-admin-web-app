@@ -16,31 +16,31 @@
   /* You can add more custom breakpoints like --breakpoint-3xl: 1920px; */
 
   /* Colors */
-  /* Main orange palette (primary) */
-  --color-primary-50: #fff7ed;
-  --color-primary-100: #ffedd5;
-  --color-primary-200: #fed7aa;
-  --color-primary-300: #fdba74;
-  --color-primary-400: #fb923c;
-  --color-primary-500: #f97316; /* Base orange */
-  --color-primary-600: #ea580c;
-  --color-primary-700: #c2410c;
-  --color-primary-800: #9a3412;
-  --color-primary-900: #7c2d12;
-  --color-primary-950: #431407;
+  /* Main purple palette (primary) */
+  --color-primary-50: #f4f1fd;
+  --color-primary-100: #ebe5fb;
+  --color-primary-200: #d9cef7;
+  --color-primary-300: #bfa9f0;
+  --color-primary-400: #9f7ae7;
+  --color-primary-500: #8251db; /* Base purple */
+  --color-primary-600: #6d3bce;
+  --color-primary-700: #5d2fb3;
+  --color-primary-800: #4e2792;
+  --color-primary-900: #43277e; /* Your specified color */
+  --color-primary-950: #2a1450;
 
   /* Supporting colors (secondary) */
-  --color-secondary-50: #f0fdfa;
-  --color-secondary-100: #ccfbf1;
-  --color-secondary-200: #99f6e4;
-  --color-secondary-300: #5eead4;
-  --color-secondary-400: #2dd4bf;
-  --color-secondary-500: #14b8a6;
-  --color-secondary-600: #0d9488;
-  --color-secondary-700: #0f766e;
-  --color-secondary-800: #115e59;
-  --color-secondary-900: #134e4a;
-  --color-secondary-950: #042f2e;
+  --color-secondary-50: #faf9ff;
+  --color-secondary-100: #f4f1ff;
+  --color-secondary-200: #ebe5ff;
+  --color-secondary-300: #d9ceff;
+  --color-secondary-400: #c0a9ff;
+  --color-secondary-500: #b28eff; /* Your specified color */
+  --color-secondary-600: #9d6fff;
+  --color-secondary-700: #8751ff;
+  --color-secondary-800: #7040e6;
+  --color-secondary-900: #5d35b8;
+  --color-secondary-950: #3a1f7a;
 
   /* Neutral colors */
   --color-neutral-50: #fafafa;
