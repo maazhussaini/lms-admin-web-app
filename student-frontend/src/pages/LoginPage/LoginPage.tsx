@@ -13,25 +13,12 @@ import StateDisplay from '@/components/common/StateDisplay';
 import { useAuth } from '@/context/AuthContext';
 
 // Import assets using proper path structure (will need to move assets to src/assets)
-import logo from '../../../public/orbed_logo.svg';
-import sideVector from '../../../public/group_12.png';
-import bgImage from '../../../public/bg.png';
-
-// Animation variants following the established patterns
-const pageVariants = {
-  initial: { opacity: 0, y: 20 },
-  in: { opacity: 1, y: 0 },
-  out: { opacity: 0, y: -20 }
-};
-
-const pageTransition = {
-  type: 'tween',
-  ease: 'anticipate',
-  duration: 0.3
-};
+import logo from '@public/orbed_logo.svg';
+import sideVector from '@public/group_12.png';
+import bgImage from '@public/bg.png';
 
 interface LoginFormData {
-  username: string;
+  email: string;
   password: string;
 }
 
@@ -64,7 +51,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
   const { login, isLoading, error: authError, clearError } = useAuth();
 
   const [formData, setFormData] = useState<LoginFormData>({
-    username: '',
+    email: '',
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -113,7 +100,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
     }
 
     // Clear login errors when user starts correcting their input
-    if ((field === 'username' || field === 'password') && (loginError || authError)) {
+    if ((field === 'email' || field === 'password') && (loginError || authError)) {
       setLoginError(null);
       clearError();
     }
@@ -122,10 +109,10 @@ const LoginPage: React.FC<LoginPageProps> = ({
   const validateForm = useCallback((): boolean => {
     const errors: Partial<LoginFormData> = {};
     
-    if (!formData.username.trim()) {
-      errors.username = 'Username/Email is required';
-    } else if (formData.username.includes('@') && !/\S+@\S+\.\S+/.test(formData.username)) {
-      errors.username = 'Please enter a valid email address';
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
     }
     
     if (!formData.password) {
@@ -156,7 +143,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
       } else {
         // Use auth context login function - this makes the actual API call
         await login(
-          formData.username.trim(),
+          formData.email.trim(),
           formData.password
         );
       }
@@ -203,7 +190,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
           displayError.includes('401') || 
           displayError.includes('authentication') ||
           displayError.includes('email address or password')) {
-        return 'Invalid username/email or password. Please check your credentials and try again.';
+        return 'Invalid email or password. Please check your credentials and try again.';
       }
       if (displayError.includes('RATE_LIMIT_EXCEEDED') || displayError.includes('Too many')) {
         return 'Too many login attempts. Please try again later.';
@@ -316,20 +303,20 @@ const LoginPage: React.FC<LoginPageProps> = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              {/* Username/Email Field using Input component */}
+              {/* Email Field using Input component */}
               <div className="w-full">
                 <Input
-                  id="username"
-                  label="Username/Email"
-                  type="text"
-                  placeholder="Enter Your Username or Email"
-                  value={formData.username}
-                  onChange={handleInputChange('username')}
+                  id="email"
+                  label="Email"
+                  type="email"
+                  placeholder="Enter Your Email Address"
+                  value={formData.email}
+                  onChange={handleInputChange('email')}
                   disabled={isFormLoading}
                   required
-                  error={formErrors.username}
+                  error={formErrors.email}
                   size="lg"
-                  autoComplete="username"
+                  autoComplete="email"
                   animate={true}
                   className="w-full"
                 />
@@ -405,7 +392,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
                   fullWidth={true}
                   isLoading={isFormLoading}
                   loadingText="Signing In..."
-                  disabled={!formData.username.trim() || !formData.password || isFormLoading}
+                  disabled={!formData.email.trim() || !formData.password || isFormLoading}
                   animationVariant="emphatic"
                   className="w-full bg-[#4a2a82] hover:bg-[#3b2168] focus:ring-[#4a2a82] py-4 text-lg"
                 >

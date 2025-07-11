@@ -14,7 +14,8 @@
     "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"],
-      "@shared/*": ["../shared/*"]
+      "@shared/*": ["../shared/*"],
+      "@public/*": ["public/*"]
     },
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": false,
@@ -41,6 +42,7 @@
   },
   "include": [
     "src",
-    "../shared/**/*"
+    "../shared/**/*",
+    "public/**/*"
   ]
 }
