@@ -7,7 +7,7 @@ import Button from '@/components/common/Button';
 import { PageTransition } from '@/components/common/PageTransition';
 
 import logo from '@public/orbed_logo.svg';
-import sideVector from '@public/group_12.png';
+import sideVector from '@public/reset_password_success_vector.png';
 import bgImage from '@public/bg.png';
 
 const ResetPasswordSuccessPage: React.FC = () => {

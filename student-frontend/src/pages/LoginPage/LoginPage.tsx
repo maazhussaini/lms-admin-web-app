@@ -14,7 +14,7 @@ import { useAuth } from '@/context/AuthContext';
 
 // Import assets using proper path structure (will need to move assets to src/assets)
 import logo from '@public/orbed_logo.svg';
-import sideVector from '@public/group_12.png';
+import sideVector from '@public/signin_vector.png';
 import bgImage from '@public/bg.png';
 
 interface LoginFormData {
