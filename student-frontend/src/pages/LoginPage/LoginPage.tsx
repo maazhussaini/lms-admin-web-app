@@ -28,19 +28,6 @@ interface LoginPageProps {
   error?: string | null;
 }
 
-/**
- * LoginPage - Secure authentication page for students
- * 
- * Features:
- * - Responsive design with mobile-first approach
- * - Form validation with proper error handling
- * - Accessibility support with ARIA labels
- * - Animation transitions with Framer Motion
- * - Security-first design patterns
- * - Uses established component design system
- * - Integrated with AuthContext for proper API calls
- */
-
 const LoginPage: React.FC<LoginPageProps> = ({ 
   onLoginSubmit,
   loading: propLoading = false,
@@ -62,12 +49,6 @@ const LoginPage: React.FC<LoginPageProps> = ({
 
   // Get return URL from location state
   const returnUrl = (location.state as { returnUrl?: string })?.returnUrl || '/dashboard';
-
-  // Clear errors on component mount
-  useEffect(() => {
-    clearError();
-    setLoginError(null);
-  }, [clearError]);
 
   // Sync auth error with local error state
   useEffect(() => {
@@ -100,11 +81,11 @@ const LoginPage: React.FC<LoginPageProps> = ({
     }
 
     // Clear login errors when user starts correcting their input
-    if ((field === 'email' || field === 'password') && (loginError || authError)) {
+    if ((field === 'email' || field === 'password') && loginError) {
       setLoginError(null);
-      clearError();
+      // Do not call clearError() here, let error persist until user corrects input
     }
-  }, [formErrors, hasInteracted, loginError, authError, clearError]);
+  }, [formErrors, hasInteracted, loginError /* removed authError, clearError */]);
 
   const validateForm = useCallback((): boolean => {
     const errors: Partial<LoginFormData> = {};
@@ -127,15 +108,15 @@ const LoginPage: React.FC<LoginPageProps> = ({
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (isSubmitting || isLoading || propLoading) return;
-    
+
     if (!validateForm()) return;
-    
+
     setIsSubmitting(true);
     setLoginError(null);
-    clearError();
-    
+    // Do not clearError() here, let error persist until successful login
+
     try {
       // Use the provided onLoginSubmit prop if available, otherwise use auth context
       if (onLoginSubmit) {
@@ -147,8 +128,9 @@ const LoginPage: React.FC<LoginPageProps> = ({
           formData.password
         );
       }
-      
-      // Redirect to return URL on successful login
+      // On successful login, clear errors and navigate
+      clearError();
+      setLoginError(null);
       navigate(returnUrl, { replace: true });
     } catch (err) {
       console.error('Login failed:', err);
@@ -164,6 +146,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
       
       // Set local error state to ensure it displays
       setLoginError(errorMessage);
+      // Do not clearError() here
     } finally {
       setIsSubmitting(false);
     }
@@ -230,7 +213,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
             className={backgroundContainerClasses}
             style={{
               backgroundImage: `url(${bgImage})`,
-              backgroundSize: 'contain',
+              backgroundSize: 'cover',
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat'
             }}
