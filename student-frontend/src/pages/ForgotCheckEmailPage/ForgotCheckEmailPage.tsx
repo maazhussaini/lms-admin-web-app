@@ -8,7 +8,7 @@ import StateDisplay from '@/components/common/StateDisplay';
 import { PageTransition } from '@/components/common/PageTransition';
 
 import logo from '@public/orbed_logo.svg';
-import sideVector from '@public/group_12.png';
+import sideVector from '@public/forgot_password_vector.png';
 import bgImage from '@public/bg.png';
 
 const CODE_LENGTH = 5;
