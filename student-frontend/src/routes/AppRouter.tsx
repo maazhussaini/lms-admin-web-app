@@ -37,7 +37,9 @@ const AppRouter: React.FC = () => {
               {/* Public routes - direct paths only */}
               <Route path="/login" element={<PublicRoutes />} />
               <Route path="/forgot-password" element={<PublicRoutes />} />
+              <Route path="/forgot-password/check-email" element={<PublicRoutes />} />
               <Route path="/reset-password" element={<PublicRoutes />} />
+              <Route path="/reset-password-success" element={<PublicRoutes />} />
               <Route path="/unauthorized" element={<PublicRoutes />} />
               <Route path="/404" element={<PublicRoutes />} />
               

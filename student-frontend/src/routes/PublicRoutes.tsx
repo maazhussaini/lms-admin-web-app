@@ -4,6 +4,14 @@ import { PublicOnlyGuard } from './guards';
 
 // Import the actual LoginPage component
 import LoginPage from '@/pages/LoginPage/LoginPage';
+// Import the actual ForgotPasswordPage component
+import ForgotPasswordPage from '@/pages/ForgotPasswordPage/ForgotPasswordPage';
+// Import the actual ForgotCheckEmailPage component
+import ForgotCheckEmailPage from '@/pages/ForgotCheckEmailPage/ForgotCheckEmailPage';
+// Import the actual ResetPasswordPage component
+import ResetPasswordPage from '@/pages/ResetPasswordPage/ResetPasswordPage';
+// Import the actual ResetPasswordSuccessPage component
+import ResetPasswordSuccessPage from '@/pages/ResetPasswordSuccessPage/ResetPasswordSuccessPage';
 
 // Dummy components for development purposes (keeping existing ones for other routes)
 const DummyPage = ({ pageName, description }: { pageName: string; description: string }) => (
@@ -39,21 +47,6 @@ const DummyPage = ({ pageName, description }: { pageName: string; description: s
   </div>
 );
 
-// Use actual LoginPage component, keep dummy components for other routes
-const ForgotPasswordPage = () => (
-  <DummyPage 
-    pageName="Forgot Password" 
-    description="Password recovery page - enter your email to receive reset instructions."
-  />
-);
-
-const ResetPasswordPage = () => (
-  <DummyPage 
-    pageName="Reset Password" 
-    description="Create a new password for your account using the reset token."
-  />
-);
-
 const UnauthorizedPage = () => (
   <DummyPage 
     pageName="Unauthorized Access" 
@@ -77,18 +70,28 @@ export const PublicRoutes: React.FC = () => {
   const currentPath = location.pathname;
   
   // Routes that should redirect authenticated users away
-  const guardedPaths = ['/login', '/forgot-password', '/reset-password'];
+  const guardedPaths = [
+    '/login',
+    '/forgot-password',
+    '/forgot-password/check-email',
+    '/reset-password',
+    '/reset-password-success'
+  ];
   const isGuardedPath = guardedPaths.includes(currentPath);
   
   // Determine which page to render based on path
   const renderPage = () => {
     switch (currentPath) {
       case '/login':
-        return <LoginPage />; // Now using the actual LoginPage component
+        return <LoginPage />;
       case '/forgot-password':
         return <ForgotPasswordPage />;
+      case '/forgot-password/check-email':
+        return <ForgotCheckEmailPage />;
       case '/reset-password':
         return <ResetPasswordPage />;
+      case '/reset-password-success':
+        return <ResetPasswordSuccessPage />;
       case '/unauthorized':
         return <UnauthorizedPage />;
       case '/404':
