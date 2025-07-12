@@ -5,6 +5,7 @@ model Program {
   program_id           Int             @id @default(autoincrement())
   tenant_id            Int
   program_name         String          @db.VarChar(255)
+  program_thumbnail_url String?        @db.Text
   
   // Audit fields
   is_active            Boolean         @default(true)
@@ -32,10 +33,11 @@ model Program {
 
 // Specialization model - academic specializations within programs
 model Specialization {
-  specialization_id    Int             @id @default(autoincrement())
-  tenant_id            Int
-  program_id           Int
-  specialization_name  String          @db.VarChar(255)
+  specialization_id     Int             @id @default(autoincrement())
+  tenant_id             Int
+  program_id            Int
+  specialization_name   String          @db.VarChar(255)
+  specialization_thumbnail_url String?        @db.Text
   
   // Audit fields
   is_active            Boolean         @default(true)

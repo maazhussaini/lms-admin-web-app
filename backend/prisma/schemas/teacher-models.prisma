@@ -11,6 +11,7 @@ model Teacher {
   state_id                Int?
   city_id                 Int?
   address                 String?                @db.Text
+  teacher_qualification   String?                @db.Text
   date_of_birth           DateTime?
   profile_picture_url     String?                @db.VarChar(500)
   zip_code                String?                @db.VarChar(20)

@@ -262,6 +262,11 @@ enum CourseStatus {
   SUSPENDED @map("SUSPENDED")
 }
 
+enum CourseType {
+  FREE @map("FREE")
+  PAID @map("PAID")
+}
+
 /**
  * Notification and Communication Enums
  * @description Defines enums for notification types, priorities, delivery status, channels, templates, recipients, and email status

@@ -4,8 +4,8 @@
  * Creates SUPER_ADMIN role and user if they don't exist
  */
 
-import { PrismaClient } from '@prisma/client';
-import { SystemUserRole } from '../src/types/enums';
+import { PrismaClient, SystemUserRole } from '@prisma/client';
+
 import { hashPassword } from '../src/utils/password.utils.js';
 import { disableTenantIsolationMiddleware } from '../src/config/database.js';
 import logger from '../src/config/logger.js';

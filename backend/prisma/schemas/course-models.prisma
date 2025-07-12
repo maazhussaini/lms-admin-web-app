@@ -8,6 +8,8 @@ model Course {
   course_description   String?   @db.Text
   main_thumbnail_url   String?   @db.Text
   course_status        CourseStatus @default(DRAFT)
+  course_type          CourseType @default(PAID)
+  course_price         Decimal?  @db.Decimal(10, 2) // Nullable for free courses
   course_total_hours   Decimal?  @db.Decimal(6, 2) // Auto-calculated by backend from sum of video durations
   specialization_id    Int?
   
@@ -128,6 +130,7 @@ model CourseVideo {
   duration_seconds     Int?
   position             Int?
   upload_status        VideoUploadStatus? @default(PENDING)
+  IsLocked           Boolean   @default(false)
   
   // Audit fields
   is_active            Boolean   @default(true)
