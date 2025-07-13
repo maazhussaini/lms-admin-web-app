@@ -1,0 +1,93 @@
+# Assignment Models Table Documentation
+
+## Assignment
+- assignment_id Int, [PK, autoincrement], not null
+- tenant_id Int, not null
+- course_id Int, not null
+- teacher_id Int, not null
+- assignment_name String, not null
+- assignment_description String, nullable
+- assignment_type AssignmentType, default FILE_UPLOAD, not null [FILE_UPLOAD]
+- total_marks Decimal(6,2), not null
+- passing_marks Decimal(6,2), nullable
+- due_date DateTime, not null
+- allow_late_submissions Boolean, default false, not null
+- max_file_size_mb Int, nullable
+- allowed_file_types String, nullable
+- max_attempts Int, nullable
+- status AssignmentStatus, default DRAFT, not null [DRAFT, PUBLISHED, GRADING_IN_PROGRESS, GRADED, ARCHIVED]
+- instructions String, nullable
+- is_active Boolean, default true, not null
+- is_deleted Boolean, default false, not null
+- created_at DateTime, default now(), not null
+- updated_at DateTime, default now(), not null
+- created_by Int, not null
+- updated_by Int, nullable
+- deleted_at DateTime, nullable
+- deleted_by Int, nullable
+- created_ip String, nullable
+- updated_ip String, nullable
+
+## AssignmentMapping
+- assignment_mapping_id Int, [PK, autoincrement], not null
+- tenant_id Int, not null
+- assignment_id Int, not null
+- reference_table_type AssignmentReferenceTable, not null [COURSE, COURSE_MODULE, COURSE_TOPIC]
+- reference_id Int, not null
+- teacher_id Int, not null
+- is_active Boolean, default true, not null
+- is_deleted Boolean, default false, not null
+- created_at DateTime, default now(), not null
+- updated_at DateTime, default now(), not null
+- created_by Int, not null
+- updated_by Int, nullable
+- deleted_at DateTime, nullable
+- deleted_by Int, nullable
+- created_ip String, nullable
+- updated_ip String, nullable
+
+## StudentAssignment
+- student_assignment_id Int, [PK, autoincrement], not null
+- tenant_id Int, not null
+- assignment_id Int, not null
+- student_id Int, not null
+- attempt_number Int, not null
+- submission_date DateTime, nullable
+- submission_status SubmissionStatus, default PENDING, not null [PENDING, NOT_SUBMITTED, SUBMITTED, LATE_SUBMISSION, GRADED, RESUBMITTED]
+- grade Decimal(6,2), nullable
+- percentage Decimal(5,2), nullable
+- feedback String, nullable
+- graded_by Int, nullable
+- graded_at DateTime, nullable
+- teacher_notes String, nullable
+- is_late_submission Boolean, default false, not null
+- is_active Boolean, default true, not null
+- is_deleted Boolean, default false, not null
+- created_at DateTime, default now(), not null
+- updated_at DateTime, default now(), not null
+- created_by Int, not null
+- updated_by Int, nullable
+- deleted_at DateTime, nullable
+- deleted_by Int, nullable
+- created_ip String, nullable
+- updated_ip String, nullable
+
+## AssignmentSubmissionFile
+- assignment_submission_file_id Int, [PK, autoincrement], not null
+- tenant_id Int, not null
+- student_assignment_id Int, not null
+- original_file_name String, not null
+- file_url String, not null
+- file_size_bytes Int, nullable
+- mime_type String, nullable
+- upload_status UploadStatus, default PENDING, nullable [PENDING, UPLOADING, COMPLETED, FAILED, CANCELLED]
+- is_active Boolean, default true, not null
+- is_deleted Boolean, default false, not null
+- created_at DateTime, default now(), not null
+- updated_at DateTime, default now(), not null
+- created_by Int, not null
+- updated_by Int, nullable
+- deleted_at DateTime, nullable
+- deleted_by Int, nullable
+- created_ip String, nullable
+- updated_ip String, nullable

@@ -1,0 +1,180 @@
+# Enrollment & Session Models Table Documentation
+
+## Enrollment
+- enrollment_id Int, [PK, autoincrement], not null
+- tenant_id Int, not null
+- course_id Int, not null
+- student_id Int, not null
+- institute_id Int, not null
+- teacher_id Int, nullable
+- enrollment_status EnrollmentStatus, default PENDING, not null [PENDING, ACTIVE, COMPLETED, DROPPED, SUSPENDED, EXPELLED, TRANSFERRED, DEFERRED]
+- enrolled_at DateTime, default now(), not null
+- expected_completion_date DateTime, nullable
+- actual_completion_date DateTime, nullable
+- status_changed_at DateTime, nullable
+- status_changed_by Int, nullable
+- status_change_reason String, nullable
+- grade String, nullable
+- final_score Decimal(5,2), nullable
+- is_active Boolean, default true, not null
+- is_deleted Boolean, default false, not null
+- created_at DateTime, default now(), not null
+- created_by Int, not null
+- created_ip String, nullable
+- updated_at DateTime, nullable
+- updated_by Int, nullable
+- updated_ip String, nullable
+- deleted_at DateTime, nullable
+- deleted_by Int, nullable
+
+## EnrollmentStatusHistory
+- enrollment_status_history_id Int, [PK, autoincrement], not null
+- tenant_id Int, not null
+- enrollment_id Int, not null
+- previous_status EnrollmentStatus, nullable [PENDING, ACTIVE, COMPLETED, DROPPED, SUSPENDED, EXPELLED, TRANSFERRED, DEFERRED]
+- new_status EnrollmentStatus, not null [PENDING, ACTIVE, COMPLETED, DROPPED, SUSPENDED, EXPELLED, TRANSFERRED, DEFERRED]
+- status_changed_at DateTime, default now(), not null
+- changed_by Int, not null
+- change_reason String, nullable
+- notes String, nullable
+- is_active Boolean, default true, not null
+- is_deleted Boolean, default false, not null
+- created_at DateTime, default now(), not null
+- created_by Int, not null
+- created_ip String, nullable
+- updated_at DateTime, nullable
+- updated_by Int, nullable
+- updated_ip String, nullable
+- deleted_at DateTime, nullable
+- deleted_by Int, nullable
+
+## StudentCourseProgress
+- student_course_progress_id Int, [PK, autoincrement], not null
+- tenant_id Int, not null
+- student_id Int, not null
+- course_id Int, not null
+- overall_progress_percentage Int, default 0, not null
+- modules_completed Int, default 0, not null
+- videos_completed Int, default 0, not null
+- quizzes_completed Int, default 0, not null
+- assignments_completed Int, default 0, not null
+- total_time_spent_minutes Int, default 0, not null
+- last_accessed_at DateTime, default now(), not null
+- is_course_completed Boolean, default false, not null
+- completion_date DateTime, nullable
+- is_active Boolean, default true, not null
+- is_deleted Boolean, default false, not null
+- created_at DateTime, default now(), not null
+- created_by Int, not null
+- created_ip String, nullable
+- updated_at DateTime, nullable
+- updated_by Int, nullable
+- updated_ip String, nullable
+- deleted_at DateTime, nullable
+- deleted_by Int, nullable
+
+## TeacherCourse
+- teacher_course_id Int, [PK, autoincrement], not null
+- tenant_id Int, not null
+- course_id Int, not null
+- teacher_id Int, not null
+- is_active Boolean, default true, not null
+- is_deleted Boolean, default false, not null
+- created_at DateTime, default now(), not null
+- created_by Int, not null
+- created_ip String, nullable
+- updated_at DateTime, nullable
+- updated_by Int, nullable
+- updated_ip String, nullable
+- deleted_at DateTime, nullable
+- deleted_by Int, nullable
+
+## CourseSession
+- course_session_id Int, [PK, autoincrement], not null
+- tenant_id Int, not null
+- teacher_id Int, not null
+- course_id Int, not null
+- course_session_status CourseSessionStatus, default DRAFT, not null [DRAFT, PUBLISHED, EXPIRED]
+- session_name String, not null
+- session_description String, nullable
+- start_date DateTime, not null
+- end_date DateTime, not null
+- max_students Int, nullable
+- enrollment_deadline DateTime, nullable
+- session_timezone String, nullable
+- session_code String, nullable
+- auto_expire_enabled Boolean, default true, not null
+- is_active Boolean, default true, not null
+- is_deleted Boolean, default false, not null
+- created_at DateTime, default now(), not null
+- created_by Int, not null
+- created_ip String, nullable
+- updated_at DateTime, nullable
+- updated_by Int, nullable
+- updated_ip String, nullable
+- deleted_at DateTime, nullable
+- deleted_by Int, nullable
+
+## CourseSessionEnrollment
+- course_session_enrollment_id Int, [PK, autoincrement], not null
+- tenant_id Int, not null
+- course_session_id Int, not null
+- student_id Int, not null
+- enrolled_at DateTime, default now(), not null
+- dropped_at DateTime, nullable
+- enrollment_status SessionEnrollmentStatus, default PENDING, not null [PENDING, ENROLLED, DROPPED, COMPLETED, EXPELLED]
+- completion_percentage Int, default 0, not null
+- final_grade Int, nullable
+- completion_date DateTime, nullable
+- is_active Boolean, default true, not null
+- is_deleted Boolean, default false, not null
+- created_at DateTime, default now(), not null
+- created_by Int, not null
+- created_ip String, nullable
+- updated_at DateTime, nullable
+- updated_by Int, nullable
+- updated_ip String, nullable
+- deleted_at DateTime, nullable
+- deleted_by Int, nullable
+
+## CourseSessionSettings
+- course_session_settings_id Int, [PK, autoincrement], not null
+- tenant_id Int, not null
+- course_session_id Int, unique, not null
+- allow_late_enrollment Boolean, default false, not null
+- require_approval_for_enrollment Boolean, default false, not null
+- allow_student_discussions Boolean, default true, not null
+- send_reminder_emails Boolean, default true, not null
+- reminder_days_before_expiry Int, default 7, not null
+- grading_scale Json, nullable
+- attendance_tracking_enabled Boolean, default false, not null
+- is_active Boolean, default true, not null
+- is_deleted Boolean, default false, not null
+- created_at DateTime, default now(), not null
+- created_by Int, not null
+- created_ip String, nullable
+- updated_at DateTime, nullable
+- updated_by Int, nullable
+- updated_ip String, nullable
+- deleted_at DateTime, nullable
+- deleted_by Int, nullable
+
+## VideoProgress
+- video_progress_id Int, [PK, autoincrement], not null
+- tenant_id Int, not null
+- student_id Int, not null
+- course_video_id Int, not null
+- watch_duration_seconds Int, default 0, not null
+- completion_percentage Int, default 0, not null
+- last_watched_at DateTime, default now(), not null
+- is_completed Boolean, default false, not null
+- is_active Boolean, default true, not null
+- is_deleted Boolean, default false, not null
+- created_at DateTime, default now(), not null
+- created_by Int, not null
+- created_ip String, nullable
+- updated_at DateTime, nullable
+- updated_by Int, nullable
+- updated_ip String, nullable
+- deleted_at DateTime, nullable
+- deleted_by Int, nullable

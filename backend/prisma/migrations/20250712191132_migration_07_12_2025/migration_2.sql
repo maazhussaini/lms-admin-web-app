@@ -62,6 +62,9 @@ CREATE TYPE "VideoUploadStatus" AS ENUM ('PENDING', 'PROCESSING', 'COMPLETED', '
 CREATE TYPE "CourseStatus" AS ENUM ('DRAFT', 'PUBLISHED', 'ARCHIVED', 'SUSPENDED');
 
 -- CreateEnum
+CREATE TYPE "CourseType" AS ENUM ('FREE', 'PAID');
+
+-- CreateEnum
 CREATE TYPE "NotificationType" AS ENUM ('ANNOUNCEMENT', 'ASSIGNMENT_DUE', 'QUIZ_AVAILABLE', 'GRADE_POSTED', 'COURSE_UPDATE', 'SYSTEM_ALERT', 'ENROLLMENT_CONFIRMATION', 'DEADLINE_REMINDER');
 
 -- CreateEnum
@@ -120,6 +123,9 @@ CREATE TYPE "ClientStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'SUSPENDED', 'TERMINAT
 
 -- CreateEnum
 CREATE TYPE "ContactType" AS ENUM ('PRIMARY', 'SECONDARY', 'EMERGENCY', 'BILLING');
+
+-- CreateEnum
+CREATE TYPE "UserType" AS ENUM ('STUDENT', 'TEACHER', 'TENANT_ADMIN', 'SUPER_ADMIN');
 
 -- CreateTable
 CREATE TABLE "tenants" (
@@ -234,7 +240,7 @@ CREATE TABLE "client_tenants" (
 -- CreateTable
 CREATE TABLE "roles" (
     "role_id" SERIAL NOT NULL,
-    "role_type" "SystemUserRole" NOT NULL,
+    "role_type" "UserType" NOT NULL,
     "role_name" VARCHAR(100) NOT NULL,
     "role_description" TEXT,
     "is_system_role" BOOLEAN NOT NULL DEFAULT false,
@@ -279,7 +285,7 @@ CREATE TABLE "screens" (
 CREATE TABLE "system_users" (
     "system_user_id" SERIAL NOT NULL,
     "tenant_id" INTEGER,
-    "role_type" "SystemUserRole" NOT NULL,
+    "role_type" "UserType" NOT NULL,
     "username" VARCHAR(50) NOT NULL,
     "full_name" VARCHAR(255) NOT NULL,
     "email_address" VARCHAR(255) NOT NULL,
@@ -330,7 +336,7 @@ CREATE TABLE "user_screens" (
 CREATE TABLE "role_screens" (
     "role_screen_id" SERIAL NOT NULL,
     "tenant_id" INTEGER NOT NULL,
-    "role_type" "SystemUserRole" NOT NULL,
+    "role_type" "UserType" NOT NULL,
     "screen_id" INTEGER NOT NULL,
     "can_view" BOOLEAN NOT NULL DEFAULT false,
     "can_create" BOOLEAN NOT NULL DEFAULT false,
@@ -416,6 +422,7 @@ CREATE TABLE "programs" (
     "program_id" SERIAL NOT NULL,
     "tenant_id" INTEGER NOT NULL,
     "program_name" VARCHAR(255) NOT NULL,
+    "program_thumbnail_url" TEXT,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_deleted" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -436,6 +443,7 @@ CREATE TABLE "specializations" (
     "tenant_id" INTEGER NOT NULL,
     "program_id" INTEGER NOT NULL,
     "specialization_name" VARCHAR(255) NOT NULL,
+    "specialization_thumbnail_url" TEXT,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_deleted" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -501,6 +509,7 @@ CREATE TABLE "teachers" (
     "state_id" INTEGER,
     "city_id" INTEGER,
     "address" TEXT,
+    "teacher_qualification" TEXT,
     "date_of_birth" TIMESTAMP(3),
     "profile_picture_url" VARCHAR(500),
     "zip_code" VARCHAR(20),
@@ -680,10 +689,14 @@ CREATE TABLE "courses" (
     "course_id" SERIAL NOT NULL,
     "tenant_id" INTEGER NOT NULL,
     "course_name" VARCHAR(255) NOT NULL,
+    "course_description" TEXT,
     "main_thumbnail_url" TEXT,
     "course_status" "CourseStatus" NOT NULL DEFAULT 'DRAFT',
+    "course_type" "CourseType" NOT NULL DEFAULT 'PAID',
+    "course_price" DECIMAL(10,2),
     "course_total_hours" DECIMAL(6,2),
     "specialization_id" INTEGER,
+    "program_id" INTEGER,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_deleted" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -753,6 +766,7 @@ CREATE TABLE "course_videos" (
     "duration_seconds" INTEGER,
     "position" INTEGER,
     "upload_status" "VideoUploadStatus" DEFAULT 'PENDING',
+    "IsLocked" BOOLEAN NOT NULL DEFAULT false,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_deleted" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1452,708 +1466,3 @@ CREATE TABLE "push_notification_devices" (
 
     CONSTRAINT "push_notification_devices_pkey" PRIMARY KEY ("push_device_id")
 );
-
--- CreateIndex
-CREATE UNIQUE INDEX "uq_tenants_tenant_name" ON "tenants"("tenant_name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "roles_role_type_key" ON "roles"("role_type");
-
--- CreateIndex
-CREATE UNIQUE INDEX "course_session_settings_course_session_id_key" ON "course_session_settings"("course_session_id");
-
--- AddForeignKey
-ALTER TABLE "tenants" ADD CONSTRAINT "tenants_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "tenants" ADD CONSTRAINT "tenants_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "tenants" ADD CONSTRAINT "tenants_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "clients" ADD CONSTRAINT "clients_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "clients" ADD CONSTRAINT "clients_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "clients" ADD CONSTRAINT "clients_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "clients" ADD CONSTRAINT "clients_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "tenant_phone_numbers" ADD CONSTRAINT "tenant_phone_numbers_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "tenant_phone_numbers" ADD CONSTRAINT "tenant_phone_numbers_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "tenant_phone_numbers" ADD CONSTRAINT "tenant_phone_numbers_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "tenant_phone_numbers" ADD CONSTRAINT "tenant_phone_numbers_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "tenant_email_addresses" ADD CONSTRAINT "tenant_email_addresses_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "tenant_email_addresses" ADD CONSTRAINT "tenant_email_addresses_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "tenant_email_addresses" ADD CONSTRAINT "tenant_email_addresses_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "tenant_email_addresses" ADD CONSTRAINT "tenant_email_addresses_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "client_tenants" ADD CONSTRAINT "client_tenants_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "clients"("client_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "client_tenants" ADD CONSTRAINT "client_tenants_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "client_tenants" ADD CONSTRAINT "client_tenants_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "client_tenants" ADD CONSTRAINT "client_tenants_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "client_tenants" ADD CONSTRAINT "client_tenants_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "roles" ADD CONSTRAINT "roles_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "roles" ADD CONSTRAINT "roles_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "roles" ADD CONSTRAINT "roles_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "screens" ADD CONSTRAINT "screens_parent_screen_id_fkey" FOREIGN KEY ("parent_screen_id") REFERENCES "screens"("screen_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "screens" ADD CONSTRAINT "screens_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "screens" ADD CONSTRAINT "screens_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "screens" ADD CONSTRAINT "screens_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "system_users" ADD CONSTRAINT "system_users_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "system_users" ADD CONSTRAINT "system_users_role_type_fkey" FOREIGN KEY ("role_type") REFERENCES "roles"("role_type") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "system_users" ADD CONSTRAINT "system_users_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "system_users" ADD CONSTRAINT "system_users_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "system_users" ADD CONSTRAINT "system_users_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "user_screens" ADD CONSTRAINT "user_screens_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "user_screens" ADD CONSTRAINT "user_screens_system_user_id_fkey" FOREIGN KEY ("system_user_id") REFERENCES "system_users"("system_user_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "user_screens" ADD CONSTRAINT "user_screens_screen_id_fkey" FOREIGN KEY ("screen_id") REFERENCES "screens"("screen_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "user_screens" ADD CONSTRAINT "user_screens_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "user_screens" ADD CONSTRAINT "user_screens_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "user_screens" ADD CONSTRAINT "user_screens_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "role_screens" ADD CONSTRAINT "role_screens_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "role_screens" ADD CONSTRAINT "role_screens_role_type_fkey" FOREIGN KEY ("role_type") REFERENCES "roles"("role_type") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "role_screens" ADD CONSTRAINT "role_screens_screen_id_fkey" FOREIGN KEY ("screen_id") REFERENCES "screens"("screen_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "role_screens" ADD CONSTRAINT "role_screens_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "role_screens" ADD CONSTRAINT "role_screens_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "role_screens" ADD CONSTRAINT "role_screens_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "countries" ADD CONSTRAINT "countries_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "countries" ADD CONSTRAINT "countries_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "countries" ADD CONSTRAINT "countries_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "states" ADD CONSTRAINT "states_country_id_fkey" FOREIGN KEY ("country_id") REFERENCES "countries"("country_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "states" ADD CONSTRAINT "states_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "states" ADD CONSTRAINT "states_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "states" ADD CONSTRAINT "states_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "cities" ADD CONSTRAINT "cities_state_id_fkey" FOREIGN KEY ("state_id") REFERENCES "states"("state_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "cities" ADD CONSTRAINT "cities_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "cities" ADD CONSTRAINT "cities_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "cities" ADD CONSTRAINT "cities_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "programs" ADD CONSTRAINT "programs_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "programs" ADD CONSTRAINT "programs_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "programs" ADD CONSTRAINT "programs_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "programs" ADD CONSTRAINT "programs_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "specializations" ADD CONSTRAINT "specializations_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "specializations" ADD CONSTRAINT "specializations_program_id_fkey" FOREIGN KEY ("program_id") REFERENCES "programs"("program_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "specializations" ADD CONSTRAINT "specializations_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "specializations" ADD CONSTRAINT "specializations_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "specializations" ADD CONSTRAINT "specializations_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "institutes" ADD CONSTRAINT "institutes_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "institutes" ADD CONSTRAINT "institutes_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "institutes" ADD CONSTRAINT "institutes_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "institutes" ADD CONSTRAINT "institutes_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_institutes" ADD CONSTRAINT "student_institutes_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_institutes" ADD CONSTRAINT "student_institutes_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("student_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_institutes" ADD CONSTRAINT "student_institutes_institute_id_fkey" FOREIGN KEY ("institute_id") REFERENCES "institutes"("institute_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_institutes" ADD CONSTRAINT "student_institutes_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_institutes" ADD CONSTRAINT "student_institutes_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_institutes" ADD CONSTRAINT "student_institutes_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teachers" ADD CONSTRAINT "teachers_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teachers" ADD CONSTRAINT "teachers_country_id_fkey" FOREIGN KEY ("country_id") REFERENCES "countries"("country_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teachers" ADD CONSTRAINT "teachers_state_id_fkey" FOREIGN KEY ("state_id") REFERENCES "states"("state_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teachers" ADD CONSTRAINT "teachers_city_id_fkey" FOREIGN KEY ("city_id") REFERENCES "cities"("city_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teachers" ADD CONSTRAINT "teachers_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teachers" ADD CONSTRAINT "teachers_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teachers" ADD CONSTRAINT "teachers_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teacher_email_addresses" ADD CONSTRAINT "teacher_email_addresses_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teacher_email_addresses" ADD CONSTRAINT "teacher_email_addresses_teacher_id_fkey" FOREIGN KEY ("teacher_id") REFERENCES "teachers"("teacher_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teacher_email_addresses" ADD CONSTRAINT "teacher_email_addresses_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teacher_email_addresses" ADD CONSTRAINT "teacher_email_addresses_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teacher_email_addresses" ADD CONSTRAINT "teacher_email_addresses_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teacher_phone_numbers" ADD CONSTRAINT "teacher_phone_numbers_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teacher_phone_numbers" ADD CONSTRAINT "teacher_phone_numbers_teacher_id_fkey" FOREIGN KEY ("teacher_id") REFERENCES "teachers"("teacher_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teacher_phone_numbers" ADD CONSTRAINT "teacher_phone_numbers_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teacher_phone_numbers" ADD CONSTRAINT "teacher_phone_numbers_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teacher_phone_numbers" ADD CONSTRAINT "teacher_phone_numbers_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "students" ADD CONSTRAINT "students_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "students" ADD CONSTRAINT "students_country_id_fkey" FOREIGN KEY ("country_id") REFERENCES "countries"("country_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "students" ADD CONSTRAINT "students_state_id_fkey" FOREIGN KEY ("state_id") REFERENCES "states"("state_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "students" ADD CONSTRAINT "students_city_id_fkey" FOREIGN KEY ("city_id") REFERENCES "cities"("city_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "students" ADD CONSTRAINT "students_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "students" ADD CONSTRAINT "students_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "students" ADD CONSTRAINT "students_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_email_addresses" ADD CONSTRAINT "student_email_addresses_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_email_addresses" ADD CONSTRAINT "student_email_addresses_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("student_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_email_addresses" ADD CONSTRAINT "student_email_addresses_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_email_addresses" ADD CONSTRAINT "student_email_addresses_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_email_addresses" ADD CONSTRAINT "student_email_addresses_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_phone_numbers" ADD CONSTRAINT "student_phone_numbers_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_phone_numbers" ADD CONSTRAINT "student_phone_numbers_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("student_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_phone_numbers" ADD CONSTRAINT "student_phone_numbers_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_phone_numbers" ADD CONSTRAINT "student_phone_numbers_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_phone_numbers" ADD CONSTRAINT "student_phone_numbers_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_devices" ADD CONSTRAINT "student_devices_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_devices" ADD CONSTRAINT "student_devices_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("student_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_devices" ADD CONSTRAINT "student_devices_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_devices" ADD CONSTRAINT "student_devices_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_devices" ADD CONSTRAINT "student_devices_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "courses" ADD CONSTRAINT "courses_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "courses" ADD CONSTRAINT "courses_specialization_id_fkey" FOREIGN KEY ("specialization_id") REFERENCES "specializations"("specialization_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "courses" ADD CONSTRAINT "courses_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "courses" ADD CONSTRAINT "courses_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "courses" ADD CONSTRAINT "courses_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_modules" ADD CONSTRAINT "course_modules_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_modules" ADD CONSTRAINT "course_modules_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("course_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_modules" ADD CONSTRAINT "course_modules_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_modules" ADD CONSTRAINT "course_modules_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_modules" ADD CONSTRAINT "course_modules_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_topics" ADD CONSTRAINT "course_topics_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_topics" ADD CONSTRAINT "course_topics_module_id_fkey" FOREIGN KEY ("module_id") REFERENCES "course_modules"("course_module_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_topics" ADD CONSTRAINT "course_topics_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_topics" ADD CONSTRAINT "course_topics_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_topics" ADD CONSTRAINT "course_topics_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_videos" ADD CONSTRAINT "course_videos_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_videos" ADD CONSTRAINT "course_videos_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("course_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_videos" ADD CONSTRAINT "course_videos_course_topic_id_fkey" FOREIGN KEY ("course_topic_id") REFERENCES "course_topics"("course_topic_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_videos" ADD CONSTRAINT "course_videos_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_videos" ADD CONSTRAINT "course_videos_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_videos" ADD CONSTRAINT "course_videos_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_documents" ADD CONSTRAINT "course_documents_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_documents" ADD CONSTRAINT "course_documents_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("course_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_documents" ADD CONSTRAINT "course_documents_course_topic_id_fkey" FOREIGN KEY ("course_topic_id") REFERENCES "course_topics"("course_topic_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_documents" ADD CONSTRAINT "course_documents_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_documents" ADD CONSTRAINT "course_documents_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_documents" ADD CONSTRAINT "course_documents_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("course_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("student_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_institute_id_fkey" FOREIGN KEY ("institute_id") REFERENCES "institutes"("institute_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_teacher_id_fkey" FOREIGN KEY ("teacher_id") REFERENCES "teachers"("teacher_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_status_changed_by_fkey" FOREIGN KEY ("status_changed_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "enrollment_status_histories" ADD CONSTRAINT "enrollment_status_histories_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "enrollment_status_histories" ADD CONSTRAINT "enrollment_status_histories_enrollment_id_fkey" FOREIGN KEY ("enrollment_id") REFERENCES "enrollments"("enrollment_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "enrollment_status_histories" ADD CONSTRAINT "enrollment_status_histories_changed_by_fkey" FOREIGN KEY ("changed_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "enrollment_status_histories" ADD CONSTRAINT "enrollment_status_histories_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "enrollment_status_histories" ADD CONSTRAINT "enrollment_status_histories_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "enrollment_status_histories" ADD CONSTRAINT "enrollment_status_histories_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_course_progresses" ADD CONSTRAINT "student_course_progresses_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_course_progresses" ADD CONSTRAINT "student_course_progresses_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("student_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_course_progresses" ADD CONSTRAINT "student_course_progresses_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("course_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_course_progresses" ADD CONSTRAINT "student_course_progresses_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_course_progresses" ADD CONSTRAINT "student_course_progresses_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_course_progresses" ADD CONSTRAINT "student_course_progresses_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teacher_courses" ADD CONSTRAINT "teacher_courses_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teacher_courses" ADD CONSTRAINT "teacher_courses_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("course_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teacher_courses" ADD CONSTRAINT "teacher_courses_teacher_id_fkey" FOREIGN KEY ("teacher_id") REFERENCES "teachers"("teacher_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teacher_courses" ADD CONSTRAINT "teacher_courses_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teacher_courses" ADD CONSTRAINT "teacher_courses_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "teacher_courses" ADD CONSTRAINT "teacher_courses_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_sessions" ADD CONSTRAINT "course_sessions_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_sessions" ADD CONSTRAINT "course_sessions_teacher_id_fkey" FOREIGN KEY ("teacher_id") REFERENCES "teachers"("teacher_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_sessions" ADD CONSTRAINT "course_sessions_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("course_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_sessions" ADD CONSTRAINT "course_sessions_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_sessions" ADD CONSTRAINT "course_sessions_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_sessions" ADD CONSTRAINT "course_sessions_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_session_enrollments" ADD CONSTRAINT "course_session_enrollments_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_session_enrollments" ADD CONSTRAINT "course_session_enrollments_course_session_id_fkey" FOREIGN KEY ("course_session_id") REFERENCES "course_sessions"("course_session_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_session_enrollments" ADD CONSTRAINT "course_session_enrollments_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("student_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_session_enrollments" ADD CONSTRAINT "course_session_enrollments_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_session_enrollments" ADD CONSTRAINT "course_session_enrollments_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_session_enrollments" ADD CONSTRAINT "course_session_enrollments_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_session_settings" ADD CONSTRAINT "course_session_settings_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_session_settings" ADD CONSTRAINT "course_session_settings_course_session_id_fkey" FOREIGN KEY ("course_session_id") REFERENCES "course_sessions"("course_session_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_session_settings" ADD CONSTRAINT "course_session_settings_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_session_settings" ADD CONSTRAINT "course_session_settings_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_session_settings" ADD CONSTRAINT "course_session_settings_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "video_progresses" ADD CONSTRAINT "video_progresses_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "video_progresses" ADD CONSTRAINT "video_progresses_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("student_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "video_progresses" ADD CONSTRAINT "video_progresses_course_video_id_fkey" FOREIGN KEY ("course_video_id") REFERENCES "course_videos"("course_video_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "video_progresses" ADD CONSTRAINT "video_progresses_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "system_users"("system_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "video_progresses" ADD CONSTRAINT "video_progresses_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "video_progresses" ADD CONSTRAINT "video_progresses_deleted_by_fkey" FOREIGN KEY ("deleted_by") REFERENCES "system_users"("system_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quizzes" ADD CONSTRAINT "quizzes_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quizzes" ADD CONSTRAINT "quizzes_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("course_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quizzes" ADD CONSTRAINT "quizzes_teacher_id_fkey" FOREIGN KEY ("teacher_id") REFERENCES "teachers"("teacher_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quiz_mappings" ADD CONSTRAINT "quiz_mappings_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quiz_mappings" ADD CONSTRAINT "quiz_mappings_quiz_id_fkey" FOREIGN KEY ("quiz_id") REFERENCES "quizzes"("quiz_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quiz_mappings" ADD CONSTRAINT "quiz_mappings_teacher_id_fkey" FOREIGN KEY ("teacher_id") REFERENCES "teachers"("teacher_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quiz_questions" ADD CONSTRAINT "quiz_questions_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quiz_questions" ADD CONSTRAINT "quiz_questions_quiz_id_fkey" FOREIGN KEY ("quiz_id") REFERENCES "quizzes"("quiz_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quiz_questions" ADD CONSTRAINT "quiz_questions_teacher_id_fkey" FOREIGN KEY ("teacher_id") REFERENCES "teachers"("teacher_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quiz_question_options" ADD CONSTRAINT "quiz_question_options_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quiz_question_options" ADD CONSTRAINT "quiz_question_options_quiz_question_id_fkey" FOREIGN KEY ("quiz_question_id") REFERENCES "quiz_questions"("quiz_question_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quiz_question_answers" ADD CONSTRAINT "quiz_question_answers_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quiz_question_answers" ADD CONSTRAINT "quiz_question_answers_quiz_question_id_fkey" FOREIGN KEY ("quiz_question_id") REFERENCES "quiz_questions"("quiz_question_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quiz_attempts" ADD CONSTRAINT "quiz_attempts_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quiz_attempts" ADD CONSTRAINT "quiz_attempts_quiz_id_fkey" FOREIGN KEY ("quiz_id") REFERENCES "quizzes"("quiz_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quiz_attempts" ADD CONSTRAINT "quiz_attempts_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("student_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quiz_attempt_answers" ADD CONSTRAINT "quiz_attempt_answers_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quiz_attempt_answers" ADD CONSTRAINT "quiz_attempt_answers_quiz_attempt_id_fkey" FOREIGN KEY ("quiz_attempt_id") REFERENCES "quiz_attempts"("quiz_attempt_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quiz_attempt_answers" ADD CONSTRAINT "quiz_attempt_answers_quiz_question_id_fkey" FOREIGN KEY ("quiz_question_id") REFERENCES "quiz_questions"("quiz_question_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quiz_attempt_answers" ADD CONSTRAINT "quiz_attempt_answers_quiz_question_option_id_fkey" FOREIGN KEY ("quiz_question_option_id") REFERENCES "quiz_question_options"("quiz_question_option_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "quiz_attempt_answers" ADD CONSTRAINT "quiz_attempt_answers_reviewed_by_teacher_id_fkey" FOREIGN KEY ("reviewed_by_teacher_id") REFERENCES "teachers"("teacher_id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "assignments" ADD CONSTRAINT "assignments_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "assignments" ADD CONSTRAINT "assignments_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("course_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "assignments" ADD CONSTRAINT "assignments_teacher_id_fkey" FOREIGN KEY ("teacher_id") REFERENCES "teachers"("teacher_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "assignment_mappings" ADD CONSTRAINT "assignment_mappings_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "assignment_mappings" ADD CONSTRAINT "assignment_mappings_assignment_id_fkey" FOREIGN KEY ("assignment_id") REFERENCES "assignments"("assignment_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "assignment_mappings" ADD CONSTRAINT "assignment_mappings_teacher_id_fkey" FOREIGN KEY ("teacher_id") REFERENCES "teachers"("teacher_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_assignments" ADD CONSTRAINT "student_assignments_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_assignments" ADD CONSTRAINT "student_assignments_assignment_id_fkey" FOREIGN KEY ("assignment_id") REFERENCES "assignments"("assignment_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "student_assignments" ADD CONSTRAINT "student_assignments_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("student_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "assignment_submission_files" ADD CONSTRAINT "assignment_submission_files_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "assignment_submission_files" ADD CONSTRAINT "assignment_submission_files_student_assignment_id_fkey" FOREIGN KEY ("student_assignment_id") REFERENCES "student_assignments"("student_assignment_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "notifications" ADD CONSTRAINT "notifications_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_session_announcements" ADD CONSTRAINT "course_session_announcements_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_session_announcements" ADD CONSTRAINT "course_session_announcements_course_session_id_fkey" FOREIGN KEY ("course_session_id") REFERENCES "course_sessions"("course_session_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "course_session_announcements" ADD CONSTRAINT "course_session_announcements_teacher_id_fkey" FOREIGN KEY ("teacher_id") REFERENCES "teachers"("teacher_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "notification_deliveries" ADD CONSTRAINT "notification_deliveries_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "notification_deliveries" ADD CONSTRAINT "notification_deliveries_notification_id_fkey" FOREIGN KEY ("notification_id") REFERENCES "notifications"("notification_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "email_queues" ADD CONSTRAINT "email_queues_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "email_queues" ADD CONSTRAINT "email_queues_notification_id_fkey" FOREIGN KEY ("notification_id") REFERENCES "notifications"("notification_id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "notification_templates" ADD CONSTRAINT "notification_templates_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "push_notification_devices" ADD CONSTRAINT "push_notification_devices_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT ON UPDATE CASCADE;
