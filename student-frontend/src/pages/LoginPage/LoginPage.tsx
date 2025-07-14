@@ -48,7 +48,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
   const [hasInteracted, setHasInteracted] = useState(false);
 
   // Get return URL from location state
-  const returnUrl = (location.state as { returnUrl?: string })?.returnUrl || '/dashboard';
+  const returnUrl = (location.state as { returnUrl?: string })?.returnUrl || '/courses';
 
   // Sync auth error with local error state
   useEffect(() => {
