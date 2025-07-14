@@ -12,6 +12,7 @@ model Course {
   course_price         Decimal?  @db.Decimal(10, 2) // Nullable for free courses
   course_total_hours   Decimal?  @db.Decimal(6, 2) // Auto-calculated by backend from sum of video durations
   specialization_id    Int?
+  program_id    Int?
   
   // Audit fields
   is_active            Boolean   @default(true)
@@ -28,7 +29,8 @@ model Course {
   // Relationships
   tenant               Tenant    @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
   specialization       Specialization? @relation(fields: [specialization_id], references: [specialization_id], onDelete: SetNull)
-  
+  program             Program? @relation(fields: [program_id], references: [program_id], onDelete: SetNull)
+
   // Course content relationships
   modules              CourseModule[]
   videos               CourseVideo[]

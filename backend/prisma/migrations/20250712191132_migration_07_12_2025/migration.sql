@@ -62,6 +62,9 @@ CREATE TYPE "VideoUploadStatus" AS ENUM ('PENDING', 'PROCESSING', 'COMPLETED', '
 CREATE TYPE "CourseStatus" AS ENUM ('DRAFT', 'PUBLISHED', 'ARCHIVED', 'SUSPENDED');
 
 -- CreateEnum
+CREATE TYPE "CourseType" AS ENUM ('FREE', 'PAID');
+
+-- CreateEnum
 CREATE TYPE "NotificationType" AS ENUM ('ANNOUNCEMENT', 'ASSIGNMENT_DUE', 'QUIZ_AVAILABLE', 'GRADE_POSTED', 'COURSE_UPDATE', 'SYSTEM_ALERT', 'ENROLLMENT_CONFIRMATION', 'DEADLINE_REMINDER');
 
 -- CreateEnum
@@ -120,6 +123,9 @@ CREATE TYPE "ClientStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'SUSPENDED', 'TERMINAT
 
 -- CreateEnum
 CREATE TYPE "ContactType" AS ENUM ('PRIMARY', 'SECONDARY', 'EMERGENCY', 'BILLING');
+
+-- CreateEnum
+CREATE TYPE "UserType" AS ENUM ('STUDENT', 'TEACHER', 'TENANT_ADMIN', 'SUPER_ADMIN');
 
 -- CreateTable
 CREATE TABLE "tenants" (
@@ -234,7 +240,7 @@ CREATE TABLE "client_tenants" (
 -- CreateTable
 CREATE TABLE "roles" (
     "role_id" SERIAL NOT NULL,
-    "role_type" "SystemUserRole" NOT NULL,
+    "role_type" "UserType" NOT NULL,
     "role_name" VARCHAR(100) NOT NULL,
     "role_description" TEXT,
     "is_system_role" BOOLEAN NOT NULL DEFAULT false,
@@ -279,7 +285,7 @@ CREATE TABLE "screens" (
 CREATE TABLE "system_users" (
     "system_user_id" SERIAL NOT NULL,
     "tenant_id" INTEGER,
-    "role_type" "SystemUserRole" NOT NULL,
+    "role_type" "UserType" NOT NULL,
     "username" VARCHAR(50) NOT NULL,
     "full_name" VARCHAR(255) NOT NULL,
     "email_address" VARCHAR(255) NOT NULL,
@@ -330,7 +336,7 @@ CREATE TABLE "user_screens" (
 CREATE TABLE "role_screens" (
     "role_screen_id" SERIAL NOT NULL,
     "tenant_id" INTEGER NOT NULL,
-    "role_type" "SystemUserRole" NOT NULL,
+    "role_type" "UserType" NOT NULL,
     "screen_id" INTEGER NOT NULL,
     "can_view" BOOLEAN NOT NULL DEFAULT false,
     "can_create" BOOLEAN NOT NULL DEFAULT false,
@@ -416,6 +422,7 @@ CREATE TABLE "programs" (
     "program_id" SERIAL NOT NULL,
     "tenant_id" INTEGER NOT NULL,
     "program_name" VARCHAR(255) NOT NULL,
+    "program_thumbnail_url" TEXT,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_deleted" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -436,6 +443,7 @@ CREATE TABLE "specializations" (
     "tenant_id" INTEGER NOT NULL,
     "program_id" INTEGER NOT NULL,
     "specialization_name" VARCHAR(255) NOT NULL,
+    "specialization_thumbnail_url" TEXT,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_deleted" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -501,6 +509,7 @@ CREATE TABLE "teachers" (
     "state_id" INTEGER,
     "city_id" INTEGER,
     "address" TEXT,
+    "teacher_qualification" TEXT,
     "date_of_birth" TIMESTAMP(3),
     "profile_picture_url" VARCHAR(500),
     "zip_code" VARCHAR(20),
@@ -680,8 +689,11 @@ CREATE TABLE "courses" (
     "course_id" SERIAL NOT NULL,
     "tenant_id" INTEGER NOT NULL,
     "course_name" VARCHAR(255) NOT NULL,
+    "course_description" TEXT,
     "main_thumbnail_url" TEXT,
     "course_status" "CourseStatus" NOT NULL DEFAULT 'DRAFT',
+    "course_type" "CourseType" NOT NULL DEFAULT 'PAID',
+    "course_price" DECIMAL(10,2),
     "course_total_hours" DECIMAL(6,2),
     "specialization_id" INTEGER,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
@@ -753,6 +765,7 @@ CREATE TABLE "course_videos" (
     "duration_seconds" INTEGER,
     "position" INTEGER,
     "upload_status" "VideoUploadStatus" DEFAULT 'PENDING',
+    "IsLocked" BOOLEAN NOT NULL DEFAULT false,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_deleted" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

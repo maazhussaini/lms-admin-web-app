@@ -1,0 +1,91 @@
+# Student Models Table Documentation
+
+## Student
+- student_id Int, [PK, autoincrement], not null
+- tenant_id Int, not null
+- full_name String, not null
+- first_name String, not null
+- middle_name String, nullable
+- last_name String, not null
+- country_id Int, not null
+- state_id Int, not null
+- city_id Int, not null
+- address String, nullable
+- date_of_birth DateTime, nullable
+- profile_picture_url String, nullable
+- zip_code String, nullable
+- age Int, nullable
+- gender Gender, nullable [MALE, FEMALE]
+- username String, not null
+- password_hash String, not null
+- last_login_at DateTime, nullable
+- student_status StudentStatus, default ACTIVE, not null [ACTIVE, ALUMNI, DROPOUT, ACCOUNT_FREEZED, BLACKLISTED, SUSPENDED, DEACTIVATED]
+- referral_type String, nullable
+- is_active Boolean, default true, not null
+- is_deleted Boolean, default false, not null
+- created_at DateTime, default now(), not null
+- updated_at DateTime, default now(), not null
+- created_by Int, not null
+- updated_by Int, nullable
+- deleted_at DateTime, nullable
+- deleted_by Int, nullable
+- created_ip String, nullable
+- updated_ip String, nullable
+
+## StudentEmailAddress
+- student_email_address_id Int, [PK, autoincrement], not null
+- tenant_id Int, not null
+- student_id Int, not null
+- email_address String, not null
+- is_primary Boolean, default false, not null
+- priority Int, nullable
+- is_active Boolean, default true, not null
+- is_deleted Boolean, default false, not null
+- created_at DateTime, default now(), not null
+- updated_at DateTime, default now(), not null
+- created_by Int, not null
+- updated_by Int, nullable
+- deleted_at DateTime, nullable
+- deleted_by Int, nullable
+- created_ip String, nullable
+- updated_ip String, nullable
+
+## StudentPhoneNumber
+- student_phone_number_id Int, [PK, autoincrement], not null
+- tenant_id Int, not null
+- student_id Int, not null
+- dial_code String, not null
+- phone_number String, not null
+- iso_country_code String, nullable
+- is_primary Boolean, default false, not null
+- is_active Boolean, default true, not null
+- is_deleted Boolean, default false, not null
+- created_at DateTime, default now(), not null
+- updated_at DateTime, default now(), not null
+- created_by Int, not null
+- updated_by Int, nullable
+- deleted_at DateTime, nullable
+- deleted_by Int, nullable
+- created_ip String, nullable
+- updated_ip String, nullable
+
+## StudentDevice
+- student_device_id Int, [PK, autoincrement], not null
+- tenant_id Int, not null
+- student_id Int, not null
+- device_type DeviceType, not null [IOS, ANDROID, WEB, DESKTOP]
+- device_identifier String, not null
+- device_ip String, nullable
+- mac_address String, nullable
+- is_primary Boolean, default false, not null
+- last_active_at DateTime, default now(), not null
+- is_active Boolean, default true, not null
+- is_deleted Boolean, default false, not null
+- created_at DateTime, default now(), not null
+- updated_at DateTime, default now(), not null
+- created_by Int, not null
+- updated_by Int, nullable
+- deleted_at DateTime, nullable
+- deleted_by Int, nullable
+- created_ip String, nullable
+- updated_ip String, nullable
