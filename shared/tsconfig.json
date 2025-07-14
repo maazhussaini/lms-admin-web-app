@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "composite": true,           // Enables project references and incremental builds; required for referencing this project from others
+    "declaration": true,         // Generates .d.ts type declaration files for all TypeScript files in the project
+    "declarationMap": true,      // Generates source maps for declaration files to improve debugging and navigation in editors
+    "emitDeclarationOnly": true, // Only emits .d.ts files (no JavaScript output), making this project type-only
+    "outDir": "../dist/shared",  // Outputs all generated files (e.g., .d.ts, .d.ts.map) to the dist/shared directory relative to this config
+    "rootDir": "./"              // Treats the current directory as the root for all input files, preserving folder structure in output
+  },
+  "include": [
+    "**/*.ts"                    // Includes all TypeScript files in this project for compilation and type generation
+  ]
+}

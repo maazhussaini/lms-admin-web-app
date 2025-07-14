@@ -1,34 +1,33 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "./tsconfig.json",                        // Inherit base config from tsconfig.json for shared settings
   "compilerOptions": {
     /* Production Build Settings */
-    "noEmit": false,                                    /* Enable file emission for production builds */
-    "declaration": true,                                /* Generate .d.ts files for better IDE support */
-    "declarationMap": true,                             /* Create sourcemaps for declaration files */
-    "sourceMap": true,                                  /* Generate source maps for debugging */
-    "rootDir": "./src",                                 /* Root directory of source files */
-    
+    "noEmit": false,                                   // Emit output files (JavaScript, declaration files, etc.) during build
+    "declaration": true,                               // Generate .d.ts declaration files for TypeScript types
+    "declarationMap": true,                            // Generate source maps for declaration files for better debugging
+    "sourceMap": true,                                 // Generate source maps for JavaScript output for debugging
+    // "rootDir": "./src",                             // (Commented out) Would set the root directory for input files
+
     /* Production Optimizations */
-    "removeComments": true,                             /* Remove comments from output */
-    "importHelpers": true,                              /* Import helpers from tslib for smaller bundles */
-    "downlevelIteration": true,                         /* Better iteration support for older targets */
-    
+    "removeComments": true,                            // Remove comments from emitted JavaScript for smaller output
+    "importHelpers": true,                             // Use external helpers from tslib to reduce bundle size
+    "downlevelIteration": true,                        // Enable full support for iterables in ES5/ES3 targets
+
     /* Stricter Production Checks */
-    "noUnusedLocals": true,                             /* Enforce no unused locals in production */
-    "noUnusedParameters": true                          /* Enforce no unused parameters in production */
+    "noUnusedLocals": true,                            // Report errors on unused local variables to keep code clean
+    "noUnusedParameters": true                         // Report errors on unused function parameters to avoid dead code
   },
   "include": [
-    "src/**/*",                                         /* Include only source files for production */
-    "../shared/**/*"                                    /* Include shared types */
+    "src/**/*"                                         // Include all TypeScript files in the src directory for production build
   ],
   "exclude": [
-    "node_modules",                                     /* Exclude dependencies */
-    "tests",                                            /* Exclude test files */
-    "**/*.test.ts",                                     /* Exclude test files */
-    "**/*.spec.ts",                                     /* Exclude spec files */
-    "coverage",                                         /* Exclude coverage reports */
-    "prisma/migrations",                                /* Exclude Prisma migration files */
-    "src/**/*.test.ts",                                 /* Exclude source test files */
-    "src/**/*.spec.ts"                                  /* Exclude source spec files */
+    "node_modules",                                    // Exclude dependencies from build
+    "tests",                                           // Exclude test files and folders
+    "**/*.test.ts",                                    // Exclude all test files ending with .test.ts
+    "**/*.spec.ts",                                    // Exclude all spec files ending with .spec.ts
+    "coverage",                                        // Exclude code coverage output
+    "prisma/migrations",                               // Exclude Prisma migration files
+    "src/**/*.test.ts",                                // Exclude test files in src directory
+    "src/**/*.spec.ts"                                 // Exclude spec files in src directory
   ]
 }

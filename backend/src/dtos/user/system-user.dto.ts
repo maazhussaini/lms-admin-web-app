@@ -15,7 +15,7 @@ export interface CreateSystemUserDto {
   email: string;
   password: string;
   roleType: UserType;
-  tenantId?: number;
+  tenantId?: number | null;
   status?: SystemUserStatus;
 }
 
@@ -36,7 +36,7 @@ export interface UpdateSystemUserDto {
 export interface SystemUserFilterDto {
   roleType?: UserType;
   status?: SystemUserStatus;
-  tenantId?: number;
+  tenantId?: number | null;
   search?: string;
 }
 

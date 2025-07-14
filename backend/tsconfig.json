@@ -1,74 +1,76 @@
 {
   "compilerOptions": {
     /* Language and Environment */
-    "target": "ES2022",                                  /* Modern target for better async/await, top-level await, optional chaining */
-    "lib": ["ES2022"],                                   /* Include modern JavaScript features */
-    "experimentalDecorators": true,                      /* Enable decorators for validation libraries like class-validator */
-    "emitDecoratorMetadata": true,                       /* Required for dependency injection and validation decorators */
-    "useDefineForClassFields": true,                     /* Emit ECMAScript-standard-compliant class fields */
+    "target": "ES2022",                        // Sets the JavaScript language version for emitted code and type checking
+    "lib": ["ES2022"],                         // Includes built-in type definitions for ES2022 features
+    "experimentalDecorators": true,             // Enables support for experimental decorators (e.g., @Injectable)
+    "emitDecoratorMetadata": true,              // Emits metadata for decorators, useful for frameworks like TypeORM/NestJS
+    "useDefineForClassFields": true,            // Uses 'define' semantics for class fields (aligns with latest JS spec)
 
     /* Modules */
-    "module": "ESNext",                                  /* Use latest ES modules for tree-shaking and modern imports */
-    "moduleResolution": "Bundler",                       /* Modern resolution strategy for better TypeScript support */
-    "baseUrl": "./",                                     /* Base directory for module resolution */
+    "module": "ESNext",                         // Sets the module code generation (e.g., import/export syntax)
+    "moduleResolution": "Bundler",              // Uses bundler-style module resolution (for modern build tools)
+    "baseUrl": "./",                            // Base directory for non-relative module names
     "paths": {
-      "@/*": ["src/*"],                                  /* Backend source files alias */
-      "@shared/*": ["../shared/*"]                       /* Shared types and utilities alias */
+      "@/*": ["src/*"],                         // Alias '@' to 'src' directory for cleaner imports
+      "@shared/*": ["../shared/*"]              // Alias '@shared' to shared directory for cross-project imports
     },
-    "resolveJsonModule": true,                           /* Enable importing .json files */
-    "moduleDetection": "force",                          /* Force module detection for consistent behavior */
+    "resolveJsonModule": true,                  // Allows importing .json files as modules
+    "moduleDetection": "force",                 // Forces all files to be modules unless otherwise specified
 
     /* Emit - Base Settings */
-    "outDir": "./dist",                                  /* Output directory for compiled files */
-    "removeComments": true,                              /* Remove comments from output for smaller files */
-    "noEmitOnError": true,                               /* Don't emit files if there are type errors */
+    "outDir": "./dist",                         // Output directory for compiled JavaScript files
+    "removeComments": true,                     // Removes comments from emitted JavaScript
+    "noEmitOnError": true,                      // Prevents emitting files if there are type errors
 
     /* Interop Constraints */
-    "isolatedModules": true,                             /* Required for build tools like esbuild, tsx */
-    "verbatimModuleSyntax": false,                       /* Allow type-only imports to be elided */
-    "allowSyntheticDefaultImports": true,                /* Better CommonJS interop for libraries */
-    "esModuleInterop": true,                             /* Enable default imports from CommonJS modules */
-    "forceConsistentCasingInFileNames": true,            /* Ensure consistent file name casing */
+    "isolatedModules": true,                    // Ensures each file can be safely transpiled independently
+    "verbatimModuleSyntax": false,              // Allows TypeScript to transform import/export syntax as needed
+    "allowSyntheticDefaultImports": true,       // Allows default imports from modules without a default export
+    "esModuleInterop": true,                    // Enables interoperability between CommonJS and ES Modules
+    "forceConsistentCasingInFileNames": true,   // Ensures file imports respect case sensitivity
 
     /* Type Checking - Strict Mode */
-    "strict": true,                                      /* Enable all strict type-checking options */
-    "noImplicitAny": true,                              /* Error on expressions with implied 'any' type */
-    "strictNullChecks": true,                           /* Enable strict null checks */
-    "strictFunctionTypes": true,                        /* Strict checking of function types */
-    "strictBindCallApply": true,                        /* Strict checking of bind, call, apply */
-    "strictPropertyInitialization": true,              /* Check class property initialization */
-    "noImplicitThis": true,                             /* Error when 'this' has type 'any' */
-    "useUnknownInCatchVariables": true,                 /* Use 'unknown' instead of 'any' in catch clauses */
-    "alwaysStrict": true,                               /* Emit 'use strict' for each source file */
+    "strict": true,                             // Enables all strict type-checking options
+    "noImplicitAny": true,                      // Disallows variables with implicit 'any' type
+    "strictNullChecks": true,                   // Makes null and undefined distinct types
+    "strictFunctionTypes": true,                // Ensures function type parameters are checked strictly
+    "strictBindCallApply": true,                // Checks arguments for bind, call, and apply methods
+    "strictPropertyInitialization": true,       // Ensures class properties are initialized in the constructor
+    "noImplicitThis": true,                     // Disallows 'this' with an implicit 'any' type
+    "useUnknownInCatchVariables": true,         // Uses 'unknown' instead of 'any' for catch clause variables
+    "alwaysStrict": true,                       // Parses files in strict mode and emits "use strict" in JS
 
     /* Additional Checks */
-    "noUnusedLocals": true,                             /* Error on unused local variables */
-    "noUnusedParameters": true,                         /* Error on unused function parameters */
-    "exactOptionalPropertyTypes": true,                 /* Interpret optional property types as written */
-    "noImplicitReturns": true,                          /* Error when not all code paths return a value */
-    "noFallthroughCasesInSwitch": true,                 /* Error on fallthrough cases in switch statements */
-    "noUncheckedIndexedAccess": true,                   /* Add 'undefined' to type when accessed using index */
-    "noImplicitOverride": true,                         /* Require 'override' modifier for overriding members */
-    "noPropertyAccessFromIndexSignature": true,        /* Require bracket notation for dynamic property access */
+    "noUnusedLocals": true,                     // Reports errors on unused local variables
+    "noUnusedParameters": true,                 // Reports errors on unused function parameters
+    "exactOptionalPropertyTypes": true,         // Makes optional property types strictly match undefined
+    "noImplicitReturns": true,                  // Ensures all code paths in a function return a value
+    "noFallthroughCasesInSwitch": true,         // Prevents fallthrough between switch cases
+    "noUncheckedIndexedAccess": true,           // Adds undefined to types for indexed object access
+    "noImplicitOverride": true,                 // Requires 'override' modifier when overriding methods
+    "noPropertyAccessFromIndexSignature": true, // Disallows property access from index signatures
 
     /* JavaScript Support */
-    "allowJs": false,                                   /* Don't allow JavaScript files (pure TypeScript project) */
-    "checkJs": false,                                   /* Don't check JavaScript files */
+    "allowJs": false,                           // Disables JavaScript file compilation
+    "checkJs": false,                           // Disables type checking for JavaScript files
 
     /* Completeness */
-    "skipLibCheck": true                                /* Skip type checking of declaration files for faster builds */
+    "skipLibCheck": true                        // Skips type checking of declaration files (*.d.ts) for faster builds
   },
+  "references": [
+    { "path": "../shared" }                     // References the shared project for type sharing and project builds
+  ],
   "include": [
-    "src/**/*",                                         /* Include all TypeScript files in src */
-    "../shared/**/*"                                    /* Include shared types and utilities */
+    "src/**/*"                                 // Includes all TypeScript files in the src directory
   ],
   "exclude": [
-    "node_modules",                                     /* Exclude dependencies */
-    "dist",                                             /* Exclude build output */
-    "tests",                                            /* Exclude test files from main compilation */
-    "**/*.test.ts",                                     /* Exclude test files */
-    "**/*.spec.ts",                                     /* Exclude spec files */
-    "coverage",                                         /* Exclude coverage reports */
-    "prisma/migrations"                                 /* Exclude Prisma migration files */
-  ],
+    "node_modules",                            // Excludes dependencies
+    "dist",                                    // Excludes build output
+    "tests",                                   // Excludes test files
+    "**/*.test.ts",                            // Excludes test files by pattern
+    "**/*.spec.ts",                            // Excludes spec files by pattern
+    "coverage",                                // Excludes coverage reports
+    "prisma/migrations"                        // Excludes Prisma migration files
+  ]
 }

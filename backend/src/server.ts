@@ -19,7 +19,6 @@ const io = initializeSocket(server);
 
 // Create global socket reference for use in other modules
 declare global {
-  // eslint-disable-next-line no-var
   var io: SocketServer | undefined;
 }
 global.io = io;

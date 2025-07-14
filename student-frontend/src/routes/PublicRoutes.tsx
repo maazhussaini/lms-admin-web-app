@@ -12,6 +12,8 @@ import ForgotCheckEmailPage from '@/pages/ForgotCheckEmailPage/ForgotCheckEmailP
 import ResetPasswordPage from '@/pages/ResetPasswordPage/ResetPasswordPage';
 // Import the actual ResetPasswordSuccessPage component
 import ResetPasswordSuccessPage from '@/pages/ResetPasswordSuccessPage/ResetPasswordSuccessPage';
+// Import the actual SignUpPage component
+import SignUpPage from '@/pages/SignUpPage';
 
 // Dummy components for development purposes (keeping existing ones for other routes)
 const DummyPage = ({ pageName, description }: { pageName: string; description: string }) => (
@@ -72,6 +74,7 @@ export const PublicRoutes: React.FC = () => {
   // Routes that should redirect authenticated users away
   const guardedPaths = [
     '/login',
+    '/signup',
     '/forgot-password',
     '/forgot-password/check-email',
     '/reset-password',
@@ -84,6 +87,8 @@ export const PublicRoutes: React.FC = () => {
     switch (currentPath) {
       case '/login':
         return <LoginPage />;
+      case '/signup':
+        return <SignUpPage />;
       case '/forgot-password':
         return <ForgotPasswordPage />;
       case '/forgot-password/check-email':

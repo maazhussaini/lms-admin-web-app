@@ -398,7 +398,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
                   variant="link"
                   size="sm"
                   className="text-[#4a2a82] font-bold hover:text-[#3b2168] p-0 h-auto"
-                  onClick={() => console.log('Sign up clicked')}
+                  onClick={() => navigate('/signup')}
                   disabled={isFormLoading}
                 >
                   Sign Up

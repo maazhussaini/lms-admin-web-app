@@ -1,51 +1,50 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "./tsconfig.json",                        // Inherit base config from tsconfig.json
   "compilerOptions": {
     /* Development-Specific Overrides */
-    "noEmit": true,                                     /* No file emission for development type checking */
-    "allowImportingTsExtensions": true,                 /* Allow .ts imports in development */
-    "incremental": true,                                /* Enable incremental compilation for faster builds */
-    "tsBuildInfoFile": "./.tsbuildinfo",               /* Cache file for incremental compilation */
-    
+    "noEmit": true,                                    // Do not emit output files during development (type-check only)
+    "allowImportingTsExtensions": true,                // Allow importing TypeScript files with .ts extension
+    "incremental": true,                               // Enable incremental compilation for faster rebuilds
+    "tsBuildInfoFile": "./.tsbuildinfo",               // Store incremental build info in this file
+
     /* Enhanced Development Experience */
-    "preserveWatchOutput": true,                        /* Keep output clean in watch mode */
-    "pretty": true,                                     /* Enable colored and formatted diagnostic output */
-    
+    "preserveWatchOutput": true,                       // Keep output in watch mode for easier debugging
+    "pretty": true,                                    // Use pretty formatting for compiler output
+
     /* Relaxed Checks for Development */
-    "noUnusedLocals": false,                           /* Allow unused locals during development */
-    "noUnusedParameters": false,                       /* Allow unused parameters during development */
-    
+    "noUnusedLocals": false,                           // Allow unused local variables in development
+    "noUnusedParameters": false,                       // Allow unused function parameters in development
+
     /* Development Source Maps */
-    "sourceMap": true,                                  /* Generate source maps for debugging */
-    "inlineSourceMap": false,                          /* Separate source map files */
-    "inlineSources": false,                            /* Don't inline sources in source maps */
-    
+    "sourceMap": true,                                 // Generate source maps for debugging
+    "inlineSourceMap": false,                          // Do not inline source maps (generate separate files)
+    "inlineSources": false,                            // Do not include source content in source maps
+
     /* Type Checking Performance */
-    "skipDefaultLibCheck": true                        /* Skip type checking of default library files */
+    "skipDefaultLibCheck": true                        // Skip type checking of default library files for faster builds
   },
   "include": [
-    "src/**/*",                                         /* Include all TypeScript files in src */
-    "../shared/**/*",                                   /* Include shared types and utilities */
-    "tests/**/*",                                       /* Include test files for development */
-    "**/*.test.ts",                                     /* Include test files */
-    "**/*.spec.ts"                                      /* Include spec files */
+    "src/**/*",                                        // Include all TypeScript files in src directory
+    "tests/**/*",                                      // Include all TypeScript files in tests directory
+    "**/*.test.ts",                                    // Include all test files ending with .test.ts
+    "**/*.spec.ts"                                     // Include all spec files ending with .spec.ts
   ],
   "exclude": [
-    "node_modules",                                     /* Exclude dependencies */
-    "dist",                                             /* Exclude build output */
-    "coverage",                                         /* Exclude coverage reports */
-    "prisma/migrations"                                 /* Exclude Prisma migration files */
+    "node_modules",                                    // Exclude dependencies
+    "dist",                                            // Exclude build output directory
+    "coverage",                                        // Exclude coverage reports
+    "prisma/migrations"                                // Exclude Prisma migration files
   ],
   "watchOptions": {
-    "watchFile": "useFsEvents",                        /* Use file system events for better performance */
-    "watchDirectory": "useFsEvents",                   /* Use file system events for directories */
-    "fallbackPolling": "dynamicPriority",             /* Fallback polling strategy */
-    "synchronousWatchDirectory": true,                 /* Synchronous directory watching */
+    "watchFile": "useFsEvents",                        // Use file system events for file watching
+    "watchDirectory": "useFsEvents",                   // Use file system events for directory watching
+    "fallbackPolling": "dynamicPriority",              // Use dynamic polling if file system events are unavailable
+    "synchronousWatchDirectory": true,                 // Use synchronous directory watching
     "excludeDirectories": [
-      "**/node_modules",
-      "**/dist",
-      "**/coverage",
-      "**/prisma/migrations"
+      "**/node_modules",                               // Exclude node_modules from watch
+      "**/dist",                                       // Exclude dist from watch
+      "**/coverage",                                   // Exclude coverage from watch
+      "**/prisma/migrations"                           // Exclude Prisma migrations from watch
     ]
   }
 }
