@@ -4,7 +4,7 @@
  */
 
 // Export API-related utilities
-export * from './api-error.utils.js';
+export * from './api-error.utils';
 // Export specific items from api-response.utils to avoid conflicts with api-error.utils
 export { 
   createSuccessResponse,
@@ -20,15 +20,15 @@ export {
   createPaginatedResponse,
   HTTP_STATUS_CODES,
   type HttpStatusCode
-} from './api-response.utils.js';
-export * from './async-handler.utils.js';
-export * from './bunny-video.utils.js';
-export * from './error-wrapper.utils.js';
-export * from './file-upload.utils.js';
-export * from './jwt.utils.js';
-export * from './pagination.utils.js';
-export * from './password.utils.js';
-export * from './validation.utils.js';
+} from './api-response.utils';
+export * from './async-handler.utils';
+export * from './bunny-video.utils';
+export * from './error-wrapper.utils';
+export * from './file-upload.utils';
+export * from './jwt.utils';
+export * from './pagination.utils';
+export * from './password.utils';
+export * from './validation.utils';
 
 // Re-export the async handler for convenience
-export { asyncHandler } from './async-handler.utils.js';
+export { asyncHandler } from './async-handler.utils';

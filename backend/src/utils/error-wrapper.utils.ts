@@ -14,7 +14,7 @@ import {
   ConflictError,
   NotFoundError,
   UnauthorizedError
-} from './api-error.utils.js';
+} from './api-error.utils';
 import { 
   PrismaClientKnownRequestError,
   PrismaClientValidationError,
@@ -22,7 +22,7 @@ import {
   PrismaClientUnknownRequestError,
   PrismaClientInitializationError
 } from '@prisma/client/runtime/library';
-import logger from '@/config/logger.js';
+import logger from '@/config/logger';
 
 /**
  * Type definitions for HTTP client errors

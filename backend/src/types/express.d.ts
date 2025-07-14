@@ -4,7 +4,7 @@
  * with custom properties used throughout the application.
  */
 
-import { TokenPayload } from '@/utils/jwt.utils.js';
+import { TokenPayload } from '@/utils/jwt.utils';
 
 declare global {
   namespace Express {

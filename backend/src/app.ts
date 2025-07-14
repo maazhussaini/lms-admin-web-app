@@ -14,20 +14,20 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 
 // Import configuration
-import env from '@/config/environment.js';
-import { requestLogger } from '@/config/logger.js';
-import setupSwagger from '@/config/swagger.js';
+import env from '@/config/environment';
+import { requestLogger } from '@/config/logger';
+import setupSwagger from '@/config/swagger';
 
 // Import middleware
-import requestId from '@/middleware/request-id.middleware.js';
-import errorHandler from '@/middleware/error-handler.middleware.js';
+import requestId from '@/middleware/request-id.middleware';
+import errorHandler from '@/middleware/error-handler.middleware';
 
 // Import API routes
-import apiV1Routes from '@/api/v1/index.js';
+import apiV1Routes from '@/api/v1/index';
 
 // Import shared types and utilities
-import { TApiSuccessResponse, TApiErrorResponse } from '@shared/types/api.types.js';
-import { createSuccessResponse, createErrorResponse, HTTP_STATUS_CODES, ERROR_CODES } from '@/utils/api-response.utils.js';
+import { TApiSuccessResponse, TApiErrorResponse } from '@shared/types/api.types';
+import { createSuccessResponse, createErrorResponse, HTTP_STATUS_CODES, ERROR_CODES } from '@/utils/api-response.utils';
 
 // Get directory name using ES modules
 const __filename = fileURLToPath(import.meta.url);

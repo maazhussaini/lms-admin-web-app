@@ -11,7 +11,7 @@ import { ApiError } from '@/utils/api-error.utils';
 import { getPaginationFromRequest, getSortParamsFromRequest } from '../utils/pagination.utils';
 import { TApiSuccessResponse } from '@shared/types/api.types';
 import logger from '@/config/logger';
-import { UserType } from '@/types/enums.types.js';
+import { UserType } from '@/types/enums.types';
 
 /**
  * Extended Request interface with authenticated user data

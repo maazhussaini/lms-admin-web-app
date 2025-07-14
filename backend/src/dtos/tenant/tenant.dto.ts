@@ -7,7 +7,7 @@ import { body, query, ValidationChain } from 'express-validator';
 import {
   TenantStatus,
   ContactType
-} from '@/types/enums.types.js';
+} from '@/types/enums.types';
 
 /**
  * DTO interface for creating a new tenant

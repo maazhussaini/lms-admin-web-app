@@ -12,8 +12,8 @@ import {
   body,
   param,
   query} from 'express-validator';
-import { ValidationError as ApiValidationError } from '@/utils/api-error.utils.js';
-import logger from '@/config/logger.js';
+import { ValidationError as ApiValidationError } from '@/utils/api-error.utils';
+import logger from '@/config/logger';
 
 /**
  * Interface for validation options

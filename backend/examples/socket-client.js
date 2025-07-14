@@ -8,7 +8,7 @@
  */
 
 import { io } from 'socket.io-client';
-import { SocketEventName } from '../shared/types/notification.types.js';
+import { SocketEventName } from '../shared/types/notification.types';
 
 // Get JWT token from command line arguments
 const token = process.argv[2];

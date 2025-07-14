@@ -5,15 +5,15 @@
  */
 
 import * as crypto from 'crypto';
-import env from '@/config/environment.js';
+import env from '@/config/environment';
 import { 
   ExternalServiceError, 
   BadRequestError, 
   InternalServerError,
   NotFoundError,
   ApiError 
-} from './api-error.utils.js';
-import logger from '@/config/logger.js';
+} from './api-error.utils';
+import logger from '@/config/logger';
 import { 
   BunnyTokenConfig, 
   BunnyVideoUploadResponse,
@@ -25,7 +25,7 @@ import {
   BunnyCdnPurgeRequest,
   BunnyCdnPurgeResponse
 } from '@shared/types/bunny.types';
-import { BunnyVideoStatus } from '@/types/enums.types.js';
+import { BunnyVideoStatus } from '@/types/enums.types';
 
 /**
  * Type-safe metadata interface for video uploads

@@ -6,9 +6,9 @@
 
 import { PrismaClient, SystemUserRole } from '@prisma/client';
 
-import { hashPassword } from '../src/utils/password.utils.js';
-import { disableTenantIsolationMiddleware } from '../src/config/database.js';
-import logger from '../src/config/logger.js';
+import { hashPassword } from '../src/utils/password.utils';
+import { disableTenantIsolationMiddleware } from '../src/config/database';
+import logger from '../src/config/logger';
 import dotenv from 'dotenv';
 
 // Load environment variables

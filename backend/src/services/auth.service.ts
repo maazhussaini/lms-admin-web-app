@@ -24,7 +24,7 @@ import {
 } from '@/dtos/auth/auth.dto';
 import crypto from 'crypto';
 import logger from '@/config/logger';
-import { SystemUserRole, UserType } from '@/types/enums.types.js';
+import { SystemUserRole, UserType } from '@/types/enums.types';
 
 // Token blacklist - In production, this would be implemented with Redis
 const TOKEN_BLACKLIST = new Set<string>();

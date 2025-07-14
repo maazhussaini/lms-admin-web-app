@@ -5,11 +5,11 @@
  */
 
 import { Server, Socket } from 'socket.io';
-import { registerNotificationHandlers } from './notification.handlers.js';
-import { registerCourseHandlers } from './course.handlers.js';
-import { registerProgressHandlers } from './progress.handlers.js';
-import { registerAdminHandlers } from './admin.handlers.js';
-import logger from '@/config/logger.js';
+import { registerNotificationHandlers } from './notification.handlers';
+import { registerCourseHandlers } from './course.handlers';
+import { registerProgressHandlers } from './progress.handlers';
+import { registerAdminHandlers } from './admin.handlers';
+import logger from '@/config/logger';
 
 /**
  * Supported user roles for socket authorization

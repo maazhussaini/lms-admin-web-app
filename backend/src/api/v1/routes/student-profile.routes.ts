@@ -3,7 +3,7 @@ import { StudentController } from '@/controllers/student.controller';
 import { authenticate, authorize } from '@/middleware/auth.middleware';
 import { validate } from '@/middleware/validation.middleware';
 import { updateStudentProfileValidation } from '@/dtos/student/student.dto';
-import { UserType } from '@/types/enums.types.js';
+import { UserType } from '@/types/enums.types';
 
 const router = Router();
 

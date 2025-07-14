@@ -1,5 +1,5 @@
 import { body, ValidationChain } from 'express-validator';
-import { Gender, StudentStatus } from '@/types/enums.types.js';
+import { Gender, StudentStatus } from '@/types/enums.types';
 
 /**
  * DTO interface for creating a new student

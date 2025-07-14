@@ -14,7 +14,7 @@ import {
 } from '@/utils/async-handler.utils';
 import { ApiError } from '@/utils/api-error.utils';
 import logger from '@/config/logger';
-import { UserType } from '@/types/enums.types.js';
+import { UserType } from '@/types/enums.types';
 
 // Initialize student service
 const studentService = new StudentService();

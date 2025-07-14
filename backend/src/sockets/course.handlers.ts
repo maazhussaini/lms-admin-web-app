@@ -8,14 +8,14 @@ import { Server } from 'socket.io';
 import { 
   CourseUpdatePayload
 } from '@shared/types/notification.types';
-import logger from '@/config/logger.js';
-import { AuthenticatedSocket } from './index.js';
-import { checkSocketRoleAuthorization } from './socket.utils.js';
+import logger from '@/config/logger';
+import { AuthenticatedSocket } from './index';
+import { checkSocketRoleAuthorization } from './socket.utils';
 import { 
   validateCourseUpdatePayload,
   withValidationAndErrorResponse
-} from '@/utils/validation.utils.js';
-import { SocketEventName } from '@/types/enums.types.js';
+} from '@/utils/validation.utils';
+import { SocketEventName } from '@/types/enums.types';
 
 /**
  * Register course related socket event handlers

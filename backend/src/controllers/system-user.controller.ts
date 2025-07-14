@@ -3,8 +3,8 @@
  * @description Controller for handling system user CRUD operations
  */
 
-import { SystemUserService } from '@/services/system-user.service.js';
-import { CreateSystemUserDto, UpdateSystemUserDto } from '@/dtos/user/system-user.dto.js';
+import { SystemUserService } from '@/services/system-user.service';
+import { CreateSystemUserDto, UpdateSystemUserDto } from '@/dtos/user/system-user.dto';
 import { SystemUser } from '@shared/types/system-users.types';
 import {
   createRouteHandler,
@@ -13,8 +13,8 @@ import {
   createDeleteHandler,
   ExtendedPaginationWithFilters,
   AuthenticatedRequest
-} from '@/utils/async-handler.utils.js';
-import prisma from '@/config/database.js';
+} from '@/utils/async-handler.utils';
+import prisma from '@/config/database';
 
 export class SystemUserController {
   private systemUserService: SystemUserService;

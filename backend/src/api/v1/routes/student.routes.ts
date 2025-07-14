@@ -4,7 +4,7 @@ import { authenticate, authorize } from '@/middleware/auth.middleware';
 import { validate } from '@/middleware/validation.middleware';
 import { createStudentValidation, updateStudentValidation } from '@/dtos/student/student.dto';
 import { param, body } from 'express-validator';
-import { UserType } from '@/types/enums.types.js';
+import { UserType } from '@/types/enums.types';
 
 const router = Router();
 

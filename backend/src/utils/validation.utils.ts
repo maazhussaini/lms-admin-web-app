@@ -6,7 +6,7 @@
  */
 
 import { body, param, query, ValidationChain, Schema } from 'express-validator';
-import { LocationOptions } from '@shared/types/validation.types.js';
+import { LocationOptions } from '@shared/types/validation.types';
 import { Socket } from 'socket.io';
 import { 
   ContentProgressPayload,
@@ -14,8 +14,8 @@ import {
   NotificationPayload,
   NotificationStatusPayload,
   CourseUpdatePayload
-} from '@shared/types/notification.types.js';
-import { AuthenticatedSocket, UserRole } from '../sockets/index.js';
+} from '@shared/types/notification.types';
+import { AuthenticatedSocket, UserRole } from '../sockets/index';
 
 /**
  * Delivery status enumeration

@@ -9,10 +9,10 @@ import jwt from 'jsonwebtoken';
 import { promisify } from 'util';
 import crypto from 'crypto';
 import type { StringValue } from 'ms';
-import env from '@/config/environment.js';
-import { UnauthorizedError } from './api-error.utils.js';
-import logger from '@/config/logger.js';
-import { UserType } from '@/types/enums.types.js';
+import env from '@/config/environment';
+import { UnauthorizedError } from './api-error.utils';
+import logger from '@/config/logger';
+import { UserType } from '@/types/enums.types';
 
 /**
  * User payload structure for JWT token

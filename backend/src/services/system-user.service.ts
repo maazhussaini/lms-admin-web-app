@@ -4,15 +4,15 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { CreateSystemUserDto, UpdateSystemUserDto, SystemUserFilterDto } from '@/dtos/user/system-user.dto.js';
+import { CreateSystemUserDto, UpdateSystemUserDto, SystemUserFilterDto } from '@/dtos/user/system-user.dto';
 import { SystemUser } from '@shared/types/system-users.types';
-import { TokenPayload } from '@/utils/jwt.utils.js';
-import { BadRequestError, ForbiddenError, NotFoundError, ConflictError } from '@/utils/api-error.utils.js';
-import { hashPassword } from '@/utils/password.utils.js';
-import { getPrismaQueryOptions, SortOrder } from '@/utils/pagination.utils.js';
-import { tryCatch } from '@/utils/error-wrapper.utils.js';
-import { ExtendedPaginationWithFilters, SafeFilterParams } from '@/utils/async-handler.utils.js';
-import { UserType, SystemUserStatus } from '@/types/enums.types.js';
+import { TokenPayload } from '@/utils/jwt.utils';
+import { BadRequestError, ForbiddenError, NotFoundError, ConflictError } from '@/utils/api-error.utils';
+import { hashPassword } from '@/utils/password.utils';
+import { getPrismaQueryOptions, SortOrder } from '@/utils/pagination.utils';
+import { tryCatch } from '@/utils/error-wrapper.utils';
+import { ExtendedPaginationWithFilters, SafeFilterParams } from '@/utils/async-handler.utils';
+import { UserType, SystemUserStatus } from '@/types/enums.types';
 
 /**
  * System user service for managing system-level users

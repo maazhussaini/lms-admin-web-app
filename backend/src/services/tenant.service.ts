@@ -21,7 +21,7 @@ import {
   TenantStatus,
   ContactType,
   UserType
-} from '@/types/enums.types.js';
+} from '@/types/enums.types';
 import logger from '@/config/logger';
 
 // Initialize Prisma client

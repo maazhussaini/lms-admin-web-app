@@ -4,8 +4,8 @@
  * Provides common functionality for socket authorization and tenant isolation.
  */
 
-import { AuthenticatedSocket, UserRole } from './index.js';
-import logger from '@/config/logger.js';
+import { AuthenticatedSocket, UserRole } from './index';
+import logger from '@/config/logger';
 
 /**
  * Check if a socket user has the required role(s)

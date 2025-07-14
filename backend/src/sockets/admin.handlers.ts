@@ -8,15 +8,15 @@ import { Server } from 'socket.io';
 import { 
   NotificationPayload
 } from '@shared/types/notification.types';
-import logger from '@/config/logger.js';
-import { AuthenticatedSocket } from './index.js';
-import { checkSocketRoleAuthorization } from './socket.utils.js';
+import logger from '@/config/logger';
+import { AuthenticatedSocket } from './index';
+import { checkSocketRoleAuthorization } from './socket.utils';
 import { 
   validateTenantBroadcastPayload,
   validateSystemAlertPayload,
   withValidationAndErrorResponse
-} from '@/utils/validation.utils.js';
-import { SocketEventName } from '@/types/enums.types.js';
+} from '@/utils/validation.utils';
+import { SocketEventName } from '@/types/enums.types';
 
 /**
  * Register admin-only socket event handlers

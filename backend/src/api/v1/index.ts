@@ -6,14 +6,14 @@
 import { Router } from 'express';
 
 // Import route modules
-import authRoutes from './routes/auth.routes.js';
-import studentAuthRoutes from './routes/student/auth.routes.js';
-import teacherAuthRoutes from './routes/teacher/auth.routes.js';
-import systemUserRoutes from './routes/system-user.routes.js';
+import authRoutes from './routes/auth.routes';
+import studentAuthRoutes from './routes/student/auth.routes';
+import teacherAuthRoutes from './routes/teacher/auth.routes';
+import systemUserRoutes from './routes/system-user.routes';
 import programRoutes from './routes/program.routes';
-import tenantRoutes from './routes/tenant.routes.js';
-import clientRoutes from './routes/client.routes.js';
-import studentRoutes from './routes/student.routes.js';
+import tenantRoutes from './routes/tenant.routes';
+import clientRoutes from './routes/client.routes';
+import studentRoutes from './routes/student.routes';
 import studentProfileRoutes from './routes/student-profile.routes';
 
 // Create router

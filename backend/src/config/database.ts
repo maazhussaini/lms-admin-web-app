@@ -5,8 +5,8 @@
  */
 
 import { PrismaClient, Prisma } from '@prisma/client';
-import logger from './logger.js';
-import env from './environment.js';
+import logger from './logger';
+import env from './environment';
 
 /**
  * Type for query event from Prisma

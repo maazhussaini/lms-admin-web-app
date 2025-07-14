@@ -4,15 +4,15 @@
  */
 
 import { Router } from 'express';
-import systemUserController from '@/controllers/system-user.controller.js';
-import { authenticate, authorize } from '@/middleware/auth.middleware.js';
-import { validate } from '@/middleware/validation.middleware.js';
+import systemUserController from '@/controllers/system-user.controller';
+import { authenticate, authorize } from '@/middleware/auth.middleware';
+import { validate } from '@/middleware/validation.middleware';
 import { 
   createSystemUserValidation, 
   updateSystemUserValidation,
   listSystemUsersValidation 
-} from '@/dtos/user/system-user.dto.js';
-import { UserType } from '@/types/enums.types.js';
+} from '@/dtos/user/system-user.dto';
+import { UserType } from '@/types/enums.types';
 
 const router = Router();
 

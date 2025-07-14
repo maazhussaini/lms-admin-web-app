@@ -4,11 +4,11 @@
  */
 
 import http from 'http';
-import app from '@/app.js';
-import env from '@/config/environment.js';
-import logger from '@/config/logger.js';
-import prisma, { handleDatabaseShutdown } from '@/config/database.js';
-import { initializeSocket } from '@/config/socket.js';
+import app from '@/app';
+import env from '@/config/environment';
+import logger from '@/config/logger';
+import prisma, { handleDatabaseShutdown } from '@/config/database';
+import { initializeSocket } from '@/config/socket';
 import { Server as SocketServer } from 'socket.io';
 
 // Create HTTP server

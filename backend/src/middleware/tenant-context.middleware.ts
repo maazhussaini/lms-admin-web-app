@@ -4,8 +4,8 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { ForbiddenError, UnauthorizedError } from '@/utils/api-error.utils.js';
-import logger from '@/config/logger.js';
+import { ForbiddenError, UnauthorizedError } from '@/utils/api-error.utils';
+import logger from '@/config/logger';
 
 /**
  * Constants for better type safety and maintainability

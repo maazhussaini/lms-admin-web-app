@@ -6,11 +6,11 @@
 
 import { Server } from 'socket.io';
 import http from 'http';
-import env from './environment.js';
-import logger from './logger.js';
-import { verifyAccessToken } from '@/utils/jwt.utils.js';
-import { registerSocketHandlers, type SocketUser, type UserRole } from '@/sockets/index.js';
-import { joinStandardRooms } from '@/sockets/socket.utils.js';
+import env from './environment';
+import logger from './logger';
+import { verifyAccessToken } from '@/utils/jwt.utils';
+import { registerSocketHandlers, type SocketUser, type UserRole } from '@/sockets/index';
+import { joinStandardRooms } from '@/sockets/socket.utils';
 
 /**
  * Socket.IO error response interface for consistent error handling

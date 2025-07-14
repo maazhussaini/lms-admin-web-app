@@ -5,7 +5,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { ApiError } from './api-error.utils.js';
+import { ApiError } from './api-error.utils';
 import { 
   createSuccessResponse, 
   createPaginatedResponse, 
@@ -13,17 +13,17 @@ import {
   createDeletedResponse,
   HTTP_STATUS_CODES, 
   HttpStatusCode
-} from './api-response.utils.js';
-import { wrapError } from './error-wrapper.utils.js';
+} from './api-response.utils';
+import { wrapError } from './error-wrapper.utils';
 import { 
   PaginationParams, 
   SortOrder, 
   getPaginationFromRequest, 
   getSortParamsFromRequest,
   createPaginatedApiResponse 
-} from './pagination.utils.js';
-import { TApiSuccessResponse } from '@shared/types/api.types.js';
-import { TokenPayload } from './jwt.utils.js';
+} from './pagination.utils';
+import { TApiSuccessResponse } from '@shared/types/api.types';
+import { TokenPayload } from './jwt.utils';
 
 /**
  * Extended Request interface with user and correlation ID

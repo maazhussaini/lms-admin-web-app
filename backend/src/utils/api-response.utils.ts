@@ -4,7 +4,7 @@
  * @module utils/api-response
  */
 
-import { TApiSuccessResponse, TApiErrorResponse, TListResponse } from '@shared/types/api.types.js';
+import { TApiSuccessResponse, TApiErrorResponse, TListResponse } from '@shared/types/api.types';
 
 /**
  * HTTP status codes enum for type safety

@@ -5,10 +5,10 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { ApiError, ValidationError as ApiValidationError } from '@/utils/api-error.utils.js';
-import { createErrorResponse, HTTP_STATUS_CODES, ERROR_CODES, HttpStatusCode, ErrorCode } from '@/utils/api-response.utils.js';
-import logger from '@/config/logger.js';
-import env from '@/config/environment.js';
+import { ApiError, ValidationError as ApiValidationError } from '@/utils/api-error.utils';
+import { createErrorResponse, HTTP_STATUS_CODES, ERROR_CODES, HttpStatusCode, ErrorCode } from '@/utils/api-response.utils';
+import logger from '@/config/logger';
+import env from '@/config/environment';
 import { 
   PrismaClientKnownRequestError, 
   PrismaClientValidationError,

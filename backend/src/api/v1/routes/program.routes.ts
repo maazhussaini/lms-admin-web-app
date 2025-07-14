@@ -10,7 +10,7 @@ import { authorize } from '@/middleware/auth.middleware';
 import { validate } from '@/middleware/validation.middleware';
 import { CreateProgramDto, UpdateProgramDto } from '@/dtos/course/program.dto';
 import { param } from 'express-validator';
-import { UserType } from '@/types/enums.types.js';
+import { UserType } from '@/types/enums.types';
 
 const router = Router();
 

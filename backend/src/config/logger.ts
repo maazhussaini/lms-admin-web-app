@@ -5,8 +5,8 @@
 
 import winston from 'winston';
 import type { Request, Response, NextFunction } from 'express';
-import type { RequestLogMetadata } from '@shared/types/logger.types.js';
-import env from './environment.js';
+import type { RequestLogMetadata } from '@shared/types/logger.types';
+import env from './environment';
 
 // Define log format based on environment
 const logFormat = env.IS_PRODUCTION

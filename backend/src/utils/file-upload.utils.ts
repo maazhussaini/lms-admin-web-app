@@ -10,9 +10,9 @@ import fs from 'fs';
 import { randomUUID } from 'crypto';
 import { createHash } from 'crypto';
 import { Request } from 'express';
-import env from '@/config/environment.js';
-import { BadRequestError, InternalServerError } from './api-error.utils.js';
-import { TUploadedFile, TUploadResult, TFileCategory } from '@shared/types/file.types.js';
+import env from '@/config/environment';
+import { BadRequestError, InternalServerError } from './api-error.utils';
+import { TUploadedFile, TUploadResult, TFileCategory } from '@shared/types/file.types';
 
 /**
  * Type guard to check if user has required tenant information
