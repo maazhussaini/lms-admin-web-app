@@ -1,50 +1,49 @@
 {
-  "extends": "./tsconfig.json",                        // Inherit base config from tsconfig.json
+  "extends": "./tsconfig.json",
   "compilerOptions": {
     /* Development-Specific Overrides */
-    "noEmit": true,                                    // Do not emit output files during development (type-check only)
-    "allowImportingTsExtensions": true,                // Allow importing TypeScript files with .ts extension
-    "incremental": true,                               // Enable incremental compilation for faster rebuilds
-    "tsBuildInfoFile": "./.tsbuildinfo",               // Store incremental build info in this file
+    "noEmit": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./.tsbuildinfo",
 
     /* Enhanced Development Experience */
-    "preserveWatchOutput": true,                       // Keep output in watch mode for easier debugging
-    "pretty": true,                                    // Use pretty formatting for compiler output
+    "preserveWatchOutput": true,
+    "pretty": true,
 
     /* Relaxed Checks for Development */
-    "noUnusedLocals": false,                           // Allow unused local variables in development
-    "noUnusedParameters": false,                       // Allow unused function parameters in development
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
 
     /* Development Source Maps */
-    "sourceMap": true,                                 // Generate source maps for debugging
-    "inlineSourceMap": false,                          // Do not inline source maps (generate separate files)
-    "inlineSources": false,                            // Do not include source content in source maps
+    "sourceMap": true,
+    "inlineSourceMap": false,
+    "inlineSources": false,
 
     /* Type Checking Performance */
-    "skipDefaultLibCheck": true                        // Skip type checking of default library files for faster builds
+    "skipDefaultLibCheck": true
   },
   "include": [
-    "src/**/*",                                        // Include all TypeScript files in src directory
-    "tests/**/*",                                      // Include all TypeScript files in tests directory
-    "**/*.test.ts",                                    // Include all test files ending with .test.ts
-    "**/*.spec.ts"                                     // Include all spec files ending with .spec.ts
+    "src/**/*",
+    "tests/**/*",
+    "**/*.test.ts",
+    "**/*.spec.ts"
   ],
   "exclude": [
-    "node_modules",                                    // Exclude dependencies
-    "dist",                                            // Exclude build output directory
-    "coverage",                                        // Exclude coverage reports
-    "prisma/migrations"                                // Exclude Prisma migration files
+    "node_modules",
+    "dist",
+    "coverage",
+    "prisma/migrations"
   ],
   "watchOptions": {
-    "watchFile": "useFsEvents",                        // Use file system events for file watching
-    "watchDirectory": "useFsEvents",                   // Use file system events for directory watching
-    "fallbackPolling": "dynamicPriority",              // Use dynamic polling if file system events are unavailable
-    "synchronousWatchDirectory": true,                 // Use synchronous directory watching
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents",
+    "fallbackPolling": "dynamicPriority",
+    "synchronousWatchDirectory": true,
     "excludeDirectories": [
-      "**/node_modules",                               // Exclude node_modules from watch
-      "**/dist",                                       // Exclude dist from watch
-      "**/coverage",                                   // Exclude coverage from watch
-      "**/prisma/migrations"                           // Exclude Prisma migrations from watch
+      "**/node_modules",
+      "**/dist",
+      "**/coverage",
+      "**/prisma/migrations"
     ]
   }
 }

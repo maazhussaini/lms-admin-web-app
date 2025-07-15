@@ -10,7 +10,6 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import bodyParser from 'body-parser';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import fs from 'fs';
 
 // Import configuration
@@ -28,10 +27,6 @@ import apiV1Routes from '@/api/v1/index';
 // Import shared types and utilities
 import { TApiSuccessResponse, TApiErrorResponse } from '@shared/types/api.types';
 import { createSuccessResponse, createErrorResponse, HTTP_STATUS_CODES, ERROR_CODES } from '@/utils/api-response.utils';
-
-// Get directory name using ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Create Express application
 const app = express();

@@ -8,8 +8,8 @@
     "useDefineForClassFields": true,            // Uses 'define' semantics for class fields (aligns with latest JS spec)
 
     /* Modules */
-    "module": "ESNext",                         // Sets the module code generation (e.g., import/export syntax)
-    "moduleResolution": "Bundler",              // Uses bundler-style module resolution (for modern build tools)
+    "module": "CommonJS",                       // Changed from ESNext to CommonJS
+    "moduleResolution": "Node",                 // Changed from Bundler to Node
     "baseUrl": "./",                            // Base directory for non-relative module names
     "paths": {
       "@/*": ["src/*"],                         // Alias '@' to 'src' directory for cleaner imports
@@ -19,9 +19,9 @@
     "moduleDetection": "force",                 // Forces all files to be modules unless otherwise specified
 
     /* Emit - Base Settings */
-    "outDir": "./dist",                         // Output directory for compiled JavaScript files
-    "removeComments": true,                     // Removes comments from emitted JavaScript
-    "noEmitOnError": true,                      // Prevents emitting files if there are type errors
+    "outDir": "./dist",
+    "removeComments": true,
+    "noEmitOnError": true,
 
     /* Interop Constraints */
     "isolatedModules": true,                    // Ensures each file can be safely transpiled independently

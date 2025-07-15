@@ -7,12 +7,7 @@ import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { Express } from 'express';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import env from './environment';
-
-// Get directory name using ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Swagger definition
 const swaggerDefinition = {
