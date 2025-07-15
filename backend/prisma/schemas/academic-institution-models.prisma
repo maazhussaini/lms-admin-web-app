@@ -29,6 +29,7 @@ model Program {
   deleted_by_user      SystemUser?     @relation("ProgramDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("programs")
+  Course Course[]
 }
 
 // Specialization model - academic specializations within programs
