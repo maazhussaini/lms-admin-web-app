@@ -1,0 +1,283 @@
+{
+  "info": {
+    "_postman_id": "specialization-management-collection-uuid",
+    "name": "Specialization Management",
+    "description": "Collection for managing academic specializations within the LMS. These endpoints handle creation, retrieval, update, and deletion of specializations with tenant isolation.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Specialization",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Generate random specialization name",
+              "const subjects = ['AI', 'Robotics', 'Finance', 'Literature', 'Physics', 'Biology', 'History', 'Design'];",
+              "const focus = ['Specialization', 'Track', 'Concentration', 'Focus'];",
+              "const subject = subjects[Math.floor(Math.random() * subjects.length)];",
+              "const focusType = focus[Math.floor(Math.random() * focus.length)];",
+              "pm.environment.set('randomSpecializationName', `${subject} ${focusType}`);",
+              "console.log(`Generated specialization name: ${pm.environment.get('randomSpecializationName')}`);"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test(\"Response has success true and correct structure\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.eql(true);",
+              "    pm.expect(jsonData.statusCode).to.eql(201);",
+              "    pm.expect(jsonData.message).to.eql(\"Specialization created successfully\");",
+              "    pm.expect(jsonData.data).to.be.an('object');",
+              "    pm.expect(jsonData.data).to.have.property('specialization_id');",
+              "    pm.expect(jsonData.data.specialization_id).to.be.a('number').and.not.eql(0);",
+              "    pm.expect(jsonData.data).to.have.property('specialization_name');",
+              "    pm.expect(jsonData.data.specialization_name).to.eql(pm.environment.get('randomSpecializationName'));",
+              "    pm.environment.set('specializationId', jsonData.data.specialization_id);",
+              "    console.log(`Specialization created with ID: ${jsonData.data.specialization_id}`);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"programId\": {{programId}},\n    \"specializationName\": \"{{randomSpecializationName}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/specializations",
+          "host": ["{{base_url}}"],
+          "path": ["specializations"]
+        },
+        "description": "Creates a new specialization under a program. The tenant ID is extracted from the JWT token."
+      },
+      "response": []
+    },
+    {
+      "name": "List Specializations",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has success true and specialization data array\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.eql(true);",
+              "    pm.expect(jsonData.statusCode).to.eql(200);",
+              "    pm.expect(jsonData.message).to.eql(\"Specializations retrieved successfully\");",
+              "    pm.expect(jsonData.data).to.be.an('array');",
+              "    if (jsonData.data.length > 0) {",
+              "        const firstSpec = jsonData.data[0];",
+              "        pm.expect(firstSpec).to.have.property('specialization_id');",
+              "        pm.expect(firstSpec).to.have.property('specialization_name');",
+              "        pm.expect(firstSpec).to.have.property('program_id');",
+              "        pm.expect(firstSpec).to.have.property('created_at');",
+              "        pm.expect(firstSpec).to.have.property('updated_at');",
+              "    }",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/specializations?programId={{programId}}",
+          "host": ["{{base_url}}"],
+          "path": ["specializations"],
+          "query": [
+            { "key": "programId", "value": "{{programId}}", "description": "Filter by program ID" }
+          ]
+        },
+        "description": "Retrieves a list of specializations, optionally filtered by programId."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Specialization by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has success true and correct specialization data\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    const specializationId = parseInt(pm.environment.get(\"specializationId\"));",
+              "    pm.expect(jsonData.success).to.eql(true);",
+              "    pm.expect(jsonData.statusCode).to.eql(200);",
+              "    pm.expect(jsonData.message).to.eql(\"Specialization retrieved successfully\");",
+              "    pm.expect(jsonData.data).to.be.an('object');",
+              "    pm.expect(jsonData.data.specialization_id).to.eql(specializationId);",
+              "    pm.expect(jsonData.data).to.have.property('specialization_name');",
+              "    pm.expect(jsonData.data).to.have.property('program_id');",
+              "    pm.expect(jsonData.data).to.have.property('created_at');",
+              "    pm.expect(jsonData.data).to.have.property('updated_at');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/specializations/{{specializationId}}",
+          "host": ["{{base_url}}"],
+          "path": ["specializations", "{{specializationId}}"]
+        },
+        "description": "Retrieves a specialization by its ID."
+      },
+      "response": []
+    },
+    {
+      "name": "Update Specialization",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Generate updated specialization name",
+              "const subjects = ['Quantum', 'Neuro', 'Eco', 'Digital', 'Nano', 'Global', 'Urban', 'Cognitive'];",
+              "const focus = ['Specialization', 'Track', 'Concentration', 'Focus'];",
+              "const subject = subjects[Math.floor(Math.random() * subjects.length)];",
+              "const focusType = focus[Math.floor(Math.random() * focus.length)];",
+              "pm.environment.set('updatedSpecializationName', `${subject} ${focusType}`);",
+              "console.log(`Generated updated specialization name: ${pm.environment.get('updatedSpecializationName')}`);"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has success true and updated specialization data\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    const specializationId = parseInt(pm.environment.get(\"specializationId\"));",
+              "    const updatedName = pm.environment.get(\"updatedSpecializationName\");",
+              "    pm.expect(jsonData.success).to.eql(true);",
+              "    pm.expect(jsonData.statusCode).to.eql(200);",
+              "    pm.expect(jsonData.message).to.eql(\"Specialization updated successfully\");",
+              "    pm.expect(jsonData.data).to.be.an('object');",
+              "    pm.expect(jsonData.data.specialization_id).to.eql(specializationId);",
+              "    pm.expect(jsonData.data.specialization_name).to.eql(updatedName);",
+              "    pm.expect(jsonData.data).to.have.property('program_id');",
+              "    pm.expect(jsonData.data).to.have.property('created_at');",
+              "    pm.expect(jsonData.data).to.have.property('updated_at');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"specializationName\": \"{{updatedSpecializationName}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/specializations/{{specializationId}}",
+          "host": ["{{base_url}}"],
+          "path": ["specializations", "{{specializationId}}"]
+        },
+        "description": "Updates an existing specialization's information."
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Specialization",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 204 No Content\", function () {",
+              "    pm.response.to.have.status(204);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/specializations/{{specializationId}}",
+          "host": ["{{base_url}}"],
+          "path": ["specializations", "{{specializationId}}"]
+        },
+        "description": "Deletes a specialization by its ID."
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{accessToken}}", "type": "string" }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script for the collection"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script for the collection"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "accessToken", "value": "YOUR_JWT_TOKEN_HERE", "type": "string" },
+    { "key": "base_url", "value": "http://localhost:3000/api/v1", "type": "string" },
+    { "key": "programId", "value": "", "type": "string" },
+    { "key": "specializationId", "value": "", "type": "string" },
+    { "key": "randomSpecializationName", "value": "", "type": "string" },
+    { "key": "updatedSpecializationName", "value": "", "type": "string" }
+  ]
+}
