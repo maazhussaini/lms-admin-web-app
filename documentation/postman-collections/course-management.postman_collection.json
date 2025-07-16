@@ -1,0 +1,217 @@
+{
+    "info": {
+        "_postman_id": "REPLACE_WITH_NEW_UUID",
+        "name": "Course Management",
+        "description": "Collection for managing courses within the Learning Management System (LMS). These endpoints handle the creation, retrieval, update, and deletion of courses with tenant isolation.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Create Course",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "// Generate random course name",
+                            "const subjects = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'History', 'Economics', 'Programming', 'Design'];",
+                            "const levels = ['101', '201', '301', '401', 'Advanced', 'Intro', 'Basics', 'Lab'];",
+                            "const courseName = `${subjects[Math.floor(Math.random() * subjects.length)]} ${levels[Math.floor(Math.random() * levels.length)]}`;",
+                            "pm.environment.set('randomCourseName', courseName);",
+                            "console.log(`Generated course name: ${pm.environment.get('randomCourseName')}`);"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 201 Created\", function () {",
+                            "    pm.response.to.have.status(201);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has success true and correct structure\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(201, \"Status code should be 201\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Course created successfully\", \"Message should indicate successful creation\");",
+                            "    pm.expect(jsonData.data).to.be.an('object', \"Data should be an object\");",
+                            "    pm.expect(jsonData.data).to.have.property('course_id');",
+                            "    pm.expect(jsonData.data.course_id).to.be.a('number').and.not.eql(0);",
+                            "    pm.expect(jsonData.data).to.have.property('course_name');",
+                            "    pm.expect(jsonData.data.course_name).to.eql(pm.environment.get('randomCourseName'), \"Course name should match what was sent\");",
+                            "    pm.expect(jsonData.data).to.have.property('is_active');",
+                            "    pm.expect(jsonData.data.is_active).to.be.true;",
+                            "    pm.expect(jsonData.data).to.have.property('created_at');",
+                            "    pm.expect(jsonData.data).to.have.property('updated_at');",
+                            "    pm.environment.set(\"courseId\", jsonData.data.course_id);",
+                            "    console.log(`Course created with ID: ${jsonData.data.course_id}`);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"course_name\": \"{{randomCourseName}}\",\n    \"course_description\": \"Sample course description\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/courses",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "courses"
+                    ]
+                },
+                "description": "Creates a new course with the specified name. The tenant ID is extracted from the JWT token of the authenticated user. Course names must be unique within a tenant."
+            },
+            "response": []
+        },
+        {
+            "name": "List Courses",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has success true and course data array\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Courses retrieved successfully\", \"Message should indicate successful retrieval\");",
+                            "    pm.expect(jsonData.data).to.be.an('array', \"Data should be an array\");",
+                            "    pm.expect(jsonData).to.have.property('pagination');",
+                            "    const pagination = jsonData.pagination;",
+                            "    pm.expect(pagination).to.have.property('page');",
+                            "    pm.expect(pagination).to.have.property('limit');",
+                            "    pm.expect(pagination).to.have.property('total');",
+                            "    pm.expect(pagination).to.have.property('totalPages');",
+                            "    pm.expect(pagination.page).to.be.a('number');",
+                            "    pm.expect(pagination.limit).to.be.a('number');",
+                            "    pm.expect(pagination.total).to.be.a('number');",
+                            "    pm.expect(pagination.totalPages).to.be.a('number');",
+                            "    if (pagination.page === 1) {",
+                            "        pm.expect(pagination.hasPrev).to.be.false;",
+                            "    } else {",
+                            "        pm.expect(pagination.hasPrev).to.be.true;",
+                            "    }",
+                            "    if (pagination.page < pagination.totalPages) {",
+                            "        pm.expect(pagination.hasNext).to.be.true;",
+                            "    } else {",
+                            "        pm.expect(pagination.hasNext).to.be.false;",
+                            "    }",
+                            "    if (jsonData.data.length > 0) {",
+                            "        const firstCourse = jsonData.data[0];",
+                            "        pm.expect(firstCourse).to.have.property('course_id');",
+                            "        pm.expect(firstCourse).to.have.property('course_name');",
+                            "        pm.expect(firstCourse).to.have.property('is_active');",
+                            "        pm.expect(firstCourse).to.have.property('created_at');",
+                            "    }",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/courses?page=1&limit=10&sortBy=created_at&order=desc&search=Physics&is_active=true",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "courses"
+                    ],
+                    "query": [
+                        { "key": "page", "value": "1", "description": "(Optional) Page number for pagination" },
+                        { "key": "limit", "value": "10", "description": "(Optional) Number of items per page" },
+                        { "key": "sortBy", "value": "created_at", "description": "(Optional) Field to sort by: course_id, course_name, created_at, updated_at" },
+                        { "key": "order", "value": "desc", "description": "(Optional) Sort order: asc or desc" },
+                        { "key": "search", "value": "Physics", "description": "(Optional) Search term for course name" },
+                        { "key": "is_active", "value": "true", "description": "(Optional) Filter to show only active courses" }
+                    ]
+                },
+                "description": "Retrieves a paginated list of courses with optional filtering and sorting. The tenant ID is extracted from the JWT token of the authenticated user, ensuring that only courses within the user's tenant are returned."
+            },
+            "response": []
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{accessToken}}",
+                "type": "string"
+            }
+        ]
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "// Global pre-request script for the collection",
+                    "// You can add common logic here that should run before every request"
+                ]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "// Global test script for the collection",
+                    "// You can add common logic here that should run after every request",
+                    "",
+                    "// Log request details for debugging",
+                    "console.log(`Request: ${pm.request.method} ${pm.request.url.toString()}`);",
+                    "console.log(`Response status: ${pm.response.code} ${pm.response.status}`);",
+                    "",
+                    "// Add a timestamp check for all successful responses",
+                    "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                    "    try {",
+                    "        const jsonData = pm.response.json();",
+                    "        if (jsonData.timestamp) {",
+                    "            pm.test(\"Response includes valid timestamp\", function () {",
+                    "                const timestamp = new Date(jsonData.timestamp).getTime();",
+                    "                pm.expect(timestamp).to.be.a('number');",
+                    "                pm.expect(timestamp).to.be.at.most(Date.now());",
+                    "                pm.expect(timestamp).to.be.at.least(Date.now() - 60000); // Within last minute",
+                    "            });",
+                    "        }",
+                    "    } catch (e) {",
+                    "        console.log(\"Response is not valid JSON or doesn't have timestamp\");",
+                    "    }",
+                    "}"
+                ]
+            }
+        }
+    ],
+    "variable": [
+        { "key": "accessToken", "value": "YOUR_JWT_TOKEN_HERE", "type": "string" },
+        { "key": "courseId", "value": "", "type": "string" },
+        { "key": "randomCourseName", "value": "", "type": "string" },
+        { "key": "updatedCourseName", "value": "", "type": "string" },
+        { "key": "tempCourseId", "value": "", "type": "string" },
+        { "key": "duplicateCourseName", "value": "", "type": "string" }
+    ]
+}

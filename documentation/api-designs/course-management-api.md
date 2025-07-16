@@ -10,17 +10,22 @@ The API handles the entire course lifecycle from program creation to individual 
 
 ### Core Entities
 
+
 The Course Management domain consists of the following main entities defined in `@shared/types/course.types.ts`:
 
 - **programs**: Top-level academic programs within a tenant
-- **specializations**: Academic specializations within programs
-- **courses**: Individual courses with comprehensive metadata and content structure
+- **specializations**: Academic specializations that can belong to multiple programs (many-to-many)
+- **courses**: Individual courses that can belong to multiple specializations (many-to-many)
 - **course_modules**: Structural components organizing course content in hierarchical order
 - **course_topics**: Content topics within course modules for granular organization
 - **course_videos**: Video content with Bunny.net integration and comprehensive metadata
 - **course_documents**: Document resources and supplementary materials within topics
 - **video_progresses**: Individual video viewing progress tracking for students
 - **student_course_progresses**: Comprehensive course progress tracking and analytics
+
+#### Junction Tables
+- **CourseSpecialization**: Junction table for many-to-many between courses and specializations
+- **SpecializationProgram**: Junction table for many-to-many between specializations and programs
 
 ### Key Enums
 
@@ -146,7 +151,7 @@ All entities extend `MultiTenantAuditFields` from `@shared/types/base.types.ts`,
 - **Method**: `POST`
 - **Path**: `/api/v1/admin/courses`
 - **Authorization**: SUPER_ADMIN, TENANT_ADMIN
-- **Description**: Create a new course with comprehensive metadata
+- **Description**: Create a new course with comprehensive metadata and associate with one or more specializations (many-to-many)
 - **Request Body**:
 ```json
 {
@@ -154,7 +159,7 @@ All entities extend `MultiTenantAuditFields` from `@shared/types/base.types.ts`,
   "course_description": "A comprehensive introduction to programming concepts and fundamentals using modern programming languages.",
   "main_thumbnail_url": "https://example.com/thumbnail.jpg",
   "course_status": "DRAFT",
-  "specialization_id": 1
+  "specialization_ids": [1, 2]
 }
 ```
 - **Response**: `201 Created`
@@ -168,7 +173,10 @@ All entities extend `MultiTenantAuditFields` from `@shared/types/base.types.ts`,
     "main_thumbnail_url": "https://example.com/thumbnail.jpg",
     "course_status": "DRAFT",
     "course_total_hours": null,
-    "specialization_id": 1,
+    "specializations": [
+      { "specialization_id": 1, "specialization_name": "AI Track" },
+      { "specialization_id": 2, "specialization_name": "Robotics Track" }
+    ],
     "tenant_id": 123,
     "created_at": "2024-01-01T00:00:00Z",
     "is_active": true,
@@ -463,7 +471,7 @@ All entities extend `MultiTenantAuditFields` from `@shared/types/base.types.ts`,
 - **course_status**: Must be valid CourseStatus enum value
 - **course_total_hours**: Read-only field, auto-calculated by backend from sum of video durations in course
 - **main_thumbnail_url**: Optional, valid URL format
-- **specialization_id**: Optional, must be valid specialization within tenant
+- **specialization_ids**: Optional, must be an array of valid specialization IDs within tenant
 
 ### Module Validation
 - **course_module_name**: Required, 2-255 characters, string type
@@ -750,7 +758,8 @@ import {
 Based on the core entities relationships, the course management domain has the following key foreign key constraints:
 
 - **courses.tenant_id** → **tenants.tenant_id** (Required for all courses)
-- **courses.specialization_id** → **specializations.specialization_id** (Optional, cascade null)
+- **CourseSpecialization**: Many-to-many between courses and specializations
+- **SpecializationProgram**: Many-to-many between specializations and programs
 - **course_modules.course_id** → **courses.course_id** (Cascade delete)
 - **course_topics.module_id** → **course_modules.course_module_id** (Cascade delete)
 - **course_videos.course_id** → **courses.course_id** (Cascade delete)
