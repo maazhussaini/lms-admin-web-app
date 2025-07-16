@@ -21,7 +21,7 @@ model Program {
 
   // Relationships
   tenant               Tenant          @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
-  specializations      Specialization[]
+  specialization_programs SpecializationProgram[]
   
   // Audit trail relationships with SystemUser
   created_by_user      SystemUser      @relation("ProgramCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
@@ -29,14 +29,12 @@ model Program {
   deleted_by_user      SystemUser?     @relation("ProgramDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("programs")
-  Course Course[]
 }
 
 // Specialization model - academic specializations within programs
 model Specialization {
   specialization_id     Int             @id @default(autoincrement())
   tenant_id             Int
-  program_id            Int
   specialization_name   String          @db.VarChar(255)
   specialization_thumbnail_url String?        @db.Text
   
@@ -54,8 +52,8 @@ model Specialization {
 
   // Relationships
   tenant               Tenant          @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
-  program              Program         @relation(fields: [program_id], references: [program_id], onDelete: Cascade)
-  courses              Course[]
+  specialization_programs SpecializationProgram[]
+  course_specializations CourseSpecialization[]
   
   // Audit trail relationships with SystemUser
   created_by_user      SystemUser      @relation("SpecializationCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
@@ -63,6 +61,15 @@ model Specialization {
   deleted_by_user      SystemUser?     @relation("SpecializationDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("specializations")
+}
+
+// Junction table for Specialization <-> Program
+model SpecializationProgram {
+  specialization_id   Int
+  program_id          Int
+  specialization      Specialization @relation(fields: [specialization_id], references: [specialization_id])
+  program             Program        @relation(fields: [program_id], references: [program_id])
+  @@id([specialization_id, program_id])
 }
 
 // Institute model - educational institutions

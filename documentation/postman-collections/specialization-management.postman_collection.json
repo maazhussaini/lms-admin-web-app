@@ -57,14 +57,14 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"programId\": {{programId}},\n    \"specializationName\": \"{{randomSpecializationName}}\"\n}"
+          "raw": "{\n    \"specialization_name\": \"{{randomSpecializationName}}\",\n    \"program_ids\": [{{programId}}]\n}"
         },
         "url": {
           "raw": "{{base_url}}/specializations",
           "host": ["{{base_url}}"],
           "path": ["specializations"]
         },
-        "description": "Creates a new specialization under a program. The tenant ID is extracted from the JWT token."
+        "description": "Creates a new specialization and associates it with one or more programs. The tenant ID is extracted from the JWT token."
       },
       "response": []
     },
@@ -89,7 +89,8 @@
               "        const firstSpec = jsonData.data[0];",
               "        pm.expect(firstSpec).to.have.property('specialization_id');",
               "        pm.expect(firstSpec).to.have.property('specialization_name');",
-              "        pm.expect(firstSpec).to.have.property('program_id');",
+              "        pm.expect(firstSpec).to.have.property('programs');",
+              "        pm.expect(firstSpec.programs).to.be.an('array');",
               "        pm.expect(firstSpec).to.have.property('created_at');",
               "        pm.expect(firstSpec).to.have.property('updated_at');",
               "    }",
@@ -134,7 +135,8 @@
               "    pm.expect(jsonData.data).to.be.an('object');",
               "    pm.expect(jsonData.data.specialization_id).to.eql(specializationId);",
               "    pm.expect(jsonData.data).to.have.property('specialization_name');",
-              "    pm.expect(jsonData.data).to.have.property('program_id');",
+              "    pm.expect(jsonData.data).to.have.property('programs');",
+              "    pm.expect(jsonData.data.programs).to.be.an('array');",
               "    pm.expect(jsonData.data).to.have.property('created_at');",
               "    pm.expect(jsonData.data).to.have.property('updated_at');",
               "});"
@@ -191,7 +193,8 @@
               "    pm.expect(jsonData.data).to.be.an('object');",
               "    pm.expect(jsonData.data.specialization_id).to.eql(specializationId);",
               "    pm.expect(jsonData.data.specialization_name).to.eql(updatedName);",
-              "    pm.expect(jsonData.data).to.have.property('program_id');",
+              "    pm.expect(jsonData.data).to.have.property('programs');",
+              "    pm.expect(jsonData.data.programs).to.be.an('array');",
               "    pm.expect(jsonData.data).to.have.property('created_at');",
               "    pm.expect(jsonData.data).to.have.property('updated_at');",
               "});"
@@ -207,7 +210,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"specializationName\": \"{{updatedSpecializationName}}\"\n}"
+          "raw": "{\n    \"specialization_name\": \"{{updatedSpecializationName}}\",\n    \"program_ids\": [{{programId}}]\n}"
         },
         "url": {
           "raw": "{{base_url}}/specializations/{{specializationId}}",

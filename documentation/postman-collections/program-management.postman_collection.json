@@ -78,7 +78,7 @@
                 ],
                 "body": {
                     "mode": "raw",
-                    "raw": "{\n    \"program_name\": \"{{randomProgramName}}\"\n}"
+                    "raw": "{\n    \"program_name\": \"{{randomProgramName}}\",\n    \"specialization_ids\": []\n}"
                 },
                 "url": {
                     "raw": "{{base_url}}/programs",

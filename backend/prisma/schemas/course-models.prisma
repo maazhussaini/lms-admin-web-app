@@ -11,9 +11,7 @@ model Course {
   course_type          CourseType @default(PAID)
   course_price         Decimal?  @db.Decimal(10, 2) // Nullable for free courses
   course_total_hours   Decimal?  @db.Decimal(6, 2) // Auto-calculated by backend from sum of video durations
-  specialization_id    Int?
-  program_id    Int?
-  
+
   // Audit fields
   is_active            Boolean   @default(true)
   is_deleted           Boolean   @default(false)
@@ -28,8 +26,7 @@ model Course {
 
   // Relationships
   tenant               Tenant    @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
-  specialization       Specialization? @relation(fields: [specialization_id], references: [specialization_id], onDelete: SetNull)
-  program             Program? @relation(fields: [program_id], references: [program_id], onDelete: SetNull)
+  course_specializations CourseSpecialization[]
 
   // Course content relationships
   modules              CourseModule[]
@@ -50,6 +47,15 @@ model Course {
   deleted_by_user      SystemUser?  @relation("CourseDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("courses")
+}
+
+// Junction table for Course <-> Specialization
+model CourseSpecialization {
+  course_id           Int
+  specialization_id   Int
+  course              Course         @relation(fields: [course_id], references: [course_id])
+  specialization      Specialization @relation(fields: [specialization_id], references: [specialization_id])
+  @@id([course_id, specialization_id])
 }
 
 // CourseModule model - structural component of a course
