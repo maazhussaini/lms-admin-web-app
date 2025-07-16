@@ -1,0 +1,36 @@
+// Seed data for role screens
+export const role_screens = [
+  {
+    tenant_id: 1,
+    role_type: 'STUDENT',
+    screen_id: 1,
+    can_view: true,
+    can_create: false,
+    can_edit: false,
+    can_delete: false,
+    can_export: false,
+    is_active: true,
+    is_deleted: false,
+    created_by: 1,
+    updated_by: 2,
+    created_ip: '10.20.0.1',
+    updated_ip: '10.20.0.2',
+  },
+  {
+    tenant_id: 2,
+    role_type: 'TEACHER',
+    screen_id: 4,
+    can_view: true,
+    can_create: true,
+    can_edit: true,
+    can_delete: true,
+    can_export: false,
+    is_active: true,
+    is_deleted: false,
+    created_by: 2,
+    updated_by: 1,
+    created_ip: '10.20.0.7',
+    updated_ip: '10.20.0.8',
+  },
+  // ...add more as needed
+];

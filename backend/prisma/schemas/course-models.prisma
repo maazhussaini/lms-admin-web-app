@@ -56,6 +56,7 @@ model CourseSpecialization {
   course              Course         @relation(fields: [course_id], references: [course_id])
   specialization      Specialization @relation(fields: [specialization_id], references: [specialization_id])
   @@id([course_id, specialization_id])
+  @@map("course_specialization")
 }
 
 // CourseModule model - structural component of a course

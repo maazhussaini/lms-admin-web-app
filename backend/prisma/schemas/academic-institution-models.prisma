@@ -63,13 +63,14 @@ model Specialization {
   @@map("specializations")
 }
 
-// Junction table for Specialization <-> Program
+// SpecializationProgram model - join table for many-to-many relationship between Specializations and Programs
 model SpecializationProgram {
   specialization_id   Int
   program_id          Int
   specialization      Specialization @relation(fields: [specialization_id], references: [specialization_id])
   program             Program        @relation(fields: [program_id], references: [program_id])
   @@id([specialization_id, program_id])
+  @@map("specialization_program")
 }
 
 // Institute model - educational institutions

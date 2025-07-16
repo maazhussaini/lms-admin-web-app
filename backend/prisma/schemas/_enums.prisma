@@ -85,7 +85,7 @@ enum ExportFormat {
  * @description Types of assignments available
  */
 enum AssignmentType {
-  FILE_UPLOAD @map("FILE_UPLOA")
+  FILE_UPLOAD @map("FILE_UPLOAD")
 }
 
 /**

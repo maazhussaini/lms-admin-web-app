@@ -134,3 +134,4 @@ dist
 
 # public directory
 public
+/backend/prisma/migrations/

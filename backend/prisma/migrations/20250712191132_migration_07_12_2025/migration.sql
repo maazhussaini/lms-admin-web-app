@@ -17,7 +17,7 @@ CREATE TYPE "WidgetType" AS ENUM ('CHART', 'TABLE', 'METRIC_CARD', 'PROGRESS_BAR
 CREATE TYPE "ExportFormat" AS ENUM ('PDF', 'EXCEL', 'CSV', 'JSON');
 
 -- CreateEnum
-CREATE TYPE "AssignmentType" AS ENUM ('FILE_UPLOA');
+CREATE TYPE "AssignmentType" AS ENUM ('FILE_UPLOAD');
 
 -- CreateEnum
 CREATE TYPE "AssignmentStatus" AS ENUM ('DRAFT', 'PUBLISHED', 'GRADING_IN_PROGRESS', 'GRADED', 'ARCHIVED');
@@ -1196,7 +1196,7 @@ CREATE TABLE "assignments" (
     "teacher_id" INTEGER NOT NULL,
     "assignment_name" VARCHAR(255) NOT NULL,
     "assignment_description" TEXT,
-    "assignment_type" "AssignmentType" NOT NULL DEFAULT 'FILE_UPLOA',
+    "assignment_type" "AssignmentType" NOT NULL DEFAULT 'FILE_UPLOAD',
     "total_marks" DECIMAL(6,2) NOT NULL,
     "passing_marks" DECIMAL(6,2),
     "due_date" TIMESTAMP(3) NOT NULL,
