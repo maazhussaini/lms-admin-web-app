@@ -244,6 +244,278 @@
         "description": "Deletes a specialization by its ID."
       },
       "response": []
+    },
+    {
+      "name": "Update Specialization Status",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response has success true and updated specialization status\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.eql(true);",
+              "    pm.expect(jsonData.statusCode).to.eql(200);",
+              "    pm.expect(jsonData.data).to.be.an('object');",
+              "    pm.expect(jsonData.data).to.have.property('is_active', false);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"is_active\": false\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/specializations/{{specializationId}}",
+          "host": ["{{base_url}}"],
+          "path": ["specializations", "{{specializationId}}"]
+        },
+        "description": "Updates the active status of a specialization."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Inactive Specialization",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Specialization is inactive\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.have.property('is_active', false);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/specializations/{{specializationId}}",
+          "host": ["{{base_url}}"],
+          "path": ["specializations", "{{specializationId}}"]
+        },
+        "description": "Retrieves a specialization by its ID to verify inactive status."
+      },
+      "response": []
+    },
+    {
+      "name": "List Specializations (filter inactive)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"All specializations are inactive\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    jsonData.data.forEach(function (spec) {",
+              "        pm.expect(spec.is_active).to.eql(false);",
+              "    });",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/specializations?is_active=false",
+          "host": ["{{base_url}}"],
+          "path": ["specializations"],
+          "query": [
+            { "key": "is_active", "value": "false" }
+          ]
+        },
+        "description": "Retrieves a list of inactive specializations."
+      },
+      "response": []
+    },
+    {
+      "name": "Restore Specialization Status",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Specialization is active again\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.have.property('is_active', true);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"is_active\": true\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/specializations/{{specializationId}}",
+          "host": ["{{base_url}}"],
+          "path": ["specializations", "{{specializationId}}"]
+        },
+        "description": "Restores an inactive specialization back to active status."
+      },
+      "response": []
+    },
+    {
+      "name": "Verify Specialization Deletion",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 404 Not Found\", function () {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/specializations/{{specializationId}}",
+          "host": ["{{base_url}}"],
+          "path": ["specializations", "{{specializationId}}"]
+        },
+        "description": "Attempts to retrieve a soft-deleted specialization to verify that it's no longer accessible."
+      },
+      "response": []
+    },
+    {
+      "name": "Create Specialization (Duplicate Name)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Use the same name as the last created specialization",
+              "pm.environment.set('duplicateSpecializationName', pm.environment.get('randomSpecializationName'));"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 409 Conflict\", function () {",
+              "    pm.response.to.have.status(409);",
+              "});",
+              "pm.test(\"Duplicate name error\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.errorCode).to.eql('DUPLICATE_SPECIALIZATION_NAME');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"programId\": {{programId}},\n    \"specializationName\": \"{{duplicateSpecializationName}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/specializations",
+          "host": ["{{base_url}}"],
+          "path": ["specializations"]
+        },
+        "description": "Attempts to create a specialization with a name that already exists within the program."
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Temporary Specialization",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 204 No Content\", function () {",
+              "    pm.response.to.have.status(204);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/specializations/{{tempSpecializationId}}",
+          "host": ["{{base_url}}"],
+          "path": ["specializations", "{{tempSpecializationId}}"]
+        },
+        "description": "Deletes the temporary specialization created for the duplicate name test."
+      },
+      "response": []
+    },
+    {
+      "name": "Invalid Specialization ID Format",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 400 Bad Request\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/specializations/invalid",
+          "host": ["{{base_url}}"],
+          "path": ["specializations", "invalid"]
+        },
+        "description": "Attempts to retrieve a specialization with an invalid ID format to test input validation."
+      },
+      "response": []
     }
   ],
   "auth": {
@@ -278,6 +550,9 @@
     { "key": "programId", "value": "", "type": "string" },
     { "key": "specializationId", "value": "", "type": "string" },
     { "key": "randomSpecializationName", "value": "", "type": "string" },
-    { "key": "updatedSpecializationName", "value": "", "type": "string" }
+    { "key": "updatedSpecializationName", "value": "", "type": "string" },
+    { "key": "inactiveSpecializationId", "value": "", "type": "string" },
+    { "key": "tempSpecializationId", "value": "", "type": "string" },
+    { "key": "duplicateSpecializationName", "value": "", "type": "string" }
   ]
 }

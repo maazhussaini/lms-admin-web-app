@@ -1,3 +1,34 @@
+-- Academic Programs
+INSERT INTO programs (
+    tenant_id, program_name, program_thumbnail_url, is_active, is_deleted, created_at, updated_at, created_by, updated_by, deleted_at, deleted_by, created_ip, updated_ip
+) VALUES
+(1, 'Computer Science', NULL, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '10.1.1.1', '10.1.1.2'),
+(2, 'Business Administration', NULL, true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '10.1.1.3', '10.1.1.4'),
+(3, 'Environmental Science', NULL, true, false, NOW(), NOW(), 3, NULL, NULL, NULL, '10.1.1.5', '10.1.1.6'),
+(4, 'Mechanical Engineering', NULL, true, false, NOW(), NOW(), 4, NULL, NULL, NULL, '10.1.1.7', '10.1.1.8'),
+(5, 'Psychology', NULL, true, false, NOW(), NOW(), 5, NULL, NULL, NULL, '10.1.1.9', '10.1.2.0');
+
+-- Academic Specializations
+INSERT INTO specializations (
+    tenant_id, program_id, specialization_name, specialization_thumbnail_url, is_active, is_deleted, created_at, updated_at, created_by, updated_by, deleted_at, deleted_by, created_ip, updated_ip
+) VALUES
+(1, 1, 'Software Engineering', NULL, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '10.1.2.1', '10.1.2.2'),
+(1, 1, 'Data Science', NULL, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '10.1.2.3', '10.1.2.4'),
+(2, 2, 'Marketing', NULL, true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '10.1.2.5', '10.1.2.6'),
+(2, 2, 'Finance', NULL, true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '10.1.2.7', '10.1.2.8'),
+(3, 3, 'Renewable Energy', NULL, true, false, NOW(), NOW(), 3, NULL, NULL, NULL, '10.1.2.9', '10.1.3.0'),
+(5, 5, 'Clinical Psychology', NULL, true, false, NOW(), NOW(), 5, NULL, NULL, NULL, '10.1.3.1', '10.1.3.2');
+
+-- Academic Institutes
+INSERT INTO institutes (
+    tenant_id, institute_name, is_active, is_deleted, created_at, updated_at, created_by, updated_by, deleted_at, deleted_by, created_ip, updated_ip
+) VALUES
+(1, 'School of Engineering', true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '10.1.3.3', '10.1.3.4'),
+(2, 'School of Business', true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '10.1.3.5', '10.1.3.6'),
+(3, 'Institute of Environmental Studies', true, false, NOW(), NOW(), 3, NULL, NULL, NULL, '10.1.3.7', '10.1.3.8'),
+(4, 'College of Arts and Sciences', true, false, NOW(), NOW(), 4, NULL, NULL, NULL, '10.1.3.9', '10.1.4.0'),
+(5, 'School of Health Sciences', true, false, NOW(), NOW(), 5, NULL, NULL, NULL, '10.1.4.1', '10.1.4.2');
+
 INSERT INTO tenants (
     tenant_name, logo_url_light, logo_url_dark, favicon_url, theme, tenant_status,
     is_active, is_deleted, created_at, updated_at, created_by, updated_by,
@@ -246,4 +277,139 @@ INSERT INTO cities (
 (8, 'Mumbai', true, false, NOW(), NOW(), 8, NULL, NULL, NULL, '10.0.1.9', '10.0.2.0');
 
 
+-- Students
+INSERT INTO students (
+    tenant_id, full_name, first_name, middle_name, last_name, country_id, state_id, city_id, address, date_of_birth, profile_picture_url, zip_code, age, gender, username, password_hash, last_login_at, student_status, referral_type, is_active, is_deleted, created_at, updated_at, created_by, updated_by, deleted_at, deleted_by, created_ip, updated_ip
+) VALUES
+(1, 'Sarah Johnson', 'Sarah', NULL, 'Johnson', 1, 1, 1, '123 Main St, Los Angeles, CA', '2002-05-14', NULL, '90001', 22, 'FEMALE', 'sarah.j', 'hashed_pw_11', NOW(), 'ACTIVE', NULL, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '10.30.1.1', '10.30.1.2'),
+(2, 'Alex Smith', 'Alex', NULL, 'Smith', 2, 3, 4, '45 Park Lane, London', '2001-09-22', NULL, 'W1K 1PN', 23, 'MALE', 'alex.s', 'hashed_pw_12', NOW(), 'ACTIVE', NULL, true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '10.30.1.3', '10.30.1.4'),
+(3, 'Emma Müller', 'Emma', NULL, 'Müller', 5, 5, 7, 'Bavaria, Munich', '2003-03-10', NULL, '80331', 21, 'FEMALE', 'emma.m', 'hashed_pw_13', NOW(), 'ACTIVE', NULL, true, false, NOW(), NOW(), 3, NULL, NULL, NULL, '10.30.1.5', '10.30.1.6'),
+(4, 'Matthew Chen', 'Matthew', NULL, 'Chen', 4, 6, 8, 'Sydney, Australia', '2000-12-01', NULL, '2000', 24, 'MALE', 'matthew.c', 'hashed_pw_14', NOW(), 'ACTIVE', NULL, true, false, NOW(), NOW(), 4, NULL, NULL, NULL, '10.30.1.7', '10.30.1.8'),
+(5, 'Alina Patel', 'Alina', NULL, 'Patel', 6, 8, 10, 'Mumbai, India', '2002-07-19', NULL, '400001', 22, 'FEMALE', 'alina.p', 'hashed_pw_15', NOW(), 'ACTIVE', NULL, true, false, NOW(), NOW(), 5, NULL, NULL, NULL, '10.30.1.9', '10.30.2.0');
+
+-- Student Email Addresses
+INSERT INTO student_email_addresses (
+    tenant_id, student_id, email_address, is_primary, priority, is_active, is_deleted, created_at, updated_at, created_by, updated_by, deleted_at, deleted_by, created_ip, updated_ip
+) VALUES
+(1, 1, 'sarah.johnson@alpha-academy.edu', true, 1, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '10.31.1.1', '10.31.1.2'),
+(2, 2, 'alex.smith@beta-school.edu', true, 1, true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '10.31.1.3', '10.31.1.4'),
+(3, 3, 'emma.muller@gamma-learning.edu', true, 1, true, false, NOW(), NOW(), 3, NULL, NULL, NULL, '10.31.1.5', '10.31.1.6'),
+(4, 4, 'matthew.chen@delta-institute.edu', true, 1, true, false, NOW(), NOW(), 4, NULL, NULL, NULL, '10.31.1.7', '10.31.1.8'),
+(5, 5, 'alina.patel@epsilon-univ.edu', true, 1, true, false, NOW(), NOW(), 5, NULL, NULL, NULL, '10.31.1.9', '10.31.2.0');
+
+-- Student Phone Numbers
+INSERT INTO student_phone_numbers (
+    tenant_id, student_id, dial_code, phone_number, iso_country_code, is_primary, is_active, is_deleted, created_at, updated_at, created_by, updated_by, deleted_at, deleted_by, created_ip, updated_ip
+) VALUES
+(1, 1, '+1', '2025550185', 'US', true, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '10.32.1.1', '10.32.1.2'),
+(2, 2, '+44', '2079460958', 'GB', true, true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '10.32.1.3', '10.32.1.4'),
+(3, 3, '+49', '8923456789', 'DE', true, true, false, NOW(), NOW(), 3, NULL, NULL, NULL, '10.32.1.5', '10.32.1.6'),
+(4, 4, '+61', '412345678', 'AU', true, true, false, NOW(), NOW(), 4, NULL, NULL, NULL, '10.32.1.7', '10.32.1.8'),
+(5, 5, '+91', '9876543210', 'IN', true, true, false, NOW(), NOW(), 5, NULL, NULL, NULL, '10.32.1.9', '10.32.2.0');
+
+-- Student Devices
+INSERT INTO student_devices (
+    tenant_id, student_id, device_type, device_identifier, device_ip, mac_address, is_primary, last_active_at, is_active, is_deleted, created_at, updated_at, created_by, updated_by, deleted_at, deleted_by, created_ip, updated_ip
+) VALUES
+(1, 1, 'LAPTOP', 'LAPTOP-ALPHA-001', '192.168.10.11', '00:1A:2B:3C:4D:5E', true, NOW(), true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '10.33.1.1', '10.33.1.2'),
+(2, 2, 'SMARTPHONE', 'PHONE-BETA-002', '192.168.10.12', '00:1A:2B:3C:4D:5F', true, NOW(), true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '10.33.1.3', '10.33.1.4'),
+(3, 3, 'TABLET', 'TABLET-GAMMA-003', '192.168.10.13', '00:1A:2B:3C:4D:60', true, NOW(), true, false, NOW(), NOW(), 3, NULL, NULL, NULL, '10.33.1.5', '10.33.1.6'),
+(4, 4, 'DESKTOP', 'DESKTOP-DELTA-004', '192.168.10.14', '00:1A:2B:3C:4D:61', true, NOW(), true, false, NOW(), NOW(), 4, NULL, NULL, NULL, '10.33.1.7', '10.33.1.8'),
+(5, 5, 'LAPTOP', 'LAPTOP-EPSILON-005', '192.168.10.15', '00:1A:2B:3C:4D:62', true, NOW(), true, false, NOW(), NOW(), 5, NULL, NULL, NULL, '10.33.1.9', '10.33.2.0');
+
+-- Student-Institute Assignments (Many-to-Many)
+INSERT INTO student_institutes (
+    tenant_id, student_id, institute_id, is_active, is_deleted, created_at, updated_at, created_by, updated_by, deleted_at, deleted_by, created_ip, updated_ip
+) VALUES
+(1, 1, 1, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '10.34.1.1', '10.34.1.2'), -- Sarah Johnson: School of Engineering
+(2, 2, 2, true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '10.34.1.3', '10.34.1.4'), -- Alex Smith: School of Business
+(3, 3, 3, true, false, NOW(), NOW(), 3, NULL, NULL, NULL, '10.34.1.5', '10.34.1.6'), -- Emma Müller: Institute of Environmental Studies
+(4, 4, 4, true, false, NOW(), NOW(), 4, NULL, NULL, NULL, '10.34.1.7', '10.34.1.8'), -- Matthew Chen: College of Arts and Sciences
+(5, 5, 5, true, false, NOW(), NOW(), 5, NULL, NULL, NULL, '10.34.1.9', '10.34.2.0'), -- Alina Patel: School of Health Sciences
+-- Add a few cross-institute assignments for realism
+(1, 1, 2, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '10.34.2.1', '10.34.2.2'), -- Sarah Johnson: School of Business (joint program)
+(2, 2, 1, true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '10.34.2.3', '10.34.2.4'); -- Alex Smith: School of Engineering (elective)
+
+-- Teachers
+INSERT INTO teachers (
+    tenant_id, full_name, first_name, middle_name, last_name, country_id, state_id, city_id, address, date_of_birth, profile_picture_url, zip_code, age, gender, username, password_hash, last_login_at, teacher_status, is_active, is_deleted, created_at, updated_at, created_by, updated_by, deleted_at, deleted_by, created_ip, updated_ip
+) VALUES
+(1, 'Dr. John Williams', 'John', NULL, 'Williams', 1, 1, 1, '456 University Ave, Los Angeles, CA', '1975-04-12', NULL, '90001', 50, 'MALE', 'john.w', 'hashed_pw_21', NOW(), 'ACTIVE', true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '10.40.1.1', '10.40.1.2'),
+(2, 'Prof. Emily Clark', 'Emily', NULL, 'Clark', 2, 3, 4, '78 Queen St, London', '1980-09-30', NULL, 'W1K 2QD', 45, 'FEMALE', 'emily.c', 'hashed_pw_22', NOW(), 'ACTIVE', true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '10.40.1.3', '10.40.1.4'),
+(3, 'Dr. Markus Schmidt', 'Markus', NULL, 'Schmidt', 5, 5, 7, 'Universitätsstraße 12, Munich', '1972-06-18', NULL, '80331', 53, 'MALE', 'markus.s', 'hashed_pw_23', NOW(), 'ACTIVE', true, false, NOW(), NOW(), 3, NULL, NULL, NULL, '10.40.1.5', '10.40.1.6'),
+(4, 'Dr. Priya Nair', 'Priya', NULL, 'Nair', 6, 8, 10, 'Bandra, Mumbai', '1985-11-22', NULL, '400050', 39, 'FEMALE', 'priya.n', 'hashed_pw_24', NOW(), 'ACTIVE', true, false, NOW(), NOW(), 4, NULL, NULL, NULL, '10.40.1.7', '10.40.1.8'),
+(5, 'Prof. Matthew Evans', 'Matthew', NULL, 'Evans', 4, 6, 8, '123 George St, Sydney', '1978-02-05', NULL, '2000', 47, 'MALE', 'matthew.e', 'hashed_pw_25', NOW(), 'ACTIVE', true, false, NOW(), NOW(), 5, NULL, NULL, NULL, '10.40.1.9', '10.40.2.0');
+
+-- Teacher Email Addresses
+INSERT INTO teacher_email_addresses (
+    tenant_id, teacher_id, email_address, is_primary, priority, is_active, is_deleted, created_at, updated_at, created_by, updated_by, deleted_at, deleted_by, created_ip, updated_ip
+) VALUES
+(1, 1, 'john.williams@alpha-academy.edu', true, 1, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '10.41.1.1', '10.41.1.2'),
+(2, 2, 'emily.clark@beta-school.edu', true, 1, true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '10.41.1.3', '10.41.1.4'),
+(3, 3, 'markus.schmidt@gamma-learning.edu', true, 1, true, false, NOW(), NOW(), 3, NULL, NULL, NULL, '10.41.1.5', '10.41.1.6'),
+(4, 4, 'priya.nair@epsilon-univ.edu', true, 1, true, false, NOW(), NOW(), 4, NULL, NULL, NULL, '10.41.1.7', '10.41.1.8'),
+(5, 5, 'matthew.evans@delta-institute.edu', true, 1, true, false, NOW(), NOW(), 5, NULL, NULL, NULL, '10.41.1.9', '10.41.2.0');
+
+-- Teacher Phone Numbers
+INSERT INTO teacher_phone_numbers (
+    tenant_id, teacher_id, dial_code, phone_number, iso_country_code, is_primary, is_active, is_deleted, created_at, updated_at, created_by, updated_by, deleted_at, deleted_by, created_ip, updated_ip
+) VALUES
+(1, 1, '+1', '2135550199', 'US', true, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '10.42.1.1', '10.42.1.2'),
+(2, 2, '+44', '2079460999', 'GB', true, true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '10.42.1.3', '10.42.1.4'),
+(3, 3, '+49', '8923456799', 'DE', true, true, false, NOW(), NOW(), 3, NULL, NULL, NULL, '10.42.1.5', '10.42.1.6'),
+(4, 4, '+91', '9812345679', 'IN', true, true, false, NOW(), NOW(), 4, NULL, NULL, NULL, '10.42.1.7', '10.42.1.8'),
+(5, 5, '+61', '412345679', 'AU', true, true, false, NOW(), NOW(), 5, NULL, NULL, NULL, '10.42.1.9', '10.42.2.0');
+
+
+-- Courses
+INSERT INTO courses (
+    tenant_id, program_id, specialization_id, course_name, course_description, main_thumbnail_url, course_status, course_type, course_price, course_total_hours, is_active, is_deleted, created_at, updated_at, created_by, updated_by, deleted_at, deleted_by, created_ip, updated_ip
+) VALUES
+(1, 1, 1, 'Introduction to Programming', 'Learn the basics of programming using Python.', 'https://cdn.example.com/thumbnails/cs101.png', 'PUBLISHED', 'PAID', 49.99, 24.0, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.1.1.1', '11.1.1.2'),
+(2, 2, 3, 'Principles of Marketing', 'Fundamentals of marketing in a digital world.', 'https://cdn.example.com/thumbnails/ba201.png', 'PUBLISHED', 'FREE', NULL, 18.0, true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '11.1.1.3', '11.1.1.4'),
+(3, 3, 5, 'Renewable Energy Systems', 'Overview of renewable energy technologies.', 'https://cdn.example.com/thumbnails/en301.png', 'DRAFT', 'PAID', 79.99, 30.0, true, false, NOW(), NOW(), 3, NULL, NULL, NULL, '11.1.1.5', '11.1.1.6'),
+(1, 1, 2, 'Data Science Fundamentals', 'Introduction to data science concepts and tools.', 'https://cdn.example.com/thumbnails/cs202.png', 'PUBLISHED', 'PAID', 59.99, 28.0, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.1.1.7', '11.1.1.8'),
+(5, 5, 6, 'Introduction to Clinical Psychology', 'Basics of clinical psychology and mental health.', 'https://cdn.example.com/thumbnails/psy101.png', 'PUBLISHED', 'FREE', NULL, 20.0, true, false, NOW(), NOW(), 5, NULL, NULL, NULL, '11.1.1.9', '11.1.2.0');
+
+-- Course Modules
+INSERT INTO course_modules (
+    tenant_id, course_id, course_module_name, position, is_active, is_deleted, created_at, updated_at, created_by, updated_by, deleted_at, deleted_by, created_ip, updated_ip
+) VALUES
+(1, 1, 'Getting Started with Python', 1, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.2.1.1', '11.2.1.2'),
+(1, 1, 'Control Structures', 2, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.2.1.3', '11.2.1.4'),
+(1, 2, 'Marketing Basics', 1, true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '11.2.1.5', '11.2.1.6'),
+(1, 3, 'Solar Power', 1, true, false, NOW(), NOW(), 3, NULL, NULL, NULL, '11.2.1.7', '11.2.1.8'),
+(1, 4, 'Data Analysis Tools', 1, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.2.1.9', '11.2.2.0'),
+(1, 5, 'Foundations of Clinical Psychology', 1, true, false, NOW(), NOW(), 5, NULL, NULL, NULL, '11.2.2.1', '11.2.2.2');
+
+-- Course Topics
+INSERT INTO course_topics (
+    module_id, topic_title, topic_description, topic_order, is_active, is_deleted, created_at, updated_at, created_by, updated_by, deleted_at, deleted_by, created_ip, updated_ip
+) VALUES
+(1, 'Python Syntax', 'Basic syntax and structure of Python programs.', 1, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.3.1.1', '11.3.1.2'),
+(1, 'Variables and Data Types', 'Understanding variables and data types in Python.', 2, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.3.1.3', '11.3.1.4'),
+(2, 'If Statements', 'Conditional logic in Python.', 1, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.3.1.5', '11.3.1.6'),
+(3, 'Solar Panel Types', 'Different types of solar panels and their uses.', 1, true, false, NOW(), NOW(), 3, NULL, NULL, NULL, '11.3.1.7', '11.3.1.8'),
+(4, 'Jupyter Notebooks', 'Using Jupyter for data analysis.', 1, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.3.1.9', '11.3.2.0'),
+(5, 'History of Clinical Psychology', 'Development of clinical psychology as a field.', 1, true, false, NOW(), NOW(), 5, NULL, NULL, NULL, '11.3.2.1', '11.3.2.2');
+
+-- Course Videos
+INSERT INTO course_videos (
+    topic_id, video_title, video_url, video_duration, video_description, is_active, is_deleted, created_at, updated_at, created_by, updated_by, deleted_at, deleted_by, created_ip, updated_ip
+) VALUES
+(1, 'Python Syntax Overview', 'https://videos.example.com/python-syntax.mp4', 600, 'A walkthrough of Python syntax.', true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.4.1.1', '11.4.1.2'),
+(2, 'Variables Explained', 'https://videos.example.com/variables.mp4', 540, 'Explains variables and data types.', true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.4.1.3', '11.4.1.4'),
+(3, 'If Statements in Action', 'https://videos.example.com/if-statements.mp4', 480, 'Demonstrates conditional logic.', true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.4.1.5', '11.4.1.6'),
+(4, 'Solar Panel Types', 'https://videos.example.com/solar-panels.mp4', 720, 'Overview of solar panel types.', true, false, NOW(), NOW(), 3, NULL, NULL, NULL, '11.4.1.7', '11.4.1.8'),
+(5, 'Jupyter Notebooks Demo', 'https://videos.example.com/jupyter-notebooks.mp4', 900, 'How to use Jupyter Notebooks.', true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.4.1.9', '11.4.2.0');
+
+-- Course Documents
+INSERT INTO course_documents (
+    topic_id, document_title, document_url, document_description, is_active, is_deleted, created_at, updated_at, created_by, updated_by, deleted_at, deleted_by, created_ip, updated_ip
+) VALUES
+(1, 'Python Syntax Cheat Sheet', 'https://docs.example.com/python-syntax.pdf', 'Quick reference for Python syntax.', true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.5.1.1', '11.5.1.2'),
+(2, 'Variables Guide', 'https://docs.example.com/variables.pdf', 'Guide to variables and data types.', true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.5.1.3', '11.5.1.4'),
+(3, 'If Statements Reference', 'https://docs.example.com/if-statements.pdf', 'Reference for conditional logic.', true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.5.1.5', '11.5.1.6'),
+(4, 'Solar Panel Types PDF', 'https://docs.example.com/solar-panels.pdf', 'Details on solar panel types.', true, false, NOW(), NOW(), 3, NULL, NULL, NULL, '11.5.1.7', '11.5.1.8'),
+(5, 'Jupyter Notebooks Manual', 'https://docs.example.com/jupyter-notebooks.pdf', 'Manual for Jupyter Notebooks.', true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.5.1.9', '11.5.2.0');
 
