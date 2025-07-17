@@ -56,7 +56,7 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({
   return (
     <div 
       className={clsx(
-        'flex bg-white rounded-full p-1.5 w-full sm:w-auto shadow-sm border border-neutral-200',
+        'flex bg-white rounded-[15px] p-1.5 w-full sm:w-auto shadow-sm border border-neutral-200',
         className
       )}
       role="tablist"
@@ -73,7 +73,7 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({
             aria-controls={`${tab.key}-courses-panel`}
             onClick={() => onTabChange(tab.key)}
             className={clsx(
-              'relative flex-1 sm:flex-none sm:px-8 px-6 py-3.5 sm:py-4 rounded-full font-semibold text-sm sm:text-base transition-all duration-200 ease-in-out',
+              'relative flex-1 sm:flex-none sm:px-8 px-6 py-3.5 sm:py-4 rounded-[15px] font-semibold text-sm sm:text-base transition-all duration-200 ease-in-out',
               'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
               'hover:scale-[1.02] active:scale-[0.98]',
               {
@@ -86,7 +86,7 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({
             {isActive && (
               <motion.div
                 layoutId="activeTab"
-                className="absolute inset-0 bg-primary-900 rounded-full shadow-lg"
+                className="absolute inset-0 bg-primary-900 rounded-[15px] shadow-lg"
                 initial={false}
                 transition={{
                   type: "spring",

@@ -42,6 +42,7 @@ interface MyCoursesSearchBarProps {
  * @param props - Component props
  * @returns JSX.Element
  */
+
 const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
   value = '',
   onSearch,
@@ -60,7 +61,6 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
   // Debounced search handler
   const debouncedSearch = useMemo(() => {
     let timeoutId: NodeJS.Timeout;
-    
     return (query: string) => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
@@ -68,6 +68,46 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
       }, debounceMs);
     };
   }, [onSearch, debounceMs]);
+
+  // Container classes with focus and disabled states
+  const containerClasses = clsx(
+    'relative w-full',
+    'bg-white rounded-[15px]',
+    'border border-neutral-200',
+    'transition-all duration-200 ease-in-out',
+    'shadow-sm hover:shadow-md',
+    'h-14 sm:h-16', // Increased height
+    {
+      'ring-2 ring-primary-500 ring-opacity-20 border-primary-300': isFocused && !disabled,
+      'opacity-60 cursor-not-allowed': disabled,
+      'shadow-lg': isFocused && !disabled
+    }
+  );
+
+  // Input classes
+  const inputClasses = clsx(
+    'w-full pl-14 sm:pl-16 pr-6 py-4 sm:py-5', // Increased padding
+    'text-neutral-700 placeholder-neutral-400',
+    'font-medium text-base sm:text-lg', // Increased font size
+    'bg-transparent border-none outline-none',
+    'rounded-[15px]',
+    {
+      'cursor-not-allowed': disabled
+    }
+  );
+
+  // Search icon classes
+  const iconClasses = clsx(
+    'absolute left-5 sm:left-6 top-1/2 transform -translate-y-1/2', // Adjusted positioning
+    'w-6 h-6 sm:w-7 sm:h-7', // Increased icon size
+    'transition-colors duration-200',
+    {
+      'text-neutral-400': !isFocused && !loading,
+      'text-primary-500': isFocused && !disabled,
+      'text-neutral-300': disabled,
+      'animate-pulse': loading
+    }
+  );
 
   /**
    * Handle input value changes with debounced search
@@ -108,46 +148,6 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
     event.stopPropagation();
     onFilterClick?.();
   }, [onFilterClick]);
-
-  // Container classes with focus and disabled states
-  const containerClasses = clsx(
-    'relative w-full',
-    'bg-white rounded-full',
-    'border border-neutral-200',
-    'transition-all duration-200 ease-in-out',
-    'shadow-sm hover:shadow-md',
-    'h-14 sm:h-16', // Increased height
-    {
-      'ring-2 ring-primary-500 ring-opacity-20 border-primary-300': isFocused && !disabled,
-      'opacity-60 cursor-not-allowed': disabled,
-      'shadow-lg': isFocused && !disabled
-    }
-  );
-
-  // Input classes
-  const inputClasses = clsx(
-    'w-full pl-14 sm:pl-16 pr-6 py-4 sm:py-5', // Increased padding
-    'text-neutral-700 placeholder-neutral-400',
-    'font-medium text-base sm:text-lg', // Increased font size
-    'bg-transparent border-none outline-none',
-    'rounded-full',
-    {
-      'cursor-not-allowed': disabled
-    }
-  );
-
-  // Search icon classes
-  const iconClasses = clsx(
-    'absolute left-5 sm:left-6 top-1/2 transform -translate-y-1/2', // Adjusted positioning
-    'w-6 h-6 sm:w-7 sm:h-7', // Increased icon size
-    'transition-colors duration-200',
-    {
-      'text-neutral-400': !isFocused && !loading,
-      'text-primary-500': isFocused && !disabled,
-      'text-neutral-300': disabled,
-      'animate-pulse': loading
-    }
-  );
 
   return (
     <motion.div
@@ -198,7 +198,7 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
                 exit={{ opacity: 0, scale: 0.8 }}
                 className="absolute right-5 sm:right-6 top-1/2 transform -translate-y-1/2" // Adjusted positioning
               >
-                <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-primary-200 border-t-primary-500 rounded-full animate-spin" /> {/* Increased size */}
+                <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-primary-200 border-t-primary-500 rounded-[15px] animate-spin" /> {/* Increased size */}
               </motion.div>
             )}
           </div>
@@ -212,7 +212,7 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
             disabled={disabled}
             className={clsx(
               'flex items-center justify-center',
-              'w-14 h-14 sm:w-16 sm:h-16 rounded-full', // Increased size to match search bar
+              'w-14 h-14 sm:w-16 sm:h-16 rounded-[15px]', // Increased size to match search bar
               'bg-white border border-neutral-200',
               'transition-all duration-200 ease-in-out',
               'shadow-sm hover:shadow-md',
