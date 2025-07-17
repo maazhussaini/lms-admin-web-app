@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { MyCoursesSearchBar } from '@/components/common/SearchBar';
 
 /**
  * MyCoursesPage - Static UI scaffold for the student courses page
@@ -30,6 +31,16 @@ const dummyTabs = [
 const DUMMY_CARDS = 6;
 
 const MyCoursesPage: React.FC = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  /**
+   * Handle search query changes
+   */
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+    // TODO: Implement actual search functionality
+    console.log('Searching for:', query);
+  }, []);
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -84,12 +95,11 @@ const MyCoursesPage: React.FC = () => {
 
       {/* Search Bar */}
       <div className="flex justify-end mb-6">
-        <input
-          type="text"
+        <MyCoursesSearchBar
+          value={searchQuery}
+          onSearch={handleSearch}
           placeholder="Search here"
-          className="w-full max-w-md px-4 py-2 rounded-lg border border-neutral-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-200 text-base"
-          aria-label="Search courses"
-          disabled
+          className="w-full max-w-md"
         />
       </div>
 
