@@ -32,7 +32,7 @@ const AppRouter: React.FC = () => {
           }>
             <Routes>
               {/* Default redirect */}
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/" element={<Navigate to="/courses" replace />} />
               
               {/* Public routes - direct paths only */}
               <Route path="/login" element={<PublicRoutes />} />

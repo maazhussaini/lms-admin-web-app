@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { HiOutlineMagnifyingGlass } from 'react-icons/hi2';
+import { HiOutlineMagnifyingGlass, HiOutlineAdjustmentsHorizontal } from 'react-icons/hi2';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
 
@@ -11,6 +11,10 @@ interface MyCoursesSearchBarProps {
   value?: string;
   /** Callback fired when search value changes */
   onSearch?: (query: string) => void;
+  /** Callback fired when filter button is clicked */
+  onFilterClick?: () => void;
+  /** Whether filter is currently active/applied */
+  hasActiveFilters?: boolean;
   /** Placeholder text for the search input */
   placeholder?: string;
   /** Whether the search is currently loading */
@@ -41,6 +45,8 @@ interface MyCoursesSearchBarProps {
 const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
   value = '',
   onSearch,
+  onFilterClick,
+  hasActiveFilters = false,
   placeholder = 'Search here',
   loading = false,
   disabled = false,
@@ -94,26 +100,35 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
     onSearch?.(searchValue);
   }, [searchValue, onSearch]);
 
+  /**
+   * Handle filter button click
+   */
+  const handleFilterClick = useCallback((event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onFilterClick?.();
+  }, [onFilterClick]);
+
   // Container classes with focus and disabled states
   const containerClasses = clsx(
-    'relative w-full max-w-md mx-auto',
+    'relative w-full',
     'bg-white rounded-full',
     'border border-neutral-200',
     'transition-all duration-200 ease-in-out',
     'shadow-sm hover:shadow-md',
+    'h-14 sm:h-16', // Increased height
     {
       'ring-2 ring-primary-500 ring-opacity-20 border-primary-300': isFocused && !disabled,
       'opacity-60 cursor-not-allowed': disabled,
       'shadow-lg': isFocused && !disabled
-    },
-    className
+    }
   );
 
   // Input classes
   const inputClasses = clsx(
-    'w-full pl-12 pr-4 py-3',
+    'w-full pl-14 sm:pl-16 pr-6 py-4 sm:py-5', // Increased padding
     'text-neutral-700 placeholder-neutral-400',
-    'font-medium text-sm',
+    'font-medium text-base sm:text-lg', // Increased font size
     'bg-transparent border-none outline-none',
     'rounded-full',
     {
@@ -123,8 +138,8 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
 
   // Search icon classes
   const iconClasses = clsx(
-    'absolute left-4 top-1/2 transform -translate-y-1/2',
-    'w-5 h-5',
+    'absolute left-5 sm:left-6 top-1/2 transform -translate-y-1/2', // Adjusted positioning
+    'w-6 h-6 sm:w-7 sm:h-7', // Increased icon size
     'transition-colors duration-200',
     {
       'text-neutral-400': !isFocused && !loading,
@@ -139,57 +154,104 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="w-full"
+      className={clsx('w-full', className)}
     >
-      <form onSubmit={handleSubmit} className="w-full">
-        <div className={containerClasses}>
-          {/* Search Icon */}
-          <div className={iconClasses}>
-            <HiOutlineMagnifyingGlass 
+      <div className="flex items-center gap-3">
+        {/* Search Bar Container */}
+        <form onSubmit={handleSubmit} className="flex-1">
+          <div className={containerClasses}>
+            {/* Search Icon */}
+            <div className={iconClasses}>
+              <HiOutlineMagnifyingGlass 
+                className={clsx(
+                  'w-full h-full',
+                  {
+                    'animate-pulse': loading
+                  }
+                )}
+                aria-hidden="true"
+              />
+            </div>
+
+            {/* Search Input */}
+            <input
+              type="text"
+              value={searchValue}
+              onChange={handleInputChange}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              placeholder={placeholder}
+              disabled={disabled}
+              autoFocus={autoFocus}
+              className={inputClasses}
+              aria-label="Search courses"
+              aria-describedby="search-help"
+              autoComplete="off"
+              spellCheck="false"
+            />
+
+            {/* Loading Indicator */}
+            {loading && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="absolute right-5 sm:right-6 top-1/2 transform -translate-y-1/2" // Adjusted positioning
+              >
+                <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-primary-200 border-t-primary-500 rounded-full animate-spin" /> {/* Increased size */}
+              </motion.div>
+            )}
+          </div>
+        </form>
+
+        {/* Filter Button */}
+        {onFilterClick && (
+          <button
+            type="button"
+            onClick={handleFilterClick}
+            disabled={disabled}
+            className={clsx(
+              'flex items-center justify-center',
+              'w-14 h-14 sm:w-16 sm:h-16 rounded-full', // Increased size to match search bar
+              'bg-white border border-neutral-200',
+              'transition-all duration-200 ease-in-out',
+              'shadow-sm hover:shadow-md',
+              'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
+              'hover:scale-105 active:scale-95',
+              {
+                'bg-primary-50 border-primary-300 text-primary-600': hasActiveFilters,
+                'text-neutral-500 hover:text-neutral-700': !hasActiveFilters && !disabled,
+                'opacity-60 cursor-not-allowed': disabled,
+                'shadow-lg': hasActiveFilters
+              }
+            )}
+            aria-label={hasActiveFilters ? "Filter active - click to modify" : "Open filter options"}
+            title={hasActiveFilters ? "Filter active" : "Filter courses"}
+          >
+            <HiOutlineAdjustmentsHorizontal 
               className={clsx(
-                'w-full h-full',
+                'w-6 h-6 sm:w-7 sm:h-7 transition-transform duration-200', // Increased icon size
                 {
-                  'animate-pulse': loading
+                  'scale-110': hasActiveFilters
                 }
               )}
-              aria-hidden="true"
             />
-          </div>
-
-          {/* Search Input */}
-          <input
-            type="text"
-            value={searchValue}
-            onChange={handleInputChange}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            placeholder={placeholder}
-            disabled={disabled}
-            autoFocus={autoFocus}
-            className={inputClasses}
-            aria-label="Search courses"
-            aria-describedby="search-help"
-            autoComplete="off"
-            spellCheck="false"
-          />
-
-          {/* Loading Indicator */}
-          {loading && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2"
-            >
-              <div className="w-4 h-4 border-2 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
-            </motion.div>
-          )}
-        </div>
-      </form>
+            {/* Active filter indicator */}
+            {hasActiveFilters && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-1 -right-1 w-4 h-4 bg-primary-500 rounded-full border-2 border-white" // Slightly larger indicator
+              />
+            )}
+          </button>
+        )}
+      </div>
 
       {/* Screen reader help text */}
       <div id="search-help" className="sr-only">
         Enter search terms to filter your courses. Results will appear as you type.
+        {onFilterClick && " Use the filter button to access additional filtering options."}
       </div>
     </motion.div>
   );

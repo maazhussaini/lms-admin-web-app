@@ -16,6 +16,9 @@
   /* You can add more custom breakpoints like --breakpoint-3xl: 1920px; */
 
   /* Colors */
+  /* Page background color for consistent theming */
+  --color-page-bg: #f7f3ff;
+  
   /* Main purple palette (primary) */
   --color-primary-50: #f4f1fd;
   --color-primary-100: #ebe5fb;
