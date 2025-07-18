@@ -3,6 +3,9 @@ config({ path: '../backend/.env' });
 import { PrismaClient } from '@prisma/client';
 import { roles } from './seed-data/roles';
 import { system_users } from './seed-data/system_users';
+import { screens } from './seed-data/screens';
+import { user_screens } from './seed-data/user_screens';
+import { role_screens } from './seed-data/role_screens';
 import { tenants } from './seed-data/tenants';
 import { clients } from './seed-data/clients';
 import { tenant_phone_numbers } from './seed-data/tenant_phone_numbers';
@@ -159,6 +162,9 @@ async function main() {
   await prisma.institute.deleteMany({});
 
   // --- OTHER TABLES ---
+  await prisma.roleScreen.deleteMany({});
+  await prisma.userScreen.deleteMany({});
+  await prisma.screen.deleteMany({});
   await prisma.clientTenant.deleteMany({});
   await prisma.tenantPhoneNumber.deleteMany({});
   await prisma.tenantEmailAddress.deleteMany({});
@@ -279,6 +285,110 @@ async function main() {
     uniqueKey: 'username',
     auditMaps,
   });
+
+  // 37. Seed Screens and collect IDs by order
+  const screenIds: number[] = [];
+  for (const item of screens) {
+    // parent_screen_id is a 1-based index in seed data, map to actual screen_id or null
+    let mappedParentScreenId: number | null = null;
+    if (typeof item.parent_screen_id === 'number' && item.parent_screen_id !== null) {
+      mappedParentScreenId = screenIds[item.parent_screen_id - 1] ?? null;
+    }
+    // Map audit fields
+    let mappedCreatedBy = (item.created_by != null && usernameToId[item.created_by] !== undefined)
+      ? usernameToId[item.created_by]!
+      : bootstrapUser.system_user_id;
+    let mappedUpdatedBy: number | null = (item.updated_by != null && usernameToId[item.updated_by] !== undefined)
+      ? usernameToId[item.updated_by]!
+      : (item.updated_by != null ? bootstrapUser.system_user_id : null);
+    let mappedDeletedBy: number | null = (item.deleted_by != null && usernameToId[item.deleted_by] !== undefined)
+      ? usernameToId[item.deleted_by]!
+      : (item.deleted_by != null ? bootstrapUser.system_user_id : null);
+
+    const screen = await prisma.screen.create({
+      data: {
+        ...item,
+        parent_screen_id: mappedParentScreenId,
+        created_by: mappedCreatedBy,
+        updated_by: mappedUpdatedBy,
+        deleted_by: mappedDeletedBy,
+      },
+    });
+    screenIds.push(screen.screen_id);
+  }
+
+  // 38. Seed UserScreens
+  for (const item of user_screens) {
+    // Map tenant_id, system_user_id, screen_id by array index (1-based in seed data)
+    const mappedTenantId = ensureNumber(
+      typeof item.tenant_id === 'number' && tenantIds[item.tenant_id - 1] !== undefined ? tenantIds[item.tenant_id - 1] : tenantIds[0],
+      `Invalid mappedTenantId for user_screens entry: ${JSON.stringify(item)}`
+    );
+    const mappedSystemUserId = ensureNumber(
+      typeof item.system_user_id === 'number' && allUsers[item.system_user_id - 1] !== undefined ? allUsers[item.system_user_id - 1].system_user_id : allUsers[0].system_user_id,
+      `Invalid mappedSystemUserId for user_screens entry: ${JSON.stringify(item)}`
+    );
+    const mappedScreenId = ensureNumber(
+      typeof item.screen_id === 'number' && screenIds[item.screen_id - 1] !== undefined ? screenIds[item.screen_id - 1] : screenIds[0],
+      `Invalid mappedScreenId for user_screens entry: ${JSON.stringify(item)}`
+    );
+    // Map audit fields
+    let mappedCreatedBy = (item.created_by != null && usernameToId[item.created_by] !== undefined)
+      ? usernameToId[item.created_by]!
+      : bootstrapUser.system_user_id;
+    let mappedUpdatedBy: number | null = (item.updated_by != null && usernameToId[item.updated_by] !== undefined)
+      ? usernameToId[item.updated_by]!
+      : (item.updated_by != null ? bootstrapUser.system_user_id : null);
+    let mappedDeletedBy: number | null = (item.deleted_by != null && usernameToId[item.deleted_by] !== undefined)
+      ? usernameToId[item.deleted_by]!
+      : (item.deleted_by != null ? bootstrapUser.system_user_id : null);
+
+    await prisma.userScreen.create({
+      data: {
+        ...item,
+        tenant_id: mappedTenantId,
+        system_user_id: mappedSystemUserId,
+        screen_id: mappedScreenId,
+        created_by: mappedCreatedBy,
+        updated_by: mappedUpdatedBy,
+        deleted_by: mappedDeletedBy,
+      },
+    });
+  }
+
+  // 39. Seed RoleScreens
+  for (const item of role_screens) {
+    // Map tenant_id, screen_id by array index (1-based in seed data)
+    const mappedTenantId = ensureNumber(
+      typeof item.tenant_id === 'number' && tenantIds[item.tenant_id - 1] !== undefined ? tenantIds[item.tenant_id - 1] : tenantIds[0],
+      `Invalid mappedTenantId for role_screens entry: ${JSON.stringify(item)}`
+    );
+    const mappedScreenId = ensureNumber(
+      typeof item.screen_id === 'number' && screenIds[item.screen_id - 1] !== undefined ? screenIds[item.screen_id - 1] : screenIds[0],
+      `Invalid mappedScreenId for role_screens entry: ${JSON.stringify(item)}`
+    );
+    // Map audit fields
+    let mappedCreatedBy = (item.created_by != null && usernameToId[item.created_by] !== undefined)
+      ? usernameToId[item.created_by]!
+      : bootstrapUser.system_user_id;
+    let mappedUpdatedBy: number | null = (item.updated_by != null && usernameToId[item.updated_by] !== undefined)
+      ? usernameToId[item.updated_by]!
+      : (item.updated_by != null ? bootstrapUser.system_user_id : null);
+    let mappedDeletedBy: number | null = (item.deleted_by != null && usernameToId[item.deleted_by] !== undefined)
+      ? usernameToId[item.deleted_by]!
+      : (item.deleted_by != null ? bootstrapUser.system_user_id : null);
+
+    await prisma.roleScreen.create({
+      data: {
+        ...item,
+        tenant_id: mappedTenantId,
+        screen_id: mappedScreenId,
+        created_by: mappedCreatedBy,
+        updated_by: mappedUpdatedBy,
+        deleted_by: mappedDeletedBy,
+      },
+    });
+  }
 
   // 7. Seed Clients and collect IDs by order (map tenant_id using tenantIds array)
   const clientIds: number[] = [];

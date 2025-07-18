@@ -47,7 +47,9 @@
     "security:audit": "npm audit",
     "security:fix": "npm audit fix",
     "dev:type-watch": "concurrently \"npm run type-check:watch\" \"npm run dev\"",
-    "clean:all": "npm run clean && rimraf node_modules && rimraf .tsbuildinfo"
+    "clean:all": "npm run clean && rimraf node_modules && rimraf .tsbuildinfo",
+    "hash-password": "tsx scripts/hash-password.ts",
+    "hash-password-js": "node scripts/hash-password.js"
   },
   "keywords": [],
   "author": "",

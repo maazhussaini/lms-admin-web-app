@@ -1,0 +1,124 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import clsx from 'clsx';
+
+export interface CourseSelectorProps {
+  /** Current active tab */
+  activeTab: 'all' | 'enrolled' | 'unenrolled';
+  /** Handler for tab change */
+  onTabChange: (tab: 'all' | 'enrolled' | 'unenrolled') => void;
+  /** Course counts for each category */
+  counts: {
+    all: number;
+    enrolled: number;
+    unenrolled: number;
+  };
+  /** Additional CSS classes */
+  className?: string;
+}
+
+/**
+ * CourseSelector - Tab selector component for filtering courses
+ * 
+ * Displays three tabs: All Courses, Enrolled, and Unenrolled with course counts.
+ * Features smooth animations and follows the LMS design system.
+ * 
+ * @param props - Component props
+ * @returns JSX.Element
+ */
+const CourseSelector: React.FC<CourseSelectorProps> = ({
+  activeTab,
+  onTabChange,
+  counts,
+  className
+}) => {
+  const tabs = [
+    {
+      key: 'all' as const,
+      label: 'All Courses',
+      shortLabel: 'All',
+      count: counts.all
+    },
+    {
+      key: 'enrolled' as const,
+      label: 'Enrolled',
+      shortLabel: 'Enrolled',
+      count: counts.enrolled
+    },
+    {
+      key: 'unenrolled' as const,
+      label: 'Unenrolled',
+      shortLabel: 'Available',
+      count: counts.unenrolled
+    }
+  ];
+
+  return (
+    <div 
+      className={clsx(
+        'flex bg-white rounded-[15px] p-1.5 w-full sm:w-auto shadow-sm border border-neutral-200',
+        className
+      )}
+      role="tablist"
+      aria-label="Course filter tabs"
+    >
+      {tabs.map((tab) => {
+        const isActive = activeTab === tab.key;
+        
+        return (
+          <button
+            key={tab.key}
+            role="tab"
+            aria-selected={isActive}
+            aria-controls={`${tab.key}-courses-panel`}
+            onClick={() => onTabChange(tab.key)}
+            className={clsx(
+              'relative flex-1 sm:flex-none sm:px-8 px-6 py-3.5 sm:py-4 rounded-[15px] font-semibold text-sm sm:text-base transition-all duration-200 ease-in-out',
+              'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
+              'hover:scale-[1.02] active:scale-[0.98]',
+              {
+                'text-white bg-primary-900 shadow-lg': isActive,
+                'text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100': !isActive
+              }
+            )}
+          >
+            {/* Active tab background animation */}
+            {isActive && (
+              <motion.div
+                layoutId="activeTab"
+                className="absolute inset-0 bg-primary-900 rounded-[15px] shadow-lg"
+                initial={false}
+                transition={{
+                  type: "spring",
+                  stiffness: 500,
+                  damping: 30
+                }}
+              />
+            )}
+            
+            {/* Tab content */}
+            <span className="relative z-10 flex items-center justify-center gap-1.5 sm:gap-2.5 w-full">
+              <span className="truncate font-semibold">
+                <span className="sm:hidden">{tab.shortLabel}</span>
+                <span className="hidden sm:inline">{tab.label}</span>
+              </span>
+              <span 
+                className={clsx(
+                  'inline-flex items-center justify-center min-w-[22px] sm:min-w-[24px] h-5 sm:h-6 px-1.5 sm:px-2 rounded-full text-xs sm:text-sm font-bold flex-shrink-0',
+                  {
+                    'bg-white/20 text-white': isActive,
+                    'bg-neutral-300 text-neutral-700': !isActive
+                  }
+                )}
+              >
+                {String(tab.count).padStart(2, '0')}
+              </span>
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+export default CourseSelector;

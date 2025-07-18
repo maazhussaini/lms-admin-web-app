@@ -120,7 +120,7 @@ const Card: React.FC<CardProps> = ({
   };
 
   const cardClasses = [
-    'bg-white rounded-lg shadow',
+    'bg-white shadow',
     className
   ].join(' ');
 

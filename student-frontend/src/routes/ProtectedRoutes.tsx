@@ -12,6 +12,39 @@ export const ProtectedRoutes: React.FC = () => {
   const location = useLocation();
   const currentPath = location.pathname;
 
+  // Get page title based on current route
+  const getPageTitle = (path: string): string => {
+    // Handle parameterized routes
+    if (path.startsWith('/courses/') && path.includes('/lectures/')) {
+      return 'Lecture';
+    }
+    if (path.startsWith('/courses/') && path !== '/courses') {
+      return 'Course Details';
+    }
+
+    // Handle exact routes
+    switch (path) {
+      case '/dashboard':
+        return 'Dashboard';
+      case '/profile':
+        return 'Profile';
+      case '/settings':
+        return 'Settings';
+      case '/courses':
+        return 'My Courses';
+      case '/assignments':
+        return 'Assignments';
+      case '/quizzes':
+        return 'Quizzes';
+      case '/grades':
+        return 'Grades';
+      case '/notifications':
+        return 'Notifications';
+      default:
+        return 'Page Not Found';
+    }
+  };
+
   // Route to component mapping
   const renderPage = () => {
     // Handle parameterized routes
@@ -57,7 +90,7 @@ export const ProtectedRoutes: React.FC = () => {
 
   return (
     <StudentGuard>
-      <MainLayout>
+      <MainLayout pageTitle={getPageTitle(currentPath)}>
         {renderPage()}
       </MainLayout>
     </StudentGuard>

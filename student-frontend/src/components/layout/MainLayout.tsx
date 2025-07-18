@@ -1,21 +1,54 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import SideNavBar from './SideNavBar';
 import Header from './Header';
 
-// Main layout with SideNavBar and Header, no Footer
-export const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+interface MainLayoutProps {
+  children?: React.ReactNode;
+  pageTitle?: string;
+}
+
+/**
+ * MainLayout - Responsive layout with mobile navigation support
+ * 
+ * Features:
+ * - Desktop: Fixed sidebar + header layout
+ * - Mobile: Collapsible drawer navigation with header menu button
+ * - Responsive design with proper spacing and mobile-first approach
+ */
+export const MainLayout: React.FC<MainLayoutProps> = ({ 
+  children, 
+  pageTitle = "Dashboard" 
+}) => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleMobileMenuToggle = () => {
+    setIsMobileMenuOpen(prev => !prev);
+  };
+
+  const handleMobileMenuClose = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-row">
-      {/* Side Nav Bar */}
-      <SideNavBar />
+    <div className="h-screen bg-[#F7F3FF] flex flex-col lg:flex-row overflow-hidden">
+      {/* Desktop Side Nav Bar - Hidden on mobile */}
+      <SideNavBar 
+        isOpen={isMobileMenuOpen} 
+        onClose={handleMobileMenuClose} 
+      />
+      
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col h-full">
         {/* Header */}
-        <Header />
+        <Header 
+          heading={pageTitle}
+          onMobileMenuToggle={handleMobileMenuToggle}
+        />
+        
         {/* Main Content */}
-        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="flex-1 w-full px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 overflow-y-auto">
           {children || <Outlet />}
         </main>
       </div>
