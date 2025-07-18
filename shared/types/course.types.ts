@@ -20,12 +20,24 @@ export type VideoUploadStatus = typeof VideoUploadStatus[keyof typeof VideoUploa
  */
 export const CourseStatus = {
   DRAFT: 'DRAFT',
-  PUBLISHED: 'PUBLISHED',
-  ARCHIVED: 'ARCHIVED',
-  SUSPENDED: 'SUSPENDED',
+  PUBLIC: 'PUBLIC',
+  PRIVATE: 'PRIVATE',
 } as const;
 
 export type CourseStatus = typeof CourseStatus[keyof typeof CourseStatus];
+
+
+/**
+ * Course type enumeration
+ * @description Represents the type of course, such as free, paid, or purchased
+ */
+export const CourseType = {
+  FREE: 'FREE',
+  PAID: 'PAID',
+  PURCHASED: 'PURCHASED',
+} as const;
+
+export type CourseType = typeof CourseType[keyof typeof CourseType];
 
 /**
  * Represents a program with multi-tenant isolation
@@ -34,6 +46,7 @@ export type CourseStatus = typeof CourseStatus[keyof typeof CourseStatus];
 export interface Program extends MultiTenantAuditFields {
   program_id: number;
   program_name: string;
+  program_thumbnail_url?: string | null;
 }
 
 /**
@@ -44,6 +57,7 @@ export interface Specialization extends MultiTenantAuditFields {
   specialization_id: number;
   program_id: number; // Foreign key to Program
   specialization_name: string;
+  specialization_thumbnail_url?: string | null;
 }
 
 /**
@@ -58,6 +72,8 @@ export interface Course extends MultiTenantAuditFields {
   course_status: CourseStatus;
   course_total_hours?: number | null; // Auto-calculated by backend based on sum of video durations
   specialization_id?: number | null; // Foreign key to Specialization
+  course_type: CourseType;
+  course_price: number | null; // Applicable for paid courses
 }
 
 /**
@@ -97,6 +113,7 @@ export interface CourseVideo extends MultiTenantAuditFields {
   duration_seconds?: number | null;
   position?: number | null;
   upload_status?: VideoUploadStatus;
+  is_locked?: boolean; // Indicates if the video is locked for students
 }
 
 /**
@@ -142,4 +159,17 @@ export interface StudentCourseProgress extends MultiTenantAuditFields {
   last_accessed_at: Date | string;
   is_course_completed: boolean;
   completion_date?: Date | string | null;
+}
+
+
+export interface SpecializationProgram {
+  specialization_program_id: number;
+  specialization_id: number;
+  program_id: number;  
+}
+
+export interface CourseSpecialization {
+  course_specialization_id: number;
+  course_id: number;
+  specialization_id: number;
 }

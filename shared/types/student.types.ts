@@ -57,6 +57,20 @@ export const EnrollmentStatus = {
 
 export type EnrollmentStatus = typeof EnrollmentStatus[keyof typeof EnrollmentStatus];
 
+
+/**
+ * Course Enrollment Enums
+ * @description Defines enums for course enrollment types
+ */
+export const CourseEnrollmentType = {
+  PAID_COURSE: 'PAID_COURSE',
+  FREE_COURSE: 'FREE_COURSE',
+  COURSE_SESSION: 'COURSE_SESSION',
+} as const;
+
+export type CourseEnrollmentType = typeof CourseEnrollmentType[keyof typeof CourseEnrollmentType];
+
+
 /**
  * Represents a country with minimal audit fields
  * @description Geographic reference data (global)
@@ -167,6 +181,8 @@ export interface Enrollment extends MultiTenantAuditFields {
   institute_id: number; // Foreign key to Institute
   teacher_id?: number | null; // Foreign key to Teacher
   enrollment_status_id: EnrollmentStatus;
+  specialization_program_id ?: number; // Foreign key to Specialization or Program
+  course_enrollment_type: CourseEnrollmentType;
   enrolled_at: Date | string;
   expected_completion_date?: Date | string | null;
   actual_completion_date?: Date | string | null;

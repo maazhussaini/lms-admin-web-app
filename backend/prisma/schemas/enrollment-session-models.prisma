@@ -7,7 +7,9 @@ model Enrollment {
   student_id                Int
   institute_id              Int
   teacher_id                Int?
+  specialization_program_id Int
   enrollment_status         EnrollmentStatus @default(PENDING)
+  course_enrollment_type   CourseEnrollmentType
   enrolled_at               DateTime  @default(now())
   expected_completion_date  DateTime?
   actual_completion_date    DateTime?
@@ -37,7 +39,10 @@ model Enrollment {
   teacher                   Teacher?  @relation(fields: [teacher_id], references: [teacher_id], onDelete: SetNull)
   status_changed_by_user    SystemUser? @relation("EnrollmentStatusChangedBy", fields: [status_changed_by], references: [system_user_id], onDelete: SetNull)
   status_history            EnrollmentStatusHistory[]
-  
+  specialization_program    SpecializationProgram @relation(fields: [specialization_program_id], references: [specialization_program_id], onDelete: Restrict)
+  course_session_enrollment  CourseSessionEnrollment?
+
+
   // Audit trail relationships with SystemUser
   created_by_user           SystemUser @relation("EnrollmentCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user           SystemUser? @relation("EnrollmentUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
@@ -45,6 +50,7 @@ model Enrollment {
 
   @@map("enrollments")
   // Unique constraints and indexes via custom SQL migrations
+  
 }
 
 model EnrollmentStatusHistory {
@@ -207,6 +213,7 @@ model CourseSessionEnrollment {
   tenant_id                    Int
   course_session_id            Int
   student_id                   Int
+  enrollment_id                Int      @unique
   enrolled_at                  DateTime @default(now())
   dropped_at                   DateTime?
   enrollment_status            SessionEnrollmentStatus @default(PENDING)
@@ -230,7 +237,8 @@ model CourseSessionEnrollment {
   tenant                       Tenant           @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
   course_session               CourseSession    @relation(fields: [course_session_id], references: [course_session_id], onDelete: Cascade)
   student                      Student          @relation(fields: [student_id], references: [student_id], onDelete: Cascade)
-  
+  enrollment                   Enrollment       @relation(fields: [enrollment_id], references: [enrollment_id], onDelete: Cascade)
+
   // Audit trail relationships with SystemUser
   created_by_user              SystemUser       @relation("CourseSessionEnrollmentCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user              SystemUser?      @relation("CourseSessionEnrollmentUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)

@@ -17,6 +17,7 @@ export interface Teacher extends MultiTenantAuditFields {
   address?: string | null;
   date_of_birth?: Date | string | null;
   profile_picture_url?: string | null;
+  teacher_qualification?: string | null;
   zip_code?: string | null;
   age?: number | null;
   gender?: Gender | null;
