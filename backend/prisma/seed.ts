@@ -16,7 +16,7 @@ import { states } from './seed-data/states';
 import { cities } from './seed-data/cities';
 import { programs } from './seed-data/programs';
 import { specializations } from './seed-data/specializations';
-import { specializationProgramData } from './seed-data/specialization_program';
+import { specialization_programs } from './seed-data/specialization_programs';
 import { institutes } from './seed-data/institutes';
 import { students } from './seed-data/students';
 import { student_email_addresses } from './seed-data/student_email_addresses';
@@ -325,7 +325,12 @@ async function main() {
       `Invalid mappedTenantId for user_screens entry: ${JSON.stringify(item)}`
     );
     const mappedSystemUserId = ensureNumber(
-      typeof item.system_user_id === 'number' && allUsers[item.system_user_id - 1] !== undefined ? allUsers[item.system_user_id - 1].system_user_id : allUsers[0].system_user_id,
+      (() => {
+        let userObj = (typeof item.system_user_id === 'number') ? allUsers[item.system_user_id - 1] : undefined;
+        return (userObj && typeof userObj.system_user_id === 'number')
+          ? userObj.system_user_id
+          : (allUsers[0]?.system_user_id ?? 1);
+      })(),
       `Invalid mappedSystemUserId for user_screens entry: ${JSON.stringify(item)}`
     );
     const mappedScreenId = ensureNumber(
@@ -577,6 +582,7 @@ async function main() {
     });
     specializationIds.push(specialization.specialization_id);
   }
+
   // 17. Seed Institutes and collect IDs by order
   const instituteIds: number[] = [];
   for (const item of institutes) {
@@ -628,17 +634,57 @@ async function main() {
     });
     instituteIds.push(institute.institute_id);
   }
+  
   // Seed SpecializationProgram join table after both specializations and programs are seeded
-  for (const item of specializationProgramData) {
+  const specializationProgramIds: number[] = [];
+  const specializationProgramLookup: { [key: string]: number } = {};
+  for (const item of specialization_programs) {
     const mappedSpecializationId = specializationIds[item.specialization_id - 1];
     const mappedProgramId = programIds[item.program_id - 1];
+    let mappedCreatedBy: number | null = item.created_by;
+    let mappedUpdatedBy: number | null = item.updated_by;
+    let mappedDeletedBy: number | null = item.deleted_by;
+    // If auditMaps and user mapping is available, map user IDs (optional, pattern from other models)
+    if (auditMaps && item.created_by != null) {
+      const userObj = auditMaps.user[item.created_by - 1];
+      if (userObj && userObj.username) {
+        const id = auditMaps.usernameToId[userObj.username];
+        mappedCreatedBy = (typeof id === 'number') ? id : item.created_by;
+      }
+    }
+    if (auditMaps && item.updated_by != null) {
+      const userObj = auditMaps.user[item.updated_by - 1];
+      if (userObj && userObj.username) {
+        const id = auditMaps.usernameToId[userObj.username];
+        mappedUpdatedBy = (typeof id === 'number') ? id : null;
+      }
+    }
+    if (auditMaps && item.deleted_by != null) {
+      const userObj = auditMaps.user[item.deleted_by - 1];
+      if (userObj && userObj.username) {
+        const id = auditMaps.usernameToId[userObj.username];
+        mappedDeletedBy = (typeof id === 'number') ? id : null;
+      }
+    }
     if (mappedSpecializationId && mappedProgramId) {
-      await prisma.specializationProgram.create({
-        data: {
-          specialization_id: mappedSpecializationId,
-          program_id: mappedProgramId,
+    const specializationProgram = await prisma.specializationProgram.create({
+      data: {
+        specialization_id: mappedSpecializationId,
+        program_id: mappedProgramId,
+        is_active: item.is_active,
+        is_deleted: item.is_deleted,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        created_by: mappedCreatedBy,
+        updated_by: mappedUpdatedBy,
+        deleted_at: item.deleted_at,
+        deleted_by: mappedDeletedBy,
+        created_ip: item.created_ip,
+        updated_ip: item.updated_ip,
         },
       });
+      specializationProgramIds.push(specializationProgram.specialization_program_id);
+      specializationProgramLookup[`${item.specialization_id}_${item.program_id}`] = specializationProgram.specialization_program_id;
     }
   }
 
@@ -1233,10 +1279,44 @@ async function main() {
       typeof item.specialization_id === 'number' && specializationIds[item.specialization_id - 1] !== undefined ? specializationIds[item.specialization_id - 1] : specializationIds[0],
       `Invalid mappedSpecializationId for course_specializations entry: ${JSON.stringify(item)}`
     );
+    let mappedCreatedBy: number | null = item.created_by;
+    let mappedUpdatedBy: number | null = item.updated_by;
+    let mappedDeletedBy: number | null = item.deleted_by;
+    if (auditMaps && item.created_by != null) {
+      const userObj = auditMaps.user[item.created_by - 1];
+      if (userObj && userObj.username) {
+        const id = auditMaps.usernameToId[userObj.username];
+        mappedCreatedBy = (typeof id === 'number') ? id : item.created_by;
+      }
+    }
+    if (auditMaps && item.updated_by != null) {
+      const userObj = auditMaps.user[item.updated_by - 1];
+      if (userObj && userObj.username) {
+        const id = auditMaps.usernameToId[userObj.username];
+        mappedUpdatedBy = (typeof id === 'number') ? id : null;
+      }
+    }
+    if (auditMaps && item.deleted_by != null) {
+      const userObj = auditMaps.user[item.deleted_by - 1];
+      if (userObj && userObj.username) {
+        const id = auditMaps.usernameToId[userObj.username];
+        mappedDeletedBy = (typeof id === 'number') ? id : null;
+      }
+    }
     await prisma.courseSpecialization.create({
       data: {
         course_id: mappedCourseId,
         specialization_id: mappedSpecializationId,
+        is_active: item.is_active,
+        is_deleted: item.is_deleted,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        created_by: mappedCreatedBy,
+        updated_by: mappedUpdatedBy,
+        deleted_at: item.deleted_at,
+        deleted_by: mappedDeletedBy,
+        created_ip: item.created_ip,
+        updated_ip: item.updated_ip
       },
     });
   }
@@ -1404,7 +1484,7 @@ async function main() {
         duration_seconds: item.duration_seconds,
         position: item.position,
         upload_status: item.upload_status,
-        IsLocked: item.IsLocked,
+        is_locked: typeof item.is_locked === 'boolean' ? item.is_locked : false,
         is_active: item.is_active,
         is_deleted: item.is_deleted,
         created_at: item.created_at,
@@ -1513,6 +1593,11 @@ async function main() {
     let mappedDeletedBy: number | null = (item.deleted_by != null && usernameToId[item.deleted_by] !== undefined && usernameToId[item.deleted_by] != null)
       ? usernameToId[item.deleted_by]!
       : (item.deleted_by != null ? bootstrapUser.system_user_id : null);
+    // Map specialization_program_id using direct 1-based index
+    const mappedSpecializationProgramId = specializationProgramIds[item.specialization_program_id - 1];
+    if (!mappedSpecializationProgramId) {
+      throw new Error(`Invalid specialization_program_id mapping for enrollment: ${JSON.stringify(item)}`);
+    }
     const enrollment = await prisma.enrollment.create({
       data: {
         tenant_id: mappedTenantId,
@@ -1520,6 +1605,8 @@ async function main() {
         student_id: mappedStudentId,
         institute_id: mappedInstituteId,
         teacher_id: mappedTeacherId,
+        specialization_program_id: mappedSpecializationProgramId,
+        course_enrollment_type: item.course_enrollment_type,
         enrollment_status: item.enrollment_status,
         enrolled_at: item.enrolled_at,
         expected_completion_date: item.expected_completion_date,
@@ -1760,11 +1847,16 @@ async function main() {
     let mappedDeletedBy: number | null = (item.deleted_by != null && usernameToId[item.deleted_by] !== undefined && usernameToId[item.deleted_by] != null)
       ? usernameToId[item.deleted_by]!
       : (item.deleted_by != null ? bootstrapUser.system_user_id : null);
+    const mappedEnrollmentId = ensureNumber(
+      typeof item.enrollment_id === 'number' && enrollmentIds[item.enrollment_id - 1] !== undefined ? enrollmentIds[item.enrollment_id - 1] : enrollmentIds[0],
+      `Invalid mappedEnrollmentId for course_session_enrollments entry: ${JSON.stringify(item)}`
+    );
     await prisma.courseSessionEnrollment.create({
       data: {
         tenant_id: mappedTenantId,
         course_session_id: mappedCourseSessionId,
         student_id: mappedStudentId,
+        enrollment_id: mappedEnrollmentId,
         enrolled_at: item.enrolled_at,
         dropped_at: item.dropped_at,
         enrollment_status: item.enrollment_status,

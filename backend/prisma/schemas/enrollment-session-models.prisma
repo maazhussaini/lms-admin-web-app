@@ -9,7 +9,7 @@ model Enrollment {
   teacher_id                Int?
   specialization_program_id Int
   enrollment_status         EnrollmentStatus @default(PENDING)
-  course_enrollment_type   CourseEnrollmentType
+  course_enrollment_type    CourseEnrollmentType
   enrolled_at               DateTime  @default(now())
   expected_completion_date  DateTime?
   actual_completion_date    DateTime?
@@ -49,8 +49,6 @@ model Enrollment {
   deleted_by_user           SystemUser? @relation("EnrollmentDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("enrollments")
-  // Unique constraints and indexes via custom SQL migrations
-  
 }
 
 model EnrollmentStatusHistory {
@@ -245,7 +243,6 @@ model CourseSessionEnrollment {
   deleted_by_user              SystemUser?      @relation("CourseSessionEnrollmentDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
   @@map("course_session_enrollments")
-  // Unique constraints and indexes via custom SQL migrations
 }
 
 model CourseSessionSettings {

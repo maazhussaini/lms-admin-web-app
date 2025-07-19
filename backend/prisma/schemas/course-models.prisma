@@ -26,7 +26,7 @@ model Course {
 
   // Relationships
   tenant               Tenant    @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
-  course_specializations CourseSpecialization[]
+  course_specialization CourseSpecialization[]
 
   // Course content relationships
   modules              CourseModule[]
@@ -75,7 +75,7 @@ model CourseSpecialization {
   created_by_user      SystemUser   @relation("CourseSpecializationCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user      SystemUser?  @relation("CourseSpecializationUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
   deleted_by_user      SystemUser?  @relation("CourseSpecializationDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
-  @@map("course_specialization")
+  @@map("course_specializations")
 }
 
 // CourseModule model - structural component of a course

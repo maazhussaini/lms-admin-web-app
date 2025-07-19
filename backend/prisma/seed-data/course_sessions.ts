@@ -5,7 +5,7 @@ export const course_sessions = [
     tenant_id: 1,
     teacher_id: 1,
     course_id: 1,
-    course_session_status: CourseSessionStatus.PUBLISHED,
+    course_session_status: CourseSessionStatus.PUBLIC,
     session_name: 'Spring 2025 - Python Basics',
     session_description: 'Introductory Python programming session for Spring 2025.',
     start_date: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 90 days ago
@@ -80,7 +80,7 @@ export const course_sessions = [
     tenant_id: 1,
     teacher_id: 4,
     course_id: 4,
-    course_session_status: CourseSessionStatus.PUBLISHED,
+    course_session_status: CourseSessionStatus.PUBLIC,
     session_name: 'Spring 2025 - Data Science',
     session_description: 'Data science session for Spring 2025.',
     start_date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000), // 60 days ago

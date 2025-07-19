@@ -248,23 +248,21 @@ INSERT INTO specializations (
 (5, 5, 'Clinical Psychology', NULL, true, false, NOW(), NOW(), 5, NULL, NULL, NULL, '10.1.3.1', '10.1.3.2');
 
 -- Specialization-Program Join Table (Many-to-Many)
-INSERT INTO specialization_program (
-    specialization_id, program_id
+INSERT INTO specialization_programs (
+    specialization_id, program_id, is_active, is_deleted, created_at, updated_at, created_by, updated_by, deleted_at, deleted_by, created_ip, updated_ip
 ) VALUES
--- Direct relationships from specializations table
-(1, 1), -- Software Engineering <-> Computer Science
-(2, 1), -- Data Science <-> Computer Science
-(3, 2), -- Marketing <-> Business Administration
-(4, 2), -- Finance <-> Business Administration
-(5, 3), -- Renewable Energy <-> Environmental Science
-(6, 5), -- Clinical Psychology <-> Psychology
--- Additional many-to-many relationships for realism
-(1, 4), -- Software Engineering <-> Mechanical Engineering
-(2, 2), -- Data Science <-> Business Administration
-(3, 5), -- Marketing <-> Psychology
-(4, 3), -- Finance <-> Environmental Science
-(5, 4), -- Renewable Energy <-> Mechanical Engineering
-(6, 2); -- Clinical Psychology <-> Business Administration
+(1, 1, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '10.1.2.1', '10.1.2.2'),
+(2, 1, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '10.1.2.3', '10.1.2.4'),
+(3, 2, true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '10.1.2.5', '10.1.2.6'),
+(4, 2, true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '10.1.2.7', '10.1.2.8'),
+(5, 3, true, false, NOW(), NOW(), 3, NULL, NULL, NULL, '10.1.2.9', '10.1.3.0'),
+(6, 5, true, false, NOW(), NOW(), 5, NULL, NULL, NULL, '10.1.3.1', '10.1.3.2'),
+(1, 4, true, false, NOW(), NOW(), 4, NULL, NULL, NULL, '10.1.3.3', '10.1.3.4'),
+(2, 2, true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '10.1.3.5', '10.1.3.6'),
+(3, 5, true, false, NOW(), NOW(), 5, NULL, NULL, NULL, '10.1.3.7', '10.1.3.8'),
+(4, 3, true, false, NOW(), NOW(), 3, NULL, NULL, NULL, '10.1.3.9', '10.1.4.0'),
+(5, 4, true, false, NOW(), NOW(), 4, NULL, NULL, NULL, '10.1.4.1', '10.1.4.2'),
+(6, 2, true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '10.1.4.3', '10.1.4.4');
 
 -- Academic Institutes
 INSERT INTO institutes (
@@ -363,27 +361,22 @@ INSERT INTO teacher_phone_numbers (
 INSERT INTO courses (
     tenant_id, program_id, specialization_id, course_name, course_description, main_thumbnail_url, course_status, course_type, course_price, course_total_hours, is_active, is_deleted, created_at, updated_at, created_by, updated_by, deleted_at, deleted_by, created_ip, updated_ip
 ) VALUES
-(1, 1, 1, 'Introduction to Programming', 'Learn the basics of programming using Python.', 'https://cdn.example.com/thumbnails/cs101.png', 'PUBLISHED', 'PAID', 49.99, 24.0, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.1.1.1', '11.1.1.2'),
-(2, 2, 3, 'Principles of Marketing', 'Fundamentals of marketing in a digital world.', 'https://cdn.example.com/thumbnails/ba201.png', 'PUBLISHED', 'FREE', NULL, 18.0, true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '11.1.1.3', '11.1.1.4'),
+(1, 1, 1, 'Introduction to Programming', 'Learn the basics of programming using Python.', 'https://cdn.example.com/thumbnails/cs101.png', 'PUBLIC', 'PAID', 49.99, 24.0, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.1.1.1', '11.1.1.2'),
+(2, 2, 3, 'Principles of Marketing', 'Fundamentals of marketing in a digital world.', 'https://cdn.example.com/thumbnails/ba201.png', 'PUBLIC', 'FREE', NULL, 18.0, true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '11.1.1.3', '11.1.1.4'),
 (3, 3, 5, 'Renewable Energy Systems', 'Overview of renewable energy technologies.', 'https://cdn.example.com/thumbnails/en301.png', 'DRAFT', 'PAID', 79.99, 30.0, true, false, NOW(), NOW(), 3, NULL, NULL, NULL, '11.1.1.5', '11.1.1.6'),
-(1, 1, 2, 'Data Science Fundamentals', 'Introduction to data science concepts and tools.', 'https://cdn.example.com/thumbnails/cs202.png', 'PUBLISHED', 'PAID', 59.99, 28.0, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.1.1.7', '11.1.1.8'),
-(5, 5, 6, 'Introduction to Clinical Psychology', 'Basics of clinical psychology and mental health.', 'https://cdn.example.com/thumbnails/psy101.png', 'PUBLISHED', 'FREE', NULL, 20.0, true, false, NOW(), NOW(), 5, NULL, NULL, NULL, '11.1.1.9', '11.1.2.0');
+(1, 1, 2, 'Data Science Fundamentals', 'Introduction to data science concepts and tools.', 'https://cdn.example.com/thumbnails/cs202.png', 'PUBLIC', 'PAID', 59.99, 28.0, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.1.1.7', '11.1.1.8'),
+(5, 5, 6, 'Introduction to Clinical Psychology', 'Basics of clinical psychology and mental health.', 'https://cdn.example.com/thumbnails/psy101.png', 'PUBLIC', 'FREE', NULL, 20.0, true, false, NOW(), NOW(), 5, NULL, NULL, NULL, '11.1.1.9', '11.1.2.0');
 
 -- CourseSpecialization (junction table for Course <-> Specialization)
 INSERT INTO course_specializations (
-    course_id, specialization_id
+    course_id, specialization_id, is_active, is_deleted, created_at, updated_at, created_by, updated_by, deleted_at, deleted_by, created_ip, updated_ip
 ) VALUES
--- Introduction to Programming (course_id 1) is linked to Software Engineering (specialization_id 1) and Data Science (specialization_id 2)
-(1, 1),
-(1, 2),
--- Principles of Marketing (course_id 2) is linked to Marketing (specialization_id 3)
-(2, 3),
--- Renewable Energy Systems (course_id 3) is linked to Renewable Energy (specialization_id 5)
-(3, 5),
--- Data Science Fundamentals (course_id 4) is linked to Data Science (specialization_id 2)
-(4, 2),
--- Introduction to Clinical Psychology (course_id 5) is linked to Clinical Psychology (specialization_id 6)
-(5, 6);
+(1, 1, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.1.2.1', '11.1.2.2'),
+(1, 2, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.1.2.3', '11.1.2.4'),
+(2, 3, true, false, NOW(), NOW(), 2, NULL, NULL, NULL, '11.1.2.5', '11.1.2.6'),
+(3, 5, true, false, NOW(), NOW(), 3, NULL, NULL, NULL, '11.1.2.7', '11.1.2.8'),
+(4, 2, true, false, NOW(), NOW(), 1, NULL, NULL, NULL, '11.1.2.9', '11.1.3.0'),
+(5, 6, true, false, NOW(), NOW(), 5, NULL, NULL, NULL, '11.1.3.1', '11.1.3.2');
 
 -- Course Modules
 INSERT INTO course_modules (
@@ -429,13 +422,13 @@ INSERT INTO course_documents (
 
 -- Enrollments
 INSERT INTO enrollments (
-    tenant_id, course_id, student_id, institute_id, teacher_id, enrollment_status, enrolled_at, expected_completion_date, actual_completion_date, status_changed_at, status_changed_by, status_change_reason, grade, final_score, is_active, is_deleted, created_at, created_by, created_ip, updated_at, updated_by, updated_ip, deleted_at, deleted_by
+    tenant_id, course_id, student_id, institute_id, teacher_id, specialization_program_id, course_enrollment_type, enrollment_status, enrolled_at, expected_completion_date, actual_completion_date, status_changed_at, status_changed_by, status_change_reason, grade, final_score, is_active, is_deleted, created_at, created_by, created_ip, updated_at, updated_by, updated_ip, deleted_at, deleted_by
 ) VALUES
- (1, 1, 1, 1, 1, 'ACTIVE', NOW() - INTERVAL '60 days', NOW() + INTERVAL '30 days', NULL, NOW() - INTERVAL '60 days', 1, NULL, 'A', 95.00, true, false, NOW() - INTERVAL '60 days', 1, '10.50.1.1', NOW() - INTERVAL '30 days', 1, '10.50.1.2', NULL, NULL),
- (1, 2, 2, 2, 2, 'COMPLETED', NOW() - INTERVAL '120 days', NOW() - INTERVAL '30 days', NOW() - INTERVAL '10 days', NOW() - INTERVAL '10 days', 2, 'Completed successfully', 'B+', 88.50, true, false, NOW() - INTERVAL '120 days', 2, '10.50.1.3', NOW() - INTERVAL '10 days', 2, '10.50.1.4', NULL, NULL),
- (1, 3, 3, 3, 3, 'PENDING', NOW() - INTERVAL '10 days', NOW() + INTERVAL '50 days', NULL, NULL, NULL, NULL, NULL, NULL, true, false, NOW() - INTERVAL '10 days', 3, '10.50.1.5', NULL, NULL, NULL, NULL, NULL),
- (1, 4, 4, 4, 4, 'ACTIVE', NOW() - INTERVAL '20 days', NOW() + INTERVAL '40 days', NULL, NOW() - INTERVAL '20 days', 4, NULL, NULL, NULL, true, false, NOW() - INTERVAL '20 days', 4, '10.50.1.6', NULL, NULL, NULL, NULL, NULL),
- (1, 5, 5, 5, 5, 'DROPPED', NOW() - INTERVAL '90 days', NOW() - INTERVAL '60 days', NOW() - INTERVAL '70 days', NOW() - INTERVAL '70 days', 5, 'Withdrew due to personal reasons', NULL, NULL, true, false, NOW() - INTERVAL '90 days', 5, '10.50.1.7', NOW() - INTERVAL '70 days', 5, '10.50.1.8', NULL, NULL);
+ (1, 1, 1, 1, 1, 1, 'PAID_COURSE', 'ACTIVE', NOW() - INTERVAL '60 days', NOW() + INTERVAL '30 days', NULL, NOW() - INTERVAL '60 days', 1, NULL, 'A', 95.00, true, false, NOW() - INTERVAL '60 days', 1, '10.50.1.1', NOW() - INTERVAL '30 days', 1, '10.50.1.2', NULL, NULL),
+ (1, 2, 2, 2, 2, 3, 'FREE_COURSE', 'COMPLETED', NOW() - INTERVAL '120 days', NOW() - INTERVAL '30 days', NOW() - INTERVAL '10 days', NOW() - INTERVAL '10 days', 2, 'Completed successfully', 'B+', 88.50, true, false, NOW() - INTERVAL '120 days', 2, '10.50.1.3', NOW() - INTERVAL '10 days', 2, '10.50.1.4', NULL, NULL),
+ (1, 3, 3, 3, 3, 5, 'PAID_COURSE', 'PENDING', NOW() - INTERVAL '10 days', NOW() + INTERVAL '50 days', NULL, NULL, NULL, NULL, NULL, NULL, true, false, NOW() - INTERVAL '10 days', 3, '10.50.1.5', NULL, NULL, NULL, NULL, NULL),
+ (1, 4, 4, 4, 4, 2, 'PAID_COURSE', 'ACTIVE', NOW() - INTERVAL '20 days', NOW() + INTERVAL '40 days', NULL, NOW() - INTERVAL '20 days', 4, NULL, NULL, NULL, true, false, NOW() - INTERVAL '20 days', 4, '10.50.1.6', NULL, NULL, NULL, NULL, NULL),
+ (1, 5, 5, 5, 5, 6, 'FREE_COURSE', 'DROPPED', NOW() - INTERVAL '90 days', NOW() - INTERVAL '60 days', NOW() - INTERVAL '70 days', NOW() - INTERVAL '70 days', 5, 'Withdrew due to personal reasons', NULL, NULL, true, false, NOW() - INTERVAL '90 days', 5, '10.50.1.7', NOW() - INTERVAL '70 days', 5, '10.50.1.8', NULL, NULL);
 
 -- Enrollment Status Histories
 INSERT INTO enrollment_status_histories (
@@ -482,21 +475,21 @@ INSERT INTO teacher_courses (
 INSERT INTO course_sessions (
     tenant_id, teacher_id, course_id, course_session_status, session_name, session_description, start_date, end_date, max_students, enrollment_deadline, session_timezone, session_code, auto_expire_enabled, is_active, is_deleted, created_at, created_by, created_ip, updated_at, updated_by, updated_ip, deleted_at, deleted_by
 ) VALUES
- (1, 1, 1, 'PUBLISHED', 'Spring 2025 - Python Basics', 'Introductory Python programming session for Spring 2025.', NOW() - INTERVAL '90 days', NOW() - INTERVAL '30 days', 30, NOW() - INTERVAL '100 days', 'America/Los_Angeles', 'PY-SPR25', true, true, false, NOW() - INTERVAL '100 days', 1, '10.60.1.1', NOW() - INTERVAL '30 days', 1, '10.60.1.2', NULL, NULL),
+ (1, 1, 1, 'PUBLIC', 'Spring 2025 - Python Basics', 'Introductory Python programming session for Spring 2025.', NOW() - INTERVAL '90 days', NOW() - INTERVAL '30 days', 30, NOW() - INTERVAL '100 days', 'America/Los_Angeles', 'PY-SPR25', true, true, false, NOW() - INTERVAL '100 days', 1, '10.60.1.1', NOW() - INTERVAL '30 days', 1, '10.60.1.2', NULL, NULL),
  (1, 2, 2, 'EXPIRED', 'Winter 2025 - Digital Marketing', 'Digital marketing session for Winter 2025.', NOW() - INTERVAL '180 days', NOW() - INTERVAL '120 days', 25, NOW() - INTERVAL '190 days', 'Europe/London', 'MK-WIN25', true, true, false, NOW() - INTERVAL '190 days', 2, '10.60.1.3', NOW() - INTERVAL '120 days', 2, '10.60.1.4', NULL, NULL),
  (1, 3, 3, 'DRAFT', 'Summer 2025 - Solar Energy', 'Solar energy systems session for Summer 2025.', NOW() + INTERVAL '10 days', NOW() + INTERVAL '70 days', 20, NOW(), 'Europe/Berlin', 'EN-SUM25', true, true, false, NOW(), 3, '10.60.1.5', NULL, NULL, NULL, NULL),
- (1, 4, 4, 'PUBLISHED', 'Spring 2025 - Data Science', 'Data science session for Spring 2025.', NOW() - INTERVAL '60 days', NOW() + INTERVAL '30 days', 35, NOW() - INTERVAL '70 days', 'Asia/Kolkata', 'DS-SPR25', true, true, false, NOW() - INTERVAL '70 days', 4, '10.60.1.6', NOW() + INTERVAL '30 days', 4, '10.60.1.7', NULL, NULL),
+ (1, 4, 4, 'PUBLIC', 'Spring 2025 - Data Science', 'Data science session for Spring 2025.', NOW() - INTERVAL '60 days', NOW() + INTERVAL '30 days', 35, NOW() - INTERVAL '70 days', 'Asia/Kolkata', 'DS-SPR25', true, true, false, NOW() - INTERVAL '70 days', 4, '10.60.1.6', NOW() + INTERVAL '30 days', 4, '10.60.1.7', NULL, NULL),
  (1, 5, 5, 'EXPIRED', 'Fall 2024 - Clinical Psychology', 'Clinical psychology session for Fall 2024.', NOW() - INTERVAL '300 days', NOW() - INTERVAL '250 days', 15, NOW() - INTERVAL '310 days', 'Australia/Sydney', 'PSY-FALL24', true, true, false, NOW() - INTERVAL '310 days', 5, '10.60.1.8', NOW() - INTERVAL '250 days', 5, '10.60.1.9', NULL, NULL);
 
 -- Course Session Enrollments
 INSERT INTO course_session_enrollments (
-    tenant_id, course_session_id, student_id, enrolled_at, dropped_at, enrollment_status, completion_percentage, final_grade, completion_date, is_active, is_deleted, created_at, created_by, created_ip, updated_at, updated_by, updated_ip, deleted_at, deleted_by
+    tenant_id, course_session_id, student_id, enrollment_id, enrolled_at, dropped_at, enrollment_status, completion_percentage, final_grade, completion_date, is_active, is_deleted, created_at, created_by, created_ip, updated_at, updated_by, updated_ip, deleted_at, deleted_by
 ) VALUES
- (1, 1, 1, NOW() - INTERVAL '95 days', NULL, 'ENROLLED', 100, 95, NOW() - INTERVAL '30 days', true, false, NOW() - INTERVAL '95 days', 1, '10.61.1.1', NOW() - INTERVAL '30 days', 1, '10.61.1.2', NULL, NULL),
- (1, 2, 2, NOW() - INTERVAL '185 days', NULL, 'COMPLETED', 100, 88, NOW() - INTERVAL '120 days', true, false, NOW() - INTERVAL '185 days', 2, '10.61.1.3', NOW() - INTERVAL '120 days', 2, '10.61.1.4', NULL, NULL),
- (1, 3, 3, NOW() + INTERVAL '5 days', NULL, 'PENDING', 0, NULL, NULL, true, false, NOW() + INTERVAL '5 days', 3, '10.61.1.5', NULL, NULL, NULL, NULL),
- (1, 4, 4, NOW() - INTERVAL '65 days', NULL, 'ENROLLED', 60, NULL, NULL, true, false, NOW() - INTERVAL '65 days', 4, '10.61.1.6', NOW() + INTERVAL '30 days', 4, '10.61.1.7', NULL, NULL),
- (1, 5, 5, NOW() - INTERVAL '305 days', NOW() - INTERVAL '260 days', 'DROPPED', 0, NULL, NULL, false, true, NOW() - INTERVAL '305 days', 5, '10.61.1.8', NOW() - INTERVAL '260 days', 5, '10.61.1.9', NULL, NULL);
+ (1, 1, 1, 1, NOW() - INTERVAL '95 days', NULL, 'ENROLLED', 100, 95, NOW() - INTERVAL '30 days', true, false, NOW() - INTERVAL '95 days', 1, '10.61.1.1', NOW() - INTERVAL '30 days', 1, '10.61.1.2', NULL, NULL),
+ (1, 2, 2, 2, NOW() - INTERVAL '185 days', NULL, 'COMPLETED', 100, 88, NOW() - INTERVAL '120 days', true, false, NOW() - INTERVAL '185 days', 2, '10.61.1.3', NOW() - INTERVAL '120 days', 2, '10.61.1.4', NULL, NULL),
+ (1, 3, 3, 3, NOW() + INTERVAL '5 days', NULL, 'PENDING', 0, NULL, NULL, true, false, NOW() + INTERVAL '5 days', 3, '10.61.1.5', NULL, NULL, NULL, NULL),
+ (1, 4, 4, 4, NOW() - INTERVAL '65 days', NULL, 'ENROLLED', 60, NULL, NULL, true, false, NOW() - INTERVAL '65 days', 4, '10.61.1.6', NOW() + INTERVAL '30 days', 4, '10.61.1.7', NULL, NULL),
+ (1, 5, 5, 5, NOW() - INTERVAL '305 days', NOW() - INTERVAL '260 days', 'DROPPED', 0, NULL, NULL, false, true, NOW() - INTERVAL '305 days', 5, '10.61.1.8', NOW() - INTERVAL '260 days', 5, '10.61.1.9', NULL, NULL);
 
 -- Course Session Settings
 INSERT INTO course_session_settings (

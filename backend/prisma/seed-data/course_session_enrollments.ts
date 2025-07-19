@@ -5,6 +5,7 @@ export const course_session_enrollments = [
     tenant_id: 1,
     course_session_id: 1,
     student_id: 1,
+    enrollment_id: 1,
     enrolled_at: new Date(Date.now() - 95 * 24 * 60 * 60 * 1000), // 95 days ago
     dropped_at: null,
     enrollment_status: SessionEnrollmentStatus.ENROLLED,
@@ -26,6 +27,7 @@ export const course_session_enrollments = [
     tenant_id: 1,
     course_session_id: 2,
     student_id: 2,
+    enrollment_id: 2,
     enrolled_at: new Date(Date.now() - 185 * 24 * 60 * 60 * 1000), // 185 days ago
     dropped_at: null,
     enrollment_status: SessionEnrollmentStatus.COMPLETED,
@@ -47,6 +49,7 @@ export const course_session_enrollments = [
     tenant_id: 1,
     course_session_id: 3,
     student_id: 3,
+    enrollment_id: 3,
     enrolled_at: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
     dropped_at: null,
     enrollment_status: SessionEnrollmentStatus.PENDING,
@@ -68,6 +71,7 @@ export const course_session_enrollments = [
     tenant_id: 1,
     course_session_id: 4,
     student_id: 4,
+    enrollment_id: 4,
     enrolled_at: new Date(Date.now() - 65 * 24 * 60 * 60 * 1000), // 65 days ago
     dropped_at: null,
     enrollment_status: SessionEnrollmentStatus.ENROLLED,
@@ -89,6 +93,7 @@ export const course_session_enrollments = [
     tenant_id: 1,
     course_session_id: 5,
     student_id: 5,
+    enrollment_id: 5,
     enrolled_at: new Date(Date.now() - 305 * 24 * 60 * 60 * 1000), // 305 days ago
     dropped_at: new Date(Date.now() - 260 * 24 * 60 * 60 * 1000), // 260 days ago
     enrollment_status: SessionEnrollmentStatus.DROPPED,

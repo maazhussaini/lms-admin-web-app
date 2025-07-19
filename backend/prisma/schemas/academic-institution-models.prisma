@@ -52,8 +52,8 @@ model Specialization {
 
   // Relationships
   tenant               Tenant          @relation(fields: [tenant_id], references: [tenant_id], onDelete: Restrict)
-  specialization_programs SpecializationProgram[]
-  course_specializations CourseSpecialization[]
+  specialization_program SpecializationProgram[]
+  course_specialization CourseSpecialization[]
   
   // Audit trail relationships with SystemUser
   created_by_user      SystemUser      @relation("SpecializationCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
@@ -91,8 +91,7 @@ model SpecializationProgram {
   updated_by_user      SystemUser?     @relation("SpecializationProgramUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
   deleted_by_user      SystemUser?     @relation("SpecializationProgramDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
-  @@map("specialization_program")
-  
+  @@map("specialization_programs")
 }
 
 // Institute model - educational institutions
