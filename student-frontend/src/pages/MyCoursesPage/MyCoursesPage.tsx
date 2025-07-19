@@ -249,13 +249,6 @@ const MyCoursesPage: React.FC = () => {
     >
       {/* Main Content Container */}
       <div className="space-y-4 sm:space-y-6">
-        {/* Page Description - Only shown on desktop */}
-        <div className="hidden sm:block">
-          <p className="text-sm sm:text-base text-neutral-600">
-            Discover and manage your learning journey
-          </p>
-        </div>
-
         {/* Course Selector and Search Bar - Mobile First Responsive */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
           {/* Course Selector - Full width on mobile */}
