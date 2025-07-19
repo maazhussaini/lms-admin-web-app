@@ -218,7 +218,8 @@ enum BunnyEncodingPreset {
  */
 enum CourseSessionStatus {
   DRAFT @map("DRAFT")
-  PUBLISHED @map("PUBLISHED")
+  PUBLIC @map("PUBLIC")
+  PRIVATE @map("PRIVATE")
   EXPIRED @map("EXPIRED")
 }
 
@@ -257,14 +258,18 @@ enum VideoUploadStatus {
  */
 enum CourseStatus {
   DRAFT @map("DRAFT")
-  PUBLISHED @map("PUBLISHED")
-  ARCHIVED @map("ARCHIVED")
-  SUSPENDED @map("SUSPENDED")
+  PUBLIC @map("PUBLIC")
+  PRIVATE @map("PRIVATE")
 }
 
+/**
+ * Course type enumeration
+ * @description Represents the type of course, such as free, paid, or purchased
+ */
 enum CourseType {
   FREE @map("FREE")
   PAID @map("PAID")
+  PURCHASED @map("PURCHASED")
 }
 
 /**
@@ -458,6 +463,16 @@ enum EnrollmentStatus {
   EXPELLED @map("EXPELLED")
   TRANSFERRED @map("TRANSFERRED")
   DEFERRED @map("DEFERRED")
+}
+
+/**
+ * Course Enrollment Enums
+ * @description Defines enums for course enrollment types
+ */
+enum CourseEnrollmentType {
+  PAID_COURSE @map("PAID_COURSE")
+  FREE_COURSE @map("FREE_COURSE")
+  COURSE_SESSION @map("COURSE_SESSION")
 }
 
 /**

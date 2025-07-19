@@ -65,12 +65,34 @@ model Specialization {
 
 // SpecializationProgram model - join table for many-to-many relationship between Specializations and Programs
 model SpecializationProgram {
+  specialization_program_id Int @id @default(autoincrement())
   specialization_id   Int
   program_id          Int
+
+ // Audit fields
+  is_active            Boolean         @default(true)
+  is_deleted           Boolean         @default(false)
+  created_at           DateTime        @default(now())
+  updated_at           DateTime        @updatedAt
+  created_by           Int
+  updated_by           Int?
+  deleted_at           DateTime?
+  deleted_by           Int?
+  created_ip           String?         @db.VarChar(45)
+  updated_ip           String?         @db.VarChar(45)  
+
+// Relationships
   specialization      Specialization @relation(fields: [specialization_id], references: [specialization_id])
   program             Program        @relation(fields: [program_id], references: [program_id])
-  @@id([specialization_id, program_id])
+  enrollment          Enrollment[]
+
+  // Audit trail relationships with SystemUser
+  created_by_user      SystemUser      @relation("SpecializationProgramCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user      SystemUser?     @relation("SpecializationProgramUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user      SystemUser?     @relation("SpecializationProgramDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
+
   @@map("specialization_program")
+  
 }
 
 // Institute model - educational institutions

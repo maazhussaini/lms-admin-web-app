@@ -51,11 +51,30 @@ model Course {
 
 // Junction table for Course <-> Specialization
 model CourseSpecialization {
+  course_specialization_id Int @id @default(autoincrement())
   course_id           Int
   specialization_id   Int
+  
+  // Audit fields
+  is_active            Boolean   @default(true)
+  is_deleted           Boolean   @default(false)
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+  created_by           Int
+  updated_by           Int?
+  deleted_at           DateTime?
+  deleted_by           Int?
+  created_ip           String?   @db.VarChar(45)
+  updated_ip           String?   @db.VarChar(45)
+
+  // Relationships
   course              Course         @relation(fields: [course_id], references: [course_id])
   specialization      Specialization @relation(fields: [specialization_id], references: [specialization_id])
-  @@id([course_id, specialization_id])
+  
+  // Audit trail relationships with SystemUser
+  created_by_user      SystemUser   @relation("CourseSpecializationCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  updated_by_user      SystemUser?  @relation("CourseSpecializationUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
+  deleted_by_user      SystemUser?  @relation("CourseSpecializationDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
   @@map("course_specialization")
 }
 
@@ -139,7 +158,7 @@ model CourseVideo {
   duration_seconds     Int?
   position             Int?
   upload_status        VideoUploadStatus? @default(PENDING)
-  IsLocked           Boolean   @default(false)
+  is_locked           Boolean   @default(false)
   
   // Audit fields
   is_active            Boolean   @default(true)

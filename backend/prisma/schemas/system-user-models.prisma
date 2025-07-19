@@ -248,6 +248,18 @@ model SystemUser {
   updated_video_progresses  VideoProgress[]             @relation("VideoProgressUpdatedBy")
   deleted_video_progresses  VideoProgress[]             @relation("VideoProgressDeletedBy")
   
+  
+  // Specialization program relations
+  created_specialization_program SpecializationProgram[] @relation("SpecializationProgramCreatedBy")
+  updated_specialization_program SpecializationProgram[] @relation("SpecializationProgramUpdatedBy")
+  deleted_specialization_program SpecializationProgram[] @relation("SpecializationProgramDeletedBy")
+
+
+  // Specialization program relations
+  created_course_specialization CourseSpecialization[] @relation("CourseSpecializationCreatedBy")
+  updated_course_specialization CourseSpecialization[] @relation("CourseSpecializationUpdatedBy")
+  deleted_course_specialization CourseSpecialization[] @relation("CourseSpecializationDeletedBy")
+
   @@map("system_users")
 }
 
