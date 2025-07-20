@@ -94,7 +94,7 @@ export interface CourseSessionSettings extends MultiTenantAuditFields {
 
 // Type guards for runtime type checking
 export const isCourseSessionStatus = (value: any): value is CourseSessionStatus =>
-  Object.values(CourseSessionStatus).includes(value);
+  Object.keys(CourseSessionStatus).map(k => (CourseSessionStatus as any)[k]).indexOf(value) !== -1;
 
 export const isSessionEnrollmentStatus = (value: any): value is SessionEnrollmentStatus =>
-  Object.values(SessionEnrollmentStatus).includes(value);
+  Object.keys(SessionEnrollmentStatus).map(k => (SessionEnrollmentStatus as any)[k]).indexOf(value) !== -1;

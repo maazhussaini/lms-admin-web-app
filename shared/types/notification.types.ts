@@ -190,28 +190,6 @@ export interface PushNotificationDevice extends MultiTenantAuditFields {
   expires_at?: Date | string | null;
 }
 
-// Type guards for runtime type checking
-export const isNotificationType = (value: any): value is NotificationType => 
-  Object.values(NotificationType).includes(value);
-
-export const isNotificationPriority = (value: any): value is NotificationPriority => 
-  Object.values(NotificationPriority).includes(value);
-
-export const isDeliveryStatus = (value: any): value is DeliveryStatus => 
-  Object.values(DeliveryStatus).includes(value);
-
-export const isDeliveryChannel = (value: any): value is DeliveryChannel => 
-  Object.values(DeliveryChannel).includes(value);
-
-export const isTemplateType = (value: any): value is TemplateType => 
-  Object.values(TemplateType).includes(value);
-
-export const isRecipientType = (value: any): value is RecipientType => 
-  Object.values(RecipientType).includes(value);
-
-export const isEmailSendStatus = (value: any): value is EmailSendStatus => 
-  Object.values(EmailSendStatus).includes(value);
-
 /**
  * Socket.IO Event Types for the LMS notification system
  * @description Defines shared types for socket.io events to ensure consistent
@@ -310,3 +288,25 @@ export interface VideoProgressPayload extends ContentProgressPayload {
   durationSeconds: number;
   isCompleted: boolean;
 }
+
+// Type guards for runtime type checking
+export const isNotificationType = (value: any): value is NotificationType => 
+  Object.keys(NotificationType).map(k => (NotificationType as any)[k]).indexOf(value) !== -1;
+
+export const isNotificationPriority = (value: any): value is NotificationPriority => 
+  Object.keys(NotificationPriority).map(k => (NotificationPriority as any)[k]).indexOf(value) !== -1;
+
+export const isDeliveryStatus = (value: any): value is DeliveryStatus => 
+  Object.keys(DeliveryStatus).map(k => (DeliveryStatus as any)[k]).indexOf(value) !== -1;
+
+export const isDeliveryChannel = (value: any): value is DeliveryChannel => 
+  Object.keys(DeliveryChannel).map(k => (DeliveryChannel as any)[k]).indexOf(value) !== -1;
+
+export const isTemplateType = (value: any): value is TemplateType => 
+  Object.keys(TemplateType).map(k => (TemplateType as any)[k]).indexOf(value) !== -1;
+
+export const isRecipientType = (value: any): value is RecipientType => 
+  Object.keys(RecipientType).map(k => (RecipientType as any)[k]).indexOf(value) !== -1;
+
+export const isEmailSendStatus = (value: any): value is EmailSendStatus => 
+  Object.keys(EmailSendStatus).map(k => (EmailSendStatus as any)[k]).indexOf(value) !== -1;

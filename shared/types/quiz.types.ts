@@ -159,13 +159,13 @@ export interface QuizAttemptAnswer extends MultiTenantAuditFields {
 
 // Type guards for runtime type checking
 export const isQuizStatus = (value: any): value is QuizStatus => 
-  Object.values(QuizStatus).includes(value);
+  Object.keys(QuizStatus).map(k => (QuizStatus as any)[k]).indexOf(value) !== -1;
 
 export const isQuizQuestionType = (value: any): value is QuizQuestionType => 
-  Object.values(QuizQuestionType).includes(value);
+  Object.keys(QuizQuestionType).map(k => (QuizQuestionType as any)[k]).indexOf(value) !== -1;
 
 export const isQuizAttemptStatus = (value: any): value is QuizAttemptStatus => 
-  Object.values(QuizAttemptStatus).includes(value);
+  Object.keys(QuizAttemptStatus).map(k => (QuizAttemptStatus as any)[k]).indexOf(value) !== -1;
 
 export const isQuizReferenceTable = (value: any): value is QuizReferenceTable => 
-  Object.values(QuizReferenceTable).includes(value);
+  Object.keys(QuizReferenceTable).map(k => (QuizReferenceTable as any)[k]).indexOf(value) !== -1;

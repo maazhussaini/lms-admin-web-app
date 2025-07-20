@@ -91,10 +91,10 @@ export interface RoleScreen extends BaseAuditFields {
 
 // Type guards for runtime type checking
 export const isUserType = (value: any): value is UserType => 
-  Object.values(UserType).includes(value);
+  Object.keys(UserType).map(k => (UserType as any)[k]).indexOf(value) !== -1;
 
 export const isSystemUserStatus = (value: any): value is SystemUserStatus => 
-  Object.values(SystemUserStatus).includes(value);
+  Object.keys(SystemUserStatus).map(k => (SystemUserStatus as any)[k]).indexOf(value) !== -1;
 
 /**
  * Helper function to check if a system user is SuperAdmin

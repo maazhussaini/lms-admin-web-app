@@ -135,16 +135,16 @@ export interface AssignmentSubmissionFile extends MultiTenantAuditFields {
 
 // Type guards for runtime type checking
 export const isAssignmentType = (value: any): value is AssignmentType => 
-  Object.values(AssignmentType).includes(value);
+  Object.keys(AssignmentType).map(k => (AssignmentType as any)[k]).indexOf(value) !== -1;
 
 export const isAssignmentStatus = (value: any): value is AssignmentStatus => 
-  Object.values(AssignmentStatus).includes(value);
+  Object.keys(AssignmentStatus).map(k => (AssignmentStatus as any)[k]).indexOf(value) !== -1;
 
 export const isSubmissionStatus = (value: any): value is SubmissionStatus => 
-  Object.values(SubmissionStatus).includes(value);
+  Object.keys(SubmissionStatus).map(k => (SubmissionStatus as any)[k]).indexOf(value) !== -1;
 
 export const isUploadStatus = (value: any): value is UploadStatus => 
-  Object.values(UploadStatus).includes(value);
+  Object.keys(UploadStatus).map(k => (UploadStatus as any)[k]).indexOf(value) !== -1;
 
 export const isAssignmentReferenceTable = (value: any): value is AssignmentReferenceTable => 
-  Object.values(AssignmentReferenceTable).includes(value);
+  Object.keys(AssignmentReferenceTable).map(k => (AssignmentReferenceTable as any)[k]).indexOf(value) !== -1;
