@@ -1,4 +1,11 @@
 import { UserType, SystemUserStatus } from '@prisma/client';
+/**
+ * Password Hashing Note:
+ * ----------------------
+ * The 'password' field should contain a plain password for each system user.
+ * The seeder will hash this value at runtime using the project's hashPassword utility.
+ * Do NOT include a 'password_hash' field in this file.
+ */
 // Seed data for system users
 export const system_users = [
   {
@@ -7,7 +14,7 @@ export const system_users = [
     username: 'admin_alpha',
     full_name: 'Alice Johnson',
     email_address: 'alice@alpha.com',
-    password_hash: 'hashed_pw_1',
+    password: 'Password123!',
     last_login_at: new Date(),
     login_attempts: 0,
     system_user_status: SystemUserStatus.ACTIVE,
@@ -28,7 +35,7 @@ export const system_users = [
     username: 'beta_support',
     full_name: 'Bob Smith',
     email_address: 'bob@beta.com',
-    password_hash: 'hashed_pw_2',
+    password: 'Password123!',
     last_login_at: null,
     login_attempts: 3,
     system_user_status: SystemUserStatus.LOCKED,
@@ -49,7 +56,7 @@ export const system_users = [
     username: 'gamma_admin',
     full_name: 'Carol Ahmed',
     email_address: 'carol@gamma.com',
-    password_hash: 'hashed_pw_3',
+    password: 'Password123!',
     last_login_at: new Date(),
     login_attempts: 1,
     system_user_status: SystemUserStatus.SUSPENDED,
@@ -70,7 +77,7 @@ export const system_users = [
     username: 'superadmin',
     full_name: 'David Wang',
     email_address: 'david@sys.com',
-    password_hash: 'hashed_pw_4',
+    password: 'Password123!',
     last_login_at: new Date(),
     login_attempts: 0,
     system_user_status: SystemUserStatus.ACTIVE,
@@ -91,7 +98,7 @@ export const system_users = [
     username: 'sys_op1',
     full_name: 'Eva Lopez',
     email_address: 'eva@sys.com',
-    password_hash: 'hashed_pw_5',
+    password: 'Password123!',
     last_login_at: null,
     login_attempts: 2,
     system_user_status: SystemUserStatus.INACTIVE,
@@ -112,7 +119,7 @@ export const system_users = [
     username: 'delta_admin',
     full_name: 'Frank Müller',
     email_address: 'frank@delta.com',
-    password_hash: 'hashed_pw_6',
+    password: 'Password123!',
     last_login_at: new Date(),
     login_attempts: 0,
     system_user_status: SystemUserStatus.ACTIVE,
@@ -133,7 +140,7 @@ export const system_users = [
     username: 'root_user',
     full_name: 'Grace Chen',
     email_address: 'grace@root.com',
-    password_hash: 'hashed_pw_7',
+    password: 'Password123!',
     last_login_at: new Date(),
     login_attempts: 0,
     system_user_status: SystemUserStatus.ACTIVE,
@@ -154,7 +161,7 @@ export const system_users = [
     username: 'eps_admin',
     full_name: 'Hassan Ali',
     email_address: 'hassan@eps.com',
-    password_hash: 'hashed_pw_8',
+    password: 'Password123!',
     last_login_at: null,
     login_attempts: 0,
     system_user_status: SystemUserStatus.ACTIVE,
@@ -175,7 +182,7 @@ export const system_users = [
     username: 'auditor',
     full_name: 'Iris Becker',
     email_address: 'iris@audit.com',
-    password_hash: 'hashed_pw_9',
+    password: 'Password123!',
     last_login_at: new Date(),
     login_attempts: 1,
     system_user_status: SystemUserStatus.SUSPENDED,
@@ -196,7 +203,7 @@ export const system_users = [
     username: 'zeta_ops',
     full_name: 'John Lee',
     email_address: 'john@zeta.com',
-    password_hash: 'hashed_pw_10',
+    password: 'Password123!',
     last_login_at: new Date(),
     login_attempts: 0,
     system_user_status: SystemUserStatus.ACTIVE,

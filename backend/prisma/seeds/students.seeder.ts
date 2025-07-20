@@ -1,4 +1,14 @@
 import { PrismaClient } from '@prisma/client';
+/**
+ * Password Hashing Note:
+ * ----------------------
+ * The student seeder now hashes the plain password from seed-data/students.ts using the project's hashPassword utility.
+ * This ensures all seeded students have secure, production-grade password hashes.
+ * Do NOT include pre-hashed passwords in the seed data; always use a plain password field.
+ * The hashPassword function uses bcrypt with 12 salt rounds (OWASP recommended).
+ * The CLI utility (npm run hash-password) uses the same logic for manual password generation.
+ */
+import { hashPassword } from '../../src/utils/password.utils';
 import { students } from '../seed-data/students';
 
 export async function seedStudents(
@@ -59,6 +69,8 @@ export async function seedStudents(
         mappedDeletedBy = typeof id === 'number' ? id : null;
       }
     }
+    // Hash the plain password before inserting
+    const passwordHash = await hashPassword(item.password);
     const student = await prisma.student.create({
       data: {
         tenant_id: mappedTenantId,
@@ -76,7 +88,7 @@ export async function seedStudents(
         age: item.age,
         gender: item.gender,
         username: item.username,
-        password_hash: item.password_hash,
+        password_hash: passwordHash,
         last_login_at: item.last_login_at,
         student_status: item.student_status,
         referral_type: item.referral_type,
