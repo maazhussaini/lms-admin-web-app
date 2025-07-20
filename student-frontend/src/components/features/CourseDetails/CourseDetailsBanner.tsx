@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { FaArrowLeft, FaCommentDots } from 'react-icons/fa';
+import Button from '@/components/common/Button/Button';
 import { CourseDetailsData } from '@/pages/CourseDetailsPage/mockData';
 
 /**
@@ -66,24 +67,28 @@ export const CourseDetailsBanner: React.FC<CourseDetailsBannerProps> = ({
       {/* Top Navigation */}
       <div className="absolute top-4 left-4 right-4 sm:top-6 sm:left-6 sm:right-6 flex justify-between items-center z-10">
         {/* Back Button */}
-        <motion.button
+        <Button
           onClick={onBack}
-          className="min-w-[44px] min-h-[44px] w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-white rounded-xl flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm touch-manipulation"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          variant="ghost"
+          size="lg"
+          shape="rounded"
+          aria-label="Go back"
+          className="min-w-[44px] min-h-[44px] w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-white shadow-sm"
         >
-          <FaArrowLeft className="text-sm sm:text-base md:text-lg" style={{ color: '#63747D' }} />
-        </motion.button>
+          <FaArrowLeft className="text-lg" style={{ color: '#63747D' }} />
+        </Button>
 
         {/* Feedback Button */}
-        <motion.button
+        <Button
           onClick={onFeedback}
-          className="min-w-[44px] min-h-[44px] w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-white rounded-xl flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm touch-manipulation"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          variant="ghost"
+          size="lg"
+          shape="rounded"
+          aria-label="Send feedback"
+          className="min-w-[44px] min-h-[44px] w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-white shadow-sm"
         >
-          <FaCommentDots className="text-sm sm:text-base md:text-lg" style={{ color: '#63747D' }} />
-        </motion.button>
+          <FaCommentDots className="text-lg" style={{ color: '#63747D' }} />
+        </Button>
       </div>
       {/* Course Type Badge Positioned on Right */}
       <div className="absolute top-20 right-3 sm:top-24 sm:right-4 md:top-32 md:right-6 z-10">

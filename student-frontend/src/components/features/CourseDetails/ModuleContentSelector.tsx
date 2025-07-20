@@ -2,76 +2,76 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
 
-export interface CourseSelectorProps {
-  /** Current active tab */
-  activeTab: 'all' | 'enrolled' | 'unenrolled';
-  /** Handler for tab change */
-  onTabChange: (tab: 'all' | 'enrolled' | 'unenrolled') => void;
-  /** Course counts for each category */
+export type ModuleContentType = 'topics' | 'assignments' | 'quizzes';
+
+export interface ModuleContentSelectorProps {
+  /** Currently active content type */
+  activeContent: ModuleContentType;
+  /** Handler for content type change */
+  onContentChange: (contentType: ModuleContentType) => void;
+  /** Content counts for each section */
   counts: {
-    all: number;
-    enrolled: number;
-    unenrolled: number;
+    topics: number;
+    assignments: number;
+    quizzes: number;
   };
   /** Additional CSS classes */
   className?: string;
 }
 
 /**
- * CourseSelector - Tab selector component for filtering courses
+ * ModuleContentSelector - Selector component for switching between module content types
  * 
- * Displays three tabs: All Courses, Enrolled, and Unenrolled with course counts.
+ * Displays tabs for Topics, Assignments, and Quizzes within a module.
  * Features smooth animations and follows the LMS design system.
+ * Shows content counts for each section.
  * 
  * @param props - Component props
  * @returns JSX.Element
  */
-const CourseSelector: React.FC<CourseSelectorProps> = ({
-  activeTab,
-  onTabChange,
+const ModuleContentSelector: React.FC<ModuleContentSelectorProps> = ({
+  activeContent,
+  onContentChange,
   counts,
   className
 }) => {
-  const tabs = [
+  const contentTabs = [
     {
-      key: 'all' as const,
-      label: 'All Courses',
-      shortLabel: 'All',
-      count: counts.all
+      key: 'topics' as const,
+      label: 'Topics',
+      count: counts.topics
     },
     {
-      key: 'enrolled' as const,
-      label: 'Enrolled',
-      shortLabel: 'Enrolled',
-      count: counts.enrolled
+      key: 'assignments' as const,
+      label: 'Assignments',
+      count: counts.assignments
     },
     {
-      key: 'unenrolled' as const,
-      label: 'Unenrolled',
-      shortLabel: 'Available',
-      count: counts.unenrolled
+      key: 'quizzes' as const,
+      label: 'Quizzes',
+      count: counts.quizzes
     }
   ];
 
   return (
     <div 
       className={clsx(
-        'flex flex-col sm:flex-row bg-white rounded-[15px] p-1.5 w-full sm:w-[480px] shadow-sm border border-neutral-200 gap-1.5 sm:gap-0',
+        'flex flex-col sm:flex-row bg-white rounded-[15px] p-1.5 w-full shadow-sm border border-neutral-200 gap-1.5 sm:gap-0',
         className
       )}
       role="tablist"
-      aria-label="Course filter tabs"
+      aria-label="Module content tabs"
     >
-      {tabs.map((tab) => {
-        const isActive = activeTab === tab.key;
+      {contentTabs.map((tab) => {
+        const isActive = activeContent === tab.key;
         
         return (
           <button
             key={tab.key}
             role="tab"
             aria-selected={isActive}
-            aria-controls={`${tab.key}-courses-panel`}
-            onClick={() => onTabChange(tab.key)}
+            aria-controls={`${tab.key}-content-panel`}
+            onClick={() => onContentChange(tab.key)}
             className={clsx(
               'relative flex-1 px-6 sm:px-8 py-3.5 sm:py-4 rounded-[15px] font-semibold text-sm sm:text-base transition-all duration-200 ease-in-out cursor-pointer',
               'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
@@ -85,7 +85,7 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({
             {/* Active tab background animation */}
             {isActive && (
               <motion.div
-                layoutId="activeTab"
+                layoutId="activeModuleContent"
                 className="absolute inset-0 bg-primary-900 rounded-[15px] shadow-lg"
                 initial={false}
                 transition={{
@@ -99,8 +99,7 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({
             {/* Tab content */}
             <span className="relative z-10 flex items-center justify-center gap-1.5 sm:gap-2.5 w-full">
               <span className="truncate font-semibold">
-                <span className="sm:hidden">{tab.shortLabel}</span>
-                <span className="hidden sm:inline">{tab.label}</span>
+                {tab.label}
               </span>
               <span 
                 className={clsx(
@@ -121,4 +120,5 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({
   );
 };
 
-export default CourseSelector;
+export { ModuleContentSelector };
+export default ModuleContentSelector;

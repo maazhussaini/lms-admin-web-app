@@ -16,6 +16,8 @@ export const ProtectedRoutes: React.FC = () => {
         <Routes>
           <Route path="/courses" element={<MyCoursesPage />} />
           <Route path="/courses/:courseId" element={<CourseDetailsPage />} />
+          <Route path="/courses/:courseId/modules/:moduleId" element={<CourseDetailsPage />} />
+          <Route path="/courses/:courseId/modules/:moduleId/topics/:topicId" element={<CourseDetailsPage />} />
           {/* Add other protected routes here as needed */}
           <Route path="*" element={<div>Page Not Found</div>} />
         </Routes>
