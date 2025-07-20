@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { MyCoursesSearchBar } from '@/components/common/SearchBar';
 import { CourseSelector } from '@/components/features/MyCourses/CourseSelector';
 import CourseCard from '@/components/features/MyCourses/CourseCard';
@@ -210,6 +211,7 @@ const mockProgress: StudentCourseProgress[] = [
 ];
 
 const MyCoursesPage: React.FC = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'enrolled' | 'unenrolled'>('all');
   const [hasActiveFilters, setHasActiveFilters] = useState(false);
@@ -246,10 +248,8 @@ const MyCoursesPage: React.FC = () => {
    * Handle course card click
    */
   const handleCourseClick = useCallback((courseId: number) => {
-    // TODO: Navigate to course detail page
-    console.log('Course clicked:', courseId);
-    // Example: navigate(`/courses/${courseId}`);
-  }, []);
+    navigate(`/courses/${courseId}`);
+  }, [navigate]);
 
   return (
     <motion.div
