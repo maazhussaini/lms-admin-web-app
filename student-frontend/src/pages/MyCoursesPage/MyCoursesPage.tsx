@@ -264,21 +264,21 @@ const MyCoursesPage: React.FC = () => {
         {/* Course Selector and Search Bar - Mobile First Responsive */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
           {/* Course Selector - Full width on mobile */}
-          <div className="w-full sm:w-auto flex justify-center sm:justify-start">
-            <CourseSelector
-              activeTab={activeTab}
-              onTabChange={handleTabChange}
-              counts={{
-                all: 50,
-                enrolled: 4,
-                unenrolled: 0
-              }}
-              className="w-full sm:w-auto"
-            />
-          </div>
+        <div className="w-full sm:w-full flex justify-center sm:justify-start">
+          <CourseSelector
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            counts={{
+              all: 50,
+              enrolled: 4,
+              unenrolled: 0
+            }}
+            className="w-full sm:w-full"
+          />
+        </div>
           
           {/* Search Bar - Full width on mobile, expanded on desktop */}
-          <div className="w-full sm:flex-1 sm:max-w-2xl">
+          <div className="w-full sm:w-full">
             <MyCoursesSearchBar
               value={searchQuery}
               onSearch={handleSearch}
