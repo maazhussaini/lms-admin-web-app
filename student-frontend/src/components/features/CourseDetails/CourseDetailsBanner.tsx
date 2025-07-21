@@ -115,7 +115,7 @@ export const CourseDetailsBanner: React.FC<CourseDetailsBannerProps> = ({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xl sm:text-2xl md:text-3xl font-semibold">
+                <div className="w-full h-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xl sm:text-2xl md:text-3xl font-medium">
                   {instructorName.split(' ').map(n => n[0]).join('').toUpperCase()}
                 </div>
               )}

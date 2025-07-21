@@ -124,7 +124,7 @@ export const CourseDetailComponent: React.FC<CourseDetailComponentProps> = ({
                   </p>
                 </div>
                 <div className="ml-4">
-                  <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-primary-800 rounded-full flex items-center justify-center">
                     <FaChevronRight className="text-white text-sm" />
                   </div>
                 </div>

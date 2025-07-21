@@ -201,7 +201,7 @@ export const TopicComponent: React.FC<TopicComponentProps> = ({
                   {video.is_locked ? (
                     <FaLock className="text-neutral-400 w-5 h-5" />
                   ) : (
-                    <FaPlayCircle className="text-primary-600 w-5 h-5" />
+                    <FaPlayCircle className="text-primary-800 w-5 h-5" />
                   )}
                 </div>
                 
