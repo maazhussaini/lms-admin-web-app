@@ -95,28 +95,28 @@ export const ModuleComponent: React.FC<ModuleComponentProps> = ({
   ];
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+      {/* Breadcrumb Navigation - Moved to top for better mobile UX */}
+      <Breadcrumb items={breadcrumbItems} />
+
       {/* Module Header */}
       <motion.div
-        className="mb-8"
+        className="mb-6 lg:mb-8"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.05 }}
       >
-        <h2 className="text-4xl font-medium text-primary-900 mb-4">
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-medium text-primary-900 mb-3 lg:mb-4 leading-tight">
           {currentModule.course_module_name || `Module ${moduleId}`}
         </h2>
-        <p className="text-neutral-600 leading-relaxed">
+        <p className="text-neutral-600 leading-relaxed text-sm sm:text-base">
           Module description will be displayed here when available.
         </p>
       </motion.div>
 
-      {/* Breadcrumb Navigation */}
-      <Breadcrumb items={breadcrumbItems} />
-
       {/* Module Selector for Navigation */}
       <motion.div
-        className="mb-8"
+        className="mb-6 lg:mb-8"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.08 }}
@@ -130,7 +130,7 @@ export const ModuleComponent: React.FC<ModuleComponentProps> = ({
 
       {/* Module Content Selector */}
       <motion.div
-        className="mb-8"
+        className="mb-6 lg:mb-8"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.1 }}
@@ -149,32 +149,32 @@ export const ModuleComponent: React.FC<ModuleComponentProps> = ({
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <h3 className="text-3xl font-medium text-primary-900 mb-6">Topics</h3>
+          <h3 className="text-2xl sm:text-3xl font-medium text-primary-900 mb-4 sm:mb-6">Topics</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {currentModule.topics?.map((topic, topicIndex) => (
               <motion.div
                 key={topic.course_topic_id}
-                className="bg-white rounded-xl p-6 shadow-sm border border-neutral-200 hover:shadow-md transition-shadow cursor-pointer"
+                className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-neutral-200 hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => handleTopicClick(topic.course_topic_id)}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <h4 className="text-lg font-semibold text-neutral-900 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-base sm:text-lg font-semibold text-neutral-900 mb-2 truncate">
                       Topic {topicIndex + 1}
                     </h4>
-                    <p className="text-neutral-600 text-sm mb-2">
+                    <p className="text-neutral-600 text-sm mb-2 line-clamp-2">
                       {topic.course_topic_name}
                     </p>
                     <p className="text-neutral-500 text-xs">
                       {topic.videos?.length || 0} Video Lectures | {topic.documents?.length || 0} Documents
                     </p>
                   </div>
-                  <div className="ml-4">
-                    <div className="w-10 h-10 bg-primary-800 rounded-full flex items-center justify-center">
-                      <FaChevronRight className="text-white text-sm" />
+                  <div className="ml-3 sm:ml-4 flex-shrink-0">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary-800 rounded-full flex items-center justify-center">
+                      <FaChevronRight className="text-white text-xs sm:text-sm" />
                     </div>
                   </div>
                 </div>
@@ -191,10 +191,10 @@ export const ModuleComponent: React.FC<ModuleComponentProps> = ({
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <h3 className="text-3xl font-medium text-primary-900 mb-6">Assignments</h3>
-          <div className="bg-neutral-50 rounded-xl p-6 text-center">
-            <FaClipboardList className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
-            <p className="text-neutral-600">Assignments for this module will be displayed here</p>
+          <h3 className="text-2xl sm:text-3xl font-medium text-primary-900 mb-4 sm:mb-6">Assignments</h3>
+          <div className="bg-neutral-50 rounded-xl p-4 sm:p-6 text-center">
+            <FaClipboardList className="w-10 h-10 sm:w-12 sm:h-12 text-neutral-400 mx-auto mb-3 sm:mb-4" />
+            <p className="text-neutral-600 text-sm sm:text-base">Assignments for this module will be displayed here</p>
           </div>
         </motion.div>
       )}
@@ -206,10 +206,10 @@ export const ModuleComponent: React.FC<ModuleComponentProps> = ({
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <h3 className="text-3xl font-medium text-primary-900 mb-6">Quizzes</h3>
-          <div className="bg-neutral-50 rounded-xl p-6 text-center">
-            <FaQuestionCircle className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
-            <p className="text-neutral-600">Quizzes for this module will be displayed here</p>
+          <h3 className="text-2xl sm:text-3xl font-medium text-primary-900 mb-4 sm:mb-6">Quizzes</h3>
+          <div className="bg-neutral-50 rounded-xl p-4 sm:p-6 text-center">
+            <FaQuestionCircle className="w-10 h-10 sm:w-12 sm:h-12 text-neutral-400 mx-auto mb-3 sm:mb-4" />
+            <p className="text-neutral-600 text-sm sm:text-base">Quizzes for this module will be displayed here</p>
           </div>
         </motion.div>
       )}

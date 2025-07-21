@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaChevronRight } from 'react-icons/fa';
+import { FaChevronRight, FaChevronLeft, FaHome } from 'react-icons/fa';
 import clsx from 'clsx';
 
 export interface BreadcrumbItem {
@@ -21,11 +21,14 @@ export interface BreadcrumbProps {
 }
 
 /**
- * Breadcrumb - Navigation breadcrumb component for hierarchical navigation
+ * Breadcrumb - Modern responsive navigation breadcrumb component
  * 
- * Displays a horizontal breadcrumb trail with clickable links and separators.
- * The last item is typically the current page and appears non-clickable.
- * Features smooth animations and follows the LMS design system.
+ * Features adaptive design:
+ * - Mobile (< 768px): Compact back button with previous item
+ * - Tablet (768px - 1024px): Horizontal scroll with fade indicators
+ * - Desktop (> 1024px): Full breadcrumb trail
+ * 
+ * Includes smooth animations and follows modern UX patterns.
  * 
  * @param props - Component props
  * @returns JSX.Element
@@ -43,14 +46,28 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
     }
   };
 
+  // Handle back navigation (mobile)
+  const handleBackClick = () => {
+    if (items.length > 1) {
+      const previousItem = items[items.length - 2];
+      if (previousItem?.path) {
+        navigate(previousItem.path);
+      }
+    }
+  };
+
   if (!items || items.length === 0) {
     return null;
   }
 
+  const currentItem = items[items.length - 1];
+  const previousItem = items.length > 1 ? items[items.length - 2] : null;
+  const hasMultipleItems = items.length > 1;
+
   return (
     <motion.nav
       className={clsx(
-        'flex items-center space-x-2 text-sm mb-6',
+        'mb-6',
         className
       )}
       initial={{ y: 10, opacity: 0 }}
@@ -58,52 +75,131 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
       transition={{ delay: 0.1 }}
       aria-label="Breadcrumb navigation"
     >
-      <ol className="flex items-center space-x-2">
-        {items.map((item, index) => {
-          const isLast = index === items.length - 1;
-          const isClickable = item.path && !item.isActive && !isLast;
+      {/* Mobile View: Compact back button */}
+      <div className="md:hidden">
+        {hasMultipleItems && previousItem ? (
+          <motion.button
+            onClick={handleBackClick}
+            className="flex items-center space-x-2 text-sm text-primary-600 hover:text-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-lg px-3 py-2 -ml-3 transition-colors"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            aria-label={`Go back to ${previousItem.label}`}
+          >
+            <FaChevronLeft className="w-3 h-3 flex-shrink-0" />
+            <span className="font-medium truncate max-w-[200px]">
+              {previousItem.label}
+            </span>
+          </motion.button>
+        ) : (
+          <div className="flex items-center space-x-2 text-sm text-neutral-600 px-3 py-2">
+            <FaHome className="w-3 h-3 flex-shrink-0" />
+            <span className="font-medium truncate">
+              {currentItem?.label || 'Current Page'}
+            </span>
+          </div>
+        )}
+      </div>
 
-          return (
-            <li key={index} className="flex items-center space-x-2">
-              {/* Breadcrumb Item */}
-              <motion.span
-                className={clsx(
-                  'transition-all duration-200 ease-in-out',
-                  {
-                    // Clickable item styles
-                    'text-primary-600 hover:text-primary-700 cursor-pointer hover:underline focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded px-1': isClickable,
-                    // Active/current item styles
-                    'text-neutral-900 font-medium': isLast || item.isActive,
-                    // Regular non-clickable styles
-                    'text-neutral-600': !isClickable && !isLast && !item.isActive
-                  }
+      {/* Tablet View: Horizontal scroll */}
+      <div className="hidden md:block lg:hidden">
+        <div className="relative">
+          <div className="flex items-center space-x-2 text-sm overflow-x-auto scrollbar-hide pb-2">
+            <div className="flex items-center space-x-2 min-w-max">
+              {items.map((item, index) => {
+                const isLast = index === items.length - 1;
+                const isClickable = item.path && !item.isActive && !isLast;
+
+                return (
+                  <div key={index} className="flex items-center space-x-2">
+                    {/* Breadcrumb Item */}
+                    <motion.span
+                      className={clsx(
+                        'transition-all duration-200 ease-in-out whitespace-nowrap px-2 py-1 rounded-md',
+                        {
+                          'text-primary-600 hover:text-primary-700 hover:bg-primary-50 cursor-pointer': isClickable,
+                          'text-neutral-900 font-medium bg-neutral-100': isLast || item.isActive,
+                          'text-neutral-600': !isClickable && !isLast && !item.isActive
+                        }
+                      )}
+                      onClick={() => handleItemClick(item)}
+                      whileHover={isClickable ? { scale: 1.02 } : {}}
+                      whileTap={isClickable ? { scale: 0.98 } : {}}
+                      role={isClickable ? 'button' : 'text'}
+                      tabIndex={isClickable ? 0 : -1}
+                      onKeyDown={(e) => {
+                        if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
+                          e.preventDefault();
+                          handleItemClick(item);
+                        }
+                      }}
+                    >
+                      {item.label}
+                    </motion.span>
+
+                    {/* Separator */}
+                    {!isLast && (
+                      <FaChevronRight 
+                        className="text-neutral-400 w-3 h-3 flex-shrink-0" 
+                        aria-hidden="true"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          
+          {/* Fade indicators for scroll */}
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none" />
+        </div>
+      </div>
+
+      {/* Desktop View: Full breadcrumb trail */}
+      <div className="hidden lg:block">
+        <ol className="flex items-center space-x-2 text-sm flex-wrap">
+          {items.map((item, index) => {
+            const isLast = index === items.length - 1;
+            const isClickable = item.path && !item.isActive && !isLast;
+
+            return (
+              <li key={index} className="flex items-center space-x-2">
+                {/* Breadcrumb Item */}
+                <motion.span
+                  className={clsx(
+                    'transition-all duration-200 ease-in-out px-2 py-1 rounded-md',
+                    {
+                      'text-primary-600 hover:text-primary-700 hover:bg-primary-50 cursor-pointer': isClickable,
+                      'text-neutral-900 font-medium bg-neutral-100': isLast || item.isActive,
+                      'text-neutral-600 hover:bg-neutral-50': !isClickable && !isLast && !item.isActive
+                    }
+                  )}
+                  onClick={() => handleItemClick(item)}
+                  whileHover={isClickable ? { scale: 1.02 } : {}}
+                  whileTap={isClickable ? { scale: 0.98 } : {}}
+                  role={isClickable ? 'button' : 'text'}
+                  tabIndex={isClickable ? 0 : -1}
+                  onKeyDown={(e) => {
+                    if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault();
+                      handleItemClick(item);
+                    }
+                  }}
+                >
+                  {item.label}
+                </motion.span>
+
+                {/* Separator */}
+                {!isLast && (
+                  <FaChevronRight 
+                    className="text-neutral-400 w-3 h-3 flex-shrink-0" 
+                    aria-hidden="true"
+                  />
                 )}
-                onClick={() => handleItemClick(item)}
-                whileHover={isClickable ? { scale: 1.02 } : {}}
-                whileTap={isClickable ? { scale: 0.98 } : {}}
-                role={isClickable ? 'button' : 'text'}
-                tabIndex={isClickable ? 0 : -1}
-                onKeyDown={(e) => {
-                  if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
-                    e.preventDefault();
-                    handleItemClick(item);
-                  }
-                }}
-              >
-                {item.label}
-              </motion.span>
-
-              {/* Separator */}
-              {!isLast && (
-                <FaChevronRight 
-                  className="text-neutral-400 w-3 h-3 flex-shrink-0" 
-                  aria-hidden="true"
-                />
-              )}
-            </li>
-          );
-        })}
-      </ol>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
     </motion.nav>
   );
 };
