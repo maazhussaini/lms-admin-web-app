@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { FaChevronRight, FaClipboardList, FaQuestionCircle } from 'react-icons/fa';
 import { CourseDetailsData } from '@/pages/CourseDetailsPage/mockData';
 import { ModuleContentSelector, ModuleContentType } from './ModuleContentSelector';
+import { ModuleSelector } from './ModuleSelector';
 import Breadcrumb, { BreadcrumbItem } from '@/components/common/Breadcrumb';
 
 /**
@@ -46,6 +47,11 @@ export const ModuleComponent: React.FC<ModuleComponentProps> = ({
   // Navigate to topic details
   const handleTopicClick = (topicId: number) => {
     navigate(`/courses/${courseId}/modules/${moduleId}/topics/${topicId}`);
+  };
+
+  // Navigate to different module
+  const handleModuleSelect = (newModuleId: number) => {
+    navigate(`/courses/${courseId}/modules/${newModuleId}`);
   };
 
   // Handle content type change
@@ -107,6 +113,20 @@ export const ModuleComponent: React.FC<ModuleComponentProps> = ({
 
       {/* Breadcrumb Navigation */}
       <Breadcrumb items={breadcrumbItems} />
+
+      {/* Module Selector for Navigation */}
+      <motion.div
+        className="mb-8"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.08 }}
+      >
+        <ModuleSelector
+          courseDetails={courseDetails}
+          currentModuleId={moduleId}
+          onModuleSelect={handleModuleSelect}
+        />
+      </motion.div>
 
       {/* Module Content Selector */}
       <motion.div

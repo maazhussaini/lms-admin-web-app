@@ -3,25 +3,27 @@ import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import { CourseDetailsData } from '@/pages/CourseDetailsPage/mockData';
 
-export interface ModuleSelectorProps {
-  /** Course details data containing all modules */
+export interface TopicSelectorProps {
+  /** Course details data containing all modules and topics */
   courseDetails: CourseDetailsData;
-  /** Currently active module ID */
-  currentModuleId: number;
-  /** Handler for module selection */
-  onModuleSelect: (moduleId: number) => void;
+  /** Current module ID */
+  moduleId: number;
+  /** Currently active topic ID */
+  currentTopicId: number;
+  /** Handler for topic selection */
+  onTopicSelect: (topicId: number) => void;
   /** Additional CSS classes */
   className?: string;
 }
 
 /**
- * ModuleSelector - Interactive horizontal selector for navigating between course modules
+ * TopicSelector - Interactive horizontal selector for navigating between topics within a module
  * 
  * Features:
- * - Horizontal scrollable list of modules with drag-to-scroll
- * - Current module highlighting with smooth animations
+ * - Horizontal scrollable list of topics with drag-to-scroll
+ * - Current topic highlighting with smooth animations
  * - Smart click vs drag detection
- * - Module information display (number, name, topic count)
+ * - Topic information display (number, name, video count, materials count)
  * - Responsive design with touch-friendly interactions
  * - Hover effects with proper container constraints
  * 
@@ -30,14 +32,20 @@ export interface ModuleSelectorProps {
  * @param props - Component props
  * @returns JSX.Element
  */
-const ModuleSelector: React.FC<ModuleSelectorProps> = ({
+const TopicSelector: React.FC<TopicSelectorProps> = ({
   courseDetails,
-  currentModuleId,
-  onModuleSelect,
+  moduleId,
+  currentTopicId,
+  onTopicSelect,
   className
 }) => {
-  const modules = courseDetails.modules || [];
-  const currentIndex = modules.findIndex(module => module.course_module_id === currentModuleId);
+  // Find the current module and its topics
+  const currentModule = courseDetails.modules?.find(
+    module => module.course_module_id === moduleId
+  );
+  const topics = currentModule?.topics || [];
+  const currentIndex = topics.findIndex(topic => topic.course_topic_id === currentTopicId);
+  
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStarted, setDragStarted] = useState(false);
@@ -81,22 +89,21 @@ const ModuleSelector: React.FC<ModuleSelectorProps> = ({
     setIsDragging(false);
   };
 
-  // Get module display information
-  const getModuleInfo = (module: CourseDetailsData['modules'][0], index: number) => {
-    const topicCount = module.topics?.length || 0;
-    const videoCount = module.topics?.reduce((total: number, topic) => 
-      total + (topic.videos?.length || 0), 0
-    ) || 0;
+  // Get topic display information
+  const getTopicInfo = (topic: CourseDetailsData['modules'][0]['topics'][0], index: number) => {
+    const videoCount = topic.videos?.length || 0;
+    const materialCount = topic.documents?.length || 0;
     
     return {
       number: index + 1,
-      name: module.course_module_name || `Module ${index + 1}`,
-      topicCount,
-      videoCount
+      name: topic.course_topic_name || `Topic ${index + 1}`,
+      videoCount,
+      materialCount
     };
   };
 
-  if (modules.length === 0) {
+  // If no topics or module not found, don't render
+  if (!currentModule || topics.length === 0) {
     return null;
   }
 
@@ -113,14 +120,14 @@ const ModuleSelector: React.FC<ModuleSelectorProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <h3 className="text-lg font-semibold text-primary-900">
-          Course Modules
+          {currentModule.course_module_name || `Module ${moduleId}`} Topics
         </h3>
         <span className="text-sm text-neutral-500">
-          {currentIndex + 1} of {modules.length}
+          {currentIndex + 1} of {topics.length}
         </span>
       </div>
 
-      {/* Modules Container - Scrollable with drag */}
+      {/* Topics Container - Scrollable with drag */}
       <div className="px-4 pb-4">
         <div 
           ref={scrollContainerRef}
@@ -142,17 +149,17 @@ const ModuleSelector: React.FC<ModuleSelectorProps> = ({
           }}
         >
           <div className="flex gap-4 px-2" style={{ width: 'max-content' }}>
-            {modules.map((module, index) => {
-              const isActive = module.course_module_id === currentModuleId;
-              const moduleInfo = getModuleInfo(module, index);
+            {topics.map((topic, index) => {
+              const isActive = topic.course_topic_id === currentTopicId;
+              const topicInfo = getTopicInfo(topic, index);
               
               return (
                 <motion.button
-                  key={module.course_module_id}
+                  key={topic.course_topic_id}
                   onClick={(e) => {
                     // Only trigger click if not dragging
                     if (!isDragging) {
-                      onModuleSelect(module.course_module_id);
+                      onTopicSelect(topic.course_topic_id);
                     }
                     e.stopPropagation();
                   }}
@@ -177,7 +184,7 @@ const ModuleSelector: React.FC<ModuleSelectorProps> = ({
                   {/* Active indicator */}
                   {isActive && (
                     <motion.div
-                      layoutId="activeModule"
+                      layoutId="activeTopic"
                       className="absolute inset-0 bg-primary-900 rounded-xl shadow-lg"
                       initial={false}
                       transition={{
@@ -188,11 +195,11 @@ const ModuleSelector: React.FC<ModuleSelectorProps> = ({
                     />
                   )}
                   
-                  {/* Module content */}
+                  {/* Topic content */}
                   <div className="relative z-10 text-left">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-semibold text-sm">
-                        Module {moduleInfo.number}
+                        Topic {topicInfo.number}
                       </span>
                       <span 
                         className={clsx(
@@ -203,7 +210,7 @@ const ModuleSelector: React.FC<ModuleSelectorProps> = ({
                           }
                         )}
                       >
-                        {moduleInfo.topicCount} topics
+                        {topicInfo.videoCount} videos
                       </span>
                     </div>
                     <p className={clsx(
@@ -213,7 +220,7 @@ const ModuleSelector: React.FC<ModuleSelectorProps> = ({
                         'text-neutral-600': !isActive
                       }
                     )}>
-                      {moduleInfo.name}
+                      {topicInfo.name}
                     </p>
                     <p className={clsx(
                       'text-xs mt-1',
@@ -222,7 +229,7 @@ const ModuleSelector: React.FC<ModuleSelectorProps> = ({
                         'text-neutral-500': !isActive
                       }
                     )}>
-                      {moduleInfo.videoCount} video lectures
+                      {topicInfo.materialCount} materials
                     </p>
                   </div>
                 </motion.button>
@@ -235,5 +242,5 @@ const ModuleSelector: React.FC<ModuleSelectorProps> = ({
   );
 };
 
-export { ModuleSelector };
-export default ModuleSelector;
+export { TopicSelector };
+export default TopicSelector;

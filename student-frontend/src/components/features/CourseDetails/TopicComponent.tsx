@@ -13,6 +13,7 @@ import {
 import Badge from '@/components/common/Badge';
 import { CourseDetailsData } from '@/pages/CourseDetailsPage/mockData';
 import { TopicContentSelector, TopicContentType } from './TopicContentSelector';
+import { TopicSelector } from './TopicSelector';
 import Breadcrumb, { BreadcrumbItem } from '@/components/common/Breadcrumb';
 
 /**
@@ -63,6 +64,11 @@ export const TopicComponent: React.FC<TopicComponentProps> = ({
   // Navigate to video player
   const handleVideoClick = (videoId: number) => {
     navigate(`/courses/${courseId}/modules/${moduleId}/topics/${topicId}/videos/${videoId}`);
+  };
+
+  // Navigate to different topic
+  const handleTopicSelect = (newTopicId: number) => {
+    navigate(`/courses/${courseId}/modules/${moduleId}/topics/${newTopicId}`);
   };
 
   // Handle content type change
@@ -141,6 +147,21 @@ export const TopicComponent: React.FC<TopicComponentProps> = ({
 
       {/* Breadcrumb Navigation */}
       <Breadcrumb items={breadcrumbItems} />
+
+      {/* Topic Selector for Navigation */}
+      <motion.div
+        className="mb-8"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.12 }}
+      >
+        <TopicSelector
+          courseDetails={courseDetails}
+          moduleId={moduleId}
+          currentTopicId={topicId}
+          onTopicSelect={handleTopicSelect}
+        />
+      </motion.div>
 
       {/* Topic Content Selector */}
       <motion.div
