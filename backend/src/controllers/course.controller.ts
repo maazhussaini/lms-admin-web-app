@@ -184,10 +184,10 @@ export class CourseController {
   /**
    * Get courses by programs and specialization
    * @route GET /api/v1/courses/by-programs-specialization
-   * @access Public (Student access - no authentication required for browsing)
+   * @access Private (All authenticated users - tenant isolation enforced)
    */
-  static getCoursesByProgramsAndSpecializationHandler = createRouteHandler(
-    async (req: AuthenticatedRequest) => {
+  static getCoursesByProgramsAndSpecializationHandler = createListHandler(
+    async (paginationParams: ExtendedPaginationWithFilters, req: AuthenticatedRequest) => {
       const params: GetCoursesByProgramsAndSpecializationDto = {
         course_type: req.query['course_type'] as string | undefined,
         program_id: req.query['program_id'] ? parseInt(req.query['program_id'] as string, 10) : undefined,
@@ -196,24 +196,27 @@ export class CourseController {
         student_id: req.query['student_id'] ? parseInt(req.query['student_id'] as string, 10) : undefined
       };
 
-      // If user is authenticated and is a student, use their student_id
-      let requestingStudentId: number | undefined;
-      if (req.user && req.user.user_type === UserType.STUDENT) {
-        // In a real implementation, you'd get the student_id from the user token
-        // For now, we'll use the student_id from query params if provided
-        requestingStudentId = params.student_id;
-      }
-
       logger.debug('Getting courses by programs and specialization', {
         params,
-        requestingStudentId,
+        paginationParams,
+        requestingUserId: req.user?.id,
         userType: req.user?.user_type
       });
 
-      return await courseService.getCoursesByProgramsAndSpecialization(
+      const result = await courseService.getCoursesByProgramsAndSpecialization(
         params,
-        requestingStudentId
+        req.user,
+        {
+          page: paginationParams.page,
+          limit: paginationParams.limit,
+          skip: paginationParams.skip
+        }
       );
+
+      return {
+        items: result.items,
+        total: result.total
+      };
     },
     {
       message: 'Courses retrieved successfully'
@@ -448,7 +451,7 @@ export class CourseController {
 
       return await courseService.getCoursesByProgramsAndSpecialization(
         params,
-        student.student_id
+        requestingUser
       );
     },
     {

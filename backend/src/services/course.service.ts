@@ -1,8 +1,7 @@
 import { PrismaClient, CourseStatus, CourseType } from '@prisma/client';
 import { CreateCourseDto, UpdateCourseDto, CourseFilterDto } from '@/dtos/course/course.dto';
 import { 
-  GetCoursesByProgramsAndSpecializationDto, 
-  CourseByProgramsAndSpecializationResponse 
+  GetCoursesByProgramsAndSpecializationDto
 } from '@/dtos/course/course-by-programs-specialization.dto';
 import { 
   CourseBasicDetailsResponse 
@@ -23,7 +22,7 @@ import { NotFoundError, ConflictError } from '@/utils/api-error.utils';
 import { TokenPayload } from '@/utils/jwt.utils';
 import { tryCatch } from '@/utils/error-wrapper.utils';
 import { ExtendedPaginationWithFilters } from '@/utils/async-handler.utils';
-import { formatDateRange, formatDecimalHours } from '@/utils/date-format.utils';
+import { formatDateRange } from '@/utils/date-format.utils';
 import { formatDurationFromSeconds } from '@/utils/duration-format.utils';
 import { BaseListService } from '@/utils/base-list.service';
 import { BaseServiceConfig } from '@/utils/service.types';
@@ -915,230 +914,202 @@ export class CourseService extends BaseListService<any, CourseFilterDto> {
     });
   }
 
+  /**
+   * Get courses by programs and specialization with complex filtering
+   */
   async getCoursesByProgramsAndSpecialization(
     params: GetCoursesByProgramsAndSpecializationDto,
-    requestingStudentId?: number
-  ): Promise<CourseByProgramsAndSpecializationResponse[]> {
+    requestingUser?: TokenPayload,
+    paginationParams?: { page: number; limit: number; skip: number }
+  ): Promise<{ items: any[]; total: number }> {
     return tryCatch(async () => {
       logger.debug('Getting courses by programs and specialization', {
         params,
-        requestingStudentId
+        paginationParams,
+        requestingUserId: requestingUser?.id,
+        userType: requestingUser?.user_type
       });
 
       // Get student's tenant_id if student_id is provided
-      let tenantId: number | null = null;
-      const studentId = params.student_id || requestingStudentId;
-      
-      if (studentId) {
-        const student = await prisma.student.findFirst({
-          where: {
-            student_id: studentId,
-            is_active: true,
-            is_deleted: false
-          },
-          select: {
-            tenant_id: true
-          }
-        });
-        if (!student) {
-          throw new NotFoundError('Student not found', 'STUDENT_NOT_FOUND');
-        }
-        tenantId = student.tenant_id;
-      }
+      const studentId = params.student_id || (requestingUser?.user_type === 'STUDENT' ? requestingUser.id : undefined);
+      const tenantId = await this.getStudentTenantId(studentId, requestingUser);
 
-      // Build base include object
-      const includeQuery: any = {
-        // Include course sessions for dates
-        course_sessions: {
-          where: {
-            is_active: true,
-            is_deleted: false
-          },
-          select: {
-            start_date: true,
-            end_date: true
-          },
-          orderBy: {
-            start_date: 'asc'
-          },
-          take: 1
-        },
-        // Include teacher information
-        teacher_courses: {
-          where: {
-            is_active: true,
-            is_deleted: false
-          },
-          include: {
-            teacher: {
-              select: {
-                full_name: true,
-                profile_picture_url: true,
-                teacher_qualification: true
-              }
-            }
-          },
-          take: 1
-        },
-        // Include program information through specialization
-        course_specialization: {
-          where: {
-            is_active: true,
-            is_deleted: false
-          },
-          include: {
-            specialization: {
-              include: {
-                specialization_program: {
-                  where: {
-                    is_active: true,
-                    is_deleted: false
-                  },
-                  include: {
-                    program: {
-                      select: {
-                        program_id: true,
-                        program_name: true
-                      }
-                    }
-                  },
-                  take: 1
-                }
-              }
-            }
-          },
-          take: 1
+      // Build where clause with all filters (no include needed for raw course data)
+      const whereClause = this.buildCourseWhereClause(params, tenantId);
+
+      // Get total count for pagination
+      const total = await prisma.course.count({
+        where: whereClause
+      });
+
+      // Execute the course query with pagination
+      const queryOptions: any = {
+        where: whereClause,
+        orderBy: {
+          created_at: 'desc'
         }
       };
 
-      // Conditionally add enrollments if studentId is provided
-      if (studentId) {
-        includeQuery.enrollments = {
-          where: {
-            student_id: studentId,
-            is_active: true,
-            is_deleted: false
-          },
-          select: {
-            student_id: true,
-            course_enrollment_type: true
-          }
-        };
+      // Add pagination if provided
+      if (paginationParams) {
+        queryOptions.skip = paginationParams.skip;
+        queryOptions.take = paginationParams.limit;
       }
 
-      // Build the complex query similar to the PostgreSQL function
-      const courses = await prisma.course.findMany({
-        where: {
-          is_active: true,
-          is_deleted: false,
-          course_status: CourseStatus.PUBLIC,
-          ...(tenantId && { tenant_id: tenantId }),
-          // Course name search filter
-          ...(params.search_query && {
-            course_name: {
-              contains: params.search_query,
-              mode: 'insensitive'
-            }
-          }),
-          // Course type filter
-          ...(params.course_type && params.course_type !== 'PURCHASED' && {
-            course_type: params.course_type as CourseType
-          }),
-          // Join conditions for specializations and programs
-          course_specialization: {
-            some: {
-              is_active: true,
-              is_deleted: false,
-              specialization: {
-                is_active: true,
-                is_deleted: false,
-                ...(params.specialization_id && params.specialization_id !== -1 && {
-                  specialization_id: params.specialization_id
-                }),
-                specialization_program: {
-                  some: {
-                    is_active: true,
-                    is_deleted: false,
-                    ...(params.program_id && params.program_id !== -1 && {
-                      program_id: params.program_id
-                    })
-                  }
-                }
-              }
-            }
-          }
-        },
-        include: includeQuery
-      });
+      const courses = await prisma.course.findMany(queryOptions);
 
       // Filter courses based on course_type = 'PURCHASED' if specified
       let filteredCourses = courses;
       if (params.course_type === 'PURCHASED' && studentId) {
-        filteredCourses = courses.filter((course: any) => 
-          course.enrollments && Array.isArray(course.enrollments) && course.enrollments.length > 0 &&
-          course.enrollments.some((enrollment: any) => 
-            ['PAID_COURSE', 'FREE_COURSE', 'COURSE_SESSION'].includes(enrollment.course_enrollment_type)
-          )
-        );
-      }
+        // For PURCHASED filter, we need to check enrollments
+        const queryOptionsWithEnrollments: any = {
+          where: whereClause,
+          include: {
+            enrollments: {
+              where: {
+                student_id: studentId,
+                is_active: true,
+                is_deleted: false,
+                course_enrollment_type: {
+                  in: ['PAID_COURSE', 'FREE_COURSE', 'COURSE_SESSION']
+                }
+              }
+            }
+          },
+          orderBy: {
+            created_at: 'desc'
+          }
+        };
 
-      // Transform the results to match the expected response format
-      const transformedCourses: CourseByProgramsAndSpecializationResponse[] = filteredCourses.map((course: any) => {
-        const enrollment = course.enrollments && Array.isArray(course.enrollments) && course.enrollments.length > 0 ? course.enrollments[0] : null;
-        const teacher = course.teacher_courses && course.teacher_courses.length > 0 ? course.teacher_courses[0].teacher : null;
-        const courseSession = course.course_sessions && course.course_sessions.length > 0 ? course.course_sessions[0] : null;
-        const program = course.course_specialization && course.course_specialization.length > 0 && 
-                       course.course_specialization[0].specialization.specialization_program &&
-                       course.course_specialization[0].specialization.specialization_program.length > 0 
-                       ? course.course_specialization[0].specialization.specialization_program[0].program 
-                       : null;
-
-        // Calculate purchase status
-        let purchaseStatus: string;
-        if (!enrollment && (!course.course_price || course.course_price.toNumber() === 0)) {
-          purchaseStatus = 'Free';
-        } else if (!enrollment && course.course_price && course.course_price.toNumber() > 0) {
-          purchaseStatus = `Buy: $${course.course_price.toNumber()}`;
-        } else if (enrollment) {
-          purchaseStatus = 'Purchased';
-        } else {
-          purchaseStatus = 'N/A';
+        // Add pagination if provided
+        if (paginationParams) {
+          queryOptionsWithEnrollments.skip = paginationParams.skip;
+          queryOptionsWithEnrollments.take = paginationParams.limit;
         }
 
-        // Format dates
-        const formattedDates = formatDateRange(
-          courseSession?.start_date || null,
-          courseSession?.end_date || null
-        );
+        const coursesWithEnrollments = await prisma.course.findMany(queryOptionsWithEnrollments);
 
-        // Format hours
-        const formattedHours = formatDecimalHours(
-          course.course_total_hours ? course.course_total_hours.toNumber() : null
-        );
+        filteredCourses = coursesWithEnrollments
+          .filter((course: any) => course.enrollments && course.enrollments.length > 0)
+          .map((course: any) => {
+            // Remove the enrollments property to return clean course data
+            const { enrollments, ...courseWithoutEnrollments } = course;
+            return courseWithoutEnrollments;
+          });
+      }
 
-        return {
-          course_id: course.course_id,
-          course_name: course.course_name,
-          start_date: formattedDates.start_date,
-          end_date: formattedDates.end_date,
-          program_name: program?.program_name || null,
-          teacher_name: teacher?.full_name || null,
-          course_total_hours: formattedHours,
-          profile_picture_url: teacher?.profile_picture_url || null,
-          teacher_qualification: teacher?.teacher_qualification || null,
-          program_id: program?.program_id || null,
-          purchase_status: purchaseStatus
-        };
-      });
-
-      return transformedCourses;
+      return {
+        items: filteredCourses,
+        total: filteredCourses.length < courses.length ? filteredCourses.length : total
+      };
     }, {
       context: {
         params,
-        requestingStudentId
+        paginationParams,
+        requestingUser: requestingUser ? { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId } : null
       }
     });
   }
+
+  /**
+   * Get student's tenant ID for filtering courses
+   * @private
+   */
+  private async getStudentTenantId(studentId?: number, requestingUser?: TokenPayload): Promise<number> {
+    // If requesting user is provided, use their tenant directly (for all user types)
+    if (requestingUser && requestingUser.tenantId) {
+      logger.debug('Using tenant from requesting user', { 
+        userId: requestingUser.id,
+        userType: requestingUser.user_type,
+        tenantId: requestingUser.tenantId 
+      });
+      return requestingUser.tenantId;
+    }
+
+    // Fallback to student lookup if studentId is provided but no requesting user
+    if (studentId) {
+      logger.debug('Looking up student tenant ID', { studentId });
+
+      const student = await prisma.student.findFirst({
+        where: {
+          student_id: studentId,
+          is_active: true,
+          is_deleted: false
+        },
+        select: {
+          tenant_id: true
+        }
+      });
+
+      if (!student) {
+        throw new NotFoundError('Student not found', 'STUDENT_NOT_FOUND');
+      }
+
+      logger.debug('Student tenant ID retrieved', { 
+        studentId, 
+        tenantId: student.tenant_id 
+      });
+
+      return student.tenant_id;
+    }
+
+    // If no user context and no student ID, this is a security violation
+    throw new NotFoundError(
+      'Tenant context required: either authentication or student_id parameter must be provided',
+      'TENANT_CONTEXT_REQUIRED'
+    );
+  }
+
+  /**
+   * Build Prisma where clause for course filtering
+   * @private
+   */
+  private buildCourseWhereClause(
+    params: GetCoursesByProgramsAndSpecializationDto, 
+    tenantId: number
+  ): any {
+    return {
+      is_active: true,
+      is_deleted: false,
+      course_status: CourseStatus.PUBLIC,
+      tenant_id: tenantId, // Always apply tenant filtering for security
+      // Course name search filter
+      ...(params.search_query && {
+        course_name: {
+          contains: params.search_query,
+          mode: 'insensitive'
+        }
+      }),
+      // Course type filter (exclude PURCHASED as it's handled separately)
+      ...(params.course_type && params.course_type !== 'PURCHASED' && {
+        course_type: params.course_type as CourseType
+      }),
+      // Join conditions for specializations and programs
+      course_specialization: {
+        some: {
+          is_active: true,
+          is_deleted: false,
+          specialization: {
+            is_active: true,
+            is_deleted: false,
+            ...(params.specialization_id && params.specialization_id !== -1 && {
+              specialization_id: params.specialization_id
+            }),
+            specialization_program: {
+              some: {
+                is_active: true,
+                is_deleted: false,
+                ...(params.program_id && params.program_id !== -1 && {
+                  program_id: params.program_id
+                })
+              }
+            }
+          }
+        }
+      }
+    };
+  }
+
 }
 
 export const courseService = CourseService.getInstance();

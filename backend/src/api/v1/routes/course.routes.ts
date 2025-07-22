@@ -19,17 +19,6 @@ const router = Router();
  */
 
 /**
- * @route GET /api/v1/courses/by-programs-specialization
- * @description Get courses by programs and specialization with filtering
- * @access Public (can be accessed without authentication for browsing)
- */
-router.get(
-  '/by-programs-specialization',
-  validate(getCoursesByProgramsAndSpecializationValidation),
-  CourseController.getCoursesByProgramsAndSpecializationHandler
-);
-
-/**
  * @route GET /api/v1/courses/:courseId/basic-details
  * @description Get basic details for a specific course
  * @access Public (authentication optional for enhanced features)
@@ -120,6 +109,17 @@ router.get(
 
 // Apply authentication to all routes below this point
 router.use(authenticate);
+
+/**
+ * @route GET /api/v1/courses/by-programs-specialization
+ * @description Get courses by programs and specialization with filtering
+ * @access Private (All authenticated users - students, teachers, admins)
+ */
+router.get(
+  '/by-programs-specialization',
+  validate(getCoursesByProgramsAndSpecializationValidation),
+  CourseController.getCoursesByProgramsAndSpecializationHandler
+);
 
 /**
  * Custom validation for SUPER_ADMIN tenant_id requirement
