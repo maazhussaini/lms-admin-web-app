@@ -132,6 +132,20 @@ export const SYSTEM_USER_FIELD_MAPPINGS: FieldMappingConfig = {
 };
 
 /**
+ * Client-specific field mappings
+ */
+export const CLIENT_FIELD_MAPPINGS: FieldMappingConfig = {
+  ...COMMON_FIELD_MAPPINGS,
+  'clientId': 'client_id',
+  'fullName': 'full_name',
+  'emailAddress': 'email_address',
+  'dialCode': 'dial_code',
+  'phoneNumber': 'phone_number',
+  'address': 'address',
+  'clientStatus': 'client_status'
+};
+
+/**
  * Map API field name to database column name using field mapping configuration
  * 
  * @param apiFieldName API field name (camelCase)

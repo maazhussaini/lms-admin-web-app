@@ -19,8 +19,8 @@ import {
 } from '@/utils/async-handler.utils';
 import { ApiError } from '@/utils/api-error.utils';
 
-// Initialize client service
-const clientService = new ClientService();
+// Use singleton client service
+const clientService = ClientService.getInstance();
 
 export class ClientController {
   // ==================== CLIENT MANAGEMENT ====================
