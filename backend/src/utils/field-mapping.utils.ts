@@ -146,6 +146,30 @@ export const CLIENT_FIELD_MAPPINGS: FieldMappingConfig = {
 };
 
 /**
+ * Tenant phone number-specific field mappings
+ */
+export const TENANT_PHONE_FIELD_MAPPINGS: FieldMappingConfig = {
+  ...COMMON_FIELD_MAPPINGS,
+  'tenantPhoneNumberId': 'tenant_phone_number_id',
+  'phoneNumber': 'phone_number',
+  'dialCode': 'dial_code',
+  'isoCountryCode': 'iso_country_code',
+  'isPrimary': 'is_primary',
+  'contactType': 'contact_type'
+};
+
+/**
+ * Tenant email address-specific field mappings
+ */
+export const TENANT_EMAIL_FIELD_MAPPINGS: FieldMappingConfig = {
+  ...COMMON_FIELD_MAPPINGS,
+  'tenantEmailAddressId': 'tenant_email_address_id',
+  'emailAddress': 'email_address',
+  'isPrimary': 'is_primary',
+  'contactType': 'contact_type'
+};
+
+/**
  * Map API field name to database column name using field mapping configuration
  * 
  * @param apiFieldName API field name (camelCase)

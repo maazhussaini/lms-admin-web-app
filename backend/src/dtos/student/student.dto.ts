@@ -1,5 +1,6 @@
-import { body, ValidationChain } from 'express-validator';
+import { body, query, ValidationChain } from 'express-validator';
 import { Gender, StudentStatus } from '@/types/enums.types';
+import { BaseFilterDto } from '@/utils/service.types';
 
 /**
  * DTO interface for creating a new student
@@ -58,6 +59,46 @@ export interface UpdateStudentProfileDto {
   address?: string | null;
   date_of_birth?: string | null;
   profile_picture_url?: string | null;
+}
+
+/**
+ * DTO interface for filtering students in list operations
+ */
+export interface StudentFilterDto extends BaseFilterDto {
+  status?: StudentStatus;
+  gender?: Gender;
+  countryId?: number;
+  stateId?: number;
+  cityId?: number;
+  ageMin?: number;
+  ageMax?: number;
+}
+
+/**
+ * Response DTO for student entities
+ */
+export interface StudentResponseDto {
+  student_id: number;
+  full_name: string;
+  first_name: string;
+  middle_name?: string;
+  last_name: string;
+  username: string;
+  primary_email?: string;
+  country_id: number;
+  state_id: number;
+  city_id: number;
+  address?: string;
+  date_of_birth?: string;
+  profile_picture_url?: string;
+  zip_code?: string;
+  age?: number;
+  gender?: Gender;
+  student_status: StudentStatus;
+  referral_type?: string;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
 }
 
 /**
@@ -327,4 +368,68 @@ export const updateStudentProfileValidation: ValidationChain[] = [
     .isURL().withMessage('Profile picture URL must be a valid URL')
     .trim()
     .isLength({ max: 500 }).withMessage('Profile picture URL cannot exceed 500 characters')
+];
+
+/**
+ * Validation chains for filtering students
+ */
+export const studentFilterValidation: ValidationChain[] = [
+  query('search')
+    .optional()
+    .isString().withMessage('Search must be a string')
+    .trim()
+    .isLength({ min: 1, max: 255 }).withMessage('Search must be between 1 and 255 characters'),
+
+  query('status')
+    .optional()
+    .isIn(Object.values(StudentStatus)).withMessage('Status must be a valid student status'),
+
+  query('gender')
+    .optional()
+    .isIn(Object.values(Gender)).withMessage('Gender must be a valid value'),
+
+  query('countryId')
+    .optional()
+    .isInt({ min: 1 }).withMessage('Country ID must be a positive integer')
+    .toInt(),
+
+  query('stateId')
+    .optional()
+    .isInt({ min: 1 }).withMessage('State ID must be a positive integer')
+    .toInt(),
+
+  query('cityId')
+    .optional()
+    .isInt({ min: 1 }).withMessage('City ID must be a positive integer')
+    .toInt(),
+
+  query('ageMin')
+    .optional()
+    .isInt({ min: 0, max: 150 }).withMessage('Minimum age must be between 0 and 150')
+    .toInt(),
+
+  query('ageMax')
+    .optional()
+    .isInt({ min: 0, max: 150 }).withMessage('Maximum age must be between 0 and 150')
+    .toInt(),
+
+  // Common filter fields from BaseFilterDto
+  query('page')
+    .optional()
+    .isInt({ min: 1 }).withMessage('Page must be a positive integer')
+    .toInt(),
+
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
+    .toInt(),
+
+  query('sortBy')
+    .optional()
+    .isString().withMessage('Sort by must be a string')
+    .trim(),
+
+  query('sortOrder')
+    .optional()
+    .isIn(['asc', 'desc']).withMessage('Sort order must be "asc" or "desc"')
 ];

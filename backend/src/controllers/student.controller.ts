@@ -17,8 +17,8 @@ import { PrismaClient } from '@prisma/client';
 import logger from '@/config/logger';
 import { UserType } from '@/types/enums.types';
 
-// Initialize student service and prisma
-const studentService = new StudentService();
+// Get student service singleton instance
+const studentService = StudentService.getInstance();
 const prisma = new PrismaClient();
 
 export class StudentController {

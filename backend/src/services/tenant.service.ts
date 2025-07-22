@@ -15,9 +15,9 @@ import {
 } from '@/dtos/tenant/tenant.dto';
 import { NotFoundError, ConflictError, ForbiddenError } from '@/utils/api-error.utils';
 import { TokenPayload } from '@/utils/jwt.utils';
-import { getPrismaQueryOptions, SortOrder } from '@/utils/pagination.utils';
+import { getPrismaQueryOptions } from '@/utils/pagination.utils';
 import { tryCatch } from '@/utils/error-wrapper.utils';
-import { ExtendedPaginationWithFilters, SafeFilterParams } from '@/utils/async-handler.utils';
+import { ExtendedPaginationWithFilters } from '@/utils/async-handler.utils';
 import { 
   TenantStatus,
   ContactType,
@@ -26,34 +26,21 @@ import {
 import logger from '@/config/logger';
 import { BaseListService } from '@/utils/base-list.service';
 import { BaseServiceConfig } from '@/utils/service.types';
-import { TENANT_FIELD_MAPPINGS } from '@/utils/field-mapping.utils';
+import { 
+  TENANT_FIELD_MAPPINGS, 
+  CLIENT_FIELD_MAPPINGS,
+  TENANT_PHONE_FIELD_MAPPINGS,
+  TENANT_EMAIL_FIELD_MAPPINGS
+} from '@/utils/field-mapping.utils';
+import {
+  convertFiltersToDto,
+  buildSearchFilters,
+  mergeFilters
+} from '@/utils/filter-builders.utils';
+import { buildSorting } from '@/utils/field-mapping.utils';
 
 // Initialize Prisma client
 const prisma = new PrismaClient();
-
-/**
- * Filter DTO for tenant phone number queries
- */
-interface TenantPhoneFilterDto {
-  contactType?: ContactType;
-  isPrimary?: boolean;
-}
-
-/**
- * Filter DTO for tenant email address queries
- */
-interface TenantEmailFilterDto {
-  contactType?: ContactType;
-  isPrimary?: boolean;
-}
-
-/**
- * Filter DTO for tenant client queries
- */
-interface TenantClientFilterDto {
-  search?: string;
-  status?: string;
-}
 
 /**
  * Configuration for Tenant service operations
@@ -262,14 +249,11 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
         throw new ForbiddenError('Cannot access clients for another tenant');
       }
 
-      // Convert filter params to structured DTO
-      const filterDto = this.convertTenantClientFiltersToDto(params.filters);
+      // Build filters using modern utilities
+      const filters = this.buildTenantClientFilters(tenantId, params);
       
-      // Build filters using the structured DTO
-      const filters = this.buildTenantClientFiltersFromDto(filterDto, tenantId);
-      
-      // Use pagination utilities to build sorting
-      const sorting = this.buildTenantClientSorting(params);
+      // Use modern sorting utilities
+      const sorting = buildSorting(params, CLIENT_FIELD_MAPPINGS);
       
       // Get query options using pagination utilities
       const queryOptions = getPrismaQueryOptions(
@@ -546,13 +530,10 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
       }
 
       // Convert filter params to structured DTO
-      const filterDto = this.convertTenantPhoneFiltersToDto(params.filters);
+      const filters = this.buildTenantPhoneFilters(tenantId, params);
       
-      // Build filters using the structured DTO
-      const filters = this.buildTenantPhoneFiltersFromDto(filterDto, tenantId);
-      
-      // Use pagination utilities to build sorting
-      const sorting = this.buildTenantPhoneSorting(params);
+      // Use modern sorting utilities
+      const sorting = buildSorting(params, TENANT_PHONE_FIELD_MAPPINGS);
       
       // Get query options using pagination utilities
       const queryOptions = getPrismaQueryOptions(
@@ -893,13 +874,10 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
       }
 
       // Convert filter params to structured DTO
-      const filterDto = this.convertTenantEmailFiltersToDto(params.filters);
+      const filters = this.buildTenantEmailFilters(tenantId, params);
       
-      // Build filters using the structured DTO
-      const filters = this.buildTenantEmailFiltersFromDto(filterDto, tenantId);
-      
-      // Use pagination utilities to build sorting
-      const sorting = this.buildTenantEmailSorting(params);
+      // Use modern sorting utilities
+      const sorting = buildSorting(params, TENANT_EMAIL_FIELD_MAPPINGS);
       
       // Get query options using pagination utilities
       const queryOptions = getPrismaQueryOptions(
@@ -1119,212 +1097,96 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
     });
   }
 
+  // ==================== MODERN UTILITY METHODS ====================
+  
   /**
-   * Convert SafeFilterParams to structured tenant client DTO
+   * Build filters for tenant clients using modern utilities
    */
-  private convertTenantClientFiltersToDto(filterParams: SafeFilterParams): TenantClientFilterDto {
-    const dto: TenantClientFilterDto = {};
-    
-    if (filterParams['search'] && typeof filterParams['search'] === 'string') {
-      dto.search = filterParams['search'];
-    }
-    
-    if (filterParams['status'] && typeof filterParams['status'] === 'string') {
-      dto.status = filterParams['status'];
-    }
-    
-    return dto;
-  }
+  private buildTenantClientFilters(
+    tenantId: number,
+    params: ExtendedPaginationWithFilters
+  ): Record<string, any> {
+    // Convert raw filter params to structured DTO
+    const filterDto = convertFiltersToDto(params.filters, {
+      stringFields: ['search'],
+      booleanFields: [],
+      numberFields: [],
+      enumFields: {}
+    });
 
-  /**
-   * Convert SafeFilterParams to structured tenant phone DTO
-   */
-  private convertTenantPhoneFiltersToDto(filterParams: SafeFilterParams): TenantPhoneFilterDto {
-    const dto: TenantPhoneFilterDto = {};
-    
-    if (filterParams['contactType']) {
-      dto.contactType = filterParams['contactType'] as ContactType;
-    }
-
-    if (filterParams['isPrimary'] !== undefined) {
-      dto.isPrimary = filterParams['isPrimary'] === 'true' || filterParams['isPrimary'] === true;
-    }
-    
-    return dto;
-  }
-
-  /**
-   * Convert SafeFilterParams to structured tenant email DTO
-   */
-  private convertTenantEmailFiltersToDto(filterParams: SafeFilterParams): TenantEmailFilterDto {
-    const dto: TenantEmailFilterDto = {};
-    
-    if (filterParams['contactType']) {
-      dto.contactType = filterParams['contactType'] as ContactType;
-    }
-
-    if (filterParams['isPrimary'] !== undefined) {
-      dto.isPrimary = filterParams['isPrimary'] === 'true' || filterParams['isPrimary'] === true;
-    }
-    
-    return dto;
-  }
-
-  /**
-   * Build Prisma filters from structured tenant client DTO
-   */
-  private buildTenantClientFiltersFromDto(filterDto: TenantClientFilterDto, tenantId: number): Record<string, any> {
-    const where: Record<string, any> = {
+    // Build base filters
+    const baseFilters = {
       tenant_id: tenantId,
       is_deleted: false
     };
 
-    if (filterDto.search) {
-      where['OR'] = [
-        {
-          full_name: {
-            contains: filterDto.search,
-            mode: 'insensitive'
-          }
-        },
-        {
-          email_address: {
-            contains: filterDto.search,
-            mode: 'insensitive'
-          }
-        }
-      ];
+    // Build search filters
+    const searchFilters = filterDto.search ? 
+      buildSearchFilters(filterDto.search, ['full_name', 'email_address']) : {};
+
+    // Build enum filters
+    const enumFilters: Record<string, any> = {};
+    const rawFilters = params.filters as any;
+    if (rawFilters?.status) {
+      enumFilters['client_status'] = rawFilters.status;
     }
 
-    if (filterDto.status) {
-      where['client_status'] = filterDto.status;
-    }
-
-    return where;
+    // Merge all filters
+    return mergeFilters([baseFilters, searchFilters, enumFilters]);
   }
 
   /**
-   * Build Prisma filters from structured tenant phone DTO
+   * Build filters for tenant phone numbers using modern utilities
    */
-  private buildTenantPhoneFiltersFromDto(filterDto: TenantPhoneFilterDto, tenantId: number): Record<string, any> {
-    const where: Record<string, any> = {
+  private buildTenantPhoneFilters(
+    tenantId: number,
+    params: ExtendedPaginationWithFilters
+  ): Record<string, any> {
+    // Build base filters
+    const baseFilters = {
       tenant_id: tenantId,
       is_deleted: false
     };
 
-    if (filterDto.contactType) {
-      where['contact_type'] = filterDto.contactType;
+    // Build specific filters
+    const specificFilters: Record<string, any> = {};
+    const rawFilters = params.filters as any;
+    if (rawFilters?.contactType) {
+      specificFilters['contact_type'] = rawFilters.contactType;
+    }
+    if (rawFilters?.isPrimary !== undefined) {
+      specificFilters['is_primary'] = rawFilters.isPrimary;
     }
 
-    if (filterDto.isPrimary !== undefined) {
-      where['is_primary'] = filterDto.isPrimary;
-    }
-
-    return where;
+    // Merge all filters
+    return mergeFilters([baseFilters, specificFilters]);
   }
 
   /**
-   * Build Prisma filters from structured tenant email DTO
+   * Build filters for tenant email addresses using modern utilities
    */
-  private buildTenantEmailFiltersFromDto(filterDto: TenantEmailFilterDto, tenantId: number): Record<string, any> {
-    const where: Record<string, any> = {
+  private buildTenantEmailFilters(
+    tenantId: number,
+    params: ExtendedPaginationWithFilters
+  ): Record<string, any> {
+    // Build base filters
+    const baseFilters = {
       tenant_id: tenantId,
       is_deleted: false
     };
 
-    if (filterDto.contactType) {
-      where['contact_type'] = filterDto.contactType;
+    // Build specific filters
+    const specificFilters: Record<string, any> = {};
+    const rawFilters = params.filters as any;
+    if (rawFilters?.contactType) {
+      specificFilters['contact_type'] = rawFilters.contactType;
+    }
+    if (rawFilters?.isPrimary !== undefined) {
+      specificFilters['is_primary'] = rawFilters.isPrimary;
     }
 
-    if (filterDto.isPrimary !== undefined) {
-      where['is_primary'] = filterDto.isPrimary;
-    }
-
-    return where;
-  }
-
-  /**
-   * Build Prisma sorting from pagination parameters for tenant clients
-   */
-  private buildTenantClientSorting(params: ExtendedPaginationWithFilters): Record<string, SortOrder> {
-    const fieldMapping: Record<string, string> = {
-      'clientId': 'client_id',
-      'fullName': 'full_name',
-      'emailAddress': 'email_address',
-      'createdAt': 'created_at',
-      'updatedAt': 'updated_at'
-    };
-
-    if (params.sorting && Object.keys(params.sorting).length > 0) {
-      const mappedSorting: Record<string, SortOrder> = {};
-      Object.entries(params.sorting).forEach(([field, order]) => {
-        const dbField = fieldMapping[field] || field;
-        mappedSorting[dbField] = order;
-      });
-      return mappedSorting;
-    }
-
-    const sortBy = params.sortBy || 'created_at';
-    const sortOrder = params.sortOrder || 'desc';
-    const dbField = fieldMapping[sortBy] || sortBy;
-    
-    return { [dbField]: sortOrder };
-  }
-
-  /**
-   * Build Prisma sorting from pagination parameters for tenant phone numbers
-   */
-  private buildTenantPhoneSorting(params: ExtendedPaginationWithFilters): Record<string, SortOrder> {
-    const fieldMapping: Record<string, string> = {
-      'tenantPhoneNumberId': 'tenant_phone_number_id',
-      'phoneNumber': 'phone_number',
-      'contactType': 'contact_type',
-      'createdAt': 'created_at',
-      'updatedAt': 'updated_at'
-    };
-
-    if (params.sorting && Object.keys(params.sorting).length > 0) {
-      const mappedSorting: Record<string, SortOrder> = {};
-      Object.entries(params.sorting).forEach(([field, order]) => {
-        const dbField = fieldMapping[field] || field;
-        mappedSorting[dbField] = order;
-      });
-      return mappedSorting;
-    }
-
-    const sortBy = params.sortBy || 'created_at';
-    const sortOrder = params.sortOrder || 'desc';
-    const dbField = fieldMapping[sortBy] || sortBy;
-    
-    return { [dbField]: sortOrder };
-  }
-
-  /**
-   * Build Prisma sorting from pagination parameters for tenant email addresses
-   */
-  private buildTenantEmailSorting(params: ExtendedPaginationWithFilters): Record<string, SortOrder> {
-    const fieldMapping: Record<string, string> = {
-      'tenantEmailAddressId': 'tenant_email_address_id',
-      'emailAddress': 'email_address',
-      'contactType': 'contact_type',
-      'createdAt': 'created_at',
-      'updatedAt': 'updated_at'
-    };
-
-    if (params.sorting && Object.keys(params.sorting).length > 0) {
-      const mappedSorting: Record<string, SortOrder> = {};
-      Object.entries(params.sorting).forEach(([field, order]) => {
-        const dbField = fieldMapping[field] || field;
-        mappedSorting[dbField] = order;
-      });
-      return mappedSorting;
-    }
-
-    const sortBy = params.sortBy || 'created_at';
-    const sortOrder = params.sortOrder || 'desc';
-    const dbField = fieldMapping[sortBy] || sortBy;
-    
-    return { [dbField]: sortOrder };
+    // Merge all filters
+    return mergeFilters([baseFilters, specificFilters]);
   }
 }
 

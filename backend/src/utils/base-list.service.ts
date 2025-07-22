@@ -91,7 +91,7 @@ export abstract class BaseListService<TEntity, TFilterDto extends BaseFilterDto>
       );
 
       // Step 5: Execute queries with include/select options
-      const includeOptions = this.getIncludeOptions?.() || {};
+      const includeOptions = this.getIncludeOptions() || {};
       const tableName = this.getTableName();
       const [entities, total] = await Promise.all([
         (this.prisma as any)[tableName].findMany({
@@ -195,14 +195,18 @@ export abstract class BaseListService<TEntity, TFilterDto extends BaseFilterDto>
   protected abstract getTableName(): string;
 
   /**
-   * Get include options for Prisma queries (optional)
+   * Get include options for Prisma queries (optional - can be overridden)
    */
-  protected getIncludeOptions?(): Record<string, any>;
+  protected getIncludeOptions(): Record<string, any> | undefined {
+    return undefined;
+  }
 
   /**
-   * Format entities before returning (optional)
+   * Format entities before returning (optional - can be overridden)
    */
-  protected formatEntities?(entities: TEntity[]): TEntity[];
+  protected formatEntities(entities: TEntity[]): TEntity[] {
+    return entities;
+  }
 
   /**
    * Create log context for error handling
