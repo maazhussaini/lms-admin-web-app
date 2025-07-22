@@ -357,7 +357,7 @@ export class CourseController {
    * @access Private (STUDENT only)
    */
   static getStudentProfileCoursesByProgramsAndSpecializationHandler = createListHandler(
-    async (paginationParams: ExtendedPaginationWithFilters, req: AuthenticatedRequest) => {
+    async (_paginationParams: ExtendedPaginationWithFilters, req: AuthenticatedRequest) => {
       if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
@@ -402,7 +402,6 @@ export class CourseController {
 
       logger.debug('Getting courses by programs and specialization for student profile', {
         params,
-        paginationParams,
         studentId: student.student_id,
         requestingUserId: requestingUser.id,
         userType: requestingUser.user_type
@@ -410,17 +409,12 @@ export class CourseController {
 
       const result = await courseService.getCoursesByProgramsAndSpecialization(
         params,
-        requestingUser,
-        {
-          page: paginationParams.page,
-          limit: paginationParams.limit,
-          skip: paginationParams.skip
-        }
+        student.student_id
       );
 
       return {
-        items: result.items,
-        total: result.total
+        items: result,
+        total: result.length
       };
     },
     {
