@@ -1,0 +1,54 @@
+# Learning Management System (LMS)
+
+> Comprehensive, secure, and scalable platform for educational content delivery, management, analytics, and protection. Supports web and mobile experiences for institutions, instructors, and students, with advanced video security, modular APIs, and shared type safety.
+
+The LMS repository is organized into modular workspaces:
+- **Backend**: Powers business logic, RESTful APIs, authentication, real-time features, and data management. It is the core engine for all platform operations, with robust security, data seeding, and extensive documentation for models and endpoints.
+- **Student Frontend**: Modern, responsive React web portal for students, featuring course management, assignments, quizzes, grades, notifications, and secure authentication. It emphasizes modular architecture, API patterns, and advanced security practices.
+- **Shared**: Centralized TypeScript types, constraints, and entity relationships for consistency and maintainability across all services. Shared code ensures type safety and seamless integration between backend and frontend.
+
+## Documentation
+
+- [Main Project README](README.md): High-level overview, features, tech stack, and setup instructions for the entire LMS platform.
+- [Backend README](backend/README.md): Backend API architecture, features, security enforcement, customization, and troubleshooting guides.
+- [Student Frontend README](student-frontend/README.md): Student portal features, tech stack, usage, security, customization, and troubleshooting.
+- [Shared Types README](shared/README.md): Centralized types, constraints, entity relationships, and usage guidelines for cross-service consistency.
+
+## Specifications
+
+- [Prisma Schema](backend/prisma/schema.prisma): Type-safe database schema for backend services, used for migrations and data modeling.
+- [API Designs](documentation/api-designs/): REST API specifications for core LMS modules, including endpoints for courses, users, assignments, and more.
+- [Tables Documentation](backend/Tables Documentation/academic-institution-models.md): Academic institution data models and relationships.
+- [Tables Documentation](backend/Tables Documentation/course-models.md): Course entity models, structure, and relationships.
+- [Tables Documentation](backend/Tables Documentation/student-models.md): Student data models, attributes, and associations.
+- [Tables Documentation](backend/Tables Documentation/teacher-models.md): Teacher data models and relationships.
+- [Tables Documentation](backend/Tables Documentation/assignment-models.md): Assignment entity models and workflow.
+- [Tables Documentation](backend/Tables Documentation/quiz-models.md): Quiz entity models and logic.
+- [Entity Relationships](shared/entity-relationships/): Shared entity relationship mappings for consistent data contracts across backend and frontend.
+
+## Examples
+
+- [Backend Socket Client Example](backend/examples/socket-client.js): Demonstrates backend real-time features using Socket.IO for notifications and live updates.
+- [Password Hashing Utilities](backend/scripts/README.md): Secure password hashing and CLI utilities for authentication workflows.
+- [Student Frontend API Usage Examples](student-frontend/src/examples/ApiUsageExamples.tsx): Advanced API patterns, React hooks, and error handling in the student portal.
+
+## Configuration
+
+- [Backend Package Configuration](backend/package.json): Backend project metadata, dependencies, and scripts.
+- [Backend TypeScript Config](backend/tsconfig.json): TypeScript build configuration for backend services.
+- [Backend Jest Config](backend/jest.config.js): Testing configuration for backend, using Jest and Supertest.
+- [Shared Package Configuration](shared/package.json): Shared types project metadata and build settings.
+- [Student Frontend Package Configuration](student-frontend/package.json): Student portal project metadata and scripts.
+- [Student Frontend Tailwind Config](student-frontend/tailwind.config.ts): Styling configuration for student portal, using Tailwind CSS.
+
+## Best Practices & Security
+
+- All sensitive operations require authentication and permission checks. Rate limiting, input validation, and secure password storage are enforced by default in the backend.
+- Use shared types and constraints for consistency across backend and frontend. Update shared types first when evolving data models, then propagate changes to dependent services.
+- Environment variables are used for secrets and configuration. See `.env.example` in backend for reference.
+
+## Customization & Troubleshooting
+
+- Backend: Update Prisma models, add new API endpoints, extend Socket.IO features, and customize data seeding scripts as needed.
+- Student Frontend: Customize theme, routing, and API integration for tailored user experiences.
+- Troubleshooting guides are available in backend and student-frontend README files for common issues and solutions.
