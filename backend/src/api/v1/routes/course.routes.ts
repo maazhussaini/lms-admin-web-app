@@ -111,17 +111,6 @@ router.get(
 router.use(authenticate);
 
 /**
- * @route GET /api/v1/courses/by-programs-specialization
- * @description Get courses by programs and specialization with filtering
- * @access Private (All authenticated users - students, teachers, admins)
- */
-router.get(
-  '/by-programs-specialization',
-  validate(getCoursesByProgramsAndSpecializationValidation),
-  CourseController.getCoursesByProgramsAndSpecializationHandler
-);
-
-/**
  * Custom validation for SUPER_ADMIN tenant_id requirement
  */
 const validateTenantIdForSuperAdmin = [

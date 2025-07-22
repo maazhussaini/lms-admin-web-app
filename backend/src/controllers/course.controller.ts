@@ -180,49 +180,7 @@ export class CourseController {
       message: 'Course deleted successfully'
     }
   );
-
-  /**
-   * Get courses by programs and specialization
-   * @route GET /api/v1/courses/by-programs-specialization
-   * @access Private (All authenticated users - tenant isolation enforced)
-   */
-  static getCoursesByProgramsAndSpecializationHandler = createListHandler(
-    async (paginationParams: ExtendedPaginationWithFilters, req: AuthenticatedRequest) => {
-      const params: GetCoursesByProgramsAndSpecializationDto = {
-        course_type: req.query['course_type'] as string | undefined,
-        program_id: req.query['program_id'] ? parseInt(req.query['program_id'] as string, 10) : undefined,
-        specialization_id: req.query['specialization_id'] ? parseInt(req.query['specialization_id'] as string, 10) : undefined,
-        search_query: req.query['search_query'] as string | undefined,
-        student_id: req.query['student_id'] ? parseInt(req.query['student_id'] as string, 10) : undefined
-      };
-
-      logger.debug('Getting courses by programs and specialization', {
-        params,
-        paginationParams,
-        requestingUserId: req.user?.id,
-        userType: req.user?.user_type
-      });
-
-      const result = await courseService.getCoursesByProgramsAndSpecialization(
-        params,
-        req.user,
-        {
-          page: paginationParams.page,
-          limit: paginationParams.limit,
-          skip: paginationParams.skip
-        }
-      );
-
-      return {
-        items: result.items,
-        total: result.total
-      };
-    },
-    {
-      message: 'Courses retrieved successfully'
-    }
-  );
-
+  
   /**
    * Get course basic details
    * @route GET /api/v1/courses/:courseId/basic-details
@@ -398,8 +356,8 @@ export class CourseController {
    * @route GET /api/v1/student/profile/courses/discover
    * @access Private (STUDENT only)
    */
-  static getStudentProfileCoursesByProgramsAndSpecializationHandler = createRouteHandler(
-    async (req: AuthenticatedRequest) => {
+  static getStudentProfileCoursesByProgramsAndSpecializationHandler = createListHandler(
+    async (paginationParams: ExtendedPaginationWithFilters, req: AuthenticatedRequest) => {
       if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
@@ -444,15 +402,26 @@ export class CourseController {
 
       logger.debug('Getting courses by programs and specialization for student profile', {
         params,
+        paginationParams,
         studentId: student.student_id,
         requestingUserId: requestingUser.id,
         userType: requestingUser.user_type
       });
 
-      return await courseService.getCoursesByProgramsAndSpecialization(
+      const result = await courseService.getCoursesByProgramsAndSpecialization(
         params,
-        requestingUser
+        requestingUser,
+        {
+          page: paginationParams.page,
+          limit: paginationParams.limit,
+          skip: paginationParams.skip
+        }
       );
+
+      return {
+        items: result.items,
+        total: result.total
+      };
     },
     {
       message: 'Courses retrieved successfully'

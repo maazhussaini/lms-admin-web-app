@@ -3,15 +3,14 @@
  * @description Service for managing students with modern BaseListService pattern
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, CourseStatus } from '@prisma/client';
 import {
   CreateStudentDto,
   UpdateStudentDto,
   UpdateStudentProfileDto,
   StudentFilterDto
 } from '@/dtos/student/student.dto';
-import { EnrolledCourseResponse } from '@/dtos/student/enrolled-courses-by-student.dto';
-import { NotFoundError, ConflictError, ForbiddenError } from '@/utils/api-error.utils';
+import { NotFoundError, ConflictError, ForbiddenError, BadRequestError } from '@/utils/api-error.utils';
 import { TokenPayload } from '@/utils/jwt.utils';
 import { tryCatch } from '@/utils/error-wrapper.utils';
 import { ExtendedPaginationWithFilters } from '@/utils/async-handler.utils';
@@ -24,7 +23,6 @@ import logger from '@/config/logger';
 import { BaseListService, BaseListServiceConfig } from '@/utils/base-list.service';
 import { STUDENT_FIELD_MAPPINGS } from '@/utils/field-mapping.utils';
 import { hashPassword } from '@/utils/password.utils';
-import { formatDateRange, formatDecimalHours } from '@/utils/date-format.utils';
 
 // Initialize Prisma client
 const prisma = new PrismaClient();
@@ -153,22 +151,53 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
    * Create a new student
    * 
    * @param data Student data from validated DTO
-   * @param tenantId Tenant ID for multi-tenant isolation
-   * @param adminUserId System user ID for audit trail
+   * @param requestingUser User requesting the student creation
    * @param clientIp IP address of the request
    * @returns Newly created student
    */
   async createStudent(
     data: CreateStudentDto,
-    tenantId: number,
-    adminUserId: number,
+    requestingUser: TokenPayload,
     clientIp?: string
   ) {
+    // Validate that we have a requesting user
+    if (!requestingUser || !requestingUser.user_type) {
+      throw new BadRequestError('Invalid requesting user context');
+    }
+
+    // Determine tenant ID based on user type
+    let tenantId: number;
+    
+    if (requestingUser.user_type === UserType.SUPER_ADMIN) {
+      // SUPER_ADMIN must provide tenant_id in request body
+      if (!data.tenant_id) {
+        throw new BadRequestError('Tenant ID is required when creating a student as SUPER_ADMIN', 'MISSING_TENANT_ID');
+      }
+      tenantId = data.tenant_id;
+    } else {
+      // Regular admins use their own tenant
+      if (!requestingUser.tenantId) {
+        throw new BadRequestError('Tenant ID is required', 'MISSING_TENANT_ID');
+      }
+      tenantId = requestingUser.tenantId;
+      
+      // Ignore tenant_id from body for non-SUPER_ADMIN users
+      if (data.tenant_id && data.tenant_id !== tenantId) {
+        logger.warn('Non-SUPER_ADMIN user attempted to specify different tenant_id', {
+          userId: requestingUser.id,
+          userType: requestingUser.user_type,
+          requestedTenantId: data.tenant_id,
+          userTenantId: tenantId
+        });
+      }
+    }
+
     return tryCatch(async () => {
       logger.debug('Creating student', {
         username: data.username,
         tenantId,
-        adminUserId
+        requestingUserId: requestingUser.id,
+        userType: requestingUser.user_type
       });
 
       // Check if username exists within tenant
@@ -225,8 +254,8 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
             referral_type: data.referral_type || null,
             is_active: true,
             is_deleted: false,
-            created_by: adminUserId,
-            updated_by: adminUserId,
+            created_by: requestingUser.id,
+            updated_by: requestingUser.id,
             created_ip: clientIp || null,
             updated_ip: clientIp || null
           }
@@ -241,8 +270,8 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
             is_primary: true,
             is_active: true,
             is_deleted: false,
-            created_by: adminUserId,
-            updated_by: adminUserId,
+            created_by: requestingUser.id,
+            updated_by: requestingUser.id,
             created_ip: clientIp || null,
             updated_ip: clientIp || null
           }
@@ -257,7 +286,7 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
     }, {
       context: {
         tenantId,
-        adminUserId,
+        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId },
         username: data.username
       }
     });
@@ -676,22 +705,22 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
   }
 
   /**
-   * Get enrolled courses by student ID
+   * Get enrolled courses by student ID with pagination, sorting, and filtering
    * 
    * @param studentId Student identifier
-   * @param searchQuery Optional search query to filter course names
    * @param requestingUser User requesting the data
-   * @returns List of enrolled courses with comprehensive details
+   * @param params Pagination and filtering parameters
+   * @returns List of enrolled courses with pagination metadata
    */
   async getEnrolledCoursesByStudentId(
     studentId: number,
-    searchQuery: string = '',
-    requestingUser: TokenPayload
-  ): Promise<EnrolledCourseResponse[]> {
+    requestingUser: TokenPayload,
+    params: ExtendedPaginationWithFilters
+  ): Promise<{ items: any[]; pagination: any }> {
     return tryCatch(async () => {
       logger.debug('Getting enrolled courses by student ID', {
         studentId,
-        searchQuery,
+        paginationParams: params,
         requestingUserId: requestingUser.id
       });
 
@@ -718,144 +747,79 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
         }
       }
 
-      // Build search filter
+      // Build search filter from pagination params
+      const searchQuery = params.filters?.['search'] || '';
       const searchFilter = searchQuery 
         ? {
             course_name: {
-              contains: searchQuery,
-              mode: 'insensitive' as any
+              contains: searchQuery as string,
+              mode: 'insensitive' as const
             }
           }
         : {};
 
-      // Query enrolled courses with all required joins
-      const enrolledCourses = await prisma.enrollment.findMany({
-        where: {
-          student_id: studentId,
+      // Calculate pagination
+      const page = params.page || 1;
+      const limit = params.limit || 10;
+      const skip = params.skip ?? (page - 1) * limit;
+
+      // Build where clause for enrolled courses
+      const whereClause = {
+        student_id: studentId,
+        is_active: true,
+        is_deleted: false,
+        course: {
           is_active: true,
           is_deleted: false,
-          course: {
-            is_active: true,
-            is_deleted: false,
-            course_status: 'PUBLIC',
-            tenant_id: student.tenant_id,
-            ...searchFilter
-          }
-        },
+          course_status: CourseStatus.PUBLIC,
+          tenant_id: student.tenant_id,
+          ...searchFilter
+        }
+      };
+
+      // Get total count for pagination
+      const total = await prisma.enrollment.count({
+        where: whereClause
+      });
+
+      // Query enrolled courses with pagination
+      const enrollments = await prisma.enrollment.findMany({
+        where: whereClause,
         include: {
-          course: {
-            include: {
-              teacher_courses: {
-                where: {
-                  is_active: true,
-                  is_deleted: false
-                },
-                include: {
-                  teacher: {
-                    select: {
-                      full_name: true
-                    }
-                  }
-                }
-              },
-              course_sessions: {
-                where: {
-                  is_active: true,
-                  is_deleted: false
-                },
-                select: {
-                  start_date: true,
-                  end_date: true
-                },
-                orderBy: {
-                  start_date: 'asc'
-                },
-                take: 1
-              }
-            }
-          },
-          specialization_program: {
-            include: {
-              specialization: {
-                select: {
-                  specialization_name: true
-                }
-              },
-              program: {
-                select: {
-                  program_name: true
-                }
-              }
-            }
-          }
+          course: true // Include full course object
         },
         orderBy: {
           enrolled_at: 'desc'
-        }
-      });
-
-      // Get student course progress separately
-      const studentProgressData = await prisma.studentCourseProgress.findMany({
-        where: {
-          student_id: studentId,
-          course_id: {
-            in: enrolledCourses.map(e => e.course_id)
-          },
-          is_active: true,
-          is_deleted: false
         },
-        select: {
-          course_id: true,
-          overall_progress_percentage: true
-        }
+        skip,
+        take: limit
       });
 
-      // Create a map for quick progress lookup
-      const progressMap = new Map(
-        studentProgressData.map(p => [p.course_id, p.overall_progress_percentage])
-      );
+      // Extract course objects
+      const courses = enrollments.map(enrollment => (enrollment as any).course);
 
-      // Format the response
-      const formattedCourses = enrolledCourses.map(enrollment => {
-        const course = enrollment.course;
-        const specializationProgram = enrollment.specialization_program;
-        const teacher = course.teacher_courses[0]?.teacher;
-        const courseSession = course.course_sessions[0];
-        const progressPercentage = progressMap.get(course.course_id) || 0;
+      // Calculate pagination metadata
+      const totalPages = Math.ceil(total / limit);
+      const hasNext = page < totalPages;
+      const hasPrev = page > 1;
 
-        // Format dates
-        const formattedDates = formatDateRange(
-          courseSession?.start_date || null,
-          courseSession?.end_date || null
-        );
+      const pagination = {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext,
+        hasPrev
+      };
 
-        // Format hours
-        const formattedHours = formatDecimalHours(
-          course.course_total_hours ? Number(course.course_total_hours) : null
-        );
-
-        return {
-          enrollment_id: enrollment.enrollment_id,
-          specialization_program_id: enrollment.specialization_program_id,
-          course_id: course.course_id,
-          specialization_id: specializationProgram?.specialization_id || null,
-          program_id: specializationProgram?.program_id || null,
-          course_name: course.course_name,
-          start_date: formattedDates.start_date,
-          end_date: formattedDates.end_date,
-          specialization_name: specializationProgram?.specialization?.specialization_name || null,
-          program_name: specializationProgram?.program?.program_name || null,
-          teacher_name: teacher?.full_name || 'Not Assigned',
-          course_total_hours: formattedHours,
-          overall_progress_percentage: progressPercentage
-        };
-      });
-
-      return formattedCourses;
+      return {
+        items: courses,
+        pagination
+      };
     }, {
       context: {
         studentId,
-        searchQuery,
+        paginationParams: params,
         requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId }
       }
     });
