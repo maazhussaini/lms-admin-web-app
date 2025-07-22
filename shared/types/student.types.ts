@@ -229,13 +229,13 @@ export interface StudentInstitute extends MultiTenantAuditFields {
 
 // Type guards for runtime type checking
 export const isGender = (value: any): value is Gender => 
-  Object.values(Gender).includes(value);
+  Object.keys(Gender).map(k => (Gender as any)[k]).indexOf(value) !== -1;
 
 export const isStudentStatus = (value: any): value is StudentStatus => 
-  Object.values(StudentStatus).includes(value);
+  Object.keys(StudentStatus).map(k => (StudentStatus as any)[k]).indexOf(value) !== -1;
 
 export const isDeviceType = (value: any): value is DeviceType => 
-  Object.values(DeviceType).includes(value);
+  Object.keys(DeviceType).map(k => (DeviceType as any)[k]).indexOf(value) !== -1;
 
 export const isEnrollmentStatus = (value: any): value is EnrollmentStatus => 
-  Object.values(EnrollmentStatus).includes(value);
+  Object.keys(EnrollmentStatus).map(k => (EnrollmentStatus as any)[k]).indexOf(value) !== -1;

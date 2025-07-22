@@ -1,54 +1,96 @@
-# React + TypeScript + Vite
+# LMS Student Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> Modern, secure, and scalable student portal for Learning Management Systems, built with React, TypeScript, Vite, and Tailwind CSS.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Overview
 
-## Expanding the ESLint configuration
+The LMS Student Frontend is a feature-rich, production-ready web application designed for students to manage courses, assignments, quizzes, grades, and notifications. It leverages a modular architecture, robust API patterns, and advanced security practices for a seamless user experience.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Features
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+- **Course Management**: Browse, enroll, and view course details and lectures.
+- **Assignments & Quizzes**: Submit assignments, take quizzes, and track progress.
+- **Grades & Notifications**: View grades, receive real-time notifications.
+- **Authentication & Security**: Secure token management, route-based access control, and error boundaries.
+- **Responsive UI**: Mobile-first design powered by Tailwind CSS.
+- **API Patterns**: Enhanced API client, React hooks, interceptors, and error handling.
+
+## Tech Stack
+
+- **React 19** & **TypeScript**
+- **Vite** for fast development & builds
+- **Tailwind CSS** for styling
+- **React Query** for data fetching & caching
+- **React Router** for navigation
+- **Axios** for API requests
+- **JWT** for authentication
+
+## Getting Started
+
+```powershell
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Run linter & type checks
+npm run check-all
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Project Structure
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+```text
+student-frontend/
+├── public/           # Static assets (logo, icons, etc.)
+├── src/              # Main source code
+│   ├── api/          # API clients & interceptors
+│   ├── components/   # Reusable UI components
+│   ├── config/       # App & route configuration
+│   ├── context/      # React context providers
+│   ├── hooks/        # Custom React hooks
+│   ├── routes/       # App routing (public/protected)
+│   ├── store/        # State management (React Query)
+│   ├── types/        # TypeScript types
+│   ├── utils/        # Utility functions
+│   └── examples/     # API usage examples
+├── index.html        # App entry point
+├── tailwind.config.ts# Tailwind CSS config
+├── package.json      # Project metadata & scripts
+└── README.md         # Project documentation
 ```
+
+## Usage Examples
+
+See [`src/examples/ApiUsageExamples.tsx`](src/examples/ApiUsageExamples.tsx) for advanced API patterns, hooks, and error handling.
+
+## Security & Best Practices
+
+:::note
+All protected routes require authentication and permission checks. Token storage is encrypted and auto-cleaned for security. See [`src/config/routeConfig.ts`](src/config/routeConfig.ts) for details.
+:::
+
+:::tip
+Use the provided React hooks and error boundaries for robust API integration and graceful error handling.
+:::
+
+## Customization
+
+- **Theme**: Easily customize colors, fonts, and breakpoints in [`src/index.css`](src/index.css) and [`tailwind.config.ts`](tailwind.config.ts).
+- **Routing**: Add or modify routes in [`src/routes/`](src/routes/) and [`src/config/routeConfig.ts`](src/config/routeConfig.ts).
+- **API**: Extend API clients and hooks in [`src/api/`](src/api/) and [`src/hooks/`](src/hooks/).
+
+## Troubleshooting
+
+:::caution
+If you see a warning about insecure context, ensure the app is served over HTTPS for full token security.
+:::
+
+---
+
+For backend integration, see the main project documentation. For UI/UX guidelines, refer to the design documents in the repository.

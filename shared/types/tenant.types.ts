@@ -107,11 +107,14 @@ export interface ClientTenant extends MultiTenantAuditFields {
 }
 
 // Type guards for runtime type checking
-export const isTenantStatus = (value: any): value is TenantStatus => 
-  Object.values(TenantStatus).includes(value);
 
-export const isClientStatus = (value: any): value is ClientStatus => 
-  Object.values(ClientStatus).includes(value);
+export const isTenantStatus = (value: any): value is TenantStatus =>
+  Object.keys(TenantStatus).map(k => (TenantStatus as any)[k]).indexOf(value) !== -1;
 
-export const isContactType = (value: any): value is ContactType => 
-  Object.values(ContactType).includes(value);
+
+export const isClientStatus = (value: any): value is ClientStatus =>
+  Object.keys(ClientStatus).map(k => (ClientStatus as any)[k]).indexOf(value) !== -1;
+
+
+export const isContactType = (value: any): value is ContactType =>
+  Object.keys(ContactType).map(k => (ContactType as any)[k]).indexOf(value) !== -1;

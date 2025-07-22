@@ -7,8 +7,20 @@ export default {
     './src/**/*.{js,ts,jsx,tsx}', // Adjust this glob pattern if needed
   ],
 
-  // Theme customizations are now defined in index.css using @theme
-  // Keep this file primarily for content paths and plugins
+  // Theme customizations
+  theme: {
+    screens: {
+      'xs': '475px',    // Custom extra small breakpoint for mobile-first design
+      'sm': '640px',    // Default small breakpoint
+      'md': '768px',    // Default medium breakpoint
+      'lg': '1024px',   // Default large breakpoint
+      'xl': '1280px',   // Default extra large breakpoint
+      '2xl': '1536px',  // Default 2x large breakpoint
+    },
+    extend: {
+      // Additional theme extensions go here
+    },
+  },
 
   plugins: [
     // Add any Tailwind plugins here

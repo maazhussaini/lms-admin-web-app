@@ -1,4 +1,11 @@
 import { Gender, StudentStatus } from '@prisma/client';
+/**
+ * Password Hashing Note:
+ * ----------------------
+ * The 'password' field should contain a plain password for each student.
+ * The seeder will hash this value at runtime using the project's hashPassword utility.
+ * Do NOT include a 'password_hash' field in this file.
+ */
 // Seed data for students
 export const students = [
   {
@@ -17,7 +24,7 @@ export const students = [
     age: 22,
     gender: Gender.FEMALE,
     username: 'sarah.j',
-    password_hash: 'hashed_pw_11',
+    password: 'Password123!',
     last_login_at: new Date(),
     student_status: StudentStatus.ACTIVE,
     referral_type: null,
@@ -48,7 +55,7 @@ export const students = [
     age: 23,
     gender: Gender.MALE,
     username: 'alex.s',
-    password_hash: 'hashed_pw_12',
+    password: 'Password123!',
     last_login_at: new Date(),
     student_status: StudentStatus.ACTIVE,
     referral_type: null,
@@ -79,7 +86,7 @@ export const students = [
     age: 21,
     gender: Gender.FEMALE,
     username: 'emma.m',
-    password_hash: 'hashed_pw_13',
+    password: 'Password123!',
     last_login_at: new Date(),
     student_status: StudentStatus.ACTIVE,
     referral_type: null,
@@ -110,7 +117,7 @@ export const students = [
     age: 24,
     gender: Gender.MALE,
     username: 'matthew.c',
-    password_hash: 'hashed_pw_14',
+    password: 'Password123!',
     last_login_at: new Date(),
     student_status: StudentStatus.ACTIVE,
     referral_type: null,
@@ -141,7 +148,7 @@ export const students = [
     age: 22,
     gender: Gender.FEMALE,
     username: 'alina.p',
-    password_hash: 'hashed_pw_15',
+    password: 'Password123!',
     last_login_at: new Date(),
     student_status: StudentStatus.ACTIVE,
     referral_type: null,

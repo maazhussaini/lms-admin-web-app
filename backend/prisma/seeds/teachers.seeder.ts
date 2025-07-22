@@ -1,5 +1,15 @@
 import { PrismaClient } from '@prisma/client';
 import { teachers } from '../seed-data/teachers';
+/**
+ * Password Hashing Note:
+ * ----------------------
+ * The teacher seeder now hashes the plain password from seed-data/teachers.ts using the project's hashPassword utility.
+ * This ensures all seeded teachers have secure, production-grade password hashes.
+ * Do NOT include pre-hashed passwords in the seed data; always use a plain password field.
+ * The hashPassword function uses bcrypt with 12 salt rounds (OWASP recommended).
+ * The CLI utility (npm run hash-password) uses the same logic for manual password generation.
+ */
+import { hashPassword } from '../../src/utils/password.utils';
 import { ensureNumber } from './utils/ensureNumber.js';
 
 /**
@@ -80,6 +90,8 @@ export async function seedTeachers(
         mappedDeletedBy = (typeof id === 'number') ? id : null;
       }
     }
+    // Hash the plain password before inserting
+    const passwordHash = await hashPassword(item.password);
     const teacher = await prisma.teacher.create({
       data: {
         tenant_id: mappedTenantId,
@@ -97,7 +109,7 @@ export async function seedTeachers(
         age: item.age,
         gender: item.gender,
         username: item.username,
-        password_hash: item.password_hash,
+        password_hash: passwordHash,
         last_login_at: item.last_login_at,
         is_active: item.is_active,
         is_deleted: item.is_deleted,

@@ -222,7 +222,7 @@ const Button: React.FC<ButtonProps> = ({
   
   // Clear ripples after animation
   useEffect(() => {
-    let timeoutIds: NodeJS.Timeout[] = [];
+    const timeoutIds: NodeJS.Timeout[] = [];
     
     if (ripples.length > 0) {
       const id = setTimeout(() => {

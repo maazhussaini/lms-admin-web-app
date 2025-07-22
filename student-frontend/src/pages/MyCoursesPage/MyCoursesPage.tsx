@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { MyCoursesSearchBar } from '@/components/common/SearchBar';
 import { CourseSelector } from '@/components/features/MyCourses/CourseSelector';
 import CourseCard from '@/components/features/MyCourses/CourseCard';
@@ -31,10 +32,12 @@ const mockCourses: Course[] = [
     course_id: 1,
     course_name: 'Computer Science',
     course_description: 'Software Engineering',
-    course_total_hours: 3.25, // 3 hours 15 minutes
-    course_status: 'PUBLISHED' as const,
     main_thumbnail_url: null,
+    course_status: 'PUBLIC',
+    course_total_hours: 3.25,
     specialization_id: 1,
+    course_type: 'PAID',
+    course_price: 99.99,
     tenant_id: 1,
     is_active: true,
     is_deleted: false,
@@ -49,10 +52,12 @@ const mockCourses: Course[] = [
     course_id: 2,
     course_name: 'Introduction to React',
     course_description: 'Learn the fundamentals of React development and modern web applications',
-    course_total_hours: 8.5,
-    course_status: 'PUBLISHED' as const,
     main_thumbnail_url: null,
+    course_status: 'PUBLIC',
+    course_total_hours: 8.5,
     specialization_id: 1,
+    course_type: 'FREE',
+    course_price: 0,
     tenant_id: 1,
     is_active: true,
     is_deleted: false,
@@ -67,10 +72,12 @@ const mockCourses: Course[] = [
     course_id: 3,
     course_name: 'Advanced JavaScript',
     course_description: 'Master advanced JavaScript concepts including ES6+, async programming, and design patterns',
-    course_total_hours: 12.0,
-    course_status: 'PUBLISHED' as const,
     main_thumbnail_url: null,
+    course_status: 'PUBLIC',
+    course_total_hours: 12.0,
     specialization_id: 1,
+    course_type: 'PAID',
+    course_price: 149.99,
     tenant_id: 1,
     is_active: true,
     is_deleted: false,
@@ -85,10 +92,12 @@ const mockCourses: Course[] = [
     course_id: 4,
     course_name: 'Database Design',
     course_description: 'Learn relational database design principles and SQL optimization',
-    course_total_hours: 6.75,
-    course_status: 'PUBLISHED' as const,
     main_thumbnail_url: null,
+    course_status: 'PUBLIC',
+    course_total_hours: 6.75,
     specialization_id: 2,
+    course_type: 'PAID',
+    course_price: 79.99,
     tenant_id: 1,
     is_active: true,
     is_deleted: false,
@@ -103,10 +112,12 @@ const mockCourses: Course[] = [
     course_id: 5,
     course_name: 'UI/UX Design Fundamentals',
     course_description: 'Master the principles of user interface and user experience design',
-    course_total_hours: 10.5,
-    course_status: 'PUBLISHED' as const,
     main_thumbnail_url: null,
+    course_status: 'PUBLIC',
+    course_total_hours: 10.5,
     specialization_id: 3,
+    course_type: 'PAID',
+    course_price: 129.99,
     tenant_id: 1,
     is_active: true,
     is_deleted: false,
@@ -121,10 +132,12 @@ const mockCourses: Course[] = [
     course_id: 6,
     course_name: 'Digital Marketing Strategy',
     course_description: 'Comprehensive guide to modern digital marketing techniques and tools',
-    course_total_hours: 4.5,
-    course_status: 'PUBLISHED' as const,
     main_thumbnail_url: null,
+    course_status: 'PUBLIC',
+    course_total_hours: 4.5,
     specialization_id: 4,
+    course_type: 'FREE',
+    course_price: 0,
     tenant_id: 1,
     is_active: true,
     is_deleted: false,
@@ -198,6 +211,7 @@ const mockProgress: StudentCourseProgress[] = [
 ];
 
 const MyCoursesPage: React.FC = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'enrolled' | 'unenrolled'>('all');
   const [hasActiveFilters, setHasActiveFilters] = useState(false);
@@ -234,10 +248,8 @@ const MyCoursesPage: React.FC = () => {
    * Handle course card click
    */
   const handleCourseClick = useCallback((courseId: number) => {
-    // TODO: Navigate to course detail page
-    console.log('Course clicked:', courseId);
-    // Example: navigate(`/courses/${courseId}`);
-  }, []);
+    navigate(`/courses/${courseId}`);
+  }, [navigate]);
 
   return (
     <motion.div
@@ -252,21 +264,21 @@ const MyCoursesPage: React.FC = () => {
         {/* Course Selector and Search Bar - Mobile First Responsive */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
           {/* Course Selector - Full width on mobile */}
-          <div className="w-full sm:w-auto flex justify-center sm:justify-start">
-            <CourseSelector
-              activeTab={activeTab}
-              onTabChange={handleTabChange}
-              counts={{
-                all: 50,
-                enrolled: 4,
-                unenrolled: 0
-              }}
-              className="w-full sm:w-auto"
-            />
-          </div>
+        <div className="w-full sm:w-full flex justify-center sm:justify-start">
+          <CourseSelector
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            counts={{
+              all: 50,
+              enrolled: 4,
+              unenrolled: 0
+            }}
+            className="w-full sm:w-full"
+          />
+        </div>
           
           {/* Search Bar - Full width on mobile, expanded on desktop */}
-          <div className="w-full sm:flex-1 sm:max-w-2xl">
+          <div className="w-full sm:w-full">
             <MyCoursesSearchBar
               value={searchQuery}
               onSearch={handleSearch}

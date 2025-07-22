@@ -1,4 +1,11 @@
 import { Gender } from '@prisma/client';
+/**
+ * Password Hashing Note:
+ * ----------------------
+ * The 'password' field should contain a plain password for each teacher.
+ * The seeder will hash this value at runtime using the project's hashPassword utility.
+ * Do NOT include a 'password_hash' field in this file.
+ */
 // Seed data for teachers
 export const teachers = [
   {
@@ -17,7 +24,7 @@ export const teachers = [
     age: 50,
     gender: Gender.MALE,
     username: 'john.w',
-    password_hash: 'hashed_pw_21',
+    password: 'Password123!',
     last_login_at: new Date(),
     is_active: true,
     is_deleted: false,
@@ -46,7 +53,7 @@ export const teachers = [
     age: 45,
     gender: Gender.FEMALE,
     username: 'emily.c',
-    password_hash: 'hashed_pw_22',
+    password: 'Password123!',
     last_login_at: new Date(),
     is_active: true,
     is_deleted: false,
@@ -75,7 +82,7 @@ export const teachers = [
     age: 53,
     gender: Gender.MALE,
     username: 'markus.s',
-    password_hash: 'hashed_pw_23',
+    password: 'Password123!',
     last_login_at: new Date(),
     is_active: true,
     is_deleted: false,
@@ -104,7 +111,7 @@ export const teachers = [
     age: 39,
     gender: Gender.FEMALE,
     username: 'priya.n',
-    password_hash: 'hashed_pw_24',
+    password: 'Password123!',
     last_login_at: new Date(),
     is_active: true,
     is_deleted: false,
@@ -133,7 +140,7 @@ export const teachers = [
     age: 47,
     gender: Gender.MALE,
     username: 'matthew.e',
-    password_hash: 'hashed_pw_25',
+    password: 'Password123!',
     last_login_at: new Date(),
     is_active: true,
     is_deleted: false,
