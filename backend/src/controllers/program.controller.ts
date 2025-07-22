@@ -331,9 +331,33 @@ export class ProgramController {
         filters.is_active = req.query['is_active'] === 'true';
       }
 
+      // Debug logging
+      logger.debug('Getting programs by tenant with filters', {
+        tenantId,
+        filters,
+        userInfo: {
+          id: req.user.id,
+          email: req.user.email,
+          user_type: req.user.user_type
+        },
+        query: req.query
+      });
+
       // Get programs by tenant using service
       const programs = await programService.getProgramsByTenant(tenantId, filters);
       
+      // Debug logging
+      logger.debug('Programs retrieved', {
+        tenantId,
+        programCount: programs.length,
+        programs: programs.map(p => ({ 
+          id: p.program_id, 
+          name: p.program_name, 
+          is_active: p.is_active,
+          tenant_id: p.tenant_id 
+        }))
+      });
+
       // Send successful response
       const response: TApiSuccessResponse<ProgramsByTenantResponse[]> = {
         success: true,

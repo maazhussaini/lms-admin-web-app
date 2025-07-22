@@ -328,6 +328,21 @@ export class ProgramService {
       }
     });
 
+    // Debug logging
+    logger.debug('Database query results', {
+      tenantId,
+      filters,
+      whereClause,
+      resultCount: programs.length,
+      results: programs.map(p => ({
+        program_id: p.program_id,
+        program_name: p.program_name,
+        tenant_id: p.tenant_id,
+        is_active: p.is_active,
+        is_deleted: p.is_deleted
+      }))
+    });
+
     // Map to response DTO format
     return programs.map((program: any) => ({
       program_id: program.program_id,
