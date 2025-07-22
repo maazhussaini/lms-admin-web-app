@@ -463,17 +463,20 @@ export class CourseService extends BaseListService<any, CourseFilterDto> {
       const specialization = courseSpecialization?.specialization;
       const specializationProgram = specialization?.specialization_program[0];
 
-      // Calculate purchase status
-        let purchaseStatus: string;
-        if (!enrollment && (!course.course_price || course.course_price.toNumber() === 0)) {
-          purchaseStatus = 'Free';
-        } else if (!enrollment && course.course_price && course.course_price.toNumber() > 0) {
-          purchaseStatus = `Buy: $${course.course_price.toNumber()}`;
-        } else if (enrollment) {
-          purchaseStatus = 'Purchased';
-        } else {
-          purchaseStatus = 'N/A';
-        }
+      // Calculate purchase status and flags
+      let purchaseStatus: string;
+      const isPurchased = enrollment !== null;
+      const isFree = !course.course_price || course.course_price.toNumber() === 0;
+      
+      if (!enrollment && (!course.course_price || course.course_price.toNumber() === 0)) {
+        purchaseStatus = 'Free';
+      } else if (!enrollment && course.course_price && course.course_price.toNumber() > 0) {
+        purchaseStatus = `Buy: $${course.course_price.toNumber()}`;
+      } else if (enrollment) {
+        purchaseStatus = 'Purchased';
+      } else {
+        purchaseStatus = 'N/A';
+      }
 
       // Format dates
       const formattedDates = formatDateRange(
@@ -493,7 +496,9 @@ export class CourseService extends BaseListService<any, CourseFilterDto> {
         end_date: formattedDates.end_date,
         purchase_status: purchaseStatus,
         program_name: specializationProgram?.program?.program_name || null,
-        specialization_name: specialization?.specialization_name || null
+        specialization_name: specialization?.specialization_name || null,
+        is_purchased: isPurchased,
+        is_free: isFree
       };
 
       return result;

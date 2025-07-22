@@ -23,6 +23,8 @@ export interface CourseBasicDetailsResponse {
   purchase_status: string;
   program_name: string | null;
   specialization_name: string | null;
+  is_purchased: boolean;
+  is_free: boolean;
 }
 
 /**

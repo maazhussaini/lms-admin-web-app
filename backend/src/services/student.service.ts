@@ -786,7 +786,89 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       const enrollments = await prisma.enrollment.findMany({
         where: whereClause,
         include: {
-          course: true // Include full course object
+          course: {
+            include: {
+              // Include teacher information
+              teacher_courses: {
+                where: {
+                  is_active: true,
+                  is_deleted: false
+                },
+                include: {
+                  teacher: {
+                    select: {
+                      full_name: true,
+                      profile_picture_url: true
+                    }
+                  }
+                },
+                take: 1
+              },
+              // Include course sessions for dates
+              course_sessions: {
+                where: {
+                  is_active: true,
+                  is_deleted: false
+                },
+                select: {
+                  start_date: true,
+                  end_date: true
+                },
+                orderBy: {
+                  start_date: 'asc'
+                },
+                take: 1
+              },
+              // Include specialization and program information
+              course_specialization: {
+                where: {
+                  is_active: true,
+                  is_deleted: false
+                },
+                include: {
+                  specialization: {
+                    select: {
+                      specialization_id: true,
+                      specialization_name: true,
+                      specialization_program: {
+                        where: {
+                          is_active: true,
+                          is_deleted: false
+                        },
+                        include: {
+                          program: {
+                            select: {
+                              program_id: true,
+                              program_name: true
+                            }
+                          }
+                        },
+                        take: 1
+                      }
+                    }
+                  }
+                },
+                take: 1
+              }
+            }
+          },
+          // Include specialization program for enrollment details
+          specialization_program: {
+            include: {
+              specialization: {
+                select: {
+                  specialization_id: true,
+                  specialization_name: true
+                }
+              },
+              program: {
+                select: {
+                  program_id: true,
+                  program_name: true
+                }
+              }
+            }
+          }
         },
         orderBy: {
           enrolled_at: 'desc'
@@ -795,8 +877,105 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
         take: limit
       });
 
-      // Extract course objects
-      const courses = enrollments.map(enrollment => (enrollment as any).course);
+      // Get progress data for all courses
+      const courseIds = enrollments.map(enrollment => (enrollment as any).course.course_id);
+      const progressData = await prisma.studentCourseProgress.findMany({
+        where: {
+          student_id: studentId,
+          course_id: { in: courseIds },
+          is_active: true,
+          is_deleted: false
+        },
+        select: {
+          course_id: true,
+          overall_progress_percentage: true
+        }
+      });
+
+      // Create a map for quick progress lookup
+      const progressMap = new Map();
+      progressData.forEach(progress => {
+        progressMap.set(progress.course_id, progress.overall_progress_percentage);
+      });
+
+      // Extract and format course objects with all required fields
+      const courses = enrollments.map(enrollment => {
+        const course = (enrollment as any).course;
+        const teacher = course.teacher_courses?.[0]?.teacher;
+        const courseSession = course.course_sessions?.[0];
+        const courseSpecialization = course.course_specialization?.[0];
+        const specialization = courseSpecialization?.specialization;
+        const specializationProgram = specialization?.specialization_program?.[0];
+        const enrollmentSpecializationProgram = (enrollment as any).specialization_program;
+
+        // Format dates
+        const formatDateRange = (startDate: Date | null, endDate: Date | null) => {
+          if (!startDate && !endDate) {
+            return { start_date: null, end_date: null };
+          }
+          
+          const formatDate = (date: Date | null) => {
+            if (!date) return null;
+            return date.toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            });
+          };
+
+          return {
+            start_date: formatDate(startDate),
+            end_date: formatDate(endDate)
+          };
+        };
+
+        // Format hours
+        const formatDecimalHours = (hours: number | null) => {
+          if (hours === null || hours === undefined) return null;
+          
+          const wholeHours = Math.floor(hours);
+          const minutes = Math.round((hours - wholeHours) * 60);
+          
+          if (minutes === 0) {
+            return `${wholeHours}h`;
+          }
+          return `${wholeHours}h ${minutes}m`;
+        };
+
+        const formattedDates = formatDateRange(
+          courseSession?.start_date || null,
+          courseSession?.end_date || null
+        );
+
+        const formattedHours = formatDecimalHours(
+          course.course_total_hours ? course.course_total_hours.toNumber() : null
+        );
+
+        const progressPercentage = progressMap.get(course.course_id) || null;
+
+        return {
+          enrollment_id: (enrollment as any).enrollment_id,
+          specialization_program_id: (enrollment as any).specialization_program_id,
+          course_id: course.course_id,
+          specialization_id: enrollmentSpecializationProgram?.specialization?.specialization_id || 
+                           specializationProgram?.specialization?.specialization_id || 
+                           specialization?.specialization_id || null,
+          program_id: enrollmentSpecializationProgram?.program?.program_id || 
+                     specializationProgram?.program?.program_id || null,
+          course_name: course.course_name,
+          start_date: formattedDates.start_date,
+          end_date: formattedDates.end_date,
+          specialization_name: enrollmentSpecializationProgram?.specialization?.specialization_name || 
+                              specializationProgram?.specialization?.specialization_name || 
+                              specialization?.specialization_name || null,
+          program_name: enrollmentSpecializationProgram?.program?.program_name || 
+                       specializationProgram?.program?.program_name || null,
+          teacher_name: teacher?.full_name || 'Not Assigned',
+          profile_picture_url: teacher?.profile_picture_url || null,
+          course_total_hours: formattedHours,
+          overall_progress_percentage: progressPercentage
+        };
+      });
 
       // Calculate pagination metadata
       const totalPages = Math.ceil(total / limit);
