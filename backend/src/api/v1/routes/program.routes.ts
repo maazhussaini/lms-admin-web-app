@@ -15,6 +15,13 @@ import { UserType } from '@/types/enums.types';
 const router = Router();
 
 /**
+ * PRIVATE ROUTES - Authentication required
+ */
+
+// Apply authentication to all routes below this point
+// router.use(authenticate); // We'll keep individual route authentication for flexibility
+
+/**
  * @route POST /api/v1/programs
  * @description Create a new academic program
  * @access Private (SUPER_ADMIN, TENANT_ADMIN)
@@ -91,7 +98,7 @@ router.delete(
 
 /**
  * @route GET /api/v1/programs/tenant/list
- * @description Get all programs for the authenticated user's tenant
+ * @description Get all programs for the authenticated user's tenant (SUPER_ADMIN sees all programs)
  * @access Private (Any authenticated user)
  */
 router.get(

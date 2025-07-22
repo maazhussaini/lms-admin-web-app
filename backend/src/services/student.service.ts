@@ -11,6 +11,7 @@ import { TokenPayload } from '@/utils/jwt.utils';
 import { getPrismaQueryOptions, SortOrder } from '@/utils/pagination.utils';
 import { tryCatch } from '@/utils/error-wrapper.utils';
 import { ExtendedPaginationWithFilters, SafeFilterParams } from '@/utils/async-handler.utils';
+import { formatDateRange, formatDecimalHours } from '@/utils/date-format.utils';
 import { 
   Gender,
   StudentStatus,
@@ -933,6 +934,17 @@ export class StudentService {
         const courseSession = course.course_sessions[0];
         const progressPercentage = progressMap.get(course.course_id) || 0;
 
+        // Format dates
+        const formattedDates = formatDateRange(
+          courseSession?.start_date || null,
+          courseSession?.end_date || null
+        );
+
+        // Format hours
+        const formattedHours = formatDecimalHours(
+          course.course_total_hours ? Number(course.course_total_hours) : null
+        );
+
         return {
           enrollment_id: enrollment.enrollment_id,
           specialization_program_id: enrollment.specialization_program_id,
@@ -940,12 +952,12 @@ export class StudentService {
           specialization_id: specializationProgram?.specialization_id || null,
           program_id: specializationProgram?.program_id || null,
           course_name: course.course_name,
-          start_date: courseSession?.start_date || null,
-          end_date: courseSession?.end_date || null,
+          start_date: formattedDates.start_date,
+          end_date: formattedDates.end_date,
           specialization_name: specializationProgram?.specialization?.specialization_name || null,
           program_name: specializationProgram?.program?.program_name || null,
           teacher_name: teacher?.full_name || 'Not Assigned',
-          course_total_hours: course.course_total_hours ? Number(course.course_total_hours) : null,
+          course_total_hours: formattedHours,
           overall_progress_percentage: progressPercentage
         };
       });

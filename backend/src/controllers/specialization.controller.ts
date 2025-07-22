@@ -72,11 +72,12 @@ export class SpecializationController {
   });
 
   /**
-   * Get active specializations by program
+   * Get active specializations by program for authenticated student
    */
   static getActiveSpecializationsByProgramHandler = createRouteHandler(async (req: Request, res: Response) => {
+    // Get tenant ID from authenticated user (required)
     const tenantId = req.user?.tenantId;
-    if (!tenantId) throw new BadRequestError('Missing tenant context');
+    if (!tenantId) throw new BadRequestError('Authentication required - missing tenant context');
     
     const programId = Number(req.query['program_id']);
     if (!programId) throw new BadRequestError('Program ID is required');

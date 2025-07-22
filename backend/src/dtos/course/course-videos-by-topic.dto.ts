@@ -16,6 +16,7 @@ export interface CourseVideosByTopicResponse {
   position: number;
   video_name: string;
   duration_seconds: number;
+  duration_formatted: string | null;
   is_completed: boolean | null;
   completion_percentage: number | null;
   last_watched_at: Date | null;

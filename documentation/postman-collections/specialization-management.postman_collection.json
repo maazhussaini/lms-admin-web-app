@@ -524,6 +524,19 @@
       "name": "Get Active Specializations by Program",
       "event": [
         {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Ensure student is authenticated",
+              "if (!pm.environment.get('studentAccessToken')) {",
+              "    console.log('Warning: No student access token found. Please login as student first.');",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {}
+          }
+        },
+        {
           "listen": "test",
           "script": {
             "exec": [
@@ -556,6 +569,16 @@
         }
       ],
       "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{studentAccessToken}}",
+              "type": "string"
+            }
+          ]
+        },
         "method": "GET",
         "header": [],
         "url": {
@@ -563,10 +586,14 @@
           "host": ["{{base_url}}"],
           "path": ["specializations", "by-program"],
           "query": [
-            { "key": "program_id", "value": "1", "description": "Program ID to filter specializations by" }
+            { 
+              "key": "program_id", 
+              "value": "1", 
+              "description": "Program ID to filter specializations by (required)" 
+            }
           ]
         },
-        "description": "Retrieves all active specializations for a specific program. Only returns specializations where is_active=true and is_deleted=false."
+        "description": "Retrieves all active specializations for a specific program. Requires student authentication. Uses tenant_id from the authenticated user's token."
       },
       "response": []
     }

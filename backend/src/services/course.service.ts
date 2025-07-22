@@ -25,6 +25,7 @@ import { getPrismaQueryOptions, SortOrder } from '@/utils/pagination.utils';
 import { tryCatch } from '@/utils/error-wrapper.utils';
 import { ExtendedPaginationWithFilters, SafeFilterParams } from '@/utils/async-handler.utils';
 import { formatDateRange, formatDecimalHours } from '@/utils/date-format.utils';
+import { formatDurationFromSeconds } from '@/utils/duration-format.utils';
 import { UserType } from '@/types/enums.types';
 import logger from '@/config/logger';
 
@@ -991,6 +992,7 @@ export class CourseService {
           position: video.position,
           video_name: video.video_name,
           duration_seconds: video.duration_seconds || 0,
+          duration_formatted: formatDurationFromSeconds(video.duration_seconds),
           is_completed: progress ? progress.is_completed : null,
           completion_percentage: progress ? progress.completion_percentage : null,
           last_watched_at: progress ? progress.last_watched_at : null,
@@ -1107,6 +1109,7 @@ export class CourseService {
         video_url: video.video_url || '',
         thumbnail_url: video.thumbnail_url,
         duration: video.duration_seconds || 0,
+        duration_formatted: formatDurationFromSeconds(video.duration_seconds),
         position: video.position || 0,
         bunny_video_id: video.bunny_video_id,
         course_topic_id: video.course_topic_id,
@@ -1117,9 +1120,11 @@ export class CourseService {
         next_course_video_id: nextVideo?.course_video_id || null,
         next_video_name: nextVideo?.video_name || null,
         next_video_duration: nextVideo?.duration_seconds || null,
+        next_video_duration_formatted: formatDurationFromSeconds(nextVideo?.duration_seconds || null),
         previous_course_video_id: previousVideo?.course_video_id || null,
         previous_video_name: previousVideo?.video_name || null,
-        previous_video_duration: previousVideo?.duration_seconds || null
+        previous_video_duration: previousVideo?.duration_seconds || null,
+        previous_video_duration_formatted: formatDurationFromSeconds(previousVideo?.duration_seconds || null)
       };
 
       return result;

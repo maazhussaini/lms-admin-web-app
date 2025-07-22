@@ -13,11 +13,13 @@ import {
   AuthenticatedRequest
 } from '@/utils/async-handler.utils';
 import { ApiError } from '@/utils/api-error.utils';
+import { PrismaClient } from '@prisma/client';
 import logger from '@/config/logger';
 import { UserType } from '@/types/enums.types';
 
-// Initialize student service
+// Initialize student service and prisma
 const studentService = new StudentService();
+const prisma = new PrismaClient();
 
 export class StudentController {
   /**
@@ -281,51 +283,6 @@ export class StudentController {
   );
 
   /**
-   * Get enrolled courses by student ID
-   * 
-   * @route GET /api/v1/students/:studentId/enrolled-courses
-   * @access Private (SUPER_ADMIN, TENANT_ADMIN, TEACHER, STUDENT)
-   */
-  static getEnrolledCoursesByStudentIdHandler = createRouteHandler(
-    async (req: AuthenticatedRequest) => {
-      if (!req.user) {
-        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
-      }
-
-      const studentIdParam = req.params['studentId'];
-      if (!studentIdParam) {
-        throw new ApiError('Student ID is required', 400, 'MISSING_STUDENT_ID');
-      }
-      
-      const studentId = parseInt(studentIdParam, 10);
-      if (isNaN(studentId)) {
-        throw new ApiError('Invalid student ID', 400, 'INVALID_STUDENT_ID');
-      }
-
-      // Get search query from query parameters
-      const searchQuery = (req.query['search_query'] as string) || '';
-
-      const requestingUser = req.user;
-      
-      logger.debug('Getting enrolled courses for student', {
-        studentId,
-        searchQuery,
-        requestingUserId: requestingUser.id,
-        userType: requestingUser.user_type
-      });
-      
-      return await studentService.getEnrolledCoursesByStudentId(
-        studentId,
-        searchQuery,
-        requestingUser
-      );
-    },
-    {
-      message: 'Enrolled courses retrieved successfully'
-    }
-  );
-
-  /**
    * Get enrolled courses for current student (profile-based)
    * 
    * @route GET /api/v1/student/profile/enrollments
@@ -339,28 +296,49 @@ export class StudentController {
 
       const requestingUser = req.user;
 
-      // Ensure the user is a student and get their student_id
+      // Ensure the user is a student
       if (requestingUser.user_type !== UserType.STUDENT) {
         throw new ApiError('Only students can access this endpoint', 403, 'FORBIDDEN');
       }
 
-      // Get student_id from the user's profile
-      // In a real implementation, you might need to get this from the student table
-      // For now, assuming the user ID maps to student ID
-      const studentId = requestingUser.id; // You might need to adjust this based on your user-student relationship
+      // Find the student record using the user's email (since student login uses email)
+      const student = await prisma.student.findFirst({
+        where: {
+          is_active: true,
+          is_deleted: false,
+          emails: {
+            some: {
+              email_address: requestingUser.email,
+              is_primary: true,
+              is_deleted: false
+            }
+          }
+        },
+        select: {
+          student_id: true
+        }
+      });
 
-      // Get search query from query parameters
+      if (!student) {
+        throw new ApiError('Student profile not found', 404, 'STUDENT_NOT_FOUND');
+      }
+
+      // Get query parameters
       const searchQuery = (req.query['search_query'] as string) || '';
+      const enrollmentStatus = req.query['enrollment_status'] as string;
+      const includeProgress = req.query['include_progress'] === 'true';
       
       logger.debug('Getting enrolled courses for current student profile', {
-        studentId,
+        studentId: student.student_id,
         searchQuery,
+        enrollmentStatus,
+        includeProgress,
         requestingUserId: requestingUser.id,
         userType: requestingUser.user_type
       });
       
       return await studentService.getEnrolledCoursesByStudentId(
-        studentId,
+        student.student_id,
         searchQuery,
         requestingUser
       );

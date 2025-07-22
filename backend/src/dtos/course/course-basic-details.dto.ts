@@ -35,3 +35,11 @@ export const getCourseBasicDetailsValidation: ValidationChain[] = [
     .withMessage('Student ID must be a positive integer')
     .toInt()
 ];
+
+/**
+ * Express validator rules for getting course basic details (profile-based, no student_id required)
+ */
+export const getCourseBasicDetailsProfileValidation: ValidationChain[] = [
+  // No additional validation needed - courseId is validated as path parameter in route
+  // student_id comes from authenticated user token
+];

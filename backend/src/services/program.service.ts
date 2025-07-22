@@ -285,19 +285,44 @@ export class ProgramService {
    * @param tenantId Tenant identifier for filtering programs
    * @returns List of active programs for the specified tenant
    */
-  async getProgramsByTenant(tenantId: number): Promise<ProgramsByTenantResponse[]> {
+  /**
+   * Get all programs for the specified tenant with optional filtering
+   * @param tenantId Tenant identifier for filtering programs (0 for SUPER_ADMIN means all tenants)
+   * @param filters Optional filters for active status
+   * @returns List of programs for the specified tenant
+   */
+  async getProgramsByTenant(
+    tenantId: number, 
+    filters?: { is_active?: boolean }
+  ): Promise<ProgramsByTenantResponse[]> {
     // Log the tenant context for debugging
     logger.debug('Getting programs by tenant', {
-      tenantId
+      tenantId,
+      filters
     });
 
-    // Get programs for the specified tenant that are active and not deleted
+    // Build where clause
+    const whereClause: any = {
+      is_deleted: false
+    };
+
+    // For SUPER_ADMIN (tenantId = 0), don't filter by tenant
+    // For other users, filter by specific tenant
+    if (tenantId !== 0) {
+      whereClause.tenant_id = tenantId;
+    }
+
+    // Add is_active filter if provided
+    if (filters?.is_active !== undefined) {
+      whereClause.is_active = filters.is_active;
+    } else {
+      // Default to active programs if no filter specified
+      whereClause.is_active = true;
+    }
+
+    // Get programs for the specified tenant
     const programs = await prisma.program.findMany({
-      where: {
-        tenant_id: tenantId,
-        is_active: true,
-        is_deleted: false
-      },
+      where: whereClause,
       orderBy: {
         program_name: 'asc'
       }

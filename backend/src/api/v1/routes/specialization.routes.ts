@@ -21,6 +21,20 @@ router.post(
   SpecializationController.createSpecializationHandler
 );
 
+/**
+ * @route GET /api/v1/specializations/by-program
+ * @description Get active specializations by program for authenticated student
+ * @access Private (Student authentication required)
+ * @query program_id - Required: Program ID to filter specializations
+ */
+router.get(
+  '/by-program',
+  authenticate,
+  authorize([UserType.STUDENT]),
+  validate(getActiveSpecializationsByProgramValidation),
+  SpecializationController.getActiveSpecializationsByProgramHandler
+);
+
 // GET /:specializationId
 router.get(
   '/:specializationId',
@@ -50,14 +64,6 @@ router.delete(
   authenticate,
   authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   SpecializationController.deleteSpecializationHandler
-);
-
-// GET /by-program
-router.get(
-  '/by-program',
-  authenticate,
-  validate(getActiveSpecializationsByProgramValidation),
-  SpecializationController.getActiveSpecializationsByProgramHandler
 );
 
 export default router;

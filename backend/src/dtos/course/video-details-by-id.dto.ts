@@ -16,6 +16,7 @@ export interface VideoDetailsByIdResponse {
   video_url: string;
   thumbnail_url: string | null;
   duration: number;
+  duration_formatted: string | null;
   position: number;
   bunny_video_id: string | null;
   course_topic_id: number;
@@ -26,9 +27,11 @@ export interface VideoDetailsByIdResponse {
   next_course_video_id: number | null;
   next_video_name: string | null;
   next_video_duration: number | null;
+  next_video_duration_formatted: string | null;
   previous_course_video_id: number | null;
   previous_video_name: string | null;
   previous_video_duration: number | null;
+  previous_video_duration_formatted: string | null;
 }
 
 /**

@@ -49,3 +49,29 @@ export const getCoursesByProgramsAndSpecializationValidation = [
     .withMessage('Student ID must be a positive integer')
     .toInt()
 ];
+
+/**
+ * Validation for profile-based courses by programs and specialization (no student_id required)
+ */
+export const getCoursesByProgramsAndSpecializationProfileValidation = [
+  query('course_type')
+    .optional()
+    .isString()
+    .isIn(['FREE', 'PAID', 'PURCHASED'])
+    .withMessage('Invalid course type. Must be FREE, PAID, or PURCHASED'),
+  query('program_id')
+    .optional()
+    .isInt({ min: -1 })
+    .withMessage('Program ID must be an integer (-1 for all programs)')
+    .toInt(),
+  query('specialization_id')
+    .optional()
+    .isInt({ min: -1 })
+    .withMessage('Specialization ID must be an integer (-1 for all specializations)')
+    .toInt(),
+  query('search_query')
+    .optional()
+    .isString()
+    .trim()
+    .withMessage('Search query must be a string')
+];

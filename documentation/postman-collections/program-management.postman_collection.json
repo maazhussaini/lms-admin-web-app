@@ -844,7 +844,7 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                    "raw": "{{base_url}}/programs/tenant/list",
+                    "raw": "{{base_url}}/programs/tenant/list?is_active=false",
                     "host": [
                         "{{base_url}}"
                     ],
@@ -852,6 +852,13 @@
                         "programs",
                         "tenant",
                         "list"
+                    ],
+                    "query": [
+                        {
+                            "key": "is_active",
+                            "value": "false",
+                            "description": "(Optional) Filter by active status - true for active, false for inactive programs"
+                        }
                     ]
                 },
                 "description": "Retrieves all active programs for the authenticated user's tenant. Uses JWT token to automatically determine tenant ID and filters programs accordingly. Only returns programs where is_active=true and is_deleted=false."

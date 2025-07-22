@@ -14,7 +14,8 @@ export interface ActiveSpecializationsByProgramResponse {
 
 export const getActiveSpecializationsByProgramValidation = [
   query('program_id')
-    .optional()
+    .notEmpty()
+    .withMessage('Program ID is required')
     .isInt({ min: 1 })
     .withMessage('Program ID must be a positive integer')
     .toInt(),

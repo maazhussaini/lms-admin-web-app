@@ -10,10 +10,12 @@ import {
   AuthenticatedRequest
 } from '@/utils/async-handler.utils';
 import { ApiError } from '@/utils/api-error.utils';
+import { PrismaClient } from '@prisma/client';
 import logger from '@/config/logger';
 import { UserType } from '@/types/enums.types';
 
 const courseService = new CourseService();
+const prisma = new PrismaClient();
 
 export class CourseController {
   /**
@@ -387,6 +389,140 @@ export class CourseController {
     },
     {
       message: 'Video details retrieved successfully'
+    }
+  );
+
+  /**
+   * Get courses by programs and specialization for current student (profile-based)
+   * @route GET /api/v1/student/profile/courses/discover
+   * @access Private (STUDENT only)
+   */
+  static getStudentProfileCoursesByProgramsAndSpecializationHandler = createRouteHandler(
+    async (req: AuthenticatedRequest) => {
+      if (!req.user) {
+        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
+      }
+
+      const requestingUser = req.user;
+
+      // Ensure the user is a student
+      if (requestingUser.user_type !== UserType.STUDENT) {
+        throw new ApiError('Only students can access this endpoint', 403, 'FORBIDDEN');
+      }
+
+      // Find the student record using the user's email
+      const student = await prisma.student.findFirst({
+        where: {
+          is_active: true,
+          is_deleted: false,
+          emails: {
+            some: {
+              email_address: requestingUser.email,
+              is_primary: true,
+              is_deleted: false
+            }
+          }
+        },
+        select: {
+          student_id: true
+        }
+      });
+
+      if (!student) {
+        throw new ApiError('Student profile not found', 404, 'STUDENT_NOT_FOUND');
+      }
+
+      // Build params from query parameters (excluding student_id)
+      const params: GetCoursesByProgramsAndSpecializationDto = {
+        course_type: req.query['course_type'] as string,
+        program_id: req.query['program_id'] ? parseInt(req.query['program_id'] as string, 10) : undefined,
+        specialization_id: req.query['specialization_id'] ? parseInt(req.query['specialization_id'] as string, 10) : undefined,
+        search_query: req.query['search_query'] as string,
+        student_id: student.student_id // Use student_id from token instead of query param
+      };
+
+      logger.debug('Getting courses by programs and specialization for student profile', {
+        params,
+        studentId: student.student_id,
+        requestingUserId: requestingUser.id,
+        userType: requestingUser.user_type
+      });
+
+      return await courseService.getCoursesByProgramsAndSpecialization(
+        params,
+        student.student_id
+      );
+    },
+    {
+      message: 'Courses retrieved successfully'
+    }
+  );
+
+  /**
+   * Get course basic details for current student (profile-based)
+   * @route GET /api/v1/student/profile/courses/:courseId/basic-details
+   * @access Private (STUDENT only)
+   */
+  static getStudentProfileCourseBasicDetailsHandler = createRouteHandler(
+    async (req: AuthenticatedRequest) => {
+      if (!req.user) {
+        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
+      }
+
+      const requestingUser = req.user;
+
+      // Ensure the user is a student
+      if (requestingUser.user_type !== UserType.STUDENT) {
+        throw new ApiError('Only students can access this endpoint', 403, 'FORBIDDEN');
+      }
+
+      const courseIdParam = req.params['courseId'];
+      if (!courseIdParam) {
+        throw new ApiError('Course ID is required', 400, 'MISSING_COURSE_ID');
+      }
+      
+      const courseId = parseInt(courseIdParam, 10);
+      if (isNaN(courseId)) {
+        throw new ApiError('Invalid course ID', 400, 'INVALID_COURSE_ID');
+      }
+
+      // Find the student record using the user's email
+      const student = await prisma.student.findFirst({
+        where: {
+          is_active: true,
+          is_deleted: false,
+          emails: {
+            some: {
+              email_address: requestingUser.email,
+              is_primary: true,
+              is_deleted: false
+            }
+          }
+        },
+        select: {
+          student_id: true
+        }
+      });
+
+      if (!student) {
+        throw new ApiError('Student profile not found', 404, 'STUDENT_NOT_FOUND');
+      }
+
+      logger.debug('Getting course basic details for student profile', {
+        courseId,
+        studentId: student.student_id,
+        requestingUserId: requestingUser.id,
+        userType: requestingUser.user_type
+      });
+
+      return await courseService.getCourseBasicDetails(
+        courseId,
+        student.student_id, // Use student_id from token instead of query param
+        requestingUser
+      );
+    },
+    {
+      message: 'Course basic details retrieved successfully'
     }
   );
 }

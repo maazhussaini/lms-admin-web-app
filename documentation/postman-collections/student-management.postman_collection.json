@@ -806,11 +806,29 @@
 									"    if (responseJson.data.length > 0) {",
 									"        const firstCourse = responseJson.data[0];",
 									"        pm.expect(firstCourse).to.have.property('enrollment_id');",
+									"        pm.expect(firstCourse).to.have.property('specialization_program_id');",
 									"        pm.expect(firstCourse).to.have.property('course_id');",
+									"        pm.expect(firstCourse).to.have.property('specialization_id');",
+									"        pm.expect(firstCourse).to.have.property('program_id');",
 									"        pm.expect(firstCourse).to.have.property('course_name');",
-									"        pm.expect(firstCourse).to.have.property('course_description');",
-									"        pm.expect(firstCourse).to.have.property('enrollment_status');",
+									"        pm.expect(firstCourse).to.have.property('start_date');",
+									"        pm.expect(firstCourse).to.have.property('end_date');",
+									"        pm.expect(firstCourse).to.have.property('specialization_name');",
+									"        pm.expect(firstCourse).to.have.property('program_name');",
+									"        pm.expect(firstCourse).to.have.property('teacher_name');",
+									"        pm.expect(firstCourse).to.have.property('course_total_hours');",
 									"        pm.expect(firstCourse).to.have.property('overall_progress_percentage');",
+									"        ",
+									"        // Verify formatted dates and hours",
+									"        if (firstCourse.start_date) {",
+									"            pm.expect(firstCourse.start_date).to.match(/^[A-Za-z]+ \\\\d{4}$/);",
+									"        }",
+									"        if (firstCourse.end_date) {",
+									"            pm.expect(firstCourse.end_date).to.match(/^[A-Za-z]+ \\\\d{4}$/);",
+									"        }",
+									"        if (firstCourse.course_total_hours) {",
+									"            pm.expect(firstCourse.course_total_hours).to.match(/^\\\\d+ hrs \\\\d+ min$/);",
+									"        }",
 									"    }",
 									"});"
 								],
@@ -832,7 +850,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/students/{{created_student_id}}/enrolled-courses?enrollment_status=ACTIVE&include_progress=true",
+							"raw": "{{base_url}}/students/{{created_student_id}}/enrolled-courses?search_query=&enrollment_status=ACTIVE&include_progress=true",
 							"host": [
 								"{{base_url}}"
 							],
@@ -842,8 +860,21 @@
 								"enrolled-courses"
 							],
 							"query": [
-								{ "key": "enrollment_status", "value": "ACTIVE", "description": "(Optional) Filter by enrollment status: ACTIVE, COMPLETED, SUSPENDED" },
-								{ "key": "include_progress", "value": "true", "description": "(Optional) Include progress information" }
+								{ 
+									"key": "search_query", 
+									"value": "", 
+									"description": "(Optional) Search courses by name" 
+								},
+								{ 
+									"key": "enrollment_status", 
+									"value": "ACTIVE", 
+									"description": "(Optional) Filter by enrollment status: ACTIVE, INACTIVE, COMPLETED, CANCELLED" 
+								},
+								{ 
+									"key": "include_progress", 
+									"value": "true", 
+									"description": "(Optional) Include progress information" 
+								}
 							]
 						},
 						"description": "Retrieves all courses a student is enrolled in with optional filtering and progress information."
@@ -1417,30 +1448,62 @@
 					"response": []
 				},
 				{
-					"name": "Get Own Enrollments",
+					"name": "Get Available Courses (Course Discovery)",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test('Student enrollments retrieved successfully', function () {",
+									"pm.test('Course discovery successful', function () {",
 									"    pm.response.to.have.status(200);",
 									"    const responseJson = pm.response.json();",
 									"    pm.expect(responseJson.success).to.be.true;",
 									"    pm.expect(responseJson.data).to.be.an('array');",
 									"    pm.expect(responseJson.pagination).to.have.property('total');",
 									"    ",
-									"    // Data might be empty if student is not enrolled in any courses",
 									"    if (responseJson.data.length > 0) {",
-									"        responseJson.data.forEach(enrollment => {",
-									"            pm.expect(enrollment).to.have.property('enrollment_id');",
-									"            pm.expect(enrollment).to.have.property('course_id');",
-									"            pm.expect(enrollment).to.have.property('enrollment_status');",
-									"        });",
+									"        const firstCourse = responseJson.data[0];",
+									"        pm.expect(firstCourse).to.have.property('course_id');",
+									"        pm.expect(firstCourse).to.have.property('course_name');",
+									"        pm.expect(firstCourse).to.have.property('course_type');",
+									"        pm.expect(firstCourse).to.have.property('program_name');",
+									"        pm.expect(firstCourse).to.have.property('specialization_name');",
+									"        pm.expect(firstCourse).to.have.property('duration_hours');",
+									"        pm.expect(firstCourse).to.have.property('available_from');",
+									"        pm.expect(firstCourse).to.have.property('available_until');",
+									"        ",
+									"        // Store first course ID for basic details test",
+									"        pm.environment.set('discovered_course_id', firstCourse.course_id);",
 									"    }",
 									"});"
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Set default query parameters if not already set",
+									"if (!pm.environment.get('course_discovery_course_type')) {",
+									"    pm.environment.set('course_discovery_course_type', 'PAID');",
+									"}",
+									"",
+									"if (!pm.environment.get('course_discovery_program_id')) {",
+									"    pm.environment.set('course_discovery_program_id', '5');",
+									"}",
+									"",
+									"if (!pm.environment.get('course_discovery_specialization_id')) {",
+									"    pm.environment.set('course_discovery_specialization_id', '-1');",
+									"}",
+									"",
+									"if (!pm.environment.get('course_discovery_search_query')) {",
+									"    pm.environment.set('course_discovery_search_query', '');",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
 							}
 						}
 					],
@@ -1458,27 +1521,237 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/students/profile/enrollments?page=1&limit=10",
+							"raw": "{{base_url}}/student/profile/courses/discover?course_type={{course_discovery_course_type}}&program_id={{course_discovery_program_id}}&specialization_id={{course_discovery_specialization_id}}&search_query={{course_discovery_search_query}}",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"students",
+								"student",
+								"profile",
+								"courses",
+								"discover"
+							],
+							"query": [
+								{
+									"key": "course_type",
+									"value": "{{course_discovery_course_type}}",
+									"description": "FREE, PAID, or PURCHASED"
+								},
+								{
+									"key": "program_id",
+									"value": "{{course_discovery_program_id}}",
+									"description": "Program ID (-1 for all programs)"
+								},
+								{
+									"key": "specialization_id",
+									"value": "{{course_discovery_specialization_id}}",
+									"description": "Specialization ID (-1 for all specializations)"
+								},
+								{
+									"key": "search_query",
+									"value": "{{course_discovery_search_query}}",
+									"description": "Search courses by name"
+								}
+							]
+						},
+						"description": "Student can discover available courses by programs and specializations with optional filtering."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Course Basic Details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Course basic details retrieved successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.true;",
+									"    pm.expect(responseJson.data).to.have.property('course_id');",
+									"    pm.expect(responseJson.data).to.have.property('course_name');",
+									"    pm.expect(responseJson.data).to.have.property('course_description');",
+									"    pm.expect(responseJson.data).to.have.property('course_type');",
+									"    pm.expect(responseJson.data).to.have.property('duration_hours');",
+									"    pm.expect(responseJson.data).to.have.property('available_from');",
+									"    pm.expect(responseJson.data).to.have.property('available_until');",
+									"    pm.expect(responseJson.data).to.have.property('program');",
+									"    pm.expect(responseJson.data).to.have.property('specialization');",
+									"    pm.expect(responseJson.data).to.have.property('teacher');",
+									"    pm.expect(responseJson.data).to.have.property('is_enrolled');",
+									"    ",
+									"    // Verify teacher details",
+									"    const teacher = responseJson.data.teacher;",
+									"    pm.expect(teacher).to.have.property('teacher_id');",
+									"    pm.expect(teacher).to.have.property('full_name');",
+									"    pm.expect(teacher).to.have.property('profile_picture_url');",
+									"    ",
+									"    // Verify formatted dates and hours",
+									"    pm.expect(responseJson.data.duration_hours).to.match(/^\\\\d+ hrs \\\\d+ min$/);",
+									"    pm.expect(responseJson.data.available_from).to.match(/^[A-Za-z]+ \\\\d{4}$/);",
+									"    pm.expect(responseJson.data.available_until).to.match(/^[A-Za-z]+ \\\\d{4}$/);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Use discovered course ID or fallback to a test course ID",
+									"let courseId = pm.environment.get('discovered_course_id');",
+									"if (!courseId) {",
+									"    courseId = pm.environment.get('created_course_id') || '1';",
+									"}",
+									"pm.environment.set('test_course_id_for_details', courseId);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{studentAccessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/student/profile/courses/{{test_course_id_for_details}}/basic-details",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"student",
+								"profile",
+								"courses",
+								"{{test_course_id_for_details}}",
+								"basic-details"
+							]
+						},
+						"description": "Student can view basic details of a specific course including teacher information and enrollment status."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Own Enrollments",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Set default enrollment query parameters if not already set",
+									"if (!pm.environment.get('enrollment_search_query')) {",
+									"    pm.environment.set('enrollment_search_query', '');",
+									"}",
+									"",
+									"if (!pm.environment.get('enrollment_status')) {",
+									"    pm.environment.set('enrollment_status', 'ACTIVE');",
+									"}",
+									"",
+									"if (!pm.environment.get('include_progress')) {",
+									"    pm.environment.set('include_progress', 'true');",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Student enrollments retrieved successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.true;",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"    pm.expect(responseJson.pagination).to.have.property('total');",
+									"    ",
+									"    // Data might be empty if student is not enrolled in any courses",
+									"    if (responseJson.data.length > 0) {",
+									"        const firstEnrollment = responseJson.data[0];",
+									"        pm.expect(firstEnrollment).to.have.property('enrollment_id');",
+									"        pm.expect(firstEnrollment).to.have.property('course_id');",
+									"        pm.expect(firstEnrollment).to.have.property('course_name');",
+									"        pm.expect(firstEnrollment).to.have.property('specialization_name');",
+									"        pm.expect(firstEnrollment).to.have.property('program_name');",
+									"        pm.expect(firstEnrollment).to.have.property('teacher_name');",
+									"        pm.expect(firstEnrollment).to.have.property('start_date');",
+									"        pm.expect(firstEnrollment).to.have.property('end_date');",
+									"        pm.expect(firstEnrollment).to.have.property('course_total_hours');",
+									"        pm.expect(firstEnrollment).to.have.property('overall_progress_percentage');",
+									"        ",
+									"        // Verify formatted dates and hours",
+									"        if (firstEnrollment.start_date) {",
+									"            pm.expect(firstEnrollment.start_date).to.match(/^[A-Za-z]+ \\\\d{4}$/);",
+									"        }",
+									"        if (firstEnrollment.end_date) {",
+									"            pm.expect(firstEnrollment.end_date).to.match(/^[A-Za-z]+ \\\\d{4}$/);",
+									"        }",
+									"        if (firstEnrollment.course_total_hours) {",
+									"            pm.expect(firstEnrollment.course_total_hours).to.match(/^\\\\d+ hrs \\\\d+ min$/);",
+									"        }",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{studentAccessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/student/profile/enrollments?search_query={{enrollment_search_query}}&enrollment_status={{enrollment_status}}&include_progress={{include_progress}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"student",
 								"profile",
 								"enrollments"
 							],
 							"query": [
 								{
-									"key": "page",
-									"value": "1"
+									"key": "search_query",
+									"value": "{{enrollment_search_query}}",
+									"description": "Search courses by name"
 								},
 								{
-									"key": "limit",
-									"value": "10"
+									"key": "enrollment_status",
+									"value": "{{enrollment_status}}",
+									"description": "Filter by enrollment status: ACTIVE, INACTIVE, COMPLETED, CANCELLED"
+								},
+								{
+									"key": "include_progress",
+									"value": "{{include_progress}}",
+									"description": "Include progress information in the response"
 								}
 							]
 						},
-						"description": "Student can view their own course enrollments."
+						"description": "Student can view their own course enrollments with optional filtering by search query and enrollment status."
 					},
 					"response": []
 				},

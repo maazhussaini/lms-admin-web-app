@@ -325,8 +325,14 @@ export class ProgramController {
       
       const tenantId = req.user.tenantId;
 
+      // Extract filtering parameters
+      const filters: { is_active?: boolean } = {};
+      if (req.query['is_active'] !== undefined) {
+        filters.is_active = req.query['is_active'] === 'true';
+      }
+
       // Get programs by tenant using service
-      const programs = await programService.getProgramsByTenant(tenantId);
+      const programs = await programService.getProgramsByTenant(tenantId, filters);
       
       // Send successful response
       const response: TApiSuccessResponse<ProgramsByTenantResponse[]> = {
