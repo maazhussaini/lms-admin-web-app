@@ -3,6 +3,7 @@ import { StudentController } from '@/controllers/student.controller';
 import { authenticate, authorize } from '@/middleware/auth.middleware';
 import { validate } from '@/middleware/validation.middleware';
 import { updateStudentProfileValidation } from '@/dtos/student/student.dto';
+import { getEnrolledCoursesByStudentValidation } from '@/dtos/student/enrolled-courses-by-student.dto';
 import { UserType } from '@/types/enums.types';
 
 const router = Router();
@@ -31,6 +32,18 @@ router.patch(
   authorize([UserType.STUDENT]),
   validate(updateStudentProfileValidation),
   StudentController.updateStudentProfileHandler
+);
+
+/**
+ * @route GET /api/v1/student/profile/enrollments
+ * @description Get current student's enrolled courses
+ * @access Private (STUDENT only)
+ */
+router.get(
+  '/profile/enrollments',
+  authorize([UserType.STUDENT]),
+  validate(getEnrolledCoursesByStudentValidation),
+  StudentController.getStudentProfileEnrollmentsHandler
 );
 
 export default router;

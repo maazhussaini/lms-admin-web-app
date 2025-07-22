@@ -803,6 +803,60 @@
                 "description": "Attempts to retrieve a program with an invalid ID format to test input validation. The API should return a 400 Bad Request response with validation error details."
             },
             "response": []
+        },
+        {
+            "name": "Get Programs by Tenant",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has success true and programs array\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Programs retrieved successfully\", \"Message should indicate successful retrieval\");",
+                            "    pm.expect(jsonData.data).to.be.an('array', \"Data should be an array\");",
+                            "    if (jsonData.data.length > 0) {",
+                            "        const firstProgram = jsonData.data[0];",
+                            "        pm.expect(firstProgram).to.have.property('program_id');",
+                            "        pm.expect(firstProgram).to.have.property('program_name');",
+                            "        pm.expect(firstProgram).to.have.property('program_thumbnail_url');",
+                            "        pm.expect(firstProgram).to.have.property('tenant_id');",
+                            "        pm.expect(firstProgram).to.have.property('is_active');",
+                            "        pm.expect(firstProgram).to.have.property('is_deleted');",
+                            "        pm.expect(firstProgram).to.have.property('created_at');",
+                            "        pm.expect(firstProgram).to.have.property('updated_at');",
+                            "        pm.expect(firstProgram.is_active).to.be.true;",
+                            "        pm.expect(firstProgram.is_deleted).to.be.false;",
+                            "    }",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/programs/tenant/list",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "programs",
+                        "tenant",
+                        "list"
+                    ]
+                },
+                "description": "Retrieves all active programs for the authenticated user's tenant. Uses JWT token to automatically determine tenant ID and filters programs accordingly. Only returns programs where is_active=true and is_deleted=false."
+            },
+            "response": []
         }
     ],
     "auth": {

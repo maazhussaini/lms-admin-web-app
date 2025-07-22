@@ -291,6 +291,69 @@ All entities extend `MultiTenantAuditFields` from `@shared/types/base.types.ts`,
 ```
 - **Response**: `200 OK`
 
+### Student Enrollment Management
+
+#### Get Enrolled Courses by Student ID
+- **Method**: `GET`
+- **Path**: `/api/v1/students/{studentId}/enrolled-courses`
+- **Authorization**: SUPER_ADMIN, TENANT_ADMIN, TEACHER, STUDENT
+- **Description**: Retrieve all enrolled courses for a specific student with comprehensive details including progress, specializations, and teacher information
+- **Path Parameters**:
+  - `studentId` (required): Student identifier
+- **Query Parameters**:
+  - `search_query` (optional): Filter courses by name (case-insensitive)
+- **Response**: `200 OK`
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "enrollment_id": 123,
+      "specialization_program_id": 45,
+      "course_id": 67,
+      "specialization_id": 12,
+      "program_id": 8,
+      "course_name": "Advanced Web Development",
+      "start_date": "2024-01-15T09:00:00Z",
+      "end_date": "2024-05-15T17:00:00Z",
+      "specialization_name": "Full Stack Development",
+      "program_name": "Computer Science",
+      "teacher_name": "Dr. Jane Smith",
+      "course_total_hours": 120.5,
+      "overall_progress_percentage": 75
+    },
+    {
+      "enrollment_id": 124,
+      "specialization_program_id": 46,
+      "course_id": 68,
+      "specialization_id": null,
+      "program_id": null,
+      "course_name": "Database Management Systems",
+      "start_date": null,
+      "end_date": null,
+      "specialization_name": null,
+      "program_name": null,
+      "teacher_name": "Prof. John Doe",
+      "course_total_hours": 80.0,
+      "overall_progress_percentage": 45
+    }
+  ],
+  "message": "Enrolled courses retrieved successfully"
+}
+```
+- **Access Control**:
+  - **SUPER_ADMIN**: Can access any student's enrolled courses across all tenants
+  - **TENANT_ADMIN**: Can access enrolled courses for students within their tenant
+  - **TEACHER**: Can access enrolled courses for students within their tenant
+  - **STUDENT**: Can access their own enrolled courses only
+- **Business Rules**:
+  - Only active, non-deleted enrollments are returned
+  - Only public courses are included
+  - Tenant isolation is automatically applied for non-SUPER_ADMIN users
+  - Progress data is fetched from `student_course_progresses` table
+  - Teacher information comes from the first assigned teacher to the course
+  - Course session dates represent the earliest scheduled session
+
 ## Authorization Rules
 
 ### SUPER_ADMIN Permissions

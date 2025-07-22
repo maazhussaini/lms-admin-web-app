@@ -3,6 +3,7 @@ import { StudentController } from '@/controllers/student.controller';
 import { authenticate, authorize } from '@/middleware/auth.middleware';
 import { validate } from '@/middleware/validation.middleware';
 import { createStudentValidation, updateStudentValidation } from '@/dtos/student/student.dto';
+import { getEnrolledCoursesByStudentValidation } from '@/dtos/student/enrolled-courses-by-student.dto';
 import { param, body } from 'express-validator';
 import { UserType } from '@/types/enums.types';
 
@@ -97,6 +98,24 @@ router.delete(
       .toInt()
   ]),
   StudentController.deleteStudentHandler
+);
+
+/**
+ * @route GET /api/v1/students/:studentId/enrolled-courses
+ * @description Get enrolled courses for a specific student
+ * @access Private (SUPER_ADMIN, TENANT_ADMIN, TEACHER, STUDENT)
+ */
+router.get(
+  '/:studentId/enrolled-courses',
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN, UserType.TEACHER, UserType.STUDENT]),
+  validate([
+    param('studentId')
+      .isInt({ min: 1 })
+      .withMessage('Student ID must be a positive integer')
+      .toInt(),
+    ...getEnrolledCoursesByStudentValidation
+  ]),
+  StudentController.getEnrolledCoursesByStudentIdHandler
 );
 
 export default router;

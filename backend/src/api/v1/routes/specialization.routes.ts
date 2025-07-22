@@ -7,6 +7,7 @@ import {
   createSpecializationValidation,
   updateSpecializationValidation,
 } from '@/dtos/course/specialization.dto';
+import { getActiveSpecializationsByProgramValidation } from '@/dtos/course/active-specializations-by-program.dto';
 
 const router = Router();
 
@@ -49,6 +50,14 @@ router.delete(
   authenticate,
   authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
   SpecializationController.deleteSpecializationHandler
+);
+
+// GET /by-program
+router.get(
+  '/by-program',
+  authenticate,
+  validate(getActiveSpecializationsByProgramValidation),
+  SpecializationController.getActiveSpecializationsByProgramHandler
 );
 
 export default router;

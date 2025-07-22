@@ -70,4 +70,22 @@ export class SpecializationController {
     await SpecializationService.deleteSpecialization(specializationId, Number(tenantId));
     return res.status(204).send();
   });
+
+  /**
+   * Get active specializations by program
+   */
+  static getActiveSpecializationsByProgramHandler = createRouteHandler(async (req: Request, res: Response) => {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) throw new BadRequestError('Missing tenant context');
+    
+    const programId = Number(req.query['program_id']);
+    if (!programId) throw new BadRequestError('Program ID is required');
+    
+    const specializations = await SpecializationService.getActiveSpecializationsByProgram(
+      programId, 
+      Number(tenantId)
+    );
+    
+    return res.json(createSuccessResponse(specializations, 'Active specializations retrieved successfully'));
+  });
 }

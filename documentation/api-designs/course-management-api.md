@@ -6,6 +6,8 @@ The Course Management API provides comprehensive functionality for managing the 
 
 The API handles the entire course lifecycle from program creation to individual video progress tracking, including academic programs, specializations, courses, modules, topics, videos, documents, and student progress monitoring. All operations are performed within the context of a specific tenant, ensuring data security and compliance with educational privacy requirements.
 
+The API includes specialized endpoints for course discovery, allowing students and anonymous users to browse available courses filtered by programs, specializations, and course types, with dynamic purchase status calculation based on enrollment data.
+
 ## Data Model Overview
 
 ### Core Entities
@@ -145,6 +147,119 @@ All entities extend `MultiTenantAuditFields` from `@shared/types/base.types.ts`,
 - **Description**: Soft delete a program
 - **Response**: `204 No Content`
 
+#### Get Programs by Tenant
+- **Method**: `GET`
+- **Path**: `/api/v1/programs/tenant/list`
+- **Authorization**: Required (Any authenticated user)
+- **Description**: Retrieve all active programs for the authenticated user's tenant. This endpoint automatically filters programs based on the tenant ID from the JWT token, ensuring users only see programs from their own institution.
+- **Source**: Converted from PostgreSQL function `get_programs_by_tenant`
+- **Authentication**: Uses JWT token to determine tenant ID automatically
+- **Query Parameters**: None required (tenant filtering is automatic)
+- **Response**: `200 OK`
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Programs retrieved successfully",
+  "data": [
+    {
+      "program_id": 1,
+      "program_name": "Computer Science",
+      "program_thumbnail_url": "https://cdn.example.com/thumbnails/cs.jpg",
+      "tenant_id": 123,
+      "is_active": true,
+      "is_deleted": false,
+      "created_at": "2024-01-15T10:00:00Z",
+      "updated_at": "2024-01-15T10:00:00Z"
+    },
+    {
+      "program_id": 2,
+      "program_name": "Business Administration",
+      "program_thumbnail_url": "https://cdn.example.com/thumbnails/ba.jpg",
+      "tenant_id": 123,
+      "is_active": true,
+      "is_deleted": false,
+      "created_at": "2024-01-10T08:30:00Z",
+      "updated_at": "2024-01-12T14:20:00Z"
+    }
+  ],
+  "timestamp": "2024-01-15T10:00:00Z"
+}
+```
+
+**Key Features:**
+- **Automatic Tenant Filtering**: Uses JWT token to identify user's tenant
+- **Active Programs Only**: Returns only programs where `is_active = true` and `is_deleted = false`
+- **Complete Metadata**: Includes program details, thumbnails, and audit information
+- **No Additional Parameters**: Simplifies frontend implementation by handling tenant filtering automatically
+- **Security**: Users can only access programs from their own tenant
+
+**Usage Examples:**
+```bash
+# Get all programs for the authenticated user's tenant
+GET /api/v1/programs/tenant/list
+Authorization: Bearer <jwt_token>
+```
+
+**Error Responses:**
+- `401 Unauthorized`: When no valid JWT token is provided
+- `403 Forbidden`: When user doesn't have permission to access programs
+- `500 Internal Server Error`: For server-side errors
+
+### Specialization Management
+
+#### Get Active Specializations by Program
+- **Method**: `GET`
+- **Path**: `/api/v1/admin/specializations/by-program`
+- **Authorization**: SUPER_ADMIN, TENANT_ADMIN, TEACHER
+- **Description**: Retrieve active specializations for a specific program within the authenticated user's tenant. This endpoint replicates the functionality of the PostgreSQL function `get_active_specializations_by_program`.
+- **Query Parameters**:
+  - `program_id: number` - Required. The program ID to filter specializations
+- **Response**: `200 OK`
+```json
+{
+  "success": true,
+  "message": "Active specializations retrieved successfully",
+  "data": [
+    {
+      "specialization_id": 1,
+      "program_id": 2,
+      "specialization_name": "Artificial Intelligence",
+      "specialization_thumbnail_url": "https://example.com/ai-thumb.jpg"
+    },
+    {
+      "specialization_id": 3,
+      "program_id": 2,
+      "specialization_name": "Machine Learning",
+      "specialization_thumbnail_url": "https://example.com/ml-thumb.jpg"
+    }
+  ]
+}
+```
+
+**Key Features**:
+- **Tenant Isolation**: Automatically filters results based on authenticated user's tenant
+- **Program Filtering**: Returns only specializations associated with the specified program
+- **Active Records Only**: Filters for active, non-deleted specializations
+- **Sorted Results**: Returns specializations ordered alphabetically by name
+- **Junction Table Handling**: Properly handles the many-to-many relationship through SpecializationProgram table
+
+**Usage Examples**:
+```bash
+# Get all active specializations for program ID 2
+GET /api/v1/admin/specializations/by-program?program_id=2
+
+# Error if program_id is missing
+GET /api/v1/admin/specializations/by-program
+# Returns: 400 Bad Request - "Program ID is required"
+```
+
+**Error Responses**:
+- `400 Bad Request`: Missing or invalid program_id parameter
+- `401 Unauthorized`: Authentication required
+- `403 Forbidden`: Insufficient permissions for the endpoint
+- `404 Not Found`: Program not found or no specializations available
+
 ### Course Management
 
 #### Create Course
@@ -226,6 +341,327 @@ All entities extend `MultiTenantAuditFields` from `@shared/types/base.types.ts`,
   - `sortBy?: string` - Sort by field (course_id, course_name, course_status, created_at, updated_at)
   - `sortOrder?: string` - Sort order (asc, desc)
 - **Response**: `200 OK`
+
+#### Get Courses by Programs and Specialization
+- **Method**: `GET`
+- **Path**: `/api/v1/courses/by-programs-specialization`
+- **Authorization**: Public (No authentication required)
+- **Description**: Retrieve courses filtered by programs and specializations with purchase status information. This endpoint supports course discovery for students and anonymous users.
+- **Query Parameters**:
+  - `course_type?: string` - Filter by course type ('FREE', 'PAID', 'PURCHASED')
+  - `program_id?: number` - Filter by program ID (-1 for all programs)
+  - `specialization_id?: number` - Filter by specialization ID (-1 for all specializations)
+  - `search_query?: string` - Search query for course names (case-insensitive)
+  - `student_id?: number` - Student ID for purchase status calculation
+- **Response**: `200 OK`
+```json
+{
+  "success": true,
+  "message": "Courses retrieved successfully",
+  "data": [
+    {
+      "course_id": 1,
+      "course_name": "Introduction to Programming",
+      "start_date": "2024-02-01T00:00:00.000Z",
+      "end_date": "2024-05-01T00:00:00.000Z",
+      "program_name": "Computer Science",
+      "teacher_name": "Dr. John Smith",
+      "course_total_hours": 120.50,
+      "profile_picture_url": "https://example.com/teacher1.jpg",
+      "teacher_qualification": "PhD in Computer Science",
+      "program_id": 1,
+      "purchase_status": "Buy: $299.99"
+    },
+    {
+      "course_id": 2,
+      "course_name": "Advanced Mathematics",
+      "start_date": "2024-03-01T00:00:00.000Z",
+      "end_date": "2024-06-01T00:00:00.000Z",
+      "program_name": "Mathematics",
+      "teacher_name": "Prof. Jane Doe",
+      "course_total_hours": 80.0,
+      "profile_picture_url": "https://example.com/teacher2.jpg",
+      "teacher_qualification": "PhD in Mathematics",
+      "program_id": 2,
+      "purchase_status": "Free"
+    }
+  ]
+}
+```
+
+**Purchase Status Values**:
+- `"Free"` - Course is free and not purchased
+- `"Buy: $X.XX"` - Course is paid and not purchased (shows price)
+- `"Purchased"` - Course is purchased by the student
+- `"N/A"` - Status cannot be determined
+
+**Usage Examples**:
+```bash
+# Get all free courses
+GET /api/v1/courses/by-programs-specialization?course_type=FREE
+
+# Get courses for specific program
+GET /api/v1/courses/by-programs-specialization?program_id=1
+
+# Search courses with purchase status for student
+GET /api/v1/courses/by-programs-specialization?search_query=programming&student_id=123
+
+# Get purchased courses for student
+GET /api/v1/courses/by-programs-specialization?course_type=PURCHASED&student_id=123
+```
+
+#### Get Course Basic Details
+- **Method**: `GET`
+- **Path**: `/api/v1/courses/{courseId}/basic-details`
+- **Authorization**: Public (authentication optional for enhanced features)
+- **Description**: Retrieve basic details for a specific course including progress information if student ID is provided
+- **Path Parameters**:
+  - `courseId` (required): Course identifier
+- **Query Parameters**:
+  - `student_id` (optional): Student identifier for enrollment and progress data
+- **Response**: `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "course_id": 123,
+    "course_name": "Advanced Web Development",
+    "course_description": "Comprehensive course covering modern web development technologies...",
+    "overall_progress_percentage": 75,
+    "teacher_name": "Dr. Jane Smith",
+    "start_date": "2024-01-15T09:00:00Z",
+    "end_date": "2024-05-15T17:00:00Z",
+    "purchase_status": "PURCHASED",
+    "program_name": "Computer Science",
+    "specialization_name": "Full Stack Development"
+  },
+  "message": "Course basic details retrieved successfully"
+}
+```
+- **Use Cases**:
+  - **Course Overview**: Get comprehensive course information for display
+  - **Student Progress**: Track individual student progress when student_id is provided
+  - **Enrollment Status**: Check if student is enrolled and course purchase status
+  - **Academic Context**: Display program and specialization information
+- **Business Rules**:
+  - Course must be active and not deleted
+  - If student_id is provided, enrollment and progress data is included
+  - Purchase status shows "PURCHASED" if student is enrolled, otherwise shows course type
+  - Teacher information comes from the first assigned teacher
+  - Session dates represent the earliest scheduled course session
+  - Progress percentage is null if student is not enrolled or has no progress
+
+#### Get Course Modules
+- **Method**: `GET`
+- **Path**: `/api/v1/courses/{courseId}/modules`
+- **Authorization**: Public (authentication optional for enhanced features)
+- **Description**: Retrieve modules list for a specific course with comprehensive statistics including topic and video counts
+- **Path Parameters**:
+  - `courseId` (required): Course identifier
+- **Query Parameters**:
+  - `student_id` (optional): Student identifier for progress tracking and enrollment context
+- **Response**: `200 OK`
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "course_module_id": 1,
+      "course_module_name": "Introduction to Programming",
+      "position": 1,
+      "is_active": true,
+      "total_topics": 5,
+      "total_videos": 12,
+      "created_at": "2024-01-15T09:00:00Z",
+      "updated_at": "2024-01-20T14:30:00Z"
+    },
+    {
+      "course_module_id": 2,
+      "course_module_name": "Advanced Concepts",
+      "position": 2,
+      "is_active": true,
+      "total_topics": 8,
+      "total_videos": 18,
+      "created_at": "2024-01-16T10:00:00Z",
+      "updated_at": "2024-01-22T16:45:00Z"
+    }
+  ],
+  "message": "Course modules retrieved successfully"
+}
+```
+- **Use Cases**:
+  - **Course Structure**: Display course organization and module hierarchy
+  - **Content Statistics**: Show total topics and videos per module for course overview
+  - **Navigation**: Provide module-based navigation for course content
+  - **Progress Tracking**: Module-level progress context when student_id is provided
+- **Business Rules**:
+  - Course must be active and not deleted
+  - Only active modules are returned in the response
+  - Modules are ordered by position field in ascending order
+  - Statistics include only active topics and videos
+  - Total counts help students understand course scope and depth
+  - Student ID context enables future progress tracking enhancements
+
+#### Get Course Topics by Module
+- **Method**: `GET`
+- **Path**: `/api/v1/modules/{moduleId}/topics`
+- **Authorization**: Public (authentication optional for enhanced features)
+- **Description**: Retrieve topics list for a specific module with comprehensive video lecture statistics
+- **Path Parameters**:
+  - `moduleId` (required): Module identifier
+- **Response**: `200 OK`
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "course_topic_id": 1,
+      "course_topic_name": "Introduction to Variables",
+      "overall_video_lectures": "5 Video Lectures",
+      "position": 1,
+      "is_active": true,
+      "created_at": "2024-01-15T09:00:00Z",
+      "updated_at": "2024-01-20T14:30:00Z"
+    },
+    {
+      "course_topic_id": 2,
+      "course_topic_name": "Data Types and Operations",
+      "overall_video_lectures": "7 Video Lectures",
+      "position": 2,
+      "is_active": true,
+      "created_at": "2024-01-16T10:00:00Z",
+      "updated_at": "2024-01-22T16:45:00Z"
+    }
+  ],
+  "message": "Course topics retrieved successfully"
+}
+```
+- **Use Cases**:
+  - **Module Content Display**: Show detailed topic structure within a module
+  - **Learning Path Navigation**: Provide topic-based navigation for course content
+  - **Content Statistics**: Display video lecture counts for each topic
+  - **Progress Planning**: Help students understand topic scope and video content
+- **Business Rules**:
+  - Module must be active and not deleted
+  - Only active topics are returned in the response
+  - Topics are ordered by position field in ascending order
+  - Video lecture counts include only active videos
+  - Statistics provide clear understanding of topic content depth
+  - Course structure supports hierarchical content organization
+
+#### Get Course Videos by Topic
+- **Method**: `GET`
+- **Path**: `/api/v1/topics/{topicId}/videos`
+- **Authorization**: Public (authentication optional for progress tracking)
+- **Description**: Retrieve all videos for a specific topic with comprehensive progress tracking and intelligent locking logic
+- **Path Parameters**:
+  - `topicId` (required): Topic identifier
+- **Query Parameters**:
+  - `student_id` (optional): Student identifier for progress tracking and video locking
+- **Response**: `200 OK`
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "course_video_id": 1,
+      "position": 1,
+      "video_name": "Introduction to Variables",
+      "duration_seconds": 450,
+      "is_completed": true,
+      "completion_percentage": 100,
+      "last_watched_at": "2024-01-20T14:30:00Z",
+      "completion_status": "Completed",
+      "is_video_locked": false
+    },
+    {
+      "course_video_id": 2,
+      "position": 2,
+      "video_name": "Variable Types and Scope",
+      "duration_seconds": 620,
+      "is_completed": false,
+      "completion_percentage": 35,
+      "last_watched_at": "2024-01-21T10:15:00Z",
+      "completion_status": "In Completed",
+      "is_video_locked": false
+    },
+    {
+      "course_video_id": 3,
+      "position": 3,
+      "video_name": "Advanced Variable Concepts",
+      "duration_seconds": 780,
+      "is_completed": null,
+      "completion_percentage": null,
+      "last_watched_at": null,
+      "completion_status": "Pending",
+      "is_video_locked": true
+    }
+  ],
+  "message": "Course videos retrieved successfully"
+}
+```
+- **Use Cases**:
+  - **Video Learning Interface**: Display sequential video content with progress tracking
+  - **Adaptive Learning**: Implement intelligent video locking based on completion status
+  - **Progress Monitoring**: Track individual video completion and watch time
+  - **Sequential Learning**: Enforce structured learning paths through position-based locking
+- **Business Rules**:
+  - Topic must be active and not deleted
+  - Only active videos are returned in the response
+  - Videos are ordered by position field in ascending order
+  - First video (minimum position) is never locked for any student
+  - Subsequent videos are locked until the previous video is completed
+  - Progress data is null when no student_id is provided
+  - Completion status: "Completed" (100%), "In Completed" (1-99%), "Pending" (0%)
+  - Video locking ensures structured learning progression and prevents content skipping
+
+#### Get Video Details by ID
+- **Method**: `GET`
+- **Path**: `/api/v1/videos/{videoId}/details`
+- **Authorization**: Public (authentication optional for enhanced features)
+- **Description**: Retrieve comprehensive video details by ID including teacher information and navigation to next/previous videos
+- **Path Parameters**:
+  - `videoId` (required): Video identifier
+- **Response**: `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "course_video_id": 1,
+    "video_name": "Lecture:1 Introduction to Variables",
+    "video_url": "https://video.bunnycdn.com/play/abc123/playlist.m3u8",
+    "thumbnail_url": "https://video.bunnycdn.com/thumbnails/abc123.jpg",
+    "duration": 450,
+    "position": 1,
+    "bunny_video_id": "abc123-def456-ghi789",
+    "course_topic_id": 1,
+    "course_id": 1,
+    "teacher_name": "Dr. Jane Smith",
+    "teacher_qualification": "PhD in Computer Science",
+    "profile_picture_url": "https://example.com/teacher-profile.jpg",
+    "next_course_video_id": 2,
+    "next_video_name": "Variable Types and Scope",
+    "next_video_duration": 620,
+    "previous_course_video_id": null,
+    "previous_video_name": null,
+    "previous_video_duration": null
+  },
+  "message": "Video details retrieved successfully"
+}
+```
+- **Use Cases**:
+  - **Video Player Interface**: Display comprehensive video information for playback
+  - **Teacher Information**: Show instructor details and qualifications
+  - **Video Navigation**: Enable seamless navigation between sequential videos
+  - **Content Management**: Provide complete video metadata for learning platforms
+- **Business Rules**:
+  - Video must be active and not deleted
+  - Teacher information comes from the first assigned teacher for the course
+  - Navigation shows next/previous videos within the same topic based on position
+  - Video name is formatted as "Lecture:{position} {original_name}"
+  - Duration is returned in seconds for consistent time handling
+  - Null values are returned when no next/previous videos exist
+  - Bunny Video ID provides integration with Bunny.net CDN for video delivery
 
 ### Course Module Management
 
@@ -460,10 +896,20 @@ All entities extend `MultiTenantAuditFields` from `@shared/types/base.types.ts`,
 - Cannot modify course content or access other students' data
 - Can only access courses they are enrolled in
 
+### Public Access (No Authentication Required)
+- Can browse available courses using the course discovery endpoint
+- Can filter courses by programs, specializations, and course types
+- Can search courses by name
+- Purchase status is calculated only when student_id is provided
+- Cannot access course content or modify any data
+
 ## Validation Rules
 
 ### Program Validation
 - **program_name**: Required, 2-255 characters, string type
+
+### Specialization Validation
+- **program_id**: Required for by-program endpoint, positive integer, must exist within tenant
 
 ### Course Validation
 - **course_name**: Required, 2-255 characters, string type
@@ -472,6 +918,13 @@ All entities extend `MultiTenantAuditFields` from `@shared/types/base.types.ts`,
 - **course_total_hours**: Read-only field, auto-calculated by backend from sum of video durations in course
 - **main_thumbnail_url**: Optional, valid URL format
 - **specialization_ids**: Optional, must be an array of valid specialization IDs within tenant
+
+### Course Discovery Validation
+- **course_type**: Optional, must be one of 'FREE', 'PAID', 'PURCHASED'
+- **program_id**: Optional, integer (-1 for all programs), minimum value -1
+- **specialization_id**: Optional, integer (-1 for all specializations), minimum value -1
+- **search_query**: Optional, string for course name search, trimmed
+- **student_id**: Optional, positive integer for purchase status calculation
 
 ### Module Validation
 - **course_module_name**: Required, 2-255 characters, string type

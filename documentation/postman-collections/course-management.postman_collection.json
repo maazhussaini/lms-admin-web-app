@@ -151,6 +151,323 @@
                 "description": "Retrieves a paginated list of courses with optional filtering and sorting. The tenant ID is extracted from the JWT token of the authenticated user, ensuring that only courses within the user's tenant are returned."
             },
             "response": []
+        },
+        {
+            "name": "Get Courses by Programs and Specialization",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has success true and course data array\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Courses retrieved successfully\", \"Message should indicate successful retrieval\");",
+                            "    pm.expect(jsonData.data).to.be.an('array', \"Data should be an array\");",
+                            "    if (jsonData.data.length > 0) {",
+                            "        const firstCourse = jsonData.data[0];",
+                            "        pm.expect(firstCourse).to.have.property('course_id');",
+                            "        pm.expect(firstCourse).to.have.property('course_name');",
+                            "        pm.expect(firstCourse).to.have.property('program_name');",
+                            "        pm.expect(firstCourse).to.have.property('specialization_name');",
+                            "        pm.expect(firstCourse).to.have.property('purchase_status');",
+                            "        pm.expect(firstCourse).to.have.property('teacher_qualification');",
+                            "    }",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/courses/by-programs-specialization?course_type=PAID&program_id=1&specialization_id=2&search_query=programming&student_id=123",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "courses",
+                        "by-programs-specialization"
+                    ],
+                    "query": [
+                        { "key": "course_type", "value": "PAID", "description": "(Optional) Course type: FREE, PAID, PURCHASED" },
+                        { "key": "program_id", "value": "1", "description": "(Optional) Program ID (-1 for all programs)" },
+                        { "key": "specialization_id", "value": "2", "description": "(Optional) Specialization ID (-1 for all specializations)" },
+                        { "key": "search_query", "value": "programming", "description": "(Optional) Search term for course names" },
+                        { "key": "student_id", "value": "123", "description": "(Optional) Student ID for purchase status calculation" }
+                    ]
+                },
+                "description": "Retrieves courses filtered by programs and specializations with purchase status calculation. Public endpoint accessible without authentication."
+            },
+            "response": []
+        },
+        {
+            "name": "Get Course Basic Details",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has success true and course details\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Course basic details retrieved successfully\", \"Message should indicate successful retrieval\");",
+                            "    pm.expect(jsonData.data).to.be.an('object', \"Data should be an object\");",
+                            "    const course = jsonData.data;",
+                            "    pm.expect(course).to.have.property('course_id');",
+                            "    pm.expect(course).to.have.property('course_name');",
+                            "    pm.expect(course).to.have.property('total_modules');",
+                            "    pm.expect(course).to.have.property('total_topics');",
+                            "    pm.expect(course).to.have.property('total_videos');",
+                            "    pm.expect(course).to.have.property('completion_percentage');",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/courses/{{courseId}}/basic-details?student_id=123",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "courses",
+                        "{{courseId}}",
+                        "basic-details"
+                    ],
+                    "query": [
+                        { "key": "student_id", "value": "123", "description": "(Optional) Student ID for progress calculation" }
+                    ]
+                },
+                "description": "Retrieves basic details for a specific course including statistics and progress information. Public endpoint with optional authentication for enhanced features."
+            },
+            "response": []
+        },
+        {
+            "name": "Get Course Modules",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has success true and modules array\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Course modules retrieved successfully\", \"Message should indicate successful retrieval\");",
+                            "    pm.expect(jsonData.data).to.be.an('array', \"Data should be an array\");",
+                            "    if (jsonData.data.length > 0) {",
+                            "        const firstModule = jsonData.data[0];",
+                            "        pm.expect(firstModule).to.have.property('module_id');",
+                            "        pm.expect(firstModule).to.have.property('module_name');",
+                            "        pm.expect(firstModule).to.have.property('module_order');",
+                            "        pm.expect(firstModule).to.have.property('total_topics');",
+                            "        pm.expect(firstModule).to.have.property('total_videos');",
+                            "    }",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/courses/{{courseId}}/modules?student_id=123",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "courses",
+                        "{{courseId}}",
+                        "modules"
+                    ],
+                    "query": [
+                        { "key": "student_id", "value": "123", "description": "(Optional) Student ID for progress calculation" }
+                    ]
+                },
+                "description": "Retrieves modules list for a specific course with statistics including topic and video counts. Public endpoint with optional authentication for enhanced features."
+            },
+            "response": []
+        },
+        {
+            "name": "Get Course Topics by Module",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has success true and topics array\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Course topics retrieved successfully\", \"Message should indicate successful retrieval\");",
+                            "    pm.expect(jsonData.data).to.be.an('array', \"Data should be an array\");",
+                            "    if (jsonData.data.length > 0) {",
+                            "        const firstTopic = jsonData.data[0];",
+                            "        pm.expect(firstTopic).to.have.property('topic_id');",
+                            "        pm.expect(firstTopic).to.have.property('topic_name');",
+                            "        pm.expect(firstTopic).to.have.property('topic_order');",
+                            "        pm.expect(firstTopic).to.have.property('total_video_lectures');",
+                            "    }",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/courses/modules/1/topics?student_id=123",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "courses",
+                        "modules",
+                        "1",
+                        "topics"
+                    ],
+                    "query": [
+                        { "key": "student_id", "value": "123", "description": "(Optional) Student ID for progress calculation" }
+                    ]
+                },
+                "description": "Retrieves topics list for a specific module with video lecture statistics. Public endpoint with optional authentication for enhanced features."
+            },
+            "response": []
+        },
+        {
+            "name": "Get Course Videos by Topic",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has success true and videos array\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Course videos retrieved successfully\", \"Message should indicate successful retrieval\");",
+                            "    pm.expect(jsonData.data).to.be.an('array', \"Data should be an array\");",
+                            "    if (jsonData.data.length > 0) {",
+                            "        const firstVideo = jsonData.data[0];",
+                            "        pm.expect(firstVideo).to.have.property('video_id');",
+                            "        pm.expect(firstVideo).to.have.property('video_title');",
+                            "        pm.expect(firstVideo).to.have.property('video_order');",
+                            "        pm.expect(firstVideo).to.have.property('is_locked');",
+                            "        pm.expect(firstVideo).to.have.property('watch_percentage');",
+                            "    }",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/courses/topics/1/videos?student_id=123",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "courses",
+                        "topics",
+                        "1",
+                        "videos"
+                    ],
+                    "query": [
+                        { "key": "student_id", "value": "123", "description": "(Optional) Student ID for progress tracking and locking logic" }
+                    ]
+                },
+                "description": "Retrieves all videos for a specific topic with progress tracking and locking logic. Public endpoint with optional authentication for progress tracking."
+            },
+            "response": []
+        },
+        {
+            "name": "Get Video Details by ID",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200 OK\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test(\"Response has success true and video details\", function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+                            "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+                            "    pm.expect(jsonData.message).to.eql(\"Video details retrieved successfully\", \"Message should indicate successful retrieval\");",
+                            "    pm.expect(jsonData.data).to.be.an('object', \"Data should be an object\");",
+                            "    const video = jsonData.data;",
+                            "    pm.expect(video).to.have.property('video_id');",
+                            "    pm.expect(video).to.have.property('video_title');",
+                            "    pm.expect(video).to.have.property('video_description');",
+                            "    pm.expect(video).to.have.property('teacher_name');",
+                            "    pm.expect(video).to.have.property('teacher_qualification');",
+                            "    pm.expect(video).to.have.property('previous_video_id');",
+                            "    pm.expect(video).to.have.property('next_video_id');",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/courses/videos/1/details?student_id=123",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "courses",
+                        "videos",
+                        "1",
+                        "details"
+                    ],
+                    "query": [
+                        { "key": "student_id", "value": "123", "description": "(Optional) Student ID for enhanced features and progress tracking" }
+                    ]
+                },
+                "description": "Retrieves comprehensive video details by ID including teacher information and navigation. Public endpoint with optional authentication for enhanced features."
+            },
+            "response": []
         }
     ],
     "auth": {
@@ -212,6 +529,10 @@
         { "key": "randomCourseName", "value": "", "type": "string" },
         { "key": "updatedCourseName", "value": "", "type": "string" },
         { "key": "tempCourseId", "value": "", "type": "string" },
-        { "key": "duplicateCourseName", "value": "", "type": "string" }
+        { "key": "duplicateCourseName", "value": "", "type": "string" },
+        { "key": "moduleId", "value": "1", "type": "string" },
+        { "key": "topicId", "value": "1", "type": "string" },
+        { "key": "videoId", "value": "1", "type": "string" },
+        { "key": "studentId", "value": "123", "type": "string" }
     ]
 }

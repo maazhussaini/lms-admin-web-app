@@ -5,6 +5,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { CreateProgramDto, UpdateProgramDto, ProgramResponseDto } from '@/dtos/course/program.dto';
+import { ProgramsByTenantResponse } from '@/dtos/course/programs-by-tenant.dto';
 import { ApiError } from '@/utils/api-error.utils';
 import { TListResponse } from '@shared/types';
 import logger from '@/config/logger';
@@ -242,8 +243,8 @@ export class ProgramService {
     // Verify program exists and belongs to tenant
     await this.getProgramById(programId, tenantId);
     
-    // Check if specializations exist for this program
-    const specializationsCount = await prisma.specialization.count({
+    // Check if specializations exist for this program  
+    const specializationsCount = await prisma.specializationProgram.count({
       where: {
         program_id: programId,
         is_deleted: false
@@ -276,6 +277,43 @@ export class ProgramService {
     });
     
     return { message: 'Program deleted successfully' };
+  }
+
+  /**
+   * Get programs by tenant with active status filtering
+   * 
+   * @param tenantId Tenant identifier for filtering programs
+   * @returns List of active programs for the specified tenant
+   */
+  async getProgramsByTenant(tenantId: number): Promise<ProgramsByTenantResponse[]> {
+    // Log the tenant context for debugging
+    logger.debug('Getting programs by tenant', {
+      tenantId
+    });
+
+    // Get programs for the specified tenant that are active and not deleted
+    const programs = await prisma.program.findMany({
+      where: {
+        tenant_id: tenantId,
+        is_active: true,
+        is_deleted: false
+      },
+      orderBy: {
+        program_name: 'asc'
+      }
+    });
+
+    // Map to response DTO format
+    return programs.map((program: any) => ({
+      program_id: program.program_id,
+      program_name: program.program_name,
+      program_thumbnail_url: program.program_thumbnail_url,
+      tenant_id: program.tenant_id,
+      is_active: program.is_active,
+      is_deleted: program.is_deleted,
+      created_at: program.created_at,
+      updated_at: program.updated_at
+    }));
   }
   
   /**

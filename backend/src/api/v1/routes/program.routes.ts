@@ -89,4 +89,15 @@ router.delete(
   ProgramController.deleteProgramHandler
 );
 
+/**
+ * @route GET /api/v1/programs/tenant/list
+ * @description Get all programs for the authenticated user's tenant
+ * @access Private (Any authenticated user)
+ */
+router.get(
+  '/tenant/list',
+  authenticate,
+  ProgramController.getProgramsByTenantHandler
+);
+
 export default router;

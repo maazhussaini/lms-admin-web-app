@@ -279,4 +279,94 @@ export class StudentController {
       message: 'Student profile updated successfully'
     }
   );
+
+  /**
+   * Get enrolled courses by student ID
+   * 
+   * @route GET /api/v1/students/:studentId/enrolled-courses
+   * @access Private (SUPER_ADMIN, TENANT_ADMIN, TEACHER, STUDENT)
+   */
+  static getEnrolledCoursesByStudentIdHandler = createRouteHandler(
+    async (req: AuthenticatedRequest) => {
+      if (!req.user) {
+        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
+      }
+
+      const studentIdParam = req.params['studentId'];
+      if (!studentIdParam) {
+        throw new ApiError('Student ID is required', 400, 'MISSING_STUDENT_ID');
+      }
+      
+      const studentId = parseInt(studentIdParam, 10);
+      if (isNaN(studentId)) {
+        throw new ApiError('Invalid student ID', 400, 'INVALID_STUDENT_ID');
+      }
+
+      // Get search query from query parameters
+      const searchQuery = (req.query['search_query'] as string) || '';
+
+      const requestingUser = req.user;
+      
+      logger.debug('Getting enrolled courses for student', {
+        studentId,
+        searchQuery,
+        requestingUserId: requestingUser.id,
+        userType: requestingUser.user_type
+      });
+      
+      return await studentService.getEnrolledCoursesByStudentId(
+        studentId,
+        searchQuery,
+        requestingUser
+      );
+    },
+    {
+      message: 'Enrolled courses retrieved successfully'
+    }
+  );
+
+  /**
+   * Get enrolled courses for current student (profile-based)
+   * 
+   * @route GET /api/v1/student/profile/enrollments
+   * @access Private (STUDENT only)
+   */
+  static getStudentProfileEnrollmentsHandler = createRouteHandler(
+    async (req: AuthenticatedRequest) => {
+      if (!req.user) {
+        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
+      }
+
+      const requestingUser = req.user;
+
+      // Ensure the user is a student and get their student_id
+      if (requestingUser.user_type !== UserType.STUDENT) {
+        throw new ApiError('Only students can access this endpoint', 403, 'FORBIDDEN');
+      }
+
+      // Get student_id from the user's profile
+      // In a real implementation, you might need to get this from the student table
+      // For now, assuming the user ID maps to student ID
+      const studentId = requestingUser.id; // You might need to adjust this based on your user-student relationship
+
+      // Get search query from query parameters
+      const searchQuery = (req.query['search_query'] as string) || '';
+      
+      logger.debug('Getting enrolled courses for current student profile', {
+        studentId,
+        searchQuery,
+        requestingUserId: requestingUser.id,
+        userType: requestingUser.user_type
+      });
+      
+      return await studentService.getEnrolledCoursesByStudentId(
+        studentId,
+        searchQuery,
+        requestingUser
+      );
+    },
+    {
+      message: 'Student enrolled courses retrieved successfully'
+    }
+  );
 }

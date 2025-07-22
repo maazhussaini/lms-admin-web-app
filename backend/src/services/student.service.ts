@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { CreateStudentDto, UpdateStudentDto, UpdateStudentProfileDto } from '@/dtos/student/student.dto';
+import { EnrolledCourseResponse } from '@/dtos/student/enrolled-courses-by-student.dto';
 import { 
   NotFoundError, 
   ConflictError, 
@@ -782,6 +783,181 @@ export class StudentService {
     const dbField = fieldMapping[sortBy] || sortBy;
     
     return { [dbField]: sortOrder };
+  }
+
+  /**
+   * Get enrolled courses by student ID
+   * 
+   * @param studentId Student identifier
+   * @param searchQuery Optional search query to filter course names
+   * @param requestingUser User requesting the data
+   * @returns List of enrolled courses with comprehensive details
+   */
+  async getEnrolledCoursesByStudentId(
+    studentId: number,
+    searchQuery: string = '',
+    requestingUser: TokenPayload
+  ): Promise<EnrolledCourseResponse[]> {
+    return tryCatch(async () => {
+      logger.debug('Getting enrolled courses by student ID', {
+        studentId,
+        searchQuery,
+        requestingUserId: requestingUser.id
+      });
+
+      // First, get the student's tenant ID and validate access
+      const student = await prisma.student.findFirst({
+        where: {
+          student_id: studentId,
+          is_deleted: false
+        },
+        select: {
+          student_id: true,
+          tenant_id: true
+        }
+      });
+
+      if (!student) {
+        throw new NotFoundError('Student not found');
+      }
+
+      // For non-SUPER_ADMIN users, restrict to their tenant
+      if (requestingUser.user_type !== UserType.SUPER_ADMIN) {
+        if (!requestingUser.tenantId || student.tenant_id !== requestingUser.tenantId) {
+          throw new ForbiddenError('Access denied to student from different tenant');
+        }
+      }
+
+      // Build search filter
+      const searchFilter = searchQuery 
+        ? {
+            course_name: {
+              contains: searchQuery,
+              mode: 'insensitive' as any
+            }
+          }
+        : {};
+
+      // Query enrolled courses with all required joins
+      const enrolledCourses = await prisma.enrollment.findMany({
+        where: {
+          student_id: studentId,
+          is_active: true,
+          is_deleted: false,
+          course: {
+            is_active: true,
+            is_deleted: false,
+            course_status: 'PUBLIC',
+            tenant_id: student.tenant_id,
+            ...searchFilter
+          }
+        },
+        include: {
+          course: {
+            include: {
+              teacher_courses: {
+                where: {
+                  is_active: true,
+                  is_deleted: false
+                },
+                include: {
+                  teacher: {
+                    select: {
+                      full_name: true
+                    }
+                  }
+                }
+              },
+              course_sessions: {
+                where: {
+                  is_active: true,
+                  is_deleted: false
+                },
+                select: {
+                  start_date: true,
+                  end_date: true
+                },
+                orderBy: {
+                  start_date: 'asc'
+                },
+                take: 1
+              }
+            }
+          },
+          specialization_program: {
+            include: {
+              specialization: {
+                select: {
+                  specialization_name: true
+                }
+              },
+              program: {
+                select: {
+                  program_name: true
+                }
+              }
+            }
+          }
+        },
+        orderBy: {
+          enrolled_at: 'desc'
+        }
+      });
+
+      // Get student course progress separately
+      const studentProgressData = await prisma.studentCourseProgress.findMany({
+        where: {
+          student_id: studentId,
+          course_id: {
+            in: enrolledCourses.map(e => e.course_id)
+          },
+          is_active: true,
+          is_deleted: false
+        },
+        select: {
+          course_id: true,
+          overall_progress_percentage: true
+        }
+      });
+
+      // Create a map for quick progress lookup
+      const progressMap = new Map(
+        studentProgressData.map(p => [p.course_id, p.overall_progress_percentage])
+      );
+
+      // Format the response
+      const formattedCourses = enrolledCourses.map(enrollment => {
+        const course = enrollment.course;
+        const specializationProgram = enrollment.specialization_program;
+        const teacher = course.teacher_courses[0]?.teacher;
+        const courseSession = course.course_sessions[0];
+        const progressPercentage = progressMap.get(course.course_id) || 0;
+
+        return {
+          enrollment_id: enrollment.enrollment_id,
+          specialization_program_id: enrollment.specialization_program_id,
+          course_id: course.course_id,
+          specialization_id: specializationProgram?.specialization_id || null,
+          program_id: specializationProgram?.program_id || null,
+          course_name: course.course_name,
+          start_date: courseSession?.start_date || null,
+          end_date: courseSession?.end_date || null,
+          specialization_name: specializationProgram?.specialization?.specialization_name || null,
+          program_name: specializationProgram?.program?.program_name || null,
+          teacher_name: teacher?.full_name || 'Not Assigned',
+          course_total_hours: course.course_total_hours ? Number(course.course_total_hours) : null,
+          overall_progress_percentage: progressPercentage
+        };
+      });
+
+      return formattedCourses;
+    }, {
+      context: {
+        studentId,
+        searchQuery,
+        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId }
+      }
+    });
   }
 }
 

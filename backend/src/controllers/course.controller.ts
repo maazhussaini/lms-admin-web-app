@@ -1,5 +1,6 @@
 import { CourseService } from '@/services/course.service';
 import { CreateCourseDto, UpdateCourseDto } from '@/dtos/course/course.dto';
+import { GetCoursesByProgramsAndSpecializationDto } from '@/dtos/course/course-by-programs-specialization.dto';
 import {
   createRouteHandler,
   createListHandler,
@@ -177,6 +178,215 @@ export class CourseController {
     },
     {
       message: 'Course deleted successfully'
+    }
+  );
+
+  /**
+   * Get courses by programs and specialization
+   * @route GET /api/v1/courses/by-programs-specialization
+   * @access Public (Student access - no authentication required for browsing)
+   */
+  static getCoursesByProgramsAndSpecializationHandler = createRouteHandler(
+    async (req: AuthenticatedRequest) => {
+      const params: GetCoursesByProgramsAndSpecializationDto = {
+        course_type: req.query['course_type'] as string | undefined,
+        program_id: req.query['program_id'] ? parseInt(req.query['program_id'] as string, 10) : undefined,
+        specialization_id: req.query['specialization_id'] ? parseInt(req.query['specialization_id'] as string, 10) : undefined,
+        search_query: req.query['search_query'] as string | undefined,
+        student_id: req.query['student_id'] ? parseInt(req.query['student_id'] as string, 10) : undefined
+      };
+
+      // If user is authenticated and is a student, use their student_id
+      let requestingStudentId: number | undefined;
+      if (req.user && req.user.user_type === UserType.STUDENT) {
+        // In a real implementation, you'd get the student_id from the user token
+        // For now, we'll use the student_id from query params if provided
+        requestingStudentId = params.student_id;
+      }
+
+      logger.debug('Getting courses by programs and specialization', {
+        params,
+        requestingStudentId,
+        userType: req.user?.user_type
+      });
+
+      return await courseService.getCoursesByProgramsAndSpecialization(
+        params,
+        requestingStudentId
+      );
+    },
+    {
+      message: 'Courses retrieved successfully'
+    }
+  );
+
+  /**
+   * Get course basic details
+   * @route GET /api/v1/courses/:courseId/basic-details
+   * @access Public (can be accessed with optional authentication)
+   */
+  static getCourseBasicDetailsHandler = createRouteHandler(
+    async (req: AuthenticatedRequest) => {
+      const courseIdParam = req.params['courseId'];
+      if (!courseIdParam) {
+        throw new ApiError('Course ID is required', 400, 'MISSING_COURSE_ID');
+      }
+      
+      const courseId = parseInt(courseIdParam, 10);
+      if (isNaN(courseId)) {
+        throw new ApiError('Invalid course ID', 400, 'INVALID_COURSE_ID');
+      }
+
+      // Get student_id from query parameters
+      const studentId = req.query['student_id'] ? parseInt(req.query['student_id'] as string, 10) : undefined;
+
+      logger.debug('Getting course basic details', {
+        courseId,
+        studentId,
+        userType: req.user?.user_type
+      });
+
+      return await courseService.getCourseBasicDetails(
+        courseId,
+        studentId,
+        req.user || undefined
+      );
+    },
+    {
+      message: 'Course basic details retrieved successfully'
+    }
+  );
+
+  /**
+   * Get course modules with statistics
+   * @route GET /api/v1/courses/:courseId/modules
+   * @access Public (can be accessed with optional authentication)
+   */
+  static getCourseModulesHandler = createRouteHandler(
+    async (req: AuthenticatedRequest) => {
+      const courseIdParam = req.params['courseId'];
+      if (!courseIdParam) {
+        throw new ApiError('Course ID is required', 400, 'MISSING_COURSE_ID');
+      }
+      
+      const courseId = parseInt(courseIdParam, 10);
+      if (isNaN(courseId)) {
+        throw new ApiError('Invalid course ID', 400, 'INVALID_COURSE_ID');
+      }
+
+      logger.debug('Getting course modules', {
+        courseId,
+        userType: req.user?.user_type
+      });
+
+      return await courseService.getCourseModules(
+        courseId,
+        req.user || undefined
+      );
+    },
+    {
+      message: 'Course modules retrieved successfully'
+    }
+  );
+
+  /**
+   * Get course topics by module ID with video lecture statistics
+   * @route GET /api/v1/modules/:moduleId/topics
+   * @access Public (can be accessed with optional authentication)
+   */
+  static getCourseTopicsByModuleIdHandler = createRouteHandler(
+    async (req: AuthenticatedRequest) => {
+      const moduleIdParam = req.params['moduleId'];
+      if (!moduleIdParam) {
+        throw new ApiError('Module ID is required', 400, 'MISSING_MODULE_ID');
+      }
+      
+      const moduleId = parseInt(moduleIdParam, 10);
+      if (isNaN(moduleId)) {
+        throw new ApiError('Invalid module ID', 400, 'INVALID_MODULE_ID');
+      }
+
+      logger.debug('Getting course topics by module ID', {
+        moduleId,
+        userType: req.user?.user_type
+      });
+
+      return await courseService.getCourseTopicsByModuleId(
+        moduleId,
+        req.user || undefined
+      );
+    },
+    {
+      message: 'Course topics retrieved successfully'
+    }
+  );
+
+  /**
+   * Get all course videos by topic ID with progress tracking and locking logic
+   * @route GET /api/v1/topics/:topicId/videos
+   * @access Public (can be accessed with optional authentication for progress tracking)
+   */
+  static getAllCourseVideosByTopicIdHandler = createRouteHandler(
+    async (req: AuthenticatedRequest) => {
+      const topicIdParam = req.params['topicId'];
+      if (!topicIdParam) {
+        throw new ApiError('Topic ID is required', 400, 'MISSING_TOPIC_ID');
+      }
+      
+      const topicId = parseInt(topicIdParam, 10);
+      if (isNaN(topicId)) {
+        throw new ApiError('Invalid topic ID', 400, 'INVALID_TOPIC_ID');
+      }
+
+      // Get student_id from query parameters
+      const studentId = req.query['student_id'] ? parseInt(req.query['student_id'] as string, 10) : undefined;
+
+      logger.debug('Getting all course videos by topic ID', {
+        topicId,
+        studentId,
+        userType: req.user?.user_type
+      });
+
+      return await courseService.getAllCourseVideosByTopicId(
+        topicId,
+        studentId,
+        req.user || undefined
+      );
+    },
+    {
+      message: 'Course videos retrieved successfully'
+    }
+  );
+
+  /**
+   * Get comprehensive video details by video ID including teacher info and navigation
+   * @route GET /api/v1/videos/:videoId/details
+   * @access Public (can be accessed with optional authentication)
+   */
+  static getVideoDetailsByIdHandler = createRouteHandler(
+    async (req: AuthenticatedRequest) => {
+      const videoIdParam = req.params['videoId'];
+      if (!videoIdParam) {
+        throw new ApiError('Video ID is required', 400, 'MISSING_VIDEO_ID');
+      }
+      
+      const videoId = parseInt(videoIdParam, 10);
+      if (isNaN(videoId)) {
+        throw new ApiError('Invalid video ID', 400, 'INVALID_VIDEO_ID');
+      }
+
+      logger.debug('Getting video details by ID', {
+        videoId,
+        userType: req.user?.user_type
+      });
+
+      return await courseService.getVideoDetailsById(
+        videoId,
+        req.user || undefined
+      );
+    },
+    {
+      message: 'Video details retrieved successfully'
     }
   );
 }

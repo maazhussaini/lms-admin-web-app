@@ -519,6 +519,56 @@
         "description": "Attempts to retrieve a specialization with an invalid ID format to test input validation."
       },
       "response": []
+    },
+    {
+      "name": "Get Active Specializations by Program",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has success true and specializations array\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.eql(true, \"Response success should be true\");",
+              "    pm.expect(jsonData.statusCode).to.eql(200, \"Status code should be 200\");",
+              "    pm.expect(jsonData.message).to.eql(\"Active specializations retrieved successfully\", \"Message should indicate successful retrieval\");",
+              "    pm.expect(jsonData.data).to.be.an('array', \"Data should be an array\");",
+              "    if (jsonData.data.length > 0) {",
+              "        const firstSpecialization = jsonData.data[0];",
+              "        pm.expect(firstSpecialization).to.have.property('specialization_id');",
+              "        pm.expect(firstSpecialization).to.have.property('specialization_name');",
+              "        pm.expect(firstSpecialization).to.have.property('specialization_description');",
+              "        pm.expect(firstSpecialization).to.have.property('program_id');",
+              "        pm.expect(firstSpecialization).to.have.property('tenant_id');",
+              "        pm.expect(firstSpecialization).to.have.property('is_active');",
+              "        pm.expect(firstSpecialization).to.have.property('is_deleted');",
+              "        pm.expect(firstSpecialization.is_active).to.be.true;",
+              "        pm.expect(firstSpecialization.is_deleted).to.be.false;",
+              "    }",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/specializations/by-program?program_id=1",
+          "host": ["{{base_url}}"],
+          "path": ["specializations", "by-program"],
+          "query": [
+            { "key": "program_id", "value": "1", "description": "Program ID to filter specializations by" }
+          ]
+        },
+        "description": "Retrieves all active specializations for a specific program. Only returns specializations where is_active=true and is_deleted=false."
+      },
+      "response": []
     }
   ],
   "auth": {

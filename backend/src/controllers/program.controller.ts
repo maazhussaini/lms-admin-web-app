@@ -5,7 +5,8 @@
 
 import { Request, Response } from 'express';
 import { ProgramService } from '@/services/program.service';
-import { CreateProgramDto, UpdateProgramDto } from '@/dtos/course/program.dto';
+import { CreateProgramDto, UpdateProgramDto } from '../dtos/course/program.dto';
+import { ProgramsByTenantResponse } from '../dtos/course/programs-by-tenant.dto';
 import { asyncHandler } from '@/utils/async-handler.utils';
 import { ApiError } from '@/utils/api-error.utils';
 import { getPaginationFromRequest, getSortParamsFromRequest } from '../utils/pagination.utils';
@@ -301,6 +302,38 @@ export class ProgramController {
         statusCode: 200,
         message: result.message,
         data: null,
+        timestamp: new Date().toISOString()
+      };
+      
+      return res.status(200).json(response);
+    }
+  );
+
+  /**
+   * Get programs by tenant - Retrieve all programs associated with the authenticated user's tenant
+   * Query parameters for pagination and filtering
+   * Authentication required - uses JWT token to determine tenant
+   * @param req AuthenticatedRequest - Express request with authenticated user context
+   * @param res Response - Express response object
+   */
+  public static getProgramsByTenantHandler = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
+      // Extract tenant ID from authenticated user
+      if (!req.user?.tenantId) {
+        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
+      }
+      
+      const tenantId = req.user.tenantId;
+
+      // Get programs by tenant using service
+      const programs = await programService.getProgramsByTenant(tenantId);
+      
+      // Send successful response
+      const response: TApiSuccessResponse<ProgramsByTenantResponse[]> = {
+        success: true,
+        statusCode: 200,
+        message: 'Programs retrieved successfully',
+        data: programs,
         timestamp: new Date().toISOString()
       };
       

@@ -12,6 +12,7 @@ import teacherAuthRoutes from './routes/teacher/auth.routes';
 import systemUserRoutes from './routes/system-user.routes';
 import programRoutes from './routes/program.routes';
 import specializationRoutes from './routes/specialization.routes';
+import courseRoutes from './routes/course.routes';
 import tenantRoutes from './routes/tenant.routes';
 import clientRoutes from './routes/client.routes';
 import studentRoutes from './routes/student.routes';
@@ -37,6 +38,7 @@ router.get('/', (_req, res) => {
         '/api/v1/tenants',
         '/api/v1/clients',
         '/api/v1/programs',
+        '/api/v1/courses',
         '/api/v1/students',
         '/api/v1/student',
         '/api/v1/specializations',
@@ -54,6 +56,7 @@ router.use('/system-users', systemUserRoutes);
 router.use('/tenants', tenantRoutes);
 router.use('/clients', clientRoutes);
 router.use('/programs', programRoutes);
+router.use('/courses', courseRoutes);
 router.use('/specializations', specializationRoutes);
 router.use('/students', studentRoutes);
 router.use('/student', studentProfileRoutes);

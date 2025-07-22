@@ -785,6 +785,70 @@
 						"description": "Verify that a deleted student cannot be retrieved."
 					},
 					"response": []
+				},
+				{
+					"name": "Get Enrolled Courses by Student",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success true and courses array', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.true;",
+									"    pm.expect(responseJson.statusCode).to.eql(200);",
+									"    pm.expect(responseJson.message).to.eql('Enrolled courses retrieved successfully');",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"    if (responseJson.data.length > 0) {",
+									"        const firstCourse = responseJson.data[0];",
+									"        pm.expect(firstCourse).to.have.property('enrollment_id');",
+									"        pm.expect(firstCourse).to.have.property('course_id');",
+									"        pm.expect(firstCourse).to.have.property('course_name');",
+									"        pm.expect(firstCourse).to.have.property('course_description');",
+									"        pm.expect(firstCourse).to.have.property('enrollment_status');",
+									"        pm.expect(firstCourse).to.have.property('overall_progress_percentage');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/students/{{created_student_id}}/enrolled-courses?enrollment_status=ACTIVE&include_progress=true",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"students",
+								"{{created_student_id}}",
+								"enrolled-courses"
+							],
+							"query": [
+								{ "key": "enrollment_status", "value": "ACTIVE", "description": "(Optional) Filter by enrollment status: ACTIVE, COMPLETED, SUSPENDED" },
+								{ "key": "include_progress", "value": "true", "description": "(Optional) Include progress information" }
+							]
+						},
+						"description": "Retrieves all courses a student is enrolled in with optional filtering and progress information."
+					},
+					"response": []
 				}
 			],
 			"description": "Operations that can be performed by users with the SuperAdmin role."
