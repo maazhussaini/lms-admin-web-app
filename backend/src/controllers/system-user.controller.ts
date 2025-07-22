@@ -17,10 +17,11 @@ import {
 import prisma from '@/config/database';
 
 export class SystemUserController {
-  private systemUserService: SystemUserService;
-
-  constructor() {
-    this.systemUserService = new SystemUserService(prisma);
+  /**
+   * Get the SystemUserService instance
+   */
+  private static get systemUserService() {
+    return SystemUserService.getInstance(prisma);
   }
 
   /**
@@ -40,8 +41,9 @@ export class SystemUserController {
       }
 
       const userData: CreateSystemUserDto = req.validatedData as CreateSystemUserDto;
+      const systemUserService = SystemUserController.systemUserService;
 
-      const newUser = await this.systemUserService.createSystemUser(userData, requestingUser);
+      const newUser = await systemUserService.createSystemUser(userData, requestingUser);
       
       return newUser;
     },
@@ -68,8 +70,9 @@ export class SystemUserController {
       }
       
       const userId = parseInt(userIdParam, 10);
+      const systemUserService = SystemUserController.systemUserService;
 
-      return this.systemUserService.getSystemUserById(userId, requestingUser);
+      return systemUserService.getSystemUserById(userId, requestingUser);
     },
     {
       message: 'System user retrieved successfully'
@@ -86,17 +89,18 @@ export class SystemUserController {
       }
 
       const requestingUser = req.user;
+      const systemUserService = SystemUserController.systemUserService;
       
       // Call the service with the params directly - no need to extract filters here
       // since the service now handles ExtendedPaginationWithFilters
-      const { users, total } = await this.systemUserService.getAllSystemUsers(
-        params,
-        requestingUser
+      const result = await systemUserService.getAllSystemUsers(
+        requestingUser,
+        params
       );
 
       return {
-        items: users,
-        total
+        items: result.items,
+        total: result.pagination.total
       };
     },
     {
@@ -122,8 +126,9 @@ export class SystemUserController {
       
       const userId = parseInt(userIdParam, 10);
       const updateData: UpdateSystemUserDto = req.validatedData as UpdateSystemUserDto;
+      const systemUserService = SystemUserController.systemUserService;
 
-      return this.systemUserService.updateSystemUser(userId, updateData, requestingUser);
+      return systemUserService.updateSystemUser(userId, updateData, requestingUser);
     },
     {
       message: 'System user updated successfully'
@@ -147,8 +152,9 @@ export class SystemUserController {
       }
       
       const userId = parseInt(userIdParam, 10);
+      const systemUserService = SystemUserController.systemUserService;
 
-      await this.systemUserService.deleteSystemUser(userId, requestingUser);
+      await systemUserService.deleteSystemUser(userId, requestingUser);
     },
     {
       message: 'System user deleted successfully'

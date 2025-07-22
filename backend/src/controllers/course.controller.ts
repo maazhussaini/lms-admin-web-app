@@ -1,4 +1,3 @@
-import { CourseService } from '@/services/course.service';
 import { CreateCourseDto, UpdateCourseDto } from '@/dtos/course/course.dto';
 import { GetCoursesByProgramsAndSpecializationDto } from '@/dtos/course/course-by-programs-specialization.dto';
 import {
@@ -13,8 +12,7 @@ import { ApiError } from '@/utils/api-error.utils';
 import { PrismaClient } from '@prisma/client';
 import logger from '@/config/logger';
 import { UserType } from '@/types/enums.types';
-
-const courseService = new CourseService();
+import { courseService } from '@/services/course.service';
 const prisma = new PrismaClient();
 
 export class CourseController {
