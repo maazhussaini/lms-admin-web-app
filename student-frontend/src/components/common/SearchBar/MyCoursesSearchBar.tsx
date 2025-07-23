@@ -1,7 +1,8 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { HiOutlineMagnifyingGlass, HiOutlineAdjustmentsHorizontal } from 'react-icons/hi2';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
+import CourseTypeFilterDropdown, { type CourseTypeFilter } from './CourseTypeFilterDropdown';
 
 /**
  * Props for the MyCoursesSearchBar component
@@ -27,6 +28,14 @@ interface MyCoursesSearchBarProps {
   autoFocus?: boolean;
   /** Debounce delay in milliseconds */
   debounceMs?: number;
+  /** Course type filter props */
+  selectedCourseType?: CourseTypeFilter;
+  /** Callback fired when course type filter changes */
+  onCourseTypeSelect?: (courseType: CourseTypeFilter) => void;
+  /** Whether the filter dropdown is open */
+  isFilterDropdownOpen?: boolean;
+  /** Callback fired when filter dropdown should be closed */
+  onFilterDropdownClose?: () => void;
 }
 
 /**
@@ -53,10 +62,33 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
   disabled = false,
   className,
   autoFocus = false,
-  debounceMs = 300
+  debounceMs = 300,
+  selectedCourseType = 'all',
+  onCourseTypeSelect,
+  isFilterDropdownOpen = false,
+  onFilterDropdownClose
 }) => {
   const [searchValue, setSearchValue] = useState(value);
   const [isFocused, setIsFocused] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
+
+  // Click outside handler to close filter dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+        onFilterDropdownClose?.();
+      }
+    };
+
+    if (isFilterDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+
+    return undefined;
+  }, [isFilterDropdownOpen, onFilterDropdownClose]);
 
   // Debounced search handler
   const debouncedSearch = useMemo(() => {
@@ -154,7 +186,7 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className={clsx('w-full', className)}
+      className={clsx('w-full relative', className)}
     >
       <div className="flex items-center gap-3">
         {/* Search Bar Container */}
@@ -219,20 +251,21 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
               'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
               'hover:scale-105 active:scale-95',
               {
-                'bg-primary-50 border-primary-300 text-primary-600': hasActiveFilters,
-                'text-neutral-500 hover:text-neutral-700': !hasActiveFilters && !disabled,
+                'bg-primary-50 border-primary-300 text-primary-600': hasActiveFilters || isFilterDropdownOpen,
+                'text-neutral-500 hover:text-neutral-700': !hasActiveFilters && !disabled && !isFilterDropdownOpen,
                 'opacity-60 cursor-not-allowed': disabled,
-                'shadow-lg': hasActiveFilters
+                'shadow-lg': hasActiveFilters || isFilterDropdownOpen
               }
             )}
             aria-label={hasActiveFilters ? "Filter active - click to modify" : "Open filter options"}
             title={hasActiveFilters ? "Filter active" : "Filter courses"}
+            aria-expanded={isFilterDropdownOpen}
           >
             <HiOutlineAdjustmentsHorizontal 
               className={clsx(
                 'w-6 h-6 sm:w-7 sm:h-7 transition-transform duration-200', // Increased icon size
                 {
-                  'scale-110': hasActiveFilters
+                  'scale-110': hasActiveFilters || isFilterDropdownOpen
                 }
               )}
             />
@@ -247,6 +280,18 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
           </button>
         )}
       </div>
+
+      {/* Course Type Filter Dropdown - Positioned under entire search container */}
+      {onCourseTypeSelect && (
+        <div ref={filterRef}>
+          <CourseTypeFilterDropdown
+            selectedCourseType={selectedCourseType}
+            onCourseTypeSelect={onCourseTypeSelect}
+            isOpen={isFilterDropdownOpen}
+            onClose={onFilterDropdownClose!}
+          />
+        </div>
+      )}
 
       {/* Screen reader help text */}
       <div id="search-help" className="sr-only">

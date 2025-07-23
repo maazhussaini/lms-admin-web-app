@@ -6,6 +6,7 @@ import { CourseSelector } from '@/components/features/MyCourses/CourseSelector';
 import { FilterBar } from '@/components/features/MyCourses/ProgramNavigator';
 import CourseCardGrid from '@/components/features/MyCourses/CourseCardGrid';
 import { useApiList } from '@/hooks/useApi';
+import type { CourseTypeFilter } from '@/components/common/SearchBar/CourseTypeFilterDropdown';
 import { 
   type CourseDiscoveryItem,
   type EnrollmentItem,
@@ -51,11 +52,12 @@ const MyCoursesPage: React.FC = () => {
   // State management
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'enrolled' | 'unenrolled'>('all');
-  const [hasActiveFilters, setHasActiveFilters] = useState(false);
+  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   
   // Filter state (simplified - no navigation states)
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [selectedSpecialization, setSelectedSpecialization] = useState<Specialization | null>(null);
+  const [selectedCourseType, setSelectedCourseType] = useState<CourseTypeFilter>('all');
 
   // Course discovery API with useApiList hook
   const { 
@@ -228,6 +230,25 @@ const MyCoursesPage: React.FC = () => {
       );
     }
 
+    // Filter by course type
+    if (selectedCourseType !== 'all') {
+      courses = courses.filter(course => {
+        const isPaid = course.course_type === 'PAID' || (course.course_price && course.course_price > 0);
+        const isPurchased = course.is_purchased || false;
+        
+        switch (selectedCourseType) {
+          case 'free':
+            return !isPaid;
+          case 'paid':
+            return isPaid && !isPurchased;
+          case 'purchased':
+            return isPurchased;
+          default:
+            return true;
+        }
+      });
+    }
+
     // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -246,6 +267,7 @@ const MyCoursesPage: React.FC = () => {
     transformedCourses,
     selectedProgram,
     selectedSpecialization,
+    selectedCourseType,
     searchQuery
   ]);
 
@@ -256,18 +278,26 @@ const MyCoursesPage: React.FC = () => {
     setActiveTab(tab);
   }, []);
 
+  // Computed values
+  const hasActiveFilters = useMemo(() => {
+    return selectedProgram !== null || 
+           selectedSpecialization !== null || 
+           selectedCourseType !== 'all';
+  }, [selectedProgram, selectedSpecialization, selectedCourseType]);
+
   /**
-   * Handle search query changes
+   * Handle course type filter selection
    */
-  const handleSearch = useCallback((query: string) => {
-    setSearchQuery(query);
+  const handleCourseTypeSelect = useCallback((courseType: CourseTypeFilter) => {
+    setSelectedCourseType(courseType);
+    setIsFilterDropdownOpen(false);
   }, []);
 
   /**
-   * Handle filter button click
+   * Handle filter dropdown close
    */
-  const handleFilterClick = useCallback(() => {
-    setHasActiveFilters(prev => !prev);
+  const handleFilterDropdownClose = useCallback(() => {
+    setIsFilterDropdownOpen(false);
   }, []);
 
   /**
@@ -389,11 +419,15 @@ const MyCoursesPage: React.FC = () => {
           <div className="w-full sm:w-full">
             <MyCoursesSearchBar
               value={searchQuery}
-              onSearch={handleSearch}
-              onFilterClick={handleFilterClick}
+              onSearch={setSearchQuery}
+              onFilterClick={() => setIsFilterDropdownOpen(true)}
               hasActiveFilters={hasActiveFilters}
               placeholder="Search here"
               className="w-full"
+              selectedCourseType={selectedCourseType}
+              onCourseTypeSelect={handleCourseTypeSelect}
+              isFilterDropdownOpen={isFilterDropdownOpen}
+              onFilterDropdownClose={handleFilterDropdownClose}
             />
           </div>
         </div>
