@@ -326,25 +326,22 @@ export class ProgramService extends BaseListService<any, ProgramFilterDto> {
   }
 
   /**
-   * Get programs by tenant with active status filtering
-   * 
-   * @param tenantId Tenant identifier for filtering programs
-   * @returns List of active programs for the specified tenant
-   */
-  /**
-   * Get all programs for the specified tenant with optional filtering
+   * Get all programs for the specified tenant with optional filtering and pagination
    * @param tenantId Tenant identifier for filtering programs (0 for SUPER_ADMIN means all tenants)
    * @param filters Optional filters for active status
-   * @returns List of programs for the specified tenant
+   * @param paginationParams Optional pagination parameters
+   * @returns List of programs for the specified tenant with pagination metadata
    */
   async getProgramsByTenant(
     tenantId: number, 
-    filters?: { is_active?: boolean }
-  ): Promise<ProgramsByTenantResponse[]> {
+    filters?: { is_active?: boolean },
+    paginationParams?: ExtendedPaginationWithFilters
+  ): Promise<{ items: ProgramsByTenantResponse[]; total: number }> {
     // Log the tenant context for debugging
     logger.debug('Getting programs by tenant', {
       tenantId,
-      filters
+      filters,
+      paginationParams
     });
 
     // Build where clause
@@ -366,12 +363,32 @@ export class ProgramService extends BaseListService<any, ProgramFilterDto> {
       whereClause.is_active = true;
     }
 
-    // Get programs for the specified tenant
+    // Add search filter if provided
+    if (paginationParams?.filters?.['search']) {
+      whereClause.program_name = {
+        contains: paginationParams.filters['search'] as string,
+        mode: 'insensitive' as const
+      };
+    }
+
+    // Get total count for pagination
+    const total = await prisma.program.count({
+      where: whereClause
+    });
+
+    // Calculate pagination
+    const page = paginationParams?.page || 1;
+    const limit = paginationParams?.limit || 10;
+    const skip = paginationParams?.skip ?? (page - 1) * limit;
+
+    // Get programs for the specified tenant with pagination
     const programs = await prisma.program.findMany({
       where: whereClause,
       orderBy: {
         program_name: 'asc'
-      }
+      },
+      skip,
+      take: limit
     });
 
     // Debug logging
@@ -379,7 +396,9 @@ export class ProgramService extends BaseListService<any, ProgramFilterDto> {
       tenantId,
       filters,
       whereClause,
+      paginationParams,
       resultCount: programs.length,
+      total,
       results: programs.map(p => ({
         program_id: p.program_id,
         program_name: p.program_name,
@@ -390,7 +409,7 @@ export class ProgramService extends BaseListService<any, ProgramFilterDto> {
     });
 
     // Map to response DTO format
-    return programs.map((program: any) => ({
+    const items = programs.map((program: any) => ({
       program_id: program.program_id,
       program_name: program.program_name,
       program_thumbnail_url: program.program_thumbnail_url,
@@ -400,6 +419,11 @@ export class ProgramService extends BaseListService<any, ProgramFilterDto> {
       created_at: program.created_at,
       updated_at: program.updated_at
     }));
+
+    return {
+      items,
+      total
+    };
   }
   
   /**

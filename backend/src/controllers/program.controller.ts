@@ -6,7 +6,6 @@
 import { Request, Response } from 'express';
 import { ProgramService } from '@/services/program.service';
 import { CreateProgramDto, UpdateProgramDto } from '../dtos/course/program.dto';
-import { ProgramsByTenantResponse } from '../dtos/course/programs-by-tenant.dto';
 import { asyncHandler, createListHandler, ExtendedPaginationWithFilters } from '@/utils/async-handler.utils';
 import { ApiError } from '@/utils/api-error.utils';
 import { TApiSuccessResponse } from '@shared/types/api.types';
@@ -247,11 +246,11 @@ export class ProgramController {
    * Get programs by tenant - Retrieve all programs associated with the authenticated user's tenant
    * Query parameters for pagination and filtering
    * Authentication required - uses JWT token to determine tenant
+   * @param paginationParams ExtendedPaginationWithFilters - Pagination and filtering parameters
    * @param req AuthenticatedRequest - Express request with authenticated user context
-   * @param res Response - Express response object
    */
-  public static getProgramsByTenantHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+  public static getProgramsByTenantHandler = createListHandler(
+    async (paginationParams: ExtendedPaginationWithFilters, req: AuthenticatedRequest) => {
       // Extract tenant ID from authenticated user
       if (!req.user?.tenantId) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
@@ -269,6 +268,7 @@ export class ProgramController {
       logger.debug('Getting programs by tenant with filters', {
         tenantId,
         filters,
+        paginationParams,
         userInfo: {
           id: req.user.id,
           email: req.user.email,
@@ -278,13 +278,14 @@ export class ProgramController {
       });
 
       // Get programs by tenant using service
-      const programs = await programService.getProgramsByTenant(tenantId, filters);
+      const result = await programService.getProgramsByTenant(tenantId, filters, paginationParams);
       
       // Debug logging
       logger.debug('Programs retrieved', {
         tenantId,
-        programCount: programs.length,
-        programs: programs.map(p => ({ 
+        programCount: result.items.length,
+        total: result.total,
+        programs: result.items.map(p => ({ 
           id: p.program_id, 
           name: p.program_name, 
           is_active: p.is_active,
@@ -292,16 +293,13 @@ export class ProgramController {
         }))
       });
 
-      // Send successful response
-      const response: TApiSuccessResponse<ProgramsByTenantResponse[]> = {
-        success: true,
-        statusCode: 200,
-        message: 'Programs retrieved successfully',
-        data: programs,
-        timestamp: new Date().toISOString()
+      return {
+        items: result.items,
+        total: result.total
       };
-      
-      return res.status(200).json(response);
+    },
+    {
+      message: 'Programs retrieved successfully'
     }
   );
 }

@@ -80,18 +80,25 @@ export class SpecializationController {
   /**
    * Get active specializations by program for authenticated student
    */
-  static getActiveSpecializationsByProgramHandler = createRouteHandler(async (req: Request, res: Response) => {
-    const user = req.user;
-    if (!user) throw new BadRequestError('Authentication required');
-    
-    const programId = Number(req.query['program_id']);
-    if (!programId) throw new BadRequestError('Program ID is required');
-    
-    const specializations = await SpecializationController.specializationService.getActiveSpecializationsByProgram(
-      programId, 
-      user
-    );
-    
-    return res.json(createSuccessResponse(specializations, 'Active specializations retrieved successfully'));
-  });
+  static getActiveSpecializationsByProgramHandler = createListHandler(
+    async (params: ExtendedPaginationWithFilters, req: AuthenticatedRequest) => {
+      if (!req.user) {
+        throw new BadRequestError('Authentication required');
+      }
+      
+      const programId = Number(req.query['program_id']);
+      if (!programId) throw new BadRequestError('Program ID is required');
+      
+      const result = await SpecializationController.specializationService.getActiveSpecializationsByProgram(
+        programId, 
+        req.user,
+        params
+      );
+      
+      return {
+        items: result.items,
+        total: result.total
+      };
+    }
+  );
 }

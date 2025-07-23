@@ -152,6 +152,7 @@ export class SpecializationService extends BaseListService<any, SpecializationFi
       pagination: result.pagination
     };
   }
+  
   /**
    * Create a new specialization with tenant isolation
    * 
@@ -341,29 +342,53 @@ export class SpecializationService extends BaseListService<any, SpecializationFi
    */
   async getActiveSpecializationsByProgram(
     programId: number,
-    requestingUser: TokenPayload
-  ): Promise<ActiveSpecializationsByProgramResponse[]> {
+    requestingUser: TokenPayload,
+    params?: ExtendedPaginationWithFilters
+  ): Promise<{ items: ActiveSpecializationsByProgramResponse[]; total: number }> {
     logger.debug('Getting active specializations by program', {
       programId,
-      tenantId: requestingUser.tenantId
+      tenantId: requestingUser.tenantId,
+      params: params ? {
+        page: params.page,
+        limit: params.limit,
+        search: params.filters?.['search']
+      } : {}
     });
 
     // Build tenant filter for the query
     const tenantFilter = requestingUser.tenantId === 0 ? {} : { tenant_id: requestingUser.tenantId };
 
-    const specializations = await prisma.specialization.findMany({
-      where: {
-        is_active: true,
-        is_deleted: false,
-        ...tenantFilter,
-        specialization_program: {
-          some: {
-            program_id: programId,
-            is_active: true,
-            is_deleted: false
-          }
+    // Build where clause with search support
+    const whereClause = {
+      is_active: true,
+      is_deleted: false,
+      ...tenantFilter,
+      specialization_program: {
+        some: {
+          program_id: programId,
+          is_active: true,
+          is_deleted: false
         }
       },
+      ...(params?.filters?.['search'] ? {
+        specialization_name: {
+          contains: params.filters['search'] as string,
+          mode: 'insensitive' as const
+        }
+      } : {})
+    };
+
+    // Get total count
+    const total = await prisma.specialization.count({
+      where: whereClause
+    });
+
+    // Apply pagination if provided
+    const skip = params ? (params.page - 1) * params.limit : undefined;
+    const take = params?.limit;
+
+    const specializations = await prisma.specialization.findMany({
+      where: whereClause,
       include: {
         specialization_program: {
           where: {
@@ -378,11 +403,13 @@ export class SpecializationService extends BaseListService<any, SpecializationFi
       },
       orderBy: {
         specialization_name: 'asc'
-      }
+      },
+      ...(skip !== undefined ? { skip } : {}),
+      ...(take !== undefined ? { take } : {})
     });
 
     // Transform the results to match the expected response format
-    const result = specializations.map(specialization => ({
+    const items = specializations.map(specialization => ({
       specialization_id: specialization.specialization_id,
       program_id: programId, // We know this from the query parameter
       specialization_name: specialization.specialization_name,
@@ -391,9 +418,10 @@ export class SpecializationService extends BaseListService<any, SpecializationFi
 
     logger.debug('Active specializations retrieved successfully', {
       programId,
-      count: result.length
+      count: items.length,
+      total
     });
 
-    return result;
+    return { items, total };
   }
 }

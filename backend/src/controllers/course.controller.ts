@@ -223,8 +223,8 @@ export class CourseController {
    * @route GET /api/v1/courses/:courseId/modules
    * @access Public (can be accessed with optional authentication)
    */
-  static getCourseModulesHandler = createRouteHandler(
-    async (req: AuthenticatedRequest) => {
+  static getCourseModulesHandler = createListHandler(
+    async (params: ExtendedPaginationWithFilters, req: AuthenticatedRequest) => {
       const courseIdParam = req.params['courseId'];
       if (!courseIdParam) {
         throw new ApiError('Course ID is required', 400, 'MISSING_COURSE_ID');
@@ -237,13 +237,24 @@ export class CourseController {
 
       logger.debug('Getting course modules', {
         courseId,
-        userType: req.user?.user_type
+        userType: req.user?.user_type,
+        params: {
+          page: params.page,
+          limit: params.limit,
+          search: params.filters?.['search']
+        }
       });
 
-      return await courseService.getCourseModules(
+      const result = await courseService.getCourseModules(
         courseId,
-        req.user || undefined
+        req.user || undefined,
+        params
       );
+
+      return {
+        items: result.items,
+        total: result.total
+      };
     },
     {
       message: 'Course modules retrieved successfully'
@@ -255,8 +266,8 @@ export class CourseController {
    * @route GET /api/v1/modules/:moduleId/topics
    * @access Public (can be accessed with optional authentication)
    */
-  static getCourseTopicsByModuleIdHandler = createRouteHandler(
-    async (req: AuthenticatedRequest) => {
+  static getCourseTopicsByModuleIdHandler = createListHandler(
+    async (params: ExtendedPaginationWithFilters, req: AuthenticatedRequest) => {
       const moduleIdParam = req.params['moduleId'];
       if (!moduleIdParam) {
         throw new ApiError('Module ID is required', 400, 'MISSING_MODULE_ID');
@@ -269,13 +280,24 @@ export class CourseController {
 
       logger.debug('Getting course topics by module ID', {
         moduleId,
-        userType: req.user?.user_type
+        userType: req.user?.user_type,
+        params: {
+          page: params.page,
+          limit: params.limit,
+          search: params.filters?.['search']
+        }
       });
 
-      return await courseService.getCourseTopicsByModuleId(
+      const result = await courseService.getCourseTopicsByModuleId(
         moduleId,
-        req.user || undefined
+        req.user || undefined,
+        params
       );
+
+      return {
+        items: result.items,
+        total: result.total
+      };
     },
     {
       message: 'Course topics retrieved successfully'
@@ -287,8 +309,8 @@ export class CourseController {
    * @route GET /api/v1/topics/:topicId/videos
    * @access Public (can be accessed with optional authentication for progress tracking)
    */
-  static getAllCourseVideosByTopicIdHandler = createRouteHandler(
-    async (req: AuthenticatedRequest) => {
+  static getAllCourseVideosByTopicIdHandler = createListHandler(
+    async (params: ExtendedPaginationWithFilters, req: AuthenticatedRequest) => {
       const topicIdParam = req.params['topicId'];
       if (!topicIdParam) {
         throw new ApiError('Topic ID is required', 400, 'MISSING_TOPIC_ID');
@@ -305,14 +327,25 @@ export class CourseController {
       logger.debug('Getting all course videos by topic ID', {
         topicId,
         studentId,
-        userType: req.user?.user_type
+        userType: req.user?.user_type,
+        params: {
+          page: params.page,
+          limit: params.limit,
+          search: params.filters?.['search']
+        }
       });
 
-      return await courseService.getAllCourseVideosByTopicId(
+      const result = await courseService.getAllCourseVideosByTopicId(
         topicId,
         studentId,
-        req.user || undefined
+        req.user || undefined,
+        params
       );
+
+      return {
+        items: result.items,
+        total: result.total
+      };
     },
     {
       message: 'Course videos retrieved successfully'

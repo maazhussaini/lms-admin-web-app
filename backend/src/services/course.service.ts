@@ -516,12 +516,18 @@ export class CourseService extends BaseListService<any, CourseFilterDto> {
    */
   async getCourseModules(
     courseId: number,
-    requestingUser?: TokenPayload
-  ): Promise<CourseModuleResponse[]> {
+    requestingUser?: TokenPayload,
+    params?: ExtendedPaginationWithFilters
+  ): Promise<{ items: CourseModuleResponse[]; total: number }> {
     return tryCatch(async () => {
       logger.debug('Getting course modules', {
         courseId,
-        requestingUserId: requestingUser?.id
+        requestingUserId: requestingUser?.id,
+        params: params ? {
+          page: params.page,
+          limit: params.limit,
+          search: params.filters?.['search']
+        } : {}
       });
 
       // First verify the course exists and is accessible
@@ -537,16 +543,36 @@ export class CourseService extends BaseListService<any, CourseFilterDto> {
         throw new NotFoundError('Course not found', 'COURSE_NOT_FOUND');
       }
 
+      // Build where clause with search support
+      const whereClause = {
+        course_id: courseId,
+        is_active: true,
+        is_deleted: false,
+        ...(params?.filters?.['search'] ? {
+          course_module_name: {
+            contains: params.filters['search'] as string,
+            mode: 'insensitive' as const
+          }
+        } : {})
+      };
+
+      // Get total count
+      const total = await prisma.courseModule.count({
+        where: whereClause
+      });
+
+      // Apply pagination if provided
+      const skip = params ? (params.page - 1) * params.limit : undefined;
+      const take = params?.limit;
+
       // Get all course modules for the specified course
       const courseModules = await prisma.courseModule.findMany({
-        where: {
-          course_id: courseId,
-          is_active: true,
-          is_deleted: false
-        },
+        where: whereClause,
         orderBy: {
           position: 'asc'
-        }
+        },
+        ...(skip !== undefined ? { skip } : {}),
+        ...(take !== undefined ? { take } : {})
       });
 
       // For each module, get the statistics
@@ -592,7 +618,7 @@ export class CourseService extends BaseListService<any, CourseFilterDto> {
         })
       );
 
-      return modulesWithStats;
+      return { items: modulesWithStats, total };
     }, {
       context: {
         courseId,
@@ -606,12 +632,18 @@ export class CourseService extends BaseListService<any, CourseFilterDto> {
    */
   async getCourseTopicsByModuleId(
     moduleId: number,
-    requestingUser?: TokenPayload
-  ): Promise<CourseTopicsByModuleResponse[]> {
+    requestingUser?: TokenPayload,
+    params?: ExtendedPaginationWithFilters
+  ): Promise<{ items: CourseTopicsByModuleResponse[]; total: number }> {
     return tryCatch(async () => {
       logger.debug('Getting course topics by module ID', {
         moduleId,
-        requestingUserId: requestingUser?.id
+        requestingUserId: requestingUser?.id,
+        params: params ? {
+          page: params.page,
+          limit: params.limit,
+          search: params.filters?.['search']
+        } : {}
       });
 
       // First verify the module exists and is accessible
@@ -627,16 +659,36 @@ export class CourseService extends BaseListService<any, CourseFilterDto> {
         throw new NotFoundError('Course module not found', 'MODULE_NOT_FOUND');
       }
 
+      // Build where clause with search support
+      const whereClause = {
+        module_id: moduleId,
+        is_active: true,
+        is_deleted: false,
+        ...(params?.filters?.['search'] ? {
+          course_topic_name: {
+            contains: params.filters['search'] as string,
+            mode: 'insensitive' as const
+          }
+        } : {})
+      };
+
+      // Get total count
+      const total = await prisma.courseTopic.count({
+        where: whereClause
+      });
+
+      // Apply pagination if provided
+      const skip = params ? (params.page - 1) * params.limit : undefined;
+      const take = params?.limit;
+
       // Get all course topics for the specified module
       const courseTopics = await prisma.courseTopic.findMany({
-        where: {
-          module_id: moduleId,
-          is_active: true,
-          is_deleted: false
-        },
+        where: whereClause,
         orderBy: {
           position: 'asc'
-        }
+        },
+        ...(skip !== undefined ? { skip } : {}),
+        ...(take !== undefined ? { take } : {})
       });
 
       // Get video counts for all topics in one query for performance
@@ -673,7 +725,7 @@ export class CourseService extends BaseListService<any, CourseFilterDto> {
         };
       });
 
-      return topicsWithStats;
+      return { items: topicsWithStats, total };
     }, {
       context: {
         moduleId,
@@ -688,13 +740,19 @@ export class CourseService extends BaseListService<any, CourseFilterDto> {
   async getAllCourseVideosByTopicId(
     topicId: number,
     studentId?: number,
-    requestingUser?: TokenPayload
-  ): Promise<CourseVideosByTopicResponse[]> {
+    requestingUser?: TokenPayload,
+    params?: ExtendedPaginationWithFilters
+  ): Promise<{ items: CourseVideosByTopicResponse[]; total: number }> {
     return tryCatch(async () => {
       logger.debug('Getting all course videos by topic ID', {
         topicId,
         studentId,
-        requestingUserId: requestingUser?.id
+        requestingUserId: requestingUser?.id,
+        params: params ? {
+          page: params.page,
+          limit: params.limit,
+          search: params.filters?.['search']
+        } : {}
       });
 
       // First verify the topic exists and is accessible
@@ -710,16 +768,36 @@ export class CourseService extends BaseListService<any, CourseFilterDto> {
         throw new NotFoundError('Course topic not found', 'TOPIC_NOT_FOUND');
       }
 
+      // Build where clause with search support
+      const whereClause = {
+        course_topic_id: topicId,
+        is_active: true,
+        is_deleted: false,
+        ...(params?.filters?.['search'] ? {
+          video_name: {
+            contains: params.filters['search'] as string,
+            mode: 'insensitive' as const
+          }
+        } : {})
+      };
+
+      // Get total count
+      const total = await prisma.courseVideo.count({
+        where: whereClause
+      });
+
+      // Apply pagination if provided
+      const skip = params ? (params.page - 1) * params.limit : undefined;
+      const take = params?.limit;
+
       // Get all course videos for the specified topic
       const courseVideos = await prisma.courseVideo.findMany({
-        where: {
-          course_topic_id: topicId,
-          is_active: true,
-          is_deleted: false
-        },
+        where: whereClause,
         orderBy: {
           position: 'asc'
-        }
+        },
+        ...(skip !== undefined ? { skip } : {}),
+        ...(take !== undefined ? { take } : {})
       });
 
       // Get video progress data for the student if provided
@@ -793,7 +871,7 @@ export class CourseService extends BaseListService<any, CourseFilterDto> {
         };
       });
 
-      return videosWithProgress;
+      return { items: videosWithProgress, total };
     }, {
       context: {
         topicId,
