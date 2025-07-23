@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Card from '@/components/common/Card';
-import Badge from '@/components/common/Badge';
 import type { Course, StudentCourseProgress } from '@shared/types';
 
 /**
@@ -36,7 +35,27 @@ export interface CourseCardProps {
    * Whether the course is free or paid
    */
   isFree?: boolean;
-  
+
+  /**
+   * Custom purchase status text to display instead of Free/Paid
+   */
+  purchaseStatusText?: string;
+
+  /**
+   * Whether to show progress bar (typically only for enrolled courses)
+   */
+  showProgress?: boolean;
+
+  /**
+   * Course start date
+   */
+  startDate?: string;
+
+  /**
+   * Course end date
+   */
+  endDate?: string;
+
   /**
    * Click handler for the card
    */
@@ -72,6 +91,10 @@ const CourseCard: React.FC<CourseCardProps> = ({
   },
   programName,
   isFree = true,
+  purchaseStatusText,
+  showProgress = false,
+  startDate,
+  endDate,
   onClick,
   className = '',
   loading = false
@@ -115,6 +138,37 @@ const CourseCard: React.FC<CourseCardProps> = ({
     
     // Generate a placeholder avatar based on instructor name using API service with pink background to match design
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(instructor.name)}&background=ffc0cb&color=fff&bold=true&format=svg`;
+  };
+
+  /**
+   * Get purchase status badge CSS class based on status text
+   */
+  const getPurchaseStatusClass = () => {
+    const statusText = purchaseStatusText || (isFree ? 'Free' : 'Paid');
+    
+    if (statusText === 'Purchased') {
+      return 'badge-purchased';
+    }
+    
+    if (statusText.startsWith('Buy:')) {
+      return 'badge-buy';
+    }
+    
+    // Free or default
+    return 'badge-free';
+  };
+
+  /**
+   * Get progress bar CSS class based on completion percentage
+   */
+  const getProgressBarClass = (percentage: number) => {
+    if (percentage === 0) {
+      return 'progress-neutral';
+    } else if (percentage === 100) {
+      return 'progress-complete';
+    } else {
+      return 'progress-active';
+    }
   };
 
   if (loading) {
@@ -207,38 +261,43 @@ const CourseCard: React.FC<CourseCardProps> = ({
               </p>
             )}
 
+            {/* Course Date Range */}
+            {startDate && endDate && (
+              <p className="text-xs text-[#737373] font-regular">
+                {startDate} - {endDate}
+              </p>
+            )}
+
             {/* Bottom Row: Duration and Price/Status */}
             <div className="flex items-center justify-between pt-2 mt-auto">
               <span className="text-xs text-[#737373] font-regular">
                 {formatDuration(course.course_total_hours)}
               </span>
               
-              <Badge
-                color={isFree ? 'info' : 'warning'}
-                size="md"
-                className="px-3 py-1 text-xs font-medium"
+              <div
+                className={`px-3 py-1 text-xs font-medium rounded-full border ${getPurchaseStatusClass()}`}
               >
-                {isFree ? 'Free' : 'Paid'}
-              </Badge>
+                {purchaseStatusText || (isFree ? 'Free' : 'Paid')}
+              </div>
             </div>
 
-            {/* Progress Bar (if enrolled and has progress) */}
-            {/* {progress && progress.overall_progress_percentage > 0 && (
+            {/* Progress Bar (only show for enrolled courses when showProgress is true) */}
+            {showProgress && progress && progress.overall_progress_percentage >= 0 && (
               <div className="space-y-2 pt-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-base font-medium text-neutral-600">Progress</span>
-                  <span className="text-base font-semibold text-[#7040e6]">
+                  <span className="text-base font-regular text-neutral-600">Progress</span>
+                  <span className="text-base font-regular text-neutral-600">
                     {Math.round(progress.overall_progress_percentage)}%
                   </span>
                 </div>
-                <div className="w-full bg-neutral-200 rounded-full h-3">
+                <div className="w-full progress-bg rounded-full h-3">
                   <div
-                    className="bg-[#7040e6] h-3 rounded-full transition-all duration-300 ease-out"
+                    className={`h-3 rounded-full transition-all duration-300 ease-out ${getProgressBarClass(progress.overall_progress_percentage)}`}
                     style={{ width: `${progress.overall_progress_percentage}%` }}
                   />
                 </div>
               </div>
-            )} */}
+            )}
           </div>
         </div>
       </Card>

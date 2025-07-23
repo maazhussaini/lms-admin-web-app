@@ -149,6 +149,42 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
   }
+
+  /* Purchase Status Badge Styles */
+  .badge-purchased {
+    background-color: #F1FFEE;
+    color: #0E6100;
+    border-color: #0E6100;
+  }
+
+  .badge-buy {
+    background-color: #FFE8ED;
+    color: #FB3E70;
+    border-color: #FB3E70;
+  }
+
+  .badge-free {
+    background-color: #EDF5FF;
+    color: #5FAAFF;
+    border-color: #5FAAFF;
+  }
+
+  /* Progress Bar Styles */
+  .progress-bg {
+    background-color: #DADADA;
+  }
+
+  .progress-neutral {
+    background-color: #737373; /* Neutral grey for 0% */
+  }
+
+  .progress-active {
+    background-color: #FA991C; /* Orange for 0-99% */
+  }
+
+  .progress-complete {
+    background-color: #22c55e; /* Success green for 100% */
+  }
 }
 
 /* Button ripple animation keyframes for enhanced UX */
