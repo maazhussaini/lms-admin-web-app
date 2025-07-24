@@ -1,8 +1,25 @@
 /**
  * @file utils/courseUIUtils.ts
- * @description Utility functions for course UI components
- * Centralizes common UI logic and formatting
+ * @description Course UI utility functions
+ * Re-exports shared utilities and provides legacy compatibility
+ * 
+ * @deprecated Most functions in this file are deprecated.
+ * Use @shared/utils directly for new code.
  */
+
+// Import from shared utilities
+import {
+  formatDurationFromHours,
+  getInstructorAvatarUrl as sharedGetInstructorAvatarUrl,
+  generatePurchaseStatusText as sharedGeneratePurchaseStatusText,
+  calculateProgressPercentage,
+  getProgressStatus,
+  formatProgressText,
+  truncateText,
+  capitalizeWords,
+  type CourseType,
+  type PurchaseStatus,
+} from '@shared/utils';
 
 import { 
   PURCHASE_STATUS_CLASSES, 
@@ -15,22 +32,11 @@ import {
  * 
  * @param hours - Duration in hours (can be null/undefined)
  * @returns Formatted duration string
+ * 
+ * @deprecated Use formatDurationFromHours from @shared/utils instead
  */
 export function formatCourseDuration(hours?: number | null): string {
-  if (!hours) return 'Duration TBD';
-  
-  const wholeHours = Math.floor(hours);
-  const minutes = Math.round((hours - wholeHours) * 60);
-  
-  if (wholeHours === 0) {
-    return `${minutes} Min`;
-  }
-  
-  if (minutes === 0) {
-    return `${wholeHours} Hrs`;
-  }
-  
-  return `${wholeHours} Hrs ${minutes} Min`;
+  return formatDurationFromHours(hours, 'course');
 }
 
 /**
@@ -38,23 +44,39 @@ export function formatCourseDuration(hours?: number | null): string {
  * 
  * @param instructorName - Name of the instructor
  * @param avatarUrl - Optional avatar URL
- * @returns Avatar URL (real or generated placeholder)
+ * @returns Avatar URL (either provided URL or generated placeholder)
+ * 
+ * @deprecated Use getInstructorAvatarUrl from @shared/utils instead
  */
 export function getInstructorAvatarUrl(instructorName: string, avatarUrl?: string): string {
-  if (avatarUrl) {
-    return avatarUrl;
-  }
-  
-  const { background, color, bold, format } = AVATAR_PLACEHOLDER_CONFIG;
-  const params = new URLSearchParams({
-    name: instructorName,
-    background,
-    color,
-    bold: bold.toString(),
-    format,
+  return sharedGetInstructorAvatarUrl(instructorName, avatarUrl, {
+    background: AVATAR_PLACEHOLDER_CONFIG.background,
+    color: AVATAR_PLACEHOLDER_CONFIG.color,
+    bold: AVATAR_PLACEHOLDER_CONFIG.bold,
+    format: AVATAR_PLACEHOLDER_CONFIG.format,
   });
+}
+
+/**
+ * Generate purchase status text based on course details
+ * 
+ * @param courseType - Type of course (FREE/PAID/PURCHASED)
+ * @param coursePrice - Price of the course
+ * @param isPurchased - Whether the course is purchased
+ * @returns Purchase status text
+ * 
+ * @deprecated Use generatePurchaseStatusText from @shared/utils instead
+ */
+export function generatePurchaseStatusText(
+  courseType: 'FREE' | 'PAID' | 'PURCHASED',
+  coursePrice?: number,
+  isPurchased?: boolean
+): string {
+  // Handle legacy courseType format
+  if (courseType === 'PURCHASED' || isPurchased) return 'Purchased';
   
-  return `https://ui-avatars.com/api/?${params.toString()}`;
+  const normalizedCourseType = courseType === 'FREE' ? 'FREE' : 'PAID';
+  return sharedGeneratePurchaseStatusText(normalizedCourseType, coursePrice, isPurchased);
 }
 
 /**
@@ -82,18 +104,20 @@ export function getPurchaseStatusClass(statusText?: string, isFree: boolean = tr
 }
 
 /**
- * Get CSS class for progress bar based on completion percentage
+ * Get CSS class for progress bar based on percentage
  * 
- * @param percentage - Completion percentage (0-100)
- * @returns CSS class name for progress bar styling
+ * @param percentage - Progress percentage (0-100)
+ * @returns CSS class name
  */
 export function getProgressBarClass(percentage: number): string {
-  if (percentage <= 0) {
-    return PROGRESS_BAR_CLASSES.NEUTRAL;
-  } else if (percentage >= 100) {
-    return PROGRESS_BAR_CLASSES.COMPLETE;
-  } else {
-    return PROGRESS_BAR_CLASSES.ACTIVE;
+  const status = getProgressStatus(percentage);
+  switch (status) {
+    case 'complete':
+      return PROGRESS_BAR_CLASSES.COMPLETE;
+    case 'active':
+      return PROGRESS_BAR_CLASSES.ACTIVE;
+    default:
+      return PROGRESS_BAR_CLASSES.NEUTRAL;
   }
 }
 
@@ -117,21 +141,14 @@ export function formatCourseDateRange(startDate?: string, endDate?: string): str
   return `${formatDate(start)} - ${formatDate(end)}`;
 }
 
-/**
- * Generate purchase status text based on course data
- * 
- * @param courseType - Type of course (FREE/PAID/PURCHASED)
- * @param coursePrice - Price of the course
- * @param isPurchased - Whether the course is purchased
- * @returns Purchase status text for display
- */
-export function generatePurchaseStatusText(
-  courseType: 'FREE' | 'PAID' | 'PURCHASED',
-  coursePrice?: number,
-  isPurchased?: boolean
-): string {
-  if (courseType === 'FREE') return 'Free';
-  if (courseType === 'PURCHASED' || isPurchased) return 'Purchased';
-  if (courseType === 'PAID' && coursePrice) return `Buy: $${coursePrice}`;
-  return 'Paid';
-}
+// Re-export shared utilities for convenience
+export {
+  calculateProgressPercentage,
+  getProgressStatus,
+  formatProgressText,
+  truncateText,
+  capitalizeWords,
+  formatDurationFromHours,
+  type CourseType,
+  type PurchaseStatus,
+};

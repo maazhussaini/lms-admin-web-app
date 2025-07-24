@@ -9,6 +9,7 @@ import {
   FaVideo
 } from 'react-icons/fa';
 import { CourseBasicDetails } from '@/services/courseService';
+import { formatDurationFromSeconds } from '@shared/utils';
 import { useTopicVideos, useModuleTopics, useCourseModules } from '@/hooks/useCourse';
 import { useCourseNavigation } from '@/hooks/useCourseNavigation';
 import TopicContentSelector from './TopicContentSelector';
@@ -108,16 +109,6 @@ export const TopicComponent: React.FC<TopicComponentProps> = ({
     assignments: 0, // TODO: Add assignments count when implemented
     quizzes: 0,     // TODO: Add quizzes count when implemented
     materials: 0    // TODO: Add materials count when implemented
-  };
-
-  // Format duration
-  const formatDuration = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    if (hours > 0) {
-      return `${hours}h ${minutes}m`;
-    }
-    return `${minutes}m`;
   };
 
   // Loading state for videos or topics - only show spinner if multiple critical resources are loading
@@ -272,7 +263,7 @@ export const TopicComponent: React.FC<TopicComponentProps> = ({
                     </h4>
                     {video.duration_seconds && (
                       <p className="text-xs sm:text-sm text-neutral-500">
-                        Duration: {formatDuration(video.duration_seconds)}
+                        Duration: {formatDurationFromSeconds(video.duration_seconds, 'compact')}
                       </p>
                     )}
                   </div>
