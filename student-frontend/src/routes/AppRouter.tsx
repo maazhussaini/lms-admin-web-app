@@ -5,8 +5,43 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { queryClient } from '@/store/queryClient';
 import { AuthProvider } from '@/context/AuthContext';
 import { Helmet } from 'react-helmet-async';
-import { PublicRoutes } from './PublicRoutes';
 import { ProtectedRoutes } from './ProtectedRoutes';
+import { PublicLayout } from '@/components/layout/PublicLayout';
+import { PublicOnlyGuard } from './guards';
+import { MyCoursesPage } from '@/pages/MyCoursesPage';
+import { CourseDetailsPage } from '@/pages/CourseDetailsPage';
+import { VideoPlayerPage } from '@/pages/VideoPlayerPage';
+
+// Import public page components
+import LoginPage from '@/pages/LoginPage/LoginPage';
+import ForgotPasswordPage from '@/pages/ForgotPasswordPage/ForgotPasswordPage';
+import ForgotCheckEmailPage from '@/pages/ForgotCheckEmailPage/ForgotCheckEmailPage';
+import ResetPasswordPage from '@/pages/ResetPasswordPage/ResetPasswordPage';
+import ResetPasswordSuccessPage from '@/pages/ResetPasswordSuccessPage/ResetPasswordSuccessPage';
+import SignUpPage from '@/pages/SignUpPage';
+
+// Public page components that don't need guard protection
+const UnauthorizedPage = () => (
+  <PublicLayout title="Unauthorized">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Unauthorized Access</h1>
+        <p className="text-gray-600 mb-8">You don't have permission to access this resource.</p>
+      </div>
+    </div>
+  </PublicLayout>
+);
+
+const NotFoundPage = () => (
+  <PublicLayout title="Page Not Found">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Page Not Found</h1>
+        <p className="text-gray-600 mb-8">The page you're looking for doesn't exist or has been moved.</p>
+      </div>
+    </div>
+  </PublicLayout>
+);
 
 /**
  * Simplified main application router
@@ -34,18 +69,65 @@ const AppRouter: React.FC = () => {
               {/* Default redirect */}
               <Route path="/" element={<Navigate to="/courses" replace />} />
               
-              {/* Public routes - direct paths only */}
-              <Route path="/login" element={<PublicRoutes />} />
-              <Route path="/signup" element={<PublicRoutes />} />
-              <Route path="/forgot-password" element={<PublicRoutes />} />
-              <Route path="/forgot-password/check-email" element={<PublicRoutes />} />
-              <Route path="/reset-password" element={<PublicRoutes />} />
-              <Route path="/reset-password-success" element={<PublicRoutes />} />
-              <Route path="/unauthorized" element={<PublicRoutes />} />
-              <Route path="/404" element={<PublicRoutes />} />
+              {/* Public routes with proper declarative structure */}
+              <Route path="/login" element={
+                <PublicOnlyGuard>
+                  <PublicLayout title="Login">
+                    <LoginPage />
+                  </PublicLayout>
+                </PublicOnlyGuard>
+              } />
+              <Route path="/signup" element={
+                <PublicOnlyGuard>
+                  <PublicLayout title="Sign Up">
+                    <SignUpPage />
+                  </PublicLayout>
+                </PublicOnlyGuard>
+              } />
+              <Route path="/forgot-password" element={
+                <PublicOnlyGuard>
+                  <PublicLayout title="Forgot Password">
+                    <ForgotPasswordPage />
+                  </PublicLayout>
+                </PublicOnlyGuard>
+              } />
+              <Route path="/forgot-password/check-email" element={
+                <PublicOnlyGuard>
+                  <PublicLayout title="Check Email">
+                    <ForgotCheckEmailPage />
+                  </PublicLayout>
+                </PublicOnlyGuard>
+              } />
+              <Route path="/reset-password" element={
+                <PublicOnlyGuard>
+                  <PublicLayout title="Reset Password">
+                    <ResetPasswordPage />
+                  </PublicLayout>
+                </PublicOnlyGuard>
+              } />
+              <Route path="/reset-password-success" element={
+                <PublicOnlyGuard>
+                  <PublicLayout title="Password Reset Success">
+                    <ResetPasswordSuccessPage />
+                  </PublicLayout>
+                </PublicOnlyGuard>
+              } />
               
-              {/* All other routes are protected */}
-              <Route path="/*" element={<ProtectedRoutes />} />
+              {/* Public routes without guard protection */}
+              <Route path="/unauthorized" element={<UnauthorizedPage />} />
+              <Route path="/404" element={<NotFoundPage />} />
+              
+              {/* Protected routes with nested structure */}
+              <Route path="/courses" element={<ProtectedRoutes />}>
+                <Route index element={<MyCoursesPage />} />
+                <Route path=":courseId" element={<CourseDetailsPage />} />
+                <Route path=":courseId/modules/:moduleId" element={<CourseDetailsPage />} />
+                <Route path=":courseId/modules/:moduleId/topics/:topicId" element={<CourseDetailsPage />} />
+                <Route path=":courseId/modules/:moduleId/topics/:topicId/videos/:videoId" element={<VideoPlayerPage />} />
+              </Route>
+              
+              {/* Catch all for unmatched routes */}
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </React.Suspense>
           

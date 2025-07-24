@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import SideNavBar from './SideNavBar';
 import Header from './Header';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 interface MainLayoutProps {
   children?: React.ReactNode;
-  pageTitle?: string;
+  pageTitle?: string; // Optional override for the page title
 }
 
 /**
@@ -16,12 +17,24 @@ interface MainLayoutProps {
  * - Desktop: Fixed sidebar + header layout
  * - Mobile: Collapsible drawer navigation with header menu button
  * - Responsive design with proper spacing and mobile-first approach
+ * - Dynamic page titles based on current route and data
  */
 export const MainLayout: React.FC<MainLayoutProps> = ({ 
   children, 
-  pageTitle = "Dashboard" 
+  pageTitle // Optional override for the page title
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Get dynamic page title based on current route, or use override
+  const dynamicPageTitle = usePageTitle();
+  const currentPageTitle = pageTitle || dynamicPageTitle;
+
+  // Debug logging
+  console.log('MainLayout Debug:', {
+    pageTitle,
+    dynamicPageTitle,
+    currentPageTitle
+  });
 
   const handleMobileMenuToggle = () => {
     setIsMobileMenuOpen(prev => !prev);
@@ -43,7 +56,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       <div className="flex-1 flex flex-col h-full">
         {/* Header */}
         <Header 
-          heading={pageTitle}
+          heading={currentPageTitle}
           onMobileMenuToggle={handleMobileMenuToggle}
         />
         

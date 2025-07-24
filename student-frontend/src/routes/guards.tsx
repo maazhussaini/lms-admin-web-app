@@ -159,9 +159,9 @@ export const PublicOnlyGuard: React.FC<{ children: React.ReactNode }> = ({ child
 
     if (isAuthenticated && user) {
       if (UserTypeGuards.isStudent(user.user_type)) {
-        // Get return URL or default to dashboard
+        // Get return URL or default to courses page
         const state = location.state as { returnUrl?: string } | undefined;
-        const returnUrl = state?.returnUrl || '/dashboard';
+        const returnUrl = state?.returnUrl || '/courses';
         navigate(returnUrl, { replace: true });
       } else {
         // Non-student users shouldn't be here
