@@ -110,11 +110,6 @@ export const COURSE_DETAILS_ANIMATIONS = {
     ANIMATE: { y: 0, opacity: 1 },
     TRANSITION: { delay: 0.1 },
   },
-  SELECTOR_ITEM: {
-    WHILEHOVER: { scale: 1.02 },
-    WHILETAP: { scale: 0.98 },
-    TRANSITION: { type: 'spring', stiffness: 300, damping: 25 },
-  },
 } as const;
 
 /**
@@ -128,8 +123,8 @@ export const COURSE_DETAILS_STYLES = {
   },
   SELECTOR: {
     CONTAINER: 'flex gap-4 overflow-x-auto scrollbar-hide pb-2',
-    ITEM_BASE: 'flex-shrink-0 p-4 rounded-lg border cursor-pointer transition-all duration-200',
-    ITEM_ACTIVE: 'bg-primary-50 border-primary-200 text-primary-900',
+    ITEM_BASE: 'relative flex-shrink-0 w-80 p-6 rounded-lg border cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]',
+    ITEM_ACTIVE: 'text-white',
     ITEM_INACTIVE: 'bg-white border-neutral-200 text-neutral-600 hover:border-neutral-300',
   },
   CONTENT_SELECTOR: {

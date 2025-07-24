@@ -1,225 +1,196 @@
 /**
  * @file components/common/ItemSelector/ItemSelector.tsx
- * @description Generic item selector component with drag-to-scroll
- * Replaces ModuleSelector and TopicSelector with unified implementation
+ * @description Generic item selector component following business-approved design pattern
+ * Based on approved ModuleSelector and TopicSelector implementation
  */
 
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
-import { useDragToScroll } from '@/hooks/useDragToScroll';
-import { COURSE_DETAILS_STYLES, COURSE_DETAILS_ANIMATIONS } from '@/constants/courseDetails.constants';
-import type { SelectorItem } from '@/types/courseDetails.ui.types';
+
+interface Item {
+  id: string;
+  title: string;
+  description?: string;
+  subtitle?: string;
+  count?: number;
+  countLabel?: string;
+  // Allow other properties without using 'any'
+  [key: string]: unknown;
+}
 
 export interface ItemSelectorProps {
   /** Array of items to display */
-  items: SelectorItem[];
-  /** Currently active item ID */
-  currentItemId: number;
+  items: Item[];
+  /** Currently selected item ID */
+  selectedItemId: string | null;
   /** Handler for item selection */
-  onItemSelect: (itemId: number) => void;
+  onItemSelect: (item: Item) => void;
+  /** Title for the selector section */
+  title: string;
+  /** Total count of items for display */
+  totalCount: number;
+  /** Current index for display (1-based) */
+  currentIndex: number;
   /** Additional CSS classes */
   className?: string;
-  /** Label for accessibility */
-  ariaLabel: string;
-  /** Whether to show item counts */
-  showCounts?: boolean;
-  /** Whether to show item subtitles */
-  showSubtitles?: boolean;
-  /** Custom render function for item content */
-  renderItem?: (item: SelectorItem, isActive: boolean) => React.ReactNode;
 }
 
 /**
  * ItemSelector - Generic horizontal selector with drag-to-scroll functionality
  * 
  * Features:
- * - Drag-to-scroll horizontal navigation
- * - Configurable item display with counts and subtitles
- * - Current item highlighting with smooth animations
- * - Smart click vs drag detection
- * - Responsive design with touch-friendly interactions
- * - Custom render support for flexible item display
- * - Full accessibility support
+ * - Business-approved white container with shadow design
+ * - Header with title and "X of Y" counter
+ * - Custom drag-to-scroll implementation
+ * - Active item highlighting with blue color scheme
+ * - Responsive design with minimum item widths
+ * - Smooth animations with Framer Motion
  * 
  * @param props - Component props
  * @returns JSX.Element
  */
 const ItemSelector: React.FC<ItemSelectorProps> = ({
   items,
-  currentItemId,
+  selectedItemId,
   onItemSelect,
-  className,
-  ariaLabel,
-  showCounts = true,
-  showSubtitles = true,
-  renderItem,
+  title,
+  totalCount,
+  currentIndex,
+  className
 }) => {
-  const { scrollContainerRef, isDragging, eventHandlers } = useDragToScroll();
-  const currentIndex = items.findIndex(item => item.id === currentItemId);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
 
-  // Handle item click (only if not dragging)
-  const handleItemClick = (itemId: number) => {
-    if (!isDragging) {
-      onItemSelect(itemId);
-    }
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeft(scrollRef.current.scrollLeft);
   };
 
-  // Default item renderer
-  const defaultRenderItem = (item: SelectorItem, isActive: boolean) => (
-    <>
-      {/* Item number and name */}
-      <div className="flex items-center gap-3">
-        <div 
-          className={clsx(
-            'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
-            {
-              'bg-primary-600 text-white': isActive,
-              'bg-neutral-100 text-neutral-600': !isActive,
-            }
-          )}
-        >
-          {items.findIndex(i => i.id === item.id) + 1}
-        </div>
-        <div className="min-w-0 flex-1">
-          <h3 
-            className={clsx(
-              'font-semibold text-sm truncate transition-colors',
-              {
-                'text-primary-900': isActive,
-                'text-neutral-700': !isActive,
-              }
-            )}
-          >
-            {item.name}
-          </h3>
-          {showSubtitles && item.subtitle && (
-            <p 
-              className={clsx(
-                'text-xs truncate transition-colors',
-                {
-                  'text-primary-600': isActive,
-                  'text-neutral-500': !isActive,
-                }
-              )}
-            >
-              {item.subtitle}
-            </p>
-          )}
-        </div>
-      </div>
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
 
-      {/* Count badge */}
-      {showCounts && typeof item.count !== 'undefined' && (
-        <motion.div
-          className={clsx(
-            'flex-shrink-0 px-2 py-1 rounded-full text-xs font-medium transition-colors',
-            {
-              'bg-primary-100 text-primary-700': isActive,
-              'bg-neutral-100 text-neutral-600': !isActive,
-            }
-          )}
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.1 }}
-        >
-          {item.count}
-        </motion.div>
-      )}
-    </>
-  );
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
 
-  // Always render the selector, even with empty arrays for consistent UI
-  const hasItems = items.length > 0;
-  const displayItems = hasItems ? items : [];
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    scrollRef.current.scrollLeft = scrollLeft - walk;
+  };
 
   return (
-    <div className={clsx('w-full', className)}>
-      <div
-        ref={scrollContainerRef}
-        className={clsx(
-          COURSE_DETAILS_STYLES.SELECTOR.CONTAINER,
-          'select-none' // Prevent text selection during drag
-        )}
-        role="tablist"
-        aria-label={ariaLabel}
-        {...eventHandlers}
-      >
-        {hasItems ? (
-          displayItems.map((item, index) => {
-            const isActive = item.id === currentItemId;
-            
-            return (
-              <motion.div
-                key={item.id}
-                role="tab"
-                aria-selected={isActive}
-                aria-controls={`${item.id}-content-panel`}
-                tabIndex={isActive ? 0 : -1}
-                onClick={() => handleItemClick(item.id)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleItemClick(item.id);
-                  }
-                }}
-                className={clsx(
-                  COURSE_DETAILS_STYLES.SELECTOR.ITEM_BASE,
-                  {
-                    [COURSE_DETAILS_STYLES.SELECTOR.ITEM_ACTIVE]: isActive,
-                    [COURSE_DETAILS_STYLES.SELECTOR.ITEM_INACTIVE]: !isActive,
-                    'cursor-pointer': !isDragging,
-                    'cursor-grabbing': isDragging,
-                  }
-                )}
-                whileHover={!isDragging ? COURSE_DETAILS_ANIMATIONS.SELECTOR_ITEM.WHILEHOVER : undefined}
-                whileTap={!isDragging ? COURSE_DETAILS_ANIMATIONS.SELECTOR_ITEM.WHILETAP : undefined}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ 
-                  ...COURSE_DETAILS_ANIMATIONS.SELECTOR_ITEM.TRANSITION,
-                  delay: index * 0.05 
-                }}
-              >
-                {renderItem ? renderItem(item, isActive) : defaultRenderItem(item, isActive)}
-
-                {/* Active indicator */}
-                {isActive && (
-                  <motion.div
-                    className="absolute inset-0 rounded-lg border-2 border-primary-400 pointer-events-none"
-                    layoutId="active-border"
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  />
-                )}
-              </motion.div>
-            );
-          })
-        ) : (
-          <div className="flex items-center justify-center py-8 text-neutral-500">
-            <p>No items available</p>
-          </div>
-        )}
-      </div>
-
-      {/* Current item indicator */}
-      {hasItems && currentIndex !== -1 && (
-        <div className="flex justify-center mt-4">
-          <div className="flex gap-1">
-            {displayItems.map((_, index) => (
-              <div
-                key={index}
-                className={clsx(
-                  'w-2 h-2 rounded-full transition-colors',
-                  {
-                    'bg-primary-600': index === currentIndex,
-                    'bg-neutral-200': index !== currentIndex,
-                  }
-                )}
-              />
-            ))}
+    <div className={clsx('bg-white rounded-[30px] shadow-lg border border-gray-100 overflow-hidden', className)}>
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+          <div className="text-sm text-gray-500">
+            {currentIndex} of {totalCount}
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Content */}
+      <div className="p-6">
+        <div
+          ref={scrollRef}
+          className="flex gap-4 overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing"
+          onMouseDown={handleMouseDown}
+          onMouseLeave={handleMouseLeave}
+          onMouseUp={handleMouseUp}
+          onMouseMove={handleMouseMove}
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {items.map((item) => {
+            const isActive = item.id === selectedItemId;
+
+            return (
+              <motion.button
+                key={item.id}
+                onClick={() => onItemSelect(item)}
+                className={clsx(
+                  'relative flex-shrink-0 min-w-[280px] p-6 rounded-2xl border-0 text-left transition-all duration-200 cursor-pointer',
+                  isActive
+                    ? 'bg-primary-800 text-white shadow-lg'
+                    : 'bg-gray-50 border border-gray-200 hover:border-gray-300 hover:shadow-md'
+                )}
+                whileHover={!isActive ? { scale: 1.02 } : {}}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="space-y-3">
+                  {/* Module/Topic Title with pill badge */}
+                  <div className="flex items-center justify-between">
+                    <h4 className={clsx(
+                      'font-semibold text-lg transition-colors',
+                      isActive ? 'text-white' : 'text-gray-900'
+                    )}>
+                      {item.title}
+                    </h4>
+                    {item.count && (
+                      <div className={clsx(
+                        'backdrop-blur-sm px-3 py-1 rounded-full transition-all duration-200',
+                        isActive 
+                          ? 'bg-white/20' 
+                          : 'bg-primary-100/80'
+                      )}>
+                        <span className={clsx(
+                          'text-xs font-medium transition-colors',
+                          isActive ? 'text-white' : 'text-gray-700'
+                        )}>
+                          {item.count} {item.countLabel || 'Items'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Description/Subtitle */}
+                  {item.subtitle && (
+                    <h5 className={clsx(
+                      'font-medium text-base transition-colors',
+                      isActive ? 'text-white/90' : 'text-gray-800'
+                    )}>
+                      {item.subtitle}
+                    </h5>
+                  )}
+
+                  {/* Additional description or count */}
+                  {item.description && (
+                    <p className={clsx(
+                      'text-sm transition-colors',
+                      isActive ? 'text-white' : 'text-purple-600'
+                    )}>
+                      {item.description}
+                    </p>
+                  )}
+                </div>
+
+                {isActive && (
+                  <motion.div
+                    layoutId="activeItem"
+                    className="absolute inset-0 rounded-2xl bg-primary-800 shadow-lg"
+                    initial={false}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 500,
+                      damping: 30
+                    }}
+                    style={{ zIndex: -1 }}
+                  />
+                )}
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 };
