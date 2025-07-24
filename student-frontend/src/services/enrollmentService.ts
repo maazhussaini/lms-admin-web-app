@@ -20,6 +20,7 @@ export interface EnrollmentItem {
   program_name: string;
   teacher_name: string;
   profile_picture_url: string | null;
+  teacher_qualification: string | null;
   course_total_hours: string;
   overall_progress_percentage: number;
 }

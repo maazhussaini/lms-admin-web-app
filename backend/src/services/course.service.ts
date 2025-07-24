@@ -23,7 +23,7 @@ import { NotFoundError, ConflictError } from '@/utils/api-error.utils';
 import { TokenPayload } from '@/utils/jwt.utils';
 import { tryCatch } from '@/utils/error-wrapper.utils';
 import { ExtendedPaginationWithFilters } from '@/utils/async-handler.utils';
-import { formatDateRange, formatDecimalHours } from '@/utils/date-format.utils';
+import { formatDateRangeShort, formatDecimalHours } from '@/utils/date-format.utils';
 import { formatDurationFromSeconds } from '@/utils/duration-format.utils';
 import { BaseListService } from '@/utils/base-list.service';
 import { BaseServiceConfig } from '@/utils/service.types';
@@ -370,7 +370,8 @@ export class CourseService extends BaseListService<any, CourseFilterDto> {
               teacher: {
                 select: {
                   full_name: true,
-                  profile_picture_url: true
+                  profile_picture_url: true,
+                  teacher_qualification: true
                 }
               }
             },
@@ -479,9 +480,14 @@ export class CourseService extends BaseListService<any, CourseFilterDto> {
       }
 
       // Format dates
-      const formattedDates = formatDateRange(
+      const formattedDates = formatDateRangeShort(
         courseSession?.start_date || null,
         courseSession?.end_date || null
+      );
+
+      // Format hours
+      const formattedHours = formatDecimalHours(
+        course.course_total_hours ? course.course_total_hours.toNumber() : null
       );
 
       // Format the response
@@ -492,8 +498,10 @@ export class CourseService extends BaseListService<any, CourseFilterDto> {
         overall_progress_percentage: progress?.overall_progress_percentage || null,
         teacher_name: teacher?.full_name || null,
         profile_picture_url: teacher?.profile_picture_url || null,
+        teacher_qualification: teacher?.teacher_qualification || null,
         start_date: formattedDates.start_date,
         end_date: formattedDates.end_date,
+        course_total_hours: formattedHours,
         purchase_status: purchaseStatus,
         program_name: specializationProgram?.program?.program_name || null,
         specialization_name: specialization?.specialization_name || null,
@@ -1199,7 +1207,7 @@ export class CourseService extends BaseListService<any, CourseFilterDto> {
         }
 
         // Format dates
-        const formattedDates = formatDateRange(
+        const formattedDates = formatDateRangeShort(
           courseSession?.start_date || null,
           courseSession?.end_date || null
         );

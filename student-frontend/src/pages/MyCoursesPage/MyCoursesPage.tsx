@@ -165,7 +165,7 @@ const MyCoursesPage: React.FC = () => {
     main_thumbnail_url: item.profile_picture_url,
     course_total_hours: parseFloat(item.course_total_hours.replace('h', '')),
     teacher_name: item.teacher_name,
-    teacher_qualification: null,
+    teacher_qualification: item.teacher_qualification,
     purchase_status: 'Purchased',
     is_purchased: true,
     program_name: item.program_name,

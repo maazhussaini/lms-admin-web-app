@@ -61,51 +61,71 @@ const SpecializationGrid: React.FC<SpecializationGridProps> = ({
   }
 
   return (
-    <div className={`flex flex-row gap-1 sm:gap-2 overflow-x-auto pb-4 sm:overflow-x-visible sm:flex-wrap sm:justify-start ${className}`}>
+    <div className={`grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-4 ${className}`}>
       {specializations.map((specialization) => (
         <motion.div
           key={specialization.specialization_id}
-          className="flex flex-col items-center min-w-[90px] sm:min-w-[110px] flex-shrink-0 sm:flex-shrink"
+          className="flex flex-col items-center cursor-pointer group"
           onClick={() => onSpecializationSelect(specialization)}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          transition={{ duration: 0.2 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
         >
-          <div
-            className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer shadow-md overflow-hidden ${
-              selectedSpecialization?.specialization_id === specialization.specialization_id
-                ? 'border-2 border-indigo-400'
-                : 'border border-gray-200'
-            }`}
-          >
+          {/* Specialization Image */}
+          <div className={`relative w-16 h-16 rounded-2xl overflow-hidden transition-all duration-300 ${
+            selectedSpecialization?.specialization_id === specialization.specialization_id
+              ? 'ring-2 ring-green-500 ring-offset-2'
+              : 'group-hover:shadow-lg'
+          }`}>
             {specialization.specialization_thumbnail_url ? (
               <img
                 src={specialization.specialization_thumbnail_url}
                 alt={`${specialization.specialization_name} thumbnail`}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  // Fallback to emoji if image fails to load
                   const target = e.target as HTMLImageElement;
                   target.style.display = 'none';
                   const parent = target.parentElement;
                   if (parent) {
                     parent.innerHTML = `
-                      <div class="w-full h-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
-                        <span class="text-3xl sm:text-4xl">📚</span>
+                      <div class="w-full h-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center rounded-2xl">
+                        <span class="text-2xl text-white">📚</span>
                       </div>
                     `;
                   }
                 }}
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
-                <span className="text-3xl sm:text-4xl">📚</span>
+              <div className="w-full h-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center rounded-2xl">
+                <span className="text-2xl text-white">📚</span>
               </div>
             )}
+            
+            {/* Selection Indicator */}
+            {selectedSpecialization?.specialization_id === specialization.specialization_id && (
+              <motion.div
+                className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow-lg"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.2 }}
+              >
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </motion.div>
+            )}
           </div>
-          <span className="mt-3 text-sm sm:text-base font-regular text-neutral-800 text-center leading-tight">
-            {specialization.specialization_name}
-          </span>
+          
+          {/* Specialization Name */}
+          <div className="mt-2 text-center px-1">
+            <span className={`text-sm font-regular leading-tight transition-colors duration-300 ${
+              selectedSpecialization?.specialization_id === specialization.specialization_id
+                ? 'text-green-700'
+                : 'text-gray-700 group-hover:text-gray-900'
+            }`}>
+              {specialization.specialization_name}
+            </span>
+          </div>
         </motion.div>
       ))}
     </div>

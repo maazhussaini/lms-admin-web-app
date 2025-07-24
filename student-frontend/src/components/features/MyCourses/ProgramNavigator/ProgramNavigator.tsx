@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { RxCross2 } from 'react-icons/rx';
 import { useApiList } from '@/hooks/useApi';
 import { apiClient } from '@/api';
+import ProgramGrid from '@/components/features/MyCourses/ProgramGrid/ProgramGrid';
+import SpecializationGrid from '@/components/features/MyCourses/SpecializationGrid/SpecializationGrid';
 import type { Program, Specialization } from '@/services';
 
 export interface FilterBarProps {
@@ -144,7 +146,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
       </div>
 
       {/* Program Filter Section */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-gray-700">Program:</span>
           {selectedProgram && (
@@ -162,27 +164,18 @@ const FilterBar: React.FC<FilterBarProps> = ({
         </div>
         
         {!selectedProgram && (
-          <div className="flex flex-wrap gap-2">
-            {programsLoading ? (
-              <div className="text-sm text-gray-500">Loading programs...</div>
-            ) : (
-              programsData?.map((program) => (
-                <button
-                  key={program.program_id}
-                  onClick={() => onProgramSelect(program)}
-                  className="px-3 py-2 text-sm border border-gray-300 rounded-full hover:bg-gray-50 hover:border-gray-400 transition-colors"
-                >
-                  {program.program_name}
-                </button>
-              ))
-            )}
-          </div>
+          <ProgramGrid
+            programs={programsData || []}
+            selectedProgram={selectedProgram}
+            loading={programsLoading}
+            onProgramSelect={onProgramSelect}
+          />
         )}
       </div>
 
       {/* Specialization Filter Section */}
       {selectedProgram && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">Specialization:</span>
             {selectedSpecialization && (
@@ -200,23 +193,12 @@ const FilterBar: React.FC<FilterBarProps> = ({
           </div>
           
           {!selectedSpecialization && (
-            <div className="flex flex-wrap gap-2">
-              {specializationsLoading ? (
-                <div className="text-sm text-gray-500">Loading specializations...</div>
-              ) : specializationsData.length > 0 ? (
-                specializationsData.map((specialization) => (
-                  <button
-                    key={specialization.specialization_id}
-                    onClick={() => onSpecializationSelect(specialization)}
-                    className="px-3 py-2 text-sm border border-gray-300 rounded-full hover:bg-gray-50 hover:border-gray-400 transition-colors"
-                  >
-                    {specialization.specialization_name}
-                  </button>
-                ))
-              ) : (
-                <div className="text-sm text-gray-500">No specializations available</div>
-              )}
-            </div>
+            <SpecializationGrid
+              specializations={specializationsData}
+              selectedSpecialization={selectedSpecialization}
+              loading={specializationsLoading}
+              onSpecializationSelect={onSpecializationSelect}
+            />
           )}
         </div>
       )}

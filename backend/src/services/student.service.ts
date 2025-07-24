@@ -14,6 +14,7 @@ import { NotFoundError, ConflictError, ForbiddenError, BadRequestError } from '@
 import { TokenPayload } from '@/utils/jwt.utils';
 import { tryCatch } from '@/utils/error-wrapper.utils';
 import { ExtendedPaginationWithFilters } from '@/utils/async-handler.utils';
+import { formatDateRangeShort, formatDecimalHours } from '@/utils/date-format.utils';
 import { 
   StudentStatus,
   Gender,
@@ -798,7 +799,8 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
                   teacher: {
                     select: {
                       full_name: true,
-                      profile_picture_url: true
+                      profile_picture_url: true,
+                      teacher_qualification: true
                     }
                   }
                 },
@@ -908,45 +910,13 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
         const specializationProgram = specialization?.specialization_program?.[0];
         const enrollmentSpecializationProgram = (enrollment as any).specialization_program;
 
-        // Format dates
-        const formatDateRange = (startDate: Date | null, endDate: Date | null) => {
-          if (!startDate && !endDate) {
-            return { start_date: null, end_date: null };
-          }
-          
-          const formatDate = (date: Date | null) => {
-            if (!date) return null;
-            return date.toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric'
-            });
-          };
-
-          return {
-            start_date: formatDate(startDate),
-            end_date: formatDate(endDate)
-          };
-        };
-
-        // Format hours
-        const formatDecimalHours = (hours: number | null) => {
-          if (hours === null || hours === undefined) return null;
-          
-          const wholeHours = Math.floor(hours);
-          const minutes = Math.round((hours - wholeHours) * 60);
-          
-          if (minutes === 0) {
-            return `${wholeHours}h`;
-          }
-          return `${wholeHours}h ${minutes}m`;
-        };
-
-        const formattedDates = formatDateRange(
+        // Format dates using utility function
+        const formattedDates = formatDateRangeShort(
           courseSession?.start_date || null,
           courseSession?.end_date || null
         );
 
+        // Format hours using utility function
         const formattedHours = formatDecimalHours(
           course.course_total_hours ? course.course_total_hours.toNumber() : null
         );
@@ -972,6 +942,7 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
                        specializationProgram?.program?.program_name || null,
           teacher_name: teacher?.full_name || 'Not Assigned',
           profile_picture_url: teacher?.profile_picture_url || null,
+          teacher_qualification: teacher?.teacher_qualification || null,
           course_total_hours: formattedHours,
           overall_progress_percentage: progressPercentage
         };
