@@ -6,9 +6,8 @@ import type { ExtendedCourse } from '@/types/course.ui.types';
 import { 
   formatCourseDuration, 
   getInstructorAvatarUrl, 
-  getPurchaseStatusClass, 
   getProgressBarClass,
-  generatePurchaseStatusText
+  getPurchaseStatusClassFromFlags
 } from '@/utils/courseUIUtils';
 import { DEFAULT_INSTRUCTOR, COURSE_CARD_ANIMATIONS } from '@/constants/courseUI.constants';
 
@@ -40,11 +39,6 @@ export interface CourseCardProps {
    */
   programName?: string;
   
-  /**
-   * Whether the course is free or paid
-   */
-  isFree?: boolean;
-
   /**
    * Custom purchase status text to display instead of Free/Paid
    */
@@ -95,7 +89,6 @@ const CourseCard: React.FC<CourseCardProps> = ({
   progress,
   instructor = DEFAULT_INSTRUCTOR,
   programName,
-  isFree = true,
   purchaseStatusText,
   showProgress = false,
   startDate,
@@ -114,13 +107,23 @@ const CourseCard: React.FC<CourseCardProps> = ({
   };
 
   // Use shared utility functions instead of local ones
-  const formattedDuration = formatCourseDuration(course.course_total_hours);
   const instructorAvatar = getInstructorAvatarUrl(instructor.name, instructor.avatar_url);
-  const purchaseStatusClass = getPurchaseStatusClass(purchaseStatusText, isFree);
   
-  // Generate purchase status text if not provided
+  // Format duration - handle string format from API like "24 hrs"
+  const formattedDuration = typeof course.course_total_hours === 'string' 
+    ? course.course_total_hours 
+    : formatCourseDuration(course.course_total_hours);
+  
+  // Use purchase_status from API response for display text
   const displayPurchaseStatus = purchaseStatusText || 
-    generatePurchaseStatusText(course.course_type, course.course_price, course.is_purchased);
+    course.purchase_status || 
+    (course.is_purchased ? 'Purchased' : (course.is_free ? 'Free' : 'Paid'));
+  
+  // Use modular approach with boolean flags (same logic as working implementation)
+  const purchaseStatusClass = getPurchaseStatusClassFromFlags(
+    course.is_purchased || false, 
+    course.is_free || false
+  );
 
   if (loading) {
     return (

@@ -132,7 +132,6 @@ const CourseCardGrid: React.FC<CourseCardGridProps> = ({
                   avatar_url: course.profile_picture_url || undefined
                 }}
                 programName={course.program_name}
-                isFree={course.course_type === 'FREE'}
                 purchaseStatusText={course.purchase_status}
                 showProgress={activeTab === 'enrolled' && !!progress}
                 startDate={course.start_date}

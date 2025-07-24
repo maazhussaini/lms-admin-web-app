@@ -104,6 +104,26 @@ export function getPurchaseStatusClass(statusText?: string, isFree: boolean = tr
 }
 
 /**
+ * Get CSS class for purchase status badge using boolean flags (more reliable)
+ * 
+ * @param isPurchased - Whether the course is purchased
+ * @param isFree - Whether the course is free
+ * @returns CSS class name for styling
+ */
+export function getPurchaseStatusClassFromFlags(isPurchased: boolean, isFree: boolean): string {
+  if (isFree) {
+    return PURCHASE_STATUS_CLASSES.FREE;
+  }
+  
+  if (isPurchased) {
+    return PURCHASE_STATUS_CLASSES.PURCHASED;
+  }
+  
+  // Paid but not purchased
+  return PURCHASE_STATUS_CLASSES.BUY;
+}
+
+/**
  * Get CSS class for progress bar based on percentage
  * 
  * @param percentage - Progress percentage (0-100)
