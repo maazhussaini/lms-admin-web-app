@@ -65,7 +65,7 @@ function ContentSelector<T extends ContentType>({
         const isEmpty = tab.count === 0;
         
         return (
-          <motion.button
+          <button
             key={tab.key}
             role="tab"
             aria-selected={isActive}
@@ -80,19 +80,32 @@ function ContentSelector<T extends ContentType>({
                 [COURSE_DETAILS_STYLES.CONTENT_SELECTOR.TAB_INACTIVE]: !isActive,
                 'opacity-50 cursor-not-allowed': isDisabled,
                 'cursor-pointer': !isDisabled,
+                'hover:scale-[1.02] active:scale-[0.98]': !isDisabled,
               }
             )}
-            whileHover={!isDisabled ? { scale: 1.02 } : undefined}
-            whileTap={!isDisabled ? { scale: 0.98 } : undefined}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
           >
-            <span className="flex items-center justify-center gap-2">
+            {/* Active tab background animation */}
+            {isActive && (
+              <motion.div
+                layoutId="activeContentTab"
+                className="absolute inset-0 bg-primary-900 rounded-[12px] shadow-lg"
+                initial={false}
+                transition={{
+                  type: "spring",
+                  stiffness: 500,
+                  damping: 30
+                }}
+              />
+            )}
+            
+            {/* Tab content */}
+            <span className="relative z-10 flex items-center justify-center gap-2">
               <span className="font-semibold">
                 {tab.label}
               </span>
               
               {showCounts && (
-                <motion.span
+                <span
                   className={clsx(
                     'inline-flex items-center justify-center min-w-[1.5rem] h-6 px-2 rounded-full text-xs font-medium transition-colors',
                     {
@@ -101,24 +114,12 @@ function ContentSelector<T extends ContentType>({
                       'bg-neutral-50 text-neutral-400': !isActive && isEmpty,
                     }
                   )}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.1 }}
                 >
                   {tab.count}
-                </motion.span>
+                </span>
               )}
             </span>
-            
-            {/* Active indicator line */}
-            {isActive && (
-              <motion.div
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full"
-                layoutId="active-indicator"
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              />
-            )}
-          </motion.button>
+          </button>
         );
       })}
     </div>

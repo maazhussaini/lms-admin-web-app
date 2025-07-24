@@ -134,8 +134,8 @@ export const COURSE_DETAILS_STYLES = {
   },
   CONTENT_SELECTOR: {
     CONTAINER: 'flex flex-col sm:flex-row bg-white rounded-[15px] p-1.5 w-full shadow-sm border border-neutral-200 gap-1.5 sm:gap-0',
-    TAB_BASE: 'relative flex-1 px-6 sm:px-8 py-3.5 sm:py-4 rounded-[15px] font-semibold text-sm sm:text-base transition-all duration-200 ease-in-out cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 hover:scale-[1.02] active:scale-[0.98]',
-    TAB_ACTIVE: 'text-white bg-primary-900 shadow-lg',
+    TAB_BASE: 'relative flex-1 px-6 sm:px-8 py-3.5 sm:py-4 rounded-[15px] font-semibold text-sm sm:text-base transition-all duration-200 ease-in-out cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
+    TAB_ACTIVE: 'text-white',
     TAB_INACTIVE: 'text-neutral-600 hover:text-neutral-800 hover:bg-neutral-50',
   },
   LOADING: {
