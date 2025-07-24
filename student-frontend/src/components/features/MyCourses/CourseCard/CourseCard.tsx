@@ -162,9 +162,9 @@ const CourseCard: React.FC<CourseCardProps> = ({
    * Get progress bar CSS class based on completion percentage
    */
   const getProgressBarClass = (percentage: number) => {
-    if (percentage === 0) {
+    if (percentage <= 0) {
       return 'progress-neutral';
-    } else if (percentage === 100) {
+    } else if (percentage >= 100) {
       return 'progress-complete';
     } else {
       return 'progress-active';
@@ -256,44 +256,44 @@ const CourseCard: React.FC<CourseCardProps> = ({
 
             {/* Program/Category */}
             {programName && (
-              <p className="text-xs font-regular text-[#43277e]">
+              <p className="text-sm font-regular text-[#43277e]">
                 {programName}
               </p>
             )}
 
             {/* Course Date Range */}
             {startDate && endDate && (
-              <p className="text-xs text-[#737373] font-regular">
+              <p className="text-sm text-[#737373] font-regular">
                 {startDate} - {endDate}
               </p>
             )}
 
             {/* Bottom Row: Duration and Price/Status */}
             <div className="flex items-center justify-between pt-2 mt-auto">
-              <span className="text-xs text-[#737373] font-regular">
+              <span className="text-sm text-[#737373] font-regular">
                 {formatDuration(course.course_total_hours)}
               </span>
               
               <div
-                className={`px-3 py-1 text-xs font-medium rounded-full border ${getPurchaseStatusClass()}`}
+                className={`px-3 py-1 text-sm font-medium rounded-full border ${getPurchaseStatusClass()}`}
               >
                 {purchaseStatusText || (isFree ? 'Free' : 'Paid')}
               </div>
             </div>
 
             {/* Progress Bar (only show for enrolled courses when showProgress is true) */}
-            {showProgress && progress && progress.overall_progress_percentage >= 0 && (
+            {showProgress && progress && typeof progress.overall_progress_percentage === 'number' && progress.overall_progress_percentage >= 0 && (
               <div className="space-y-2 pt-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-base font-regular text-neutral-600">Progress</span>
-                  <span className="text-base font-regular text-neutral-600">
+                  <span className="text-sm font-regular text-neutral-600">Progress</span>
+                  <span className="text-sm font-regular text-neutral-600">
                     {Math.round(progress.overall_progress_percentage)}%
                   </span>
                 </div>
                 <div className="w-full progress-bg rounded-full h-3">
                   <div
                     className={`h-3 rounded-full transition-all duration-300 ease-out ${getProgressBarClass(progress.overall_progress_percentage)}`}
-                    style={{ width: `${progress.overall_progress_percentage}%` }}
+                    style={{ width: `${Math.max(0, progress.overall_progress_percentage)}%` }}
                   />
                 </div>
               </div>

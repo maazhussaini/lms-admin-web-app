@@ -979,7 +979,7 @@ export class CourseService extends BaseListService<any, CourseFilterDto> {
       // Format the response with navigation information
       const result: VideoDetailsByIdResponse = {
         course_video_id: video.course_video_id,
-        video_name: `Lecture:${video.position || 0} ${video.video_name}`,
+        video_name: video.video_name,
         video_url: video.video_url || '',
         thumbnail_url: video.thumbnail_url,
         duration: video.duration_seconds || 0,

@@ -4,6 +4,7 @@ import { FaArrowLeft, FaCommentDots } from 'react-icons/fa';
 import Button from '@/components/common/Button';
 import type { CourseVideo } from '@shared/types';
 import { CourseDetailsData } from '@/pages/CourseDetailsPage/mockData';
+import { VideoDetails } from '@/services/courseService';
 
 interface NavigationContext {
   courseDetails: CourseDetailsData;
@@ -15,6 +16,10 @@ interface NavigationContext {
 interface VideoPlayerHeaderProps {
   /** Navigation context containing course, module, topic, and video data */
   navigationContext: NavigationContext;
+  /** Video details from API with teacher information */
+  videoDetails: VideoDetails;
+  /** Topic name for display */
+  topicName?: string;
   /** Callback function for back navigation */
   onBack: () => void;
   /** Callback function for feedback action */
@@ -26,8 +31,8 @@ interface VideoPlayerHeaderProps {
  * 
  * Features:
  * - Back navigation button
- * - Teacher thumbnail and information
- * - Topic and lecture information
+ * - Teacher thumbnail and information from API
+ * - Topic and lecture information from API
  * - Feedback button
  * - Clean design matching the LMS system
  * 
@@ -36,11 +41,21 @@ interface VideoPlayerHeaderProps {
  */
 export const VideoPlayerHeader: React.FC<VideoPlayerHeaderProps> = ({
   navigationContext,
+  videoDetails,
+  topicName,
   onBack,
   onFeedback
 }) => {
-  const { courseDetails, currentTopic, currentVideo } = navigationContext;
-  const instructorName = courseDetails.instructor?.name || 'Unknown Instructor';
+  const { currentVideo } = navigationContext;
+  
+  // Use API data for teacher information
+  const instructorName = videoDetails.teacher_name || 'Unknown Instructor';
+  const instructorQualification = videoDetails.teacher_qualification || 'Instructor';
+  const instructorAvatar = videoDetails.profile_picture_url;
+  
+  // Use API data for content information
+  const videoName = videoDetails.video_name || currentVideo.video_name;
+  const topicDisplayName = topicName || 'Course Topic';
 
   return (
     <motion.div
@@ -66,11 +81,17 @@ export const VideoPlayerHeader: React.FC<VideoPlayerHeaderProps> = ({
         <div className="flex items-center space-x-4 flex-1 ml-4">
           {/* Teacher Avatar */}
           <div className="w-20 h-20 rounded-full overflow-hidden bg-neutral-200 flex-shrink-0">
-            <img
-              src="/female.png"
-              alt={instructorName}
-              className="w-full h-full object-cover"
-            />
+            {instructorAvatar ? (
+              <img
+                src={instructorAvatar}
+                alt={instructorName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-lg font-medium">
+                {instructorName.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+              </div>
+            )}
           </div>
           
           {/* Teacher Details */}
@@ -79,7 +100,7 @@ export const VideoPlayerHeader: React.FC<VideoPlayerHeaderProps> = ({
               {instructorName}
             </h2>
             <p className="text-gray-600 text-base">
-              Computer Science Professor
+              {instructorQualification}
             </p>
           </div>
         </div>
@@ -100,10 +121,10 @@ export const VideoPlayerHeader: React.FC<VideoPlayerHeaderProps> = ({
       {/* Topic and Lecture Section */}
       <div className="px-6 pb-6">
         <h3 className="text-lg text-gray-600 mb-2">
-          Topic 1: {currentTopic?.course_topic_name || 'Computer Science'}
+          {topicDisplayName}
         </h3>
         <h1 className="text-2xl font-medium text-primary-900">
-          Lecture 1: {currentVideo.video_name}
+          {videoName}
         </h1>
       </div>
     </motion.div>

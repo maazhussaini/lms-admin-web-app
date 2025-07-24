@@ -1,11 +1,11 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
-import { CourseDetailsData } from '@/pages/CourseDetailsPage/mockData';
+import { CourseModule } from '@/services/courseService';
 
 export interface ModuleSelectorProps {
-  /** Course details data containing all modules */
-  courseDetails: CourseDetailsData;
+  /** List of course modules */
+  modules: CourseModule[];
   /** Currently active module ID */
   currentModuleId: number;
   /** Handler for module selection */
@@ -31,13 +31,12 @@ export interface ModuleSelectorProps {
  * @returns JSX.Element
  */
 const ModuleSelector: React.FC<ModuleSelectorProps> = ({
-  courseDetails,
+  modules,
   currentModuleId,
   onModuleSelect,
   className
 }) => {
-  const modules = courseDetails.modules || [];
-  const currentIndex = modules.findIndex(module => module.course_module_id === currentModuleId);
+  const currentIndex = modules.findIndex((module: CourseModule) => module.course_module_id === currentModuleId);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStarted, setDragStarted] = useState(false);
@@ -81,12 +80,21 @@ const ModuleSelector: React.FC<ModuleSelectorProps> = ({
     setIsDragging(false);
   };
 
+  // Parse module stats string to extract topic and video counts
+  const parseModuleStats = (moduleStats: string) => {
+    // Parse format like "2 Topics | 2 Video Lectures"
+    const topicMatch = moduleStats.match(/(\d+)\s+Topics?/i);
+    const videoMatch = moduleStats.match(/(\d+)\s+Video\s+Lectures?/i);
+    
+    return {
+      topicCount: topicMatch && topicMatch[1] ? parseInt(topicMatch[1], 10) : 0,
+      videoCount: videoMatch && videoMatch[1] ? parseInt(videoMatch[1], 10) : 0
+    };
+  };
+
   // Get module display information
-  const getModuleInfo = (module: CourseDetailsData['modules'][0], index: number) => {
-    const topicCount = module.topics?.length || 0;
-    const videoCount = module.topics?.reduce((total: number, topic) => 
-      total + (topic.videos?.length || 0), 0
-    ) || 0;
+  const getModuleInfo = (module: CourseModule, index: number) => {
+    const { topicCount, videoCount } = parseModuleStats(module.module_stats || '');
     
     return {
       number: index + 1,
@@ -96,9 +104,9 @@ const ModuleSelector: React.FC<ModuleSelectorProps> = ({
     };
   };
 
-  if (modules.length === 0) {
-    return null;
-  }
+  // Always render the selector, even with empty arrays for consistent UI
+  const hasModules = modules.length > 0;
+  const displayModules = hasModules ? modules : [];
 
   return (
     <motion.div
@@ -116,33 +124,38 @@ const ModuleSelector: React.FC<ModuleSelectorProps> = ({
           Course Modules
         </h3>
         <span className="text-sm text-neutral-500">
-          {currentIndex + 1} of {modules.length}
+          {hasModules ? `${currentIndex + 1} of ${modules.length}` : '0 modules'}
         </span>
       </div>
 
       {/* Modules Container - Scrollable with drag */}
       <div className="px-4 pb-4">
-        <div 
-          ref={scrollContainerRef}
-          className={clsx(
-            'overflow-x-auto scrollbar-hide py-4 -my-2',
-            'select-none', // Prevent text selection during drag
-            {
-              'cursor-grab': !isDragging && !dragStarted,
-              'cursor-grabbing': isDragging || dragStarted,
-            }
-          )}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseLeave}
-          style={{
-            scrollbarWidth: 'none', // Firefox
-            msOverflowStyle: 'none', // Internet Explorer 10+
-          }}
-        >
-          <div className="flex gap-4 px-2" style={{ width: 'max-content' }}>
-            {modules.map((module, index) => {
+        {!hasModules ? (
+          <div className="flex items-center justify-center py-8">
+            <p className="text-neutral-500 text-sm">No modules available</p>
+          </div>
+        ) : (
+          <div 
+            ref={scrollContainerRef}
+            className={clsx(
+              'overflow-x-auto scrollbar-hide py-4 -my-2',
+              'select-none', // Prevent text selection during drag
+              {
+                'cursor-grab': !isDragging && !dragStarted,
+                'cursor-grabbing': isDragging || dragStarted,
+              }
+            )}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+            style={{
+              scrollbarWidth: 'none', // Firefox
+              msOverflowStyle: 'none', // Internet Explorer 10+
+            }}
+          >
+            <div className="flex gap-4 px-2" style={{ width: 'max-content' }}>
+              {displayModules.map((module: CourseModule, index: number) => {
               const isActive = module.course_module_id === currentModuleId;
               const moduleInfo = getModuleInfo(module, index);
               
@@ -228,8 +241,9 @@ const ModuleSelector: React.FC<ModuleSelectorProps> = ({
                 </motion.button>
               );
             })}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </motion.div>
   );

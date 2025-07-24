@@ -30,8 +30,10 @@ export interface CourseBasicDetails {
   overall_progress_percentage: number;
   teacher_name: string;
   profile_picture_url: string | null;
+  teacher_qualification: string | null;
   start_date: string;
   end_date: string;
+  course_total_hours: string;
   purchase_status: string;
   program_name: string;
   specialization_name: string;

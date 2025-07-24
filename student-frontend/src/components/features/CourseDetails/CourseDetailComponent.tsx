@@ -2,14 +2,16 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaChevronRight } from 'react-icons/fa';
-import { CourseDetailsData } from '@/pages/CourseDetailsPage/mockData';
+import { CourseBasicDetails } from '@/services/courseService';
+import { useCourseModules } from '@/hooks/useCourse';
+import Spinner from '@/components/common/Spinner';
 
 /**
  * Props for the CourseDetailComponent
  */
 interface CourseDetailComponentProps {
   /** Course details data */
-  courseDetails: CourseDetailsData;
+  courseDetails: CourseBasicDetails;
   /** Course ID for navigation */
   courseId: string;
 }
@@ -32,6 +34,9 @@ export const CourseDetailComponent: React.FC<CourseDetailComponentProps> = ({
 }) => {
   const navigate = useNavigate();
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+
+  // Fetch course modules
+  const { data: modulesResponse, loading: modulesLoading, error: modulesError } = useCourseModules(courseDetails.course_id);
 
   // Navigate to module details
   const handleModuleClick = (moduleId: number) => {
@@ -98,40 +103,50 @@ export const CourseDetailComponent: React.FC<CourseDetailComponentProps> = ({
       >
         <h2 className="text-3xl font-medium text-primary-900 mb-6">Modules</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {courseDetails.modules?.map((module, moduleIndex) => (
-            <motion.div
-              key={module.course_module_id}
-              className="bg-white rounded-xl p-6 shadow-sm border border-neutral-200 hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => handleModuleClick(module.course_module_id)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-neutral-900 mb-2">
-                    Module {moduleIndex + 1}
-                  </h3>
-                  <p className="text-neutral-600 text-sm mb-2">
-                    {module.course_module_name || `Module ${moduleIndex + 1}`}
-                  </p>
-                  <p className="text-neutral-500 text-xs">
-                    {module.topics?.length || 0} Topics | {
-                      module.topics?.reduce((total, topic) => 
-                        total + (topic.videos?.length || 0), 0
-                      )
-                    } Video Lectures
-                  </p>
-                </div>
-                <div className="ml-4">
-                  <div className="w-10 h-10 bg-primary-800 rounded-full flex items-center justify-center">
-                    <FaChevronRight className="text-white text-sm" />
+        {modulesLoading ? (
+          <div className="flex justify-center py-8">
+            <Spinner size="md" />
+          </div>
+        ) : modulesError ? (
+          <div className="text-center py-8">
+            <p className="text-red-600 mb-4">Error loading modules: {modulesError.message}</p>
+          </div>
+        ) : modulesResponse?.items && modulesResponse.items.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {modulesResponse.items.map((module, moduleIndex) => (
+              <motion.div
+                key={module.course_module_id}
+                className="bg-white rounded-xl p-6 shadow-sm border border-neutral-200 hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => handleModuleClick(module.course_module_id)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-neutral-900 mb-2">
+                      Module {moduleIndex + 1}
+                    </h3>
+                    <p className="text-neutral-600 text-sm mb-2">
+                      {module.course_module_name}
+                    </p>
+                    <p className="text-neutral-500 text-xs">
+                      {module.module_stats}
+                    </p>
+                  </div>
+                  <div className="ml-4">
+                    <div className="w-10 h-10 bg-primary-800 rounded-full flex items-center justify-center">
+                      <FaChevronRight className="text-white text-sm" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-neutral-600">No modules available for this course.</p>
+          </div>
+        )}
       </motion.div>
     </div>
   );

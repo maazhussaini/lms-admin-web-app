@@ -1,13 +1,11 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
-import { CourseDetailsData } from '@/pages/CourseDetailsPage/mockData';
+import { CourseTopic } from '@/services/courseService';
 
 export interface TopicSelectorProps {
-  /** Course details data containing all modules and topics */
-  courseDetails: CourseDetailsData;
-  /** Current module ID */
-  moduleId: number;
+  /** Array of topics for the current module */
+  topics: CourseTopic[];
   /** Currently active topic ID */
   currentTopicId: number;
   /** Handler for topic selection */
@@ -23,7 +21,7 @@ export interface TopicSelectorProps {
  * - Horizontal scrollable list of topics with drag-to-scroll
  * - Current topic highlighting with smooth animations
  * - Smart click vs drag detection
- * - Topic information display (number, name, video count, materials count)
+ * - Topic information display (number, name, video count)
  * - Responsive design with touch-friendly interactions
  * - Hover effects with proper container constraints
  * 
@@ -33,17 +31,11 @@ export interface TopicSelectorProps {
  * @returns JSX.Element
  */
 const TopicSelector: React.FC<TopicSelectorProps> = ({
-  courseDetails,
-  moduleId,
+  topics,
   currentTopicId,
   onTopicSelect,
   className
 }) => {
-  // Find the current module and its topics
-  const currentModule = courseDetails.modules?.find(
-    module => module.course_module_id === moduleId
-  );
-  const topics = currentModule?.topics || [];
   const currentIndex = topics.findIndex(topic => topic.course_topic_id === currentTopicId);
   
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -90,22 +82,21 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
   };
 
   // Get topic display information
-  const getTopicInfo = (topic: CourseDetailsData['modules'][0]['topics'][0], index: number) => {
-    const videoCount = topic.videos?.length || 0;
-    const materialCount = topic.documents?.length || 0;
+  const getTopicInfo = (topic: CourseTopic, index: number) => {
+    // Parse video count from overall_video_lectures string or default to 0
+    const videoCount = topic.overall_video_lectures ? parseInt(topic.overall_video_lectures, 10) || 0 : 0;
     
     return {
       number: index + 1,
       name: topic.course_topic_name || `Topic ${index + 1}`,
       videoCount,
-      materialCount
+      materialCount: 0 // TODO: Add materials count when API provides this data
     };
   };
 
-  // If no topics or module not found, don't render
-  if (!currentModule || topics.length === 0) {
-    return null;
-  }
+  // Always render the selector, even with empty arrays for consistent UI
+  const hasTopics = topics.length > 0;
+  const displayTopics = hasTopics ? topics : [];
 
   return (
     <motion.div
@@ -120,36 +111,41 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <h3 className="text-lg font-semibold text-primary-900">
-          {currentModule.course_module_name || `Module ${moduleId}`} Topics
+          Module Topics
         </h3>
         <span className="text-sm text-neutral-500">
-          {currentIndex + 1} of {topics.length}
+          {hasTopics ? `${currentIndex + 1} of ${topics.length}` : '0 topics'}
         </span>
       </div>
 
       {/* Topics Container - Scrollable with drag */}
       <div className="px-4 pb-4">
-        <div 
-          ref={scrollContainerRef}
-          className={clsx(
-            'overflow-x-auto scrollbar-hide py-4 -my-2',
-            'select-none', // Prevent text selection during drag
-            {
-              'cursor-grab': !isDragging && !dragStarted,
-              'cursor-grabbing': isDragging || dragStarted,
-            }
-          )}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseLeave}
-          style={{
-            scrollbarWidth: 'none', // Firefox
-            msOverflowStyle: 'none', // Internet Explorer 10+
-          }}
-        >
-          <div className="flex gap-4 px-2" style={{ width: 'max-content' }}>
-            {topics.map((topic, index) => {
+        {!hasTopics ? (
+          <div className="flex items-center justify-center py-8">
+            <p className="text-neutral-500 text-sm">No topics available</p>
+          </div>
+        ) : (
+          <div 
+            ref={scrollContainerRef}
+            className={clsx(
+              'overflow-x-auto scrollbar-hide py-4 -my-2',
+              'select-none', // Prevent text selection during drag
+              {
+                'cursor-grab': !isDragging && !dragStarted,
+                'cursor-grabbing': isDragging || dragStarted,
+              }
+            )}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+            style={{
+              scrollbarWidth: 'none', // Firefox
+              msOverflowStyle: 'none', // Internet Explorer 10+
+            }}
+          >
+            <div className="flex gap-4 px-2" style={{ width: 'max-content' }}>
+              {displayTopics.map((topic, index) => {
               const isActive = topic.course_topic_id === currentTopicId;
               const topicInfo = getTopicInfo(topic, index);
               
@@ -235,8 +231,9 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
                 </motion.button>
               );
             })}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </motion.div>
   );
