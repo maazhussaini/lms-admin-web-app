@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaChevronRight } from 'react-icons/fa';
 import { CourseBasicDetails } from '@/services/courseService';
 import { useCourseModules } from '@/hooks/useCourse';
+import { useCourseNavigation } from '@/hooks/useCourseNavigation';
+import { truncateText } from '@/utils/courseDetailsUtils';
 import Spinner from '@/components/common/Spinner';
 
 /**
@@ -12,8 +13,6 @@ import Spinner from '@/components/common/Spinner';
 interface CourseDetailComponentProps {
   /** Course details data */
   courseDetails: CourseBasicDetails;
-  /** Course ID for navigation */
-  courseId: string;
 }
 
 /**
@@ -29,29 +28,19 @@ interface CourseDetailComponentProps {
  * @returns JSX.Element
  */
 export const CourseDetailComponent: React.FC<CourseDetailComponentProps> = ({
-  courseDetails,
-  courseId
+  courseDetails
 }) => {
-  const navigate = useNavigate();
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  
+  // Use course navigation hook for consistent navigation
+  const { navigateToModule } = useCourseNavigation();
 
   // Fetch course modules
   const { data: modulesResponse, loading: modulesLoading, error: modulesError } = useCourseModules(courseDetails.course_id);
 
   // Navigate to module details
   const handleModuleClick = (moduleId: number) => {
-    navigate(`/courses/${courseId}/modules/${moduleId}`);
-  };
-
-  // Truncate description text
-  const truncateText = (text: string, maxLength: number = 300): { truncated: string; isTruncated: boolean } => {
-    if (text.length <= maxLength) {
-      return { truncated: text, isTruncated: false };
-    }
-    return { 
-      truncated: text.substring(0, maxLength) + '...', 
-      isTruncated: true 
-    };
+    navigateToModule(moduleId);
   };
 
   // Handle description expansion

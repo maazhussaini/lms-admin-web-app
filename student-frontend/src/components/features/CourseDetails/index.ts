@@ -1,10 +1,11 @@
 // CourseDetails Components Exports
 export { CourseDetailComponent } from './CourseDetailComponent';
 export { ModuleComponent } from './ModuleComponent';
-export { ModuleContentSelector } from './ModuleContentSelector';
-export { ModuleSelector } from './ModuleSelector';
 export { TopicComponent } from './TopicComponent';
-export { TopicContentSelector } from './TopicContentSelector';
-export { TopicSelector } from './TopicSelector';
 export { CourseDetailsBanner } from './CourseDetailsBanner';
-export { default } from './CourseDetailsBanner';
+
+// Default export components
+export { default as ModuleContentSelector } from './ModuleContentSelector';
+export { default as ModuleSelector } from './ModuleSelector';
+export { default as TopicContentSelector } from './TopicContentSelector';
+export { default as TopicSelector } from './TopicSelector';

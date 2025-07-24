@@ -1,18 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
+import type { CourseTab, CourseCounts } from '@/types/course.ui.types';
 
 export interface CourseSelectorProps {
   /** Current active tab */
-  activeTab: 'all' | 'enrolled' | 'unenrolled';
+  activeTab: CourseTab;
   /** Handler for tab change */
-  onTabChange: (tab: 'all' | 'enrolled' | 'unenrolled') => void;
+  onTabChange: (tab: CourseTab) => void;
   /** Course counts for each category */
-  counts: {
-    all: number;
-    enrolled: number;
-    unenrolled: number;
-  };
+  counts: CourseCounts;
   /** Additional CSS classes */
   className?: string;
 }

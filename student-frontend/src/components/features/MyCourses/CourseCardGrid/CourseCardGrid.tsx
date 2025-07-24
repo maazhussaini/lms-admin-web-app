@@ -3,26 +3,9 @@ import { motion } from 'framer-motion';
 import CourseCard from '@/components/features/MyCourses/CourseCard';
 import Spinner from '@/components/common/Spinner';
 import type { StudentCourseProgress } from '@shared/types/course.types';
-
-// Extended Course type for UI display
-type ExtendedCourse = {
-  course_id: number;
-  course_name: string;
-  course_description: string;
-  main_thumbnail_url: string | null;
-  course_total_hours: number;
-  teacher_name?: string;
-  teacher_qualification?: string | null;
-  purchase_status?: string;
-  is_purchased?: boolean;
-  program_name?: string;
-  profile_picture_url?: string | null;
-  start_date?: string;
-  end_date?: string;
-  course_type: 'FREE' | 'PAID';
-  course_price: number;
-  specialization_id: number;
-};
+import type { ExtendedCourse, CourseTab } from '@/types/course.ui.types';
+import { getProgressForCourse } from '@/utils/courseDataTransformers';
+import { GRID_LAYOUTS } from '@/constants/courseUI.constants';
 
 export interface CourseCardGridProps {
   /**
@@ -48,7 +31,7 @@ export interface CourseCardGridProps {
   /**
    * Currently active tab (affects how courses are displayed)
    */
-  activeTab: 'all' | 'enrolled' | 'unenrolled';
+  activeTab: CourseTab;
   
   /**
    * Additional CSS classes
@@ -73,36 +56,10 @@ const CourseCardGrid: React.FC<CourseCardGridProps> = ({
   activeTab,
   className = ''
 }) => {
-  /**
-   * Get progress data for a specific course
-   */
-  const getProgressForCourse = (courseId: number): StudentCourseProgress | undefined => {
-    return progressData.find(progress => progress.course_id === courseId);
+  // Use shared utility function for progress lookup
+  const getCourseProgress = (courseId: number): StudentCourseProgress | undefined => {
+    return getProgressForCourse(courseId, progressData);
   };
-
-  /**
-   * Convert ExtendedCourse to Course type for CourseCard
-   */
-  const convertToCourse = (extendedCourse: ExtendedCourse) => ({
-    course_id: extendedCourse.course_id,
-    course_name: extendedCourse.course_name,
-    course_description: extendedCourse.course_description,
-    main_thumbnail_url: extendedCourse.main_thumbnail_url,
-    course_total_hours: extendedCourse.course_total_hours,
-    course_type: extendedCourse.course_type,
-    course_price: extendedCourse.course_price,
-    specialization_id: extendedCourse.specialization_id,
-    course_status: 'PUBLIC' as const,
-    tenant_id: 1,
-    is_active: true,
-    is_deleted: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    created_by: 1,
-    updated_by: 1,
-    created_ip: '127.0.0.1',
-    updated_ip: '127.0.0.1'
-  });
 
   if (loading) {
     return (
@@ -141,7 +98,7 @@ const CourseCardGrid: React.FC<CourseCardGridProps> = ({
 
       {/* Course Grid */}
       <motion.div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
+        className={GRID_LAYOUTS.COURSES}
         initial="hidden"
         animate="visible"
         variants={{
@@ -155,7 +112,7 @@ const CourseCardGrid: React.FC<CourseCardGridProps> = ({
         }}
       >
         {courses.map((course) => {
-          const progress = getProgressForCourse(course.course_id);
+          const progress = getCourseProgress(course.course_id);
           
           return (
             <motion.div
@@ -167,7 +124,7 @@ const CourseCardGrid: React.FC<CourseCardGridProps> = ({
               transition={{ duration: 0.3 }}
             >
               <CourseCard
-                course={convertToCourse(course)}
+                course={course}
                 progress={progress}
                 instructor={{
                   name: course.teacher_name || 'Unknown Instructor',

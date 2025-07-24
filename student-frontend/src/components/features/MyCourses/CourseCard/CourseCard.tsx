@@ -1,16 +1,25 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Card from '@/components/common/Card';
-import type { Course, StudentCourseProgress } from '@shared/types';
+import type { StudentCourseProgress } from '@shared/types';
+import type { ExtendedCourse } from '@/types/course.ui.types';
+import { 
+  formatCourseDuration, 
+  getInstructorAvatarUrl, 
+  getPurchaseStatusClass, 
+  getProgressBarClass,
+  generatePurchaseStatusText
+} from '@/utils/courseUIUtils';
+import { DEFAULT_INSTRUCTOR, COURSE_CARD_ANIMATIONS } from '@/constants/courseUI.constants';
 
 /**
  * Props for the CourseCard component
  */
 export interface CourseCardProps {
   /**
-   * Course data from the API
+   * Course data from the API (using ExtendedCourse for UI-specific fields)
    */
-  course: Course;
+  course: ExtendedCourse;
   
   /**
    * Optional progress data for the student
@@ -84,11 +93,7 @@ export interface CourseCardProps {
 const CourseCard: React.FC<CourseCardProps> = ({
   course,
   progress,
-  instructor = {
-    name: 'Chris Evans',
-    title: 'CS Professor',
-    avatar_url: undefined
-  },
+  instructor = DEFAULT_INSTRUCTOR,
   programName,
   isFree = true,
   purchaseStatusText,
@@ -108,68 +113,14 @@ const CourseCard: React.FC<CourseCardProps> = ({
     }
   };
 
-  /**
-   * Format duration for display to match design exactly
-   */
-  const formatDuration = (hours?: number | null): string => {
-    if (!hours) return 'Duration TBD';
-    
-    const wholeHours = Math.floor(hours);
-    const minutes = Math.round((hours - wholeHours) * 60);
-    
-    if (wholeHours === 0) {
-      return `${minutes} Min`;
-    }
-    
-    if (minutes === 0) {
-      return `${wholeHours} Hrs`;
-    }
-    
-    return `${wholeHours} Hrs ${minutes} Min`;
-  };
-
-  /**
-   * Get instructor avatar or default placeholder
-   */
-  const getInstructorAvatar = (): string => {
-    if (instructor.avatar_url) {
-      return instructor.avatar_url;
-    }
-    
-    // Generate a placeholder avatar based on instructor name using API service with pink background to match design
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(instructor.name)}&background=ffc0cb&color=fff&bold=true&format=svg`;
-  };
-
-  /**
-   * Get purchase status badge CSS class based on status text
-   */
-  const getPurchaseStatusClass = () => {
-    const statusText = purchaseStatusText || (isFree ? 'Free' : 'Paid');
-    
-    if (statusText === 'Purchased') {
-      return 'badge-purchased';
-    }
-    
-    if (statusText.startsWith('Buy:')) {
-      return 'badge-buy';
-    }
-    
-    // Free or default
-    return 'badge-free';
-  };
-
-  /**
-   * Get progress bar CSS class based on completion percentage
-   */
-  const getProgressBarClass = (percentage: number) => {
-    if (percentage <= 0) {
-      return 'progress-neutral';
-    } else if (percentage >= 100) {
-      return 'progress-complete';
-    } else {
-      return 'progress-active';
-    }
-  };
+  // Use shared utility functions instead of local ones
+  const formattedDuration = formatCourseDuration(course.course_total_hours);
+  const instructorAvatar = getInstructorAvatarUrl(instructor.name, instructor.avatar_url);
+  const purchaseStatusClass = getPurchaseStatusClass(purchaseStatusText, isFree);
+  
+  // Generate purchase status text if not provided
+  const displayPurchaseStatus = purchaseStatusText || 
+    generatePurchaseStatusText(course.course_type, course.course_price, course.is_purchased);
 
   if (loading) {
     return (
@@ -200,9 +151,9 @@ const CourseCard: React.FC<CourseCardProps> = ({
 
   return (
     <motion.div
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.2, ease: 'easeInOut' }}
+      whileHover={COURSE_CARD_ANIMATIONS.hover}
+      whileTap={COURSE_CARD_ANIMATIONS.tap}
+      transition={COURSE_CARD_ANIMATIONS.transition}
       className={className}
     >
       <Card
@@ -214,7 +165,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
           <div className="flex items-center gap-2">
             <div className="relative">
               <img
-                src={getInstructorAvatar()}
+                src={instructorAvatar}
                 alt={`${instructor.name} avatar`}
                 className="w-16 h-16 rounded-full object-cover"
                 onError={(e) => {
@@ -271,13 +222,13 @@ const CourseCard: React.FC<CourseCardProps> = ({
             {/* Bottom Row: Duration and Price/Status */}
             <div className="flex items-center justify-between pt-2 mt-auto">
               <span className="text-sm text-[#737373] font-regular">
-                {formatDuration(course.course_total_hours)}
+                {formattedDuration}
               </span>
               
               <div
-                className={`px-3 py-1 text-sm font-medium rounded-full border ${getPurchaseStatusClass()}`}
+                className={`px-3 py-1 text-sm font-medium rounded-full border ${purchaseStatusClass}`}
               >
-                {purchaseStatusText || (isFree ? 'Free' : 'Paid')}
+                {displayPurchaseStatus}
               </div>
             </div>
 

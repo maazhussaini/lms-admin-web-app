@@ -76,7 +76,6 @@ export const CourseDetailsPage: React.FC = () => {
     return (
       <CourseDetailComponent 
         courseDetails={courseDetails}
-        courseId={courseId}
       />
     );
   };

@@ -3,7 +3,7 @@
  * @description React hooks for API operations with enhanced error handling and loading states
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { apiClient, apiClientWithMeta } from '@/api';
 import { ApiError } from '@/types/auth.types';
 import { PaginatedResponseResult } from '@/api/response-utils';
@@ -713,4 +713,53 @@ export function useApiBulk<T extends ApiData>(
     reset,
     isRetrying: false
   };
+}
+
+/**
+ * Hook for batch retry operations across multiple API hooks
+ * Useful when you need to retry several API calls at once
+ */
+export function useBatchRetry(hooks: Array<{ refetch?: () => void }>) {
+  const retryAll = useCallback(() => {
+    hooks.forEach(hook => {
+      if (hook.refetch) {
+        hook.refetch();
+      }
+    });
+  }, [hooks]);
+
+  const hasErrors = useMemo(() => {
+    return hooks.some(hook => 'error' in hook && hook.error);
+  }, [hooks]);
+
+  const isLoading = useMemo(() => {
+    return hooks.some(hook => 'loading' in hook && hook.loading);
+  }, [hooks]);
+
+  return {
+    retryAll,
+    hasErrors,
+    isLoading,
+  };
+}
+
+/**
+ * Hook for aggregating state across multiple API hooks
+ * Useful for getting combined loading/error states
+ */
+export function useApiStateAggregator(hooks: Array<{ loading?: boolean; error?: unknown }>) {
+  const aggregatedState = useMemo(() => {
+    const loading = hooks.some(hook => hook.loading);
+    const errors = hooks.filter(hook => hook.error).map(hook => hook.error);
+    const hasErrors = errors.length > 0;
+
+    return {
+      loading,
+      hasErrors,
+      errors,
+      firstError: errors[0] || null,
+    };
+  }, [hooks]);
+
+  return aggregatedState;
 }

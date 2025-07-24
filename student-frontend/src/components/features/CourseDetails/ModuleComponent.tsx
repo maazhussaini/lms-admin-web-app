@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaChevronRight, FaClipboardList, FaQuestionCircle } from 'react-icons/fa';
 import { CourseBasicDetails } from '@/services/courseService';
 import { useModuleTopics, useCourseModules } from '@/hooks/useCourse';
-import { ModuleContentSelector, ModuleContentType } from './ModuleContentSelector';
-import { ModuleSelector } from './ModuleSelector';
+import { useCourseNavigation } from '@/hooks/useCourseNavigation';
+import ModuleContentSelector from './ModuleContentSelector';
+import ModuleSelector from './ModuleSelector';
 import Breadcrumb, { BreadcrumbItem } from '@/components/common/Breadcrumb';
+import type { ModuleContentType } from '@/types/courseDetails.ui.types';
 
 /**
  * Props for the ModuleComponent
@@ -37,8 +39,10 @@ export const ModuleComponent: React.FC<ModuleComponentProps> = ({
   moduleId
 }) => {
   const { courseId } = useParams<{ courseId: string }>();
-  const navigate = useNavigate();
   const [activeContent, setActiveContent] = useState<ModuleContentType>('topics');
+  
+  // Use course navigation hook for simplified navigation
+  const { navigateToTopic, navigateToModule } = useCourseNavigation();
 
   // Parse courseId from string to number for API calls
   const courseIdNumber = courseId ? parseInt(courseId, 10) : 0;
@@ -62,12 +66,12 @@ export const ModuleComponent: React.FC<ModuleComponentProps> = ({
 
   // Navigate to topic details
   const handleTopicClick = (topicId: number) => {
-    navigate(`/courses/${courseId}/modules/${moduleId}/topics/${topicId}`);
+    navigateToTopic(moduleId, topicId);
   };
 
   // Handle module selection from ModuleSelector
   const handleModuleSelect = (selectedModuleId: number) => {
-    navigate(`/courses/${courseId}/modules/${selectedModuleId}`);
+    navigateToModule(selectedModuleId);
   };
 
   // Handle content type change

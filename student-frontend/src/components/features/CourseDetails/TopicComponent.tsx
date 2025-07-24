@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   FaPlayCircle, 
@@ -10,9 +10,11 @@ import {
 } from 'react-icons/fa';
 import { CourseBasicDetails } from '@/services/courseService';
 import { useTopicVideos, useModuleTopics, useCourseModules } from '@/hooks/useCourse';
-import { TopicContentSelector, TopicContentType } from './TopicContentSelector';
-import { TopicSelector } from './TopicSelector';
+import { useCourseNavigation } from '@/hooks/useCourseNavigation';
+import TopicContentSelector from './TopicContentSelector';
+import TopicSelector from './TopicSelector';
 import Breadcrumb, { BreadcrumbItem } from '@/components/common/Breadcrumb';
+import type { TopicContentType } from '@/types/courseDetails.ui.types';
 
 /**
  * Props for the TopicComponent
@@ -48,8 +50,10 @@ export const TopicComponent: React.FC<TopicComponentProps> = ({
   topicId
 }) => {
   const { courseId } = useParams<{ courseId: string }>();
-  const navigate = useNavigate();
   const [activeContent, setActiveContent] = useState<TopicContentType>('lectures');
+  
+  // Use course navigation hook for simplified navigation
+  const { navigateToVideo, navigateToTopic } = useCourseNavigation();
 
   // Parse courseId from string to number for API calls
   const courseIdNumber = courseId ? parseInt(courseId, 10) : 0;
@@ -84,12 +88,12 @@ export const TopicComponent: React.FC<TopicComponentProps> = ({
 
   // Navigate to video player
   const handleVideoClick = (videoId: number) => {
-    navigate(`/courses/${courseId}/modules/${moduleId}/topics/${topicId}/videos/${videoId}`);
+    navigateToVideo(moduleId, topicId, videoId);
   };
 
   // Handle topic selection from TopicSelector
   const handleTopicSelect = (selectedTopicId: number) => {
-    navigate(`/courses/${courseId}/modules/${moduleId}/topics/${selectedTopicId}`);
+    navigateToTopic(moduleId, selectedTopicId);
   };
 
   // Handle content type change
