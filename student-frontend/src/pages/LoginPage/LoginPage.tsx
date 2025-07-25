@@ -12,7 +12,7 @@ import { PageTransition } from '@/components/common/PageTransition';
 import StateDisplay from '@/components/common/StateDisplay';
 import { useAuth } from '@/context/AuthContext';
 
-// Import assets using proper path structure (will need to move assets to src/assets)
+// Import assets using proper path structure
 import logo from '@public/orbed_logo.svg';
 import sideVector from '@public/signin_vector.png';
 import bgImage from '@public/bg.png';

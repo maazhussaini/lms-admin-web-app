@@ -83,7 +83,7 @@ const SetNewPasswordPage: React.FC = () => {
       setSuccessMessage('Your password has been reset successfully.');
       // Navigate to ResetPasswordSuccessPage after short delay
       setTimeout(() => navigate('/reset-password-success', { replace: true }), 1200);
-    } catch (err) {
+    } catch {
       setErrorMessage('Failed to reset password. Please try again.');
     } finally {
       setIsSubmitting(false);
