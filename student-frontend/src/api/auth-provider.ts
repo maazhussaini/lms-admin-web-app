@@ -5,7 +5,7 @@
 
 import { IApiAuthProvider } from '@/api/interfaces';
 import { ITokenManager } from '@/types/auth.types';
-import { TRefreshTokenResponse } from '@shared/types/api.types';
+import { TAuthResponse } from '@shared/types/api.types';
 
 /**
  * API Authentication Provider
@@ -66,8 +66,10 @@ export class ApiAuthProvider implements IApiAuthProvider {
       const data = await response.json();
       
       if (data.success && data.data) {
-        const tokenData = data.data as TRefreshTokenResponse;
-        await this.tokenManager.storeAccessToken(tokenData.access_token, tokenData.expires_in);
+        const authData = data.data as TAuthResponse;
+        // Store both access and refresh tokens
+        await this.tokenManager.storeAccessToken(authData.tokens.access_token, authData.tokens.expires_in);
+        await this.tokenManager.storeRefreshToken(authData.tokens.refresh_token);
         return true;
       }
       
