@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { clsx } from 'clsx';
@@ -87,17 +87,15 @@ const SignUpPage: React.FC = () => {
     setSuccessMessage(null);
     try {
       // Use formData.phone directly
-      const submitData = {
-        ...formData,
-      };
-      // TODO: Replace with actual API call, using submitData
+      // TODO: Replace with actual API call using formData
+      // const response = await apiClient.post('/auth/signup', formData);
       await new Promise((resolve) => setTimeout(resolve, 1200));
       setSuccessMessage('Account created successfully! Please check your email to verify your account.');
       // Optionally reset phone input and form
       setFormData(prev => ({ ...prev, phone: '' }));
       // Optionally navigate to login page after a delay
       setTimeout(() => navigate('/login', { replace: true }), 1800);
-    } catch (err) {
+    } catch {
       setErrorMessage('Failed to create account. Please try again.');
     } finally {
       setIsSubmitting(false);

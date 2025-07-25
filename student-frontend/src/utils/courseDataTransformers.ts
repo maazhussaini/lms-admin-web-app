@@ -19,9 +19,9 @@ export function convertExtendedToCourse(extendedCourse: ExtendedCourse): Course 
     course_name: extendedCourse.course_name,
     course_description: extendedCourse.course_description,
     main_thumbnail_url: extendedCourse.main_thumbnail_url,
-    course_total_hours: extendedCourse.course_total_hours,
+    course_total_hours: typeof extendedCourse.course_total_hours === 'number' ? extendedCourse.course_total_hours : null,
     course_type: extendedCourse.course_type as 'FREE' | 'PAID', // Remove PURCHASED for base type
-    course_price: extendedCourse.course_price,
+    course_price: extendedCourse.course_price ?? null,
     specialization_id: extendedCourse.specialization_id,
     // Required fields for base Course type
     course_status: 'PUBLIC' as const,

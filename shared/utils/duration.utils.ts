@@ -84,7 +84,7 @@ export function formatDurationFromSeconds(
     case 'display':
       return formatDisplay(hours, minutes, remainingSeconds, finalConfig);
     case 'timestamp':
-      return formatTimestamp(hours, minutes, remainingSeconds, finalConfig);
+      return formatTimestamp(hours, minutes, remainingSeconds);
     case 'course':
       return formatCourse(hours, minutes, remainingSeconds, finalConfig);
     default:
@@ -200,7 +200,7 @@ function formatDisplay(hours: number, minutes: number, seconds: number, config: 
   return parts.length > 0 ? parts.join(' ') : (config.zeroDisplay || '0 sec');
 }
 
-function formatTimestamp(hours: number, minutes: number, seconds: number, config: DurationFormatConfig): string {
+function formatTimestamp(hours: number, minutes: number, seconds: number): string {
   // Helper function for padding numbers
   const pad = (num: number, length: number = 2): string => {
     const str = num.toString();
