@@ -17,6 +17,10 @@ const ResetPasswordPage = React.lazy(() => import('@/pages/ResetPasswordPage/Res
 const ResetPasswordSuccessPage = React.lazy(() => import('@/pages/ResetPasswordSuccessPage/ResetPasswordSuccessPage'));
 const SignUpPage = React.lazy(() => import('@/pages/SignUpPage'));
 
+// Lazy load error pages
+const NotFoundPage = React.lazy(() => import('@/pages/NotFoundPage'));
+const UnauthorizedPage = React.lazy(() => import('@/pages/UnauthorizedPage'));
+
 // Lazy load protected page components with correct import structure
 const MyCoursesPage = React.lazy(() => import('@/pages/MyCoursesPage').then(module => ({ default: module.MyCoursesPage })));
 const CourseDetailsPage = React.lazy(() => import('@/pages/CourseDetailsPage').then(module => ({ default: module.CourseDetailsPage })));
@@ -30,29 +34,6 @@ const PageLoader: React.FC<{ message?: string }> = ({ message = "Loading..." }) 
       <p className="text-gray-600 font-medium">{message}</p>
     </div>
   </div>
-);
-
-// Public page components that don't need guard protection
-const UnauthorizedPage = () => (
-  <PublicLayout title="Unauthorized">
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Unauthorized Access</h1>
-        <p className="text-gray-600 mb-8">You don't have permission to access this resource.</p>
-      </div>
-    </div>
-  </PublicLayout>
-);
-
-const NotFoundPage = () => (
-  <PublicLayout title="Page Not Found">
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Page Not Found</h1>
-        <p className="text-gray-600 mb-8">The page you're looking for doesn't exist or has been moved.</p>
-      </div>
-    </div>
-  </PublicLayout>
 );
 
 /**
@@ -133,8 +114,16 @@ const AppRouter: React.FC = () => {
               } />
               
               {/* Public routes without guard protection */}
-              <Route path="/unauthorized" element={<UnauthorizedPage />} />
-              <Route path="/404" element={<NotFoundPage />} />
+              <Route path="/unauthorized" element={
+                <Suspense fallback={<PageLoader message="Loading..." />}>
+                  <UnauthorizedPage />
+                </Suspense>
+              } />
+              <Route path="/404" element={
+                <Suspense fallback={<PageLoader message="Loading..." />}>
+                  <NotFoundPage />
+                </Suspense>
+              } />
               
               {/* Protected routes with nested structure */}
               <Route path="/courses" element={<ProtectedRoutes />}>
@@ -166,7 +155,11 @@ const AppRouter: React.FC = () => {
               </Route>
               
               {/* Catch all for unmatched routes */}
-              <Route path="*" element={<NotFoundPage />} />
+              <Route path="*" element={
+                <Suspense fallback={<PageLoader message="Loading..." />}>
+                  <NotFoundPage />
+                </Suspense>
+              } />
             </Routes>
           </Suspense>
           
