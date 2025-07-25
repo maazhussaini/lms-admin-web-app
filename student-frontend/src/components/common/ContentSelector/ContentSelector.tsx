@@ -4,7 +4,6 @@
  * Replaces ModuleContentSelector and TopicContentSelector with unified implementation
  */
 
-import React from 'react';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import { COURSE_DETAILS_STYLES } from '@/constants/courseDetails.constants';

@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FaRegCalendarAlt } from "react-icons/fa";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 import { MdOutlinePlayCircle } from "react-icons/md";
-import { FiSettings, FiX } from "react-icons/fi";
+import { FiSettings, FiX, FiLogOut } from "react-icons/fi";
+import { useAuth } from '@/context/AuthContext';
 
 type NavIcon = {
   icon: React.ReactNode;
@@ -45,10 +46,26 @@ interface SideNavBarProps {
 }
 
 const SideNavBar: React.FC<SideNavBarProps> = ({ isOpen = false, onClose }) => {
+  const { logout } = useAuth();
+
   const handleNavClick = (nav: NavIcon) => {
     // TODO: Implement navigation logic
     console.log('Navigate to:', nav.href);
     // Close mobile menu after navigation
+    if (onClose) {
+      onClose();
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Navigation to login page will be handled by route guards
+      console.log('User logged out successfully');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+    // Close mobile menu if open
     if (onClose) {
       onClose();
     }
@@ -72,6 +89,11 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ isOpen = false, onClose }) => {
           <NavButton key={nav.label} nav={nav} onClick={() => handleNavClick(nav)} />
         ))}
       </nav>
+
+      {/* Logout Button */}
+      <div className="mt-auto">
+        <LogoutButton onClick={handleLogout} />
+      </div>
     </aside>
   );
 
@@ -136,6 +158,17 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ isOpen = false, onClose }) => {
                     <span className="font-medium text-base">{nav.label}</span>
                   </button>
                 ))}
+                
+                {/* Mobile Logout Button */}
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition focus:outline-none focus:ring-2 focus:ring-red-500 hover:bg-red-50 text-red-600 border-t border-neutral-200 mt-4 pt-6"
+                >
+                  <div className="flex-shrink-0">
+                    <FiLogOut className="w-6 h-6 lg:w-7 lg:h-7" />
+                  </div>
+                  <span className="font-medium text-base">Logout</span>
+                </button>
               </div>
             </nav>
 
@@ -188,6 +221,34 @@ const NavButton: React.FC<NavButtonProps> = ({ nav, onClick }) => (
     >
       {nav.label}
       <span className="absolute left-0 top-1/2 -translate-y-1/2 -ml-2 w-3 h-3 bg-primary-400 border border-primary-400 shadow -z-10 rotate-45"></span>
+    </span>
+  </div>
+);
+
+// Logout Button Component for Desktop Navigation
+interface LogoutButtonProps {
+  onClick: () => void;
+}
+
+const LogoutButton: React.FC<LogoutButtonProps> = ({ onClick }) => (
+  <div className="relative group flex items-center">
+    <button
+      onClick={onClick}
+      className="rounded-2xl p-3 transition focus:outline-none flex items-center justify-center w-14 h-14 cursor-pointer focus:ring-2 focus:ring-red-500 hover:bg-red-50 text-red-600 border-2 border-transparent hover:border-red-200"
+      aria-label="Logout"
+      tabIndex={0}
+    >
+      <FiLogOut className="w-6 h-6 lg:w-7 lg:h-7" />
+    </button>
+    
+    {/* Desktop Tooltip */}
+    <span
+      className="absolute left-full top-1/2 -translate-y-1/2 ml-4 px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-xl border border-red-400 shadow-2xl opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 group-hover:translate-x-0 translate-x-2 transition-all duration-200 pointer-events-none whitespace-nowrap z-20 flex items-center gap-2 drop-shadow-lg"
+      style={{ transitionDelay: '80ms' }}
+      role="tooltip"
+    >
+      Logout
+      <span className="absolute left-0 top-1/2 -translate-y-1/2 -ml-2 w-3 h-3 bg-red-400 border border-red-400 shadow -z-10 rotate-45"></span>
     </span>
   </div>
 );
