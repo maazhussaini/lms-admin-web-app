@@ -1,19 +1,26 @@
 # Learning Management System (LMS)
 
-The Learning Management System (LMS) is a comprehensive, secure, and scalable platform designed to revolutionize the delivery of educational content. It focuses on protecting intellectual property, particularly high-value video content, while offering a modern, engaging, and accessible user experience across web and mobile platforms. This LMS empowers educational institutions and instructors to manage courses, engage students, and track progress effectively, with robust integration with Bunny.net for secure video hosting, streaming, and DRM.
+> Enterprise-grade, production-ready learning platform with advanced video DRM, multi-tenant architecture, and comprehensive type safety.
+
+The Learning Management System (LMS) is an enterprise-grade, scalable platform designed to revolutionize the delivery of educational content with production-level security and performance. Built with sophisticated multi-tenant architecture, advanced video protection via Bunny.net DRM integration, and comprehensive type-safe development patterns, this LMS empowers educational institutions to deliver secure, engaging, and scalable learning experiences across web and mobile platforms.
 
 ## ✨ Features
 
 The LMS is broadly divided into an Admin/Instructor Panel for management and a Student Platform for learning and engagement.
 
 ### 🔑 Core & Differentiating Features
-*   **Advanced Video Protection**:
-    *   Enterprise Multi-DRM (Widevine, PlayReady, FairPlay) via Bunny.net integration to secure video playback.
-    *   Token-Based Access for authorized video streaming.
-    *   Screenshot and Screen Recording Prevention mechanisms on supported platforms.
-*   **Cross-Platform Accessibility**: Unified experience across web (Admin & Student) and native mobile apps (Android & iOS for Students).
-*   **Bunny.net Integration**: Leverages Bunny.net for secure video hosting, global CDN delivery, DRM, and scalable streaming infrastructure.
-*   **User-Centric Design**: Modern UI/UX with interactive components, responsive layouts, and accessibility features like dark mode.
+*   **Enterprise Video Protection**:
+    *   Enterprise Multi-DRM (Widevine, PlayReady, FairPlay) via Bunny.net integration
+    *   Advanced token-based access with correlation ID tracking
+    *   Screenshot and screen recording prevention on supported platforms
+    *   Comprehensive video analytics and performance monitoring
+*   **Production-Ready Architecture**: 
+    *   Multi-tenant architecture with complete tenant isolation
+    *   Advanced API system with interceptors, caching, and error boundaries
+    *   Enterprise-level type system with 17+ domain-specific type files
+    *   Comprehensive constraint validation and performance optimization
+*   **Cross-Platform Excellence**: Unified experience across web (Admin & Student) and native mobile apps (Android & iOS for Students)
+*   **Developer Experience**: Type-safe development with correlation IDs, structured logging, and comprehensive tooling
 
 ### 🧑‍🏫 Admin/Instructor Panel (Web)
 
@@ -93,68 +100,91 @@ The Student Platform provides an engaging and interactive learning environment a
 
 ## 🛠️ Tech Stack
 
-*   **Backend**:
-    *   Language: TypeScript
-    *   Runtime Environment: Node.js
-    *   Framework: Express.js
-    *   Database: PostgreSQL
-    *   Real-time Communication: Socket.IO
-*   **Frontend (Web Admin Panel & Student Web Portal)**:
-    *   Framework: Angular
-    *   Language: TypeScript
-    *   UI Components: PrimeNG
-    *   Build Tool: Vite
-*   **Mobile Applications (Student Android & iOS)**:
-    *   Android: Kotlin (Native)
-    *   iOS: Swift (Native)
-*   **Video Infrastructure & Security**:
-    *   Bunny.net: Video Hosting, Secure Streaming (HLS/DASH), Global CDN, Enterprise Multi-DRM (Widevine, PlayReady, FairPlay).
+*   **Backend** ([Enterprise Documentation](backend/README.md)):
+    *   **Core**: TypeScript, Node.js, Express.js 5 with advanced middleware stack
+    *   **Database**: PostgreSQL with Prisma ORM and sophisticated constraint system
+    *   **Architecture**: Multi-tenant with complete isolation and context-aware operations
+    *   **Security**: JWT auth, rate limiting, security headers, and DRM integration
+    *   **Real-time**: Socket.IO for notifications and live updates
+    *   **Testing**: Comprehensive Jest and Supertest coverage with 40+ npm scripts
+    *   **Video Integration**: Bunny.net DRM, transcoding, and secure delivery
+
+*   **Student Frontend** ([Enhanced API Documentation](student-frontend/src/api/README.md)):
+    *   **Framework**: React 19 with TypeScript and modern development patterns
+    *   **Styling**: TailwindCSS 4 with responsive design and dark mode
+    *   **Build**: Vite with optimized production builds and hot reload
+    *   **State**: TanStack React Query with intelligent caching
+    *   **UI/UX**: Framer Motion animations and React Icons
+    *   **API System**: Enterprise-grade client with interceptors, correlation IDs, caching, and error boundaries
+
+*   **Shared Type System** ([Comprehensive Documentation](shared/README.md)):
+    *   **Domain Modeling**: 17+ specialized type files covering all business domains
+    *   **Constraint System**: Advanced database validation with performance optimization
+    *   **Video Integration**: 573+ lines of Bunny.net DRM and streaming types
+    *   **Multi-Tenant**: Complete tenant isolation and context-aware type definitions
+    *   **Enterprise Patterns**: Audit trails, logging types, and production-ready validation
+
+*   **Mobile Applications** (Future):
+    *   Android: Kotlin (Native) with enterprise security patterns - Planned
+    *   iOS: Swift (Native) with DRM compliance - Planned
 
 ## 📁 Folder Structure Overview
 
 The project follows industry-standard organizational patterns with clear separation of concerns:
 
 ```
-learning-management-system/
-├── backend/                     # Node.js, Express, TypeScript, PostgreSQL, Socket.IO
+lms-admin-web-app/
+├── backend/                     # Node.js, Express, TypeScript, Prisma, Socket.IO
 │   ├── src/                     # Backend source code
+│   │   ├── api/                 # API routes (v1)
 │   │   ├── controllers/         # Request handlers and route logic
-│   │   ├── models/              # Database schema definitions (TypeORM entities)
-│   │   ├── routes/              # API route definitions and middleware
+│   │   ├── dtos/                # Data transfer objects
 │   │   ├── services/            # Business logic and data access services
 │   │   ├── middleware/          # Custom middleware (auth, validation, etc.)
 │   │   ├── types/               # Backend-specific type definitions
 │   │   ├── utils/               # Utility functions and helpers
 │   │   ├── config/              # Configuration files and environment setup
+│   │   ├── sockets/             # Socket.IO event handlers
+│   │   ├── app.ts               # Express application setup
+│   │   └── server.ts            # Backend server entry point
+│   ├── prisma/                  # Prisma ORM configuration
+│   │   ├── schema.prisma        # Database schema definition
 │   │   ├── migrations/          # Database migration scripts
 │   │   ├── seeds/               # Database seeding scripts
-│   │   ├── sockets/             # Socket.IO event handlers
-│   │   └── server.ts            # Backend server entry point
+│   │   └── seed.ts              # Main seed file
+│   ├── scripts/                 # CLI utilities (e.g., password hashing)
 │   ├── tests/                   # Unit and integration tests
-│   ├── docs/                    # API documentation (OpenAPI/Swagger)
+│   │   ├── unit/                # Unit tests
+│   │   └── integration/         # Integration tests
+│   ├── Tables Documentation/    # Data model documentation
+│   ├── uploads/                 # File uploads storage
 │   ├── package.json
 │   ├── tsconfig.json            # TypeScript configuration
 │   ├── jest.config.js           # Testing configuration
 │   └── .env.example             # Environment variables template
 │
-├── frontend-admin-panel/        # Angular Admin Panel with Vite
+├── student-frontend/            # React Student Portal with Vite
 │   ├── src/                     # Frontend source code
-│   │   ├── app/                 # Core application modules and components
-│   │   │   ├── core/            # Core services, guards, interceptors
-│   │   │   ├── shared/          # Shared components, pipes, directives
-│   │   │   ├── features/        # Feature modules (users, courses, etc.)
-│   │   │   ├── layouts/         # Application layouts
-│   │   │   └── pages/           # Page components
+│   │   ├── api/                 # Enhanced API client system
+│   │   │   ├── client.ts        # Original API client (enhanced)
+│   │   │   ├── client-with-meta.ts  # Enhanced client with metadata
+│   │   │   ├── response-utils.ts    # Type-safe response handling
+│   │   │   ├── interceptors.ts      # Request/response interceptors
+│   │   │   └── logger.ts            # API logging utilities
+│   │   ├── components/          # React components
+│   │   │   └── APIErrorBoundary/    # Error boundary for API errors
+│   │   ├── hooks/               # Custom React hooks
+│   │   │   ├── useApi.ts        # API operation hooks
+│   │   │   └── useErrorBoundary.ts  # Error boundary hook
+│   │   ├── pages/               # Page components
 │   │   ├── assets/              # Static assets (images, fonts, styles)
-│   │   ├── environments/        # Environment-specific configurations
-│   │   └── styles/              # Global styles and themes
-│   ├── tests/                   # Unit and e2e tests
-│   ├── docs/                    # Component documentation
-│   ├── angular.json             # Angular CLI workspace configuration
+│   │   └── main.tsx             # React application entry point
+│   ├── public/                  # Public static files
 │   ├── package.json
 │   ├── tsconfig.json            # TypeScript configuration
 │   ├── vite.config.ts           # Vite build configuration
-│   └── karma.conf.js            # Testing configuration
+│   ├── tailwind.config.ts       # TailwindCSS configuration
+│   └── eslint.config.js         # ESLint configuration
 │
 ├── shared/                      # Shared code for type consistency
 │   ├── types/                   # Domain type definitions
@@ -178,156 +208,290 @@ learning-management-system/
 │   ├── enums/                   # Shared enumeration definitions
 │   └── utils/                   # Shared utility functions
 │
-├── docs/                        # Project documentation
-│   ├── architecture/            # System architecture documentation
-│   ├── database/                # Database schema and ERD
-│   ├── api/                     # API documentation
-│   ├── deployment/              # Deployment guides
-│   └── development/             # Development setup and guidelines
+├── documentation/               # Comprehensive project documentation
+│   ├── api-designs/             # API design specifications
+│   ├── api-conversion/          # API conversion documentation
+│   ├── architectural-improvements/ # Architecture enhancement docs
+│   ├── postman-collections/     # API testing collections
+│   ├── ui-ux design documents/  # Design specifications
+│   └── extras/                  # Additional documentation
 │
-├── scripts/                     # Build and deployment scripts
-├── docker/                      # Docker configuration files
-├── .github/                     # GitHub workflows and templates
+├── frontend/                    # Legacy/unused frontend folder
 ├── .gitignore
-├── LICENSE.MD                   # Project license information
-├── README.MD                    # This file
-├── CONTRIBUTING.md              # Contribution guidelines
-├── CHANGELOG.md                 # Version history and changes
-└── package.json                 # Root workspace configuration
+├── llms.txt                     # LLM context file
+└── README.md                    # This file
 ```
 
 This structure promotes:
-- **Separation of Concerns**: Clear boundaries between different layers
-- **Type Safety**: Shared types ensure consistency across frontend and backend
-- **Scalability**: Modular architecture supports growth
-- **Maintainability**: Well-organized code is easier to maintain
-- **Industry Standards**: Follows established patterns and conventions
+- **Enterprise Architecture**: Multi-tenant isolation, advanced security, and production-ready patterns
+- **Type Safety**: Comprehensive type system with 17+ domain-specific files and advanced constraints
+- **Scalability**: Microservice-ready modular architecture with sophisticated build system
+- **Developer Experience**: Enhanced API system with interceptors, correlation IDs, and comprehensive tooling
+- **Production Readiness**: 40+ npm scripts, comprehensive testing, and enterprise-level logging
+- **Video Security**: Advanced DRM integration with Bunny.net and comprehensive video management
 
 ## 🚀 Installation
 
-(Note: Specific commands might vary based on final setup and chosen package managers like npm or yarn.)
+### Prerequisites
 
-```bash
-# Clone the repository (example)
-# git clone https://github.com/yourusername/learning-management-system.git
-# cd learning-management-system
+- Node.js (v18 or higher)
+- npm or yarn package manager
+- PostgreSQL database
 
-# --- Backend Installation ---
+### Quick Start
+
+```powershell
+# Clone the repository
+git clone <repository-url>
+cd lms-admin-web-app
+
+# --- Backend Setup ---
 cd backend
-npm install # or yarn install
+npm install
+# Setup database & generate Prisma client
+npm run setup
 cd ..
 
-# --- Frontend Admin Panel Installation ---
-cd frontend-admin-panel
-npm install # or yarn install
+# --- Student Frontend Setup ---
+cd student-frontend
+npm install
 cd ..
 
-# --- Frontend Student Portal Installation ---
-cd frontend-student-portal
-npm install # or yarn install
+# --- Shared Types Setup ---
+cd shared
+npm install
+npx tsc  # Build type declarations
 cd ..
+```
 
-# --- Mobile Applications ---
-# Android: Open 'mobile-student-android' project in Android Studio and sync Gradle.
-# iOS: Open 'mobile-student-ios/LMSProjectName.xcodeproj' in Xcode and install dependencies (e.g., using CocoaPods or Swift Package Manager if applicable).
+### Database Setup
+
+The backend uses PostgreSQL with Prisma ORM. Make sure you have PostgreSQL running and create a `.env` file in the backend directory based on `.env.example`.
+
+```powershell
+cd backend
+# Copy environment template
+cp .env.example .env
+# Edit .env with your database credentials
+# Then run setup
+npm run setup
 ```
 
 ## ⚙️ Usage
 
 ### Starting Development Servers
 
-**Backend:**
-```bash
+**Backend Server:**
+```powershell
 cd backend
-npm run dev # or your specific script, e.g., npm run start:dev
-# or
-yarn dev
+npm run dev
 ```
-The backend server will typically run on a port specified in your backend configuration (e.g., `http://localhost:3000`).
+The backend server will run on `http://localhost:3000` (or configured port).
 
-**Frontend Admin Panel (Angular with Vite):**
-```bash
-cd frontend-admin-panel
-npm run dev # or yarn dev
+**Student Frontend (React + Vite):**
+```powershell
+cd student-frontend
+npm run dev
 ```
-The admin panel development server will typically run on `http://localhost:4200` or another port specified by Vite.
+The student portal will run on `http://localhost:5173` (default Vite port).
 
-**Frontend Student Portal (Angular with Vite):**
-```bash
-cd frontend-student-portal
-npm run dev # or yarn dev
+**Running Both Simultaneously:**
+You can open multiple terminals to run both services:
+1. **Terminal 1:** `cd backend; npm run dev` (Backend server)
+2. **Terminal 2:** `cd student-frontend; npm run dev` (Frontend server)
+
+### Backend Development Commands
+
+```powershell
+cd backend
+
+# Development
+npm run dev                    # Start development server with hot reload
+npm run dev:debug             # Start with debugging enabled
+
+# Database operations
+npm run prisma:generate       # Generate Prisma client
+npm run prisma:migrate        # Run database migrations
+npm run prisma:studio         # Open Prisma Studio (DB GUI)
+npm run prisma:seed           # Seed database with demo data
+npm run prisma:seed:reset     # Reset and reseed database
+
+# Testing
+npm run test                  # Run all tests
+npm run test:watch           # Run tests in watch mode
+npm run test:coverage        # Run tests with coverage report
+npm run test:unit            # Run only unit tests
+npm run test:integration     # Run only integration tests
+
+# Building and validation
+npm run build                # Build for production
+npm run type-check           # Check TypeScript types
+npm run lint                 # Run ESLint
+npm run lint:fix             # Fix ESLint issues automatically
 ```
-The student portal development server will typically run on a different port (e.g., `http://localhost:4201`).
 
-**Mobile Applications:**
-*   **Android**: Run from Android Studio on an emulator or physical device.
-*   **iOS**: Run from Xcode on an emulator or physical device.
+### Frontend Development Commands
+
+```powershell
+cd student-frontend
+
+# Development
+npm run dev                  # Start development server
+npm run preview              # Preview production build
+
+# Building and validation
+npm run build                # Build for production
+npm run type-check           # Check TypeScript types
+npm run lint                 # Run ESLint
+npm run lint:fix             # Fix ESLint issues automatically
+```
+
+### API System Features
+
+The student frontend includes an enterprise-grade API system ([Full Documentation](student-frontend/src/api/README.md)) featuring:
+
+- **Enterprise-Level Architecture**: Type-safe clients with metadata access and correlation ID tracking
+- **Advanced Interceptors**: Request/response middleware for cross-cutting concerns and performance monitoring
+- **Intelligent Error Handling**: Custom error types with validation details and automatic retry logic
+- **Performance Optimization**: Response caching with configurable TTL and request timing analytics
+- **Developer Experience**: React hooks for common operations and comprehensive error boundaries
+- **Production Monitoring**: Built-in logging, performance metrics, and distributed tracing support
+
+See the [Enhanced API System Documentation](student-frontend/src/api/README.md) for comprehensive usage examples and patterns.
 
 ### Building for Production
 
-**Backend (if applicable, e.g., compiling TypeScript):**
-```bash
+**Backend:**
+```powershell
 cd backend
-npm run build # or your specific build script
-# or
-yarn build
+npm run build                # Build TypeScript to JavaScript
+npm run start:prod          # Start production server
 ```
 
-**Frontend Admin Panel:**
-```bash
-cd frontend-admin-panel
-npm run build
-# or
-yarn build
+**Student Frontend:**
+```powershell
+cd student-frontend
+npm run build               # Build React app for production
+npm run preview             # Preview production build locally
 ```
 
-**Frontend Student Portal:**
-```bash
-cd frontend-student-portal
-npm run build
-# or
-yarn build
+### Testing
+
+**Backend Testing:**
+```powershell
+cd backend
+npm run test                # Run all tests
+npm run test:ci             # Run tests in CI mode with coverage
+npm run test:unit           # Run unit tests only
+npm run test:integration    # Run integration tests only
 ```
 
-**Mobile Applications:**
-*   **Android**: Build an APK or App Bundle using Android Studio.
-*   **iOS**: Archive and build the app using Xcode.
-
-### Previewing Production Build (Frontend with Vite)
-
-**Frontend Admin Panel:**
-```bash
-cd frontend-admin-panel
-npm run preview
-# or
-yarn preview
+**Frontend Testing:**
+```powershell
+cd student-frontend
+npm run lint                # Run ESLint checks
+npm run type-check          # TypeScript type checking
 ```
 
-**Frontend Student Portal:**
-```bash
-cd frontend-student-portal
-npm run preview
-# or
-yarn preview
-```
+### Key Features
+
+#### Enterprise API System ([Full Documentation](student-frontend/src/api/README.md))
+- **Advanced Architecture**: Type-safe operations with metadata access and correlation ID tracking
+- **Production Monitoring**: Built-in performance metrics, timing analytics, and distributed tracing
+- **Intelligent Caching**: Automatic response caching with configurable TTL and cache management
+- **Error Boundaries**: Graceful error handling in React components with retry mechanisms
+- **Interceptor System**: Comprehensive request/response middleware for cross-cutting concerns
+
+#### Enterprise Backend ([Full Documentation](backend/README.md))
+- **Multi-Tenant Architecture**: Complete tenant isolation with context-aware middleware and operations
+- **Advanced Security**: JWT authentication, rate limiting, security headers, and comprehensive validation
+- **Video DRM Integration**: Bunny.net enterprise Multi-DRM with secure streaming and analytics
+- **Production Tooling**: 40+ npm scripts covering development, testing, deployment, and maintenance
+- **Real-Time Features**: Socket.IO for notifications, progress tracking, and live collaborative features
+- **Comprehensive Testing**: Unit and integration tests with Jest, Supertest, and coverage reporting
+
+#### Enterprise Type System ([Full Documentation](shared/README.md))
+- **Domain Modeling**: 17+ specialized type files covering all business domains with comprehensive coverage
+- **Advanced Constraints**: Database-level validation rules, foreign keys, and performance optimization indexes
+- **Video Integration**: 573+ lines of Bunny.net DRM, streaming, and analytics type definitions
+- **Multi-Tenant Support**: Complete tenant isolation types and context-aware entity definitions
+- **Production Patterns**: Audit trails, structured logging, validation, and error handling type systems
+
+## 📚 Documentation
+
+The project includes comprehensive documentation in the `documentation/` folder:
+
+- **API Designs**: Complete API specifications and endpoint documentation
+- **API Conversion**: Migration guides and conversion documentation
+- **Architectural Improvements**: System architecture and enhancement proposals
+- **Postman Collections**: Ready-to-use API testing collections
+- **UI/UX Design Documents**: Design specifications and user experience guidelines
+
+### Additional Documentation
+
+- **Backend**: See [Backend Documentation](backend/README.md) for enterprise-level architecture, 40+ npm scripts, and comprehensive feature documentation
+- **Student Frontend API**: See [Enhanced API System Documentation](student-frontend/src/api/README.md) for advanced interceptors, caching, and production patterns
+- **Shared Types**: See [Enterprise Type System Documentation](shared/README.md) for comprehensive domain modeling, constraint system, and video integration types
+- **Tables Documentation**: See `backend/Tables Documentation/` for detailed data model specifications and relationship mappings
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please follow these general steps:
-1.  Fork the repository.
-2.  Create a new branch (`git checkout -b feature/YourAmazingFeature`).
-3.  Make your changes and commit them (`git commit -m 'Add some AmazingFeature'`).
-4.  Push to the branch (`git push origin feature/AmazingFeature`).
-5.  Open a Pull Request.
+Contributions are welcome! Please follow these steps:
 
-Please ensure your code adheres to the project's coding standards and includes relevant tests.
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Follow the project's coding standards:
+   - **Backend**: Use ESLint and TypeScript strict mode
+   - **Frontend**: Follow React best practices and ESLint rules
+   - **Shared**: Maintain type safety and consistency
+4. Write tests for new features
+5. Ensure all tests pass (`npm run test` in respective directories)
+6. Commit your changes (`git commit -m 'Add amazing feature'`)
+7. Push to the branch (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
+
+### Development Guidelines
+
+- **Monorepo Structure**: Use appropriate navigation commands for Windows PowerShell
+- **Type Safety**: Always use shared types from the `shared/` directory
+- **API Design**: Follow the enhanced API system patterns
+- **Database Changes**: Update Prisma schema and run migrations
+- **Documentation**: Update relevant README files and documentation
+
+## � Troubleshooting
+
+### Common Issues
+
+**Backend Database Issues:**
+```powershell
+cd backend
+# Reset database if needed
+npm run prisma:reset
+# Regenerate Prisma client
+npm run prisma:generate
+```
+
+**Frontend API Issues:**
+- Check if backend server is running on correct port
+- Verify API endpoints match backend routes
+- Check browser console for correlation IDs in error messages
+
+**Type Errors:**
+```powershell
+# Rebuild shared types
+cd shared
+npx tsc
+# Check types in other projects
+cd ../backend
+npm run type-check
+cd ../student-frontend
+npm run type-check
+```
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the `LICENSE.MD` file for details. (You'll need to create this `LICENSE.MD` file and add the MIT License text or your chosen license).
+This project is licensed under the MIT License - see the `LICENSE.MD` file for details.
 
 ---
 
-*This README was generated with the assistance of GitHub Copilot.*
-*User: @abdulazeem1357*
-*Date: 2025-05-25*
+*This README reflects the current state of the LMS Admin Web App as of 2025.*
