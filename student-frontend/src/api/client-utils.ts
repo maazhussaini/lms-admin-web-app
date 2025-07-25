@@ -97,7 +97,9 @@ export const setInterceptorManager = (manager: IInterceptorManager): void => {
  */
 export const createAbortControllerWithTimeout = (timeout: number): { controller: AbortController; timeoutId: number } => {
   const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), timeout);
+  const timeoutId = window.setTimeout(() => {
+    controller.abort(`Request timed out after ${timeout}ms`);
+  }, timeout);
   return { controller, timeoutId };
 };
 
@@ -273,26 +275,43 @@ export const fetchWithTimeout = async <T>(
   } catch (error) {
     const duration = Date.now() - startTime;
     
+    // Handle AbortError - check if it's from timeout or manual cancellation
     if (error instanceof DOMException && error.name === 'AbortError') {
-      const timeoutError = new TimeoutError(timeout);
+      // Check if this is a timeout (our timeout controller) vs manual abort
+      const isTimeout = error.message && error.message.includes('timed out after');
       
-      // Emit error event
-      apiEvents.emit(API_EVENTS.REQUEST_ERROR, {
-        url,
-        error: timeoutError,
-        correlationId,
-        duration
-      });
-      
-      // Log timeout error if logger is available
-      const logger = dependencies.getLogger();
-      if (logger) {
-        const errorInfo = logger.createErrorLogInfo(timeoutError as any, correlationId);
-        errorInfo.duration = duration;
-        logger.logError(errorInfo);
+      if (isTimeout) {
+        // This is a timeout error - treat as an actual error
+        const timeoutError = new TimeoutError(timeout);
+        
+        // Emit error event
+        apiEvents.emit(API_EVENTS.REQUEST_ERROR, {
+          url,
+          error: timeoutError,
+          correlationId,
+          duration
+        });
+        
+        // Log timeout error if logger is available
+        const logger = dependencies.getLogger();
+        if (logger) {
+          const errorInfo = logger.createErrorLogInfo(timeoutError as any, correlationId);
+          errorInfo.duration = duration;
+          logger.logError(errorInfo);
+        }
+        
+        throw timeoutError;
+      } else {
+        // This is a manual abort (component unmount, new request, etc.)
+        // Don't emit events or log, just silently re-throw to be caught by hooks
+        throw error;
       }
-      
-      throw timeoutError;
+    }
+    
+    // Handle other AbortError types (from Error instances)
+    if (error instanceof Error && error.name === 'AbortError') {
+      // This is also a manual abort, silently re-throw
+      throw error;
     }
     
     if (error instanceof ApiError) {
@@ -343,9 +362,27 @@ export const fetchWithTimeoutAndMeta = async <T>(
     const response = await fetch(url, { ...fetchOptions, signal });
     return await processResponseWithMeta<T>(response);
   } catch (error) {
+    // Handle AbortError - check if it's from timeout or manual cancellation
     if (error instanceof DOMException && error.name === 'AbortError') {
-      throw new TimeoutError(timeout);
+      // Check if this is a timeout (our timeout controller) vs manual abort
+      const isTimeout = error.message && error.message.includes('timed out after');
+      
+      if (isTimeout) {
+        // This is a timeout error - treat as an actual error
+        throw new TimeoutError(timeout);
+      } else {
+        // This is a manual abort (component unmount, new request, etc.)
+        // Just re-throw to be handled by the calling code
+        throw error;
+      }
     }
+    
+    // Handle other AbortError types (from Error instances)
+    if (error instanceof Error && error.name === 'AbortError') {
+      // This is also a manual abort, re-throw
+      throw error;
+    }
+    
     throw error;
   } finally {
     clearTimeout(timeoutId);

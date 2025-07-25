@@ -8,6 +8,21 @@ import { apiClient, apiClientWithMeta } from '@/api';
 import { ApiError } from '@/types/auth.types';
 import { PaginatedResponseResult } from '@/api/response-utils';
 
+// Global unhandled rejection handler for AbortErrors
+if (typeof window !== 'undefined') {
+  window.addEventListener('unhandledrejection', (event) => {
+    // Check if this is an AbortError that we want to ignore
+    if (event.reason instanceof DOMException && event.reason.name === 'AbortError') {
+      event.preventDefault(); // Prevent the error from being logged
+      return;
+    }
+    if (event.reason instanceof Error && event.reason.name === 'AbortError') {
+      event.preventDefault(); // Prevent the error from being logged
+      return;
+    }
+  });
+}
+
 /**
  * Base constraint for API data types
  */
@@ -94,14 +109,21 @@ export function useApiItem<T extends ApiData>(
   
   const retryCountRef = useRef(0);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
 
   const fetchData = useCallback(async (): Promise<void> => {
-    // Cancel previous request
+    // Cancel previous request safely
     if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+      try {
+        abortControllerRef.current.abort();
+      } catch {
+        // Ignore any errors from abort()
+      }
     }
 
     abortControllerRef.current = new AbortController();
+    
+    if (!isMountedRef.current) return;
     
     setState(prev => ({ ...prev, loading: true, error: null }));
 
@@ -109,6 +131,8 @@ export function useApiItem<T extends ApiData>(
       const data = await apiClient.get<T>(endpoint, {
         signal: abortControllerRef.current.signal
       });
+      
+      if (!isMountedRef.current) return;
       
       setState({
         data,
@@ -119,6 +143,21 @@ export function useApiItem<T extends ApiData>(
       retryCountRef.current = 0;
       onSuccess?.();
     } catch (error: unknown) {
+      if (!isMountedRef.current) return;
+      
+      // Handle AbortError - should be ignored (from request cancellation)
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        // Request was aborted (component unmount, new request, etc.)
+        // Don't update state or show error - this is expected behavior
+        return;
+      }
+      
+      // Handle other AbortError types
+      if (error instanceof Error && error.name === 'AbortError') {
+        // Also an abort error, ignore silently
+        return;
+      }
+
       if (error instanceof ApiError) {
         setState(prev => ({
           ...prev,
@@ -136,7 +175,8 @@ export function useApiItem<T extends ApiData>(
           retryCountRef.current++;
           setTimeout(fetchData, retryDelay * Math.pow(2, retryCountRef.current - 1));
         }
-      } else if (error instanceof Error && error.name !== 'AbortError') {
+      } else if (error instanceof Error) {
+        // Handle other unexpected errors
         const apiError = new ApiError({
           success: false,
           statusCode: 500,
@@ -157,17 +197,28 @@ export function useApiItem<T extends ApiData>(
 
   const refetch = useCallback((): void => {
     retryCountRef.current = 0;
-    fetchData();
+    fetchData().catch(() => {
+      // Silently catch any errors from refetch to prevent uncaught promises
+    });
   }, [fetchData]);
 
   useEffect(() => {
+    isMountedRef.current = true;
+    
     if (immediate) {
-      fetchData();
+      fetchData().catch(() => {
+        // Silently handle any errors to prevent uncaught promises
+      });
     }
 
     return () => {
+      isMountedRef.current = false;
       if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+        try {
+          abortControllerRef.current.abort();
+        } catch {
+          // Ignore any errors from abort()
+        }
       }
     };
   }, [fetchData, immediate]);
@@ -215,13 +266,21 @@ export function useApiList<T extends ApiData>(
   const [params, setParams] = useState<ListParams>(initialParams);
   const retryCountRef = useRef(0);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
 
   const fetchData = useCallback(async (requestParams: ListParams = params): Promise<void> => {
+    // Cancel previous request safely
     if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+      try {
+        abortControllerRef.current.abort();
+      } catch {
+        // Ignore any errors from abort()
+      }
     }
 
     abortControllerRef.current = new AbortController();
+    
+    if (!isMountedRef.current) return;
     
     setState(prev => ({ ...prev, loading: true, error: null }));
 
@@ -239,6 +298,8 @@ export function useApiList<T extends ApiData>(
         signal: abortControllerRef.current.signal
       });
       
+      if (!isMountedRef.current) return;
+      
       setState({
         data: result.items,
         pagination: result.pagination,
@@ -249,6 +310,21 @@ export function useApiList<T extends ApiData>(
       retryCountRef.current = 0;
       onSuccess?.();
     } catch (error: unknown) {
+      if (!isMountedRef.current) return;
+      
+      // Handle AbortError - should be ignored (from request cancellation)
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        // Request was aborted (component unmount, new request, etc.)
+        // Don't update state or show error - this is expected behavior
+        return;
+      }
+      
+      // Handle other AbortError types
+      if (error instanceof Error && error.name === 'AbortError') {
+        // Also an abort error, ignore silently
+        return;
+      }
+
       if (error instanceof ApiError) {
         setState(prev => ({
           ...prev,
@@ -265,7 +341,8 @@ export function useApiList<T extends ApiData>(
           retryCountRef.current++;
           setTimeout(() => fetchData(requestParams), retryDelay * Math.pow(2, retryCountRef.current - 1));
         }
-      } else if (error instanceof Error && error.name !== 'AbortError') {
+      } else if (error instanceof Error) {
+        // Handle other unexpected errors
         const apiError = new ApiError({
           success: false,
           statusCode: 500,
@@ -294,7 +371,9 @@ export function useApiList<T extends ApiData>(
 
   const refetch = useCallback((): void => {
     retryCountRef.current = 0;
-    fetchData();
+    fetchData().catch(() => {
+      // Silently catch any errors from refetch to prevent uncaught promises
+    });
   }, [fetchData]);
 
   // Navigation helpers with proper typing
@@ -315,21 +394,32 @@ export function useApiList<T extends ApiData>(
   }, [updateParams]);
 
   useEffect(() => {
+    isMountedRef.current = true;
+    
     if (immediate) {
-      fetchData();
+      fetchData().catch(() => {
+        // Silently handle any errors to prevent uncaught promises
+      });
     }
 
     return () => {
+      isMountedRef.current = false;
       if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+        try {
+          abortControllerRef.current.abort();
+        } catch {
+          // Ignore any errors from abort()
+        }
       }
     };
   }, [fetchData, immediate]);
 
   // Re-fetch when params change
   useEffect(() => {
-    if (immediate) {
-      fetchData(params);
+    if (immediate && isMountedRef.current) {
+      fetchData(params).catch(() => {
+        // Silently handle any errors to prevent uncaught promises
+      });
     }
   }, [params, fetchData, immediate]);
 
@@ -376,20 +466,32 @@ export function useApiCreate<T extends ApiData, D extends ApiData = Record<strin
 
       return result;
     } catch (error: unknown) {
+      // Handle AbortError - should be ignored (from request cancellation)
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        // Request was aborted, don't update state
+        return null;
+      }
+      
+      // Handle other AbortError types
+      if (error instanceof Error && error.name === 'AbortError') {
+        // Also an abort error, ignore silently
+        return null;
+      }
+
       if (error instanceof ApiError) {
         setState(prev => ({
           ...prev,
           loading: false,
           error
         }));
-      } else {
+      } else if (error instanceof Error) {
         setState(prev => ({
           ...prev,
           loading: false,
           error: new ApiError({
             success: false,
             statusCode: 500,
-            message: error instanceof Error ? error.message : 'An unexpected error occurred',
+            message: error.message || 'An unexpected error occurred',
             timestamp: new Date().toISOString()
           })
         }));
@@ -443,20 +545,32 @@ export function useApiUpdate<T extends ApiData, D extends ApiData = Record<strin
 
       return result;
     } catch (error: unknown) {
+      // Handle AbortError - should be ignored (from request cancellation)
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        // Request was aborted, don't update state
+        return null;
+      }
+      
+      // Handle other AbortError types
+      if (error instanceof Error && error.name === 'AbortError') {
+        // Also an abort error, ignore silently
+        return null;
+      }
+
       if (error instanceof ApiError) {
         setState(prev => ({
           ...prev,
           loading: false,
           error
         }));
-      } else {
+      } else if (error instanceof Error) {
         setState(prev => ({
           ...prev,
           loading: false,
           error: new ApiError({
             success: false,
             statusCode: 500,
-            message: error instanceof Error ? error.message : 'An unexpected error occurred',
+            message: error.message || 'An unexpected error occurred',
             timestamp: new Date().toISOString()
           })
         }));
@@ -510,20 +624,32 @@ export function useApiDelete(
 
       return true;
     } catch (error: unknown) {
+      // Handle AbortError - should be ignored (from request cancellation)
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        // Request was aborted, don't update state
+        return false;
+      }
+      
+      // Handle other AbortError types
+      if (error instanceof Error && error.name === 'AbortError') {
+        // Also an abort error, ignore silently
+        return false;
+      }
+
       if (error instanceof ApiError) {
         setState(prev => ({
           ...prev,
           loading: false,
           error
         }));
-      } else {
+      } else if (error instanceof Error) {
         setState(prev => ({
           ...prev,
           loading: false,
           error: new ApiError({
             success: false,
             statusCode: 500,
-            message: error instanceof Error ? error.message : 'An unexpected error occurred',
+            message: error.message || 'An unexpected error occurred',
             timestamp: new Date().toISOString()
           })
         }));
@@ -648,16 +774,28 @@ export function useApiBulk<T extends ApiData>(
 
       return true;
     } catch (error: unknown) {
+      // Handle AbortError - should be ignored (from request cancellation)
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        // Request was aborted, don't update state
+        return false;
+      }
+      
+      // Handle other AbortError types
+      if (error instanceof Error && error.name === 'AbortError') {
+        // Also an abort error, ignore silently
+        return false;
+      }
+
       if (error instanceof ApiError) {
         setState(prev => ({ ...prev, loading: false, error }));
-      } else {
+      } else if (error instanceof Error) {
         setState(prev => ({
           ...prev,
           loading: false,
           error: new ApiError({
             success: false,
             statusCode: 500,
-            message: error instanceof Error ? error.message : 'Bulk delete failed',
+            message: error.message || 'Bulk delete failed',
             timestamp: new Date().toISOString()
           })
         }));
@@ -680,16 +818,28 @@ export function useApiBulk<T extends ApiData>(
 
       return result;
     } catch (error: unknown) {
+      // Handle AbortError - should be ignored (from request cancellation)
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        // Request was aborted, don't update state
+        return null;
+      }
+      
+      // Handle other AbortError types
+      if (error instanceof Error && error.name === 'AbortError') {
+        // Also an abort error, ignore silently
+        return null;
+      }
+
       if (error instanceof ApiError) {
         setState(prev => ({ ...prev, loading: false, error }));
-      } else {
+      } else if (error instanceof Error) {
         setState(prev => ({
           ...prev,
           loading: false,
           error: new ApiError({
             success: false,
             statusCode: 500,
-            message: error instanceof Error ? error.message : 'Bulk update failed',
+            message: error.message || 'Bulk update failed',
             timestamp: new Date().toISOString()
           })
         }));
