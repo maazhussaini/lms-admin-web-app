@@ -39,3 +39,9 @@ export {
   type ProgramParams,
   type SpecializationParams
 } from './programService';
+
+// Export student service
+export { 
+  studentService, 
+  StudentService
+} from './studentService';
