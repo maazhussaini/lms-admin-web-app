@@ -196,7 +196,7 @@ const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
         result = result.replace('yy', year.toString().substr(2, 2));
         
         return result;
-      } catch (error) {
+      } catch {
         return '';
       }
     };
@@ -263,7 +263,7 @@ const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
         }
         
         return null;
-      } catch (error) {
+      } catch {
         return null;
       }
     };

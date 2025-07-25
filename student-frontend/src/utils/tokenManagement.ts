@@ -456,7 +456,7 @@ class TokenManager implements ITokenManager {
       const remaining = decoded.exp - currentTime;
       
       return remaining > 0 ? Math.floor(remaining) : 0;
-    } catch (error) {
+    } catch {
       return 0;
     }
   }

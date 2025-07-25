@@ -85,7 +85,7 @@ export class ApiAuthProvider implements IApiAuthProvider {
     if (error.statusCode === 401 && error.errorCode === 'TOKEN_EXPIRED') {
       try {
         return await this.refreshAuthToken();
-      } catch (refreshError) {
+      } catch {
         return false;
       }
     }

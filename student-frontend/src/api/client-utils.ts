@@ -186,7 +186,7 @@ export const handleAuthError = async (error: ApiError): Promise<boolean> => {
   if (authProvider && error.statusCode === 401 && error.errorCode === 'TOKEN_EXPIRED') {
     try {
       return await authProvider.onAuthError(error);
-    } catch (refreshError) {
+    } catch {
       return false;
     }
   }

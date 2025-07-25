@@ -115,7 +115,7 @@ const ForgotCheckEmailPage: React.FC = () => {
       setSuccessMessage('Code verified! You may now reset your password.');
       // Navigate to reset password page after short delay
       setTimeout(() => navigate('/reset-password', { replace: true }), 1000);
-    } catch (err) {
+    } catch {
       setErrorMessage('Invalid or expired code. Please try again.');
     } finally {
       setIsSubmitting(false);
