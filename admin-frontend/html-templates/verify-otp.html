@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP - orb-Ed</title>
+    <link rel="stylesheet" href="Assests/css/main-theme.css">
+    <link rel="stylesheet" href="Assests/css/verify-otp.css">
+</head>
+<body class="verify-otp-container">
+    <div class="container">
+        <div class="verify-otp-left-section">
+            <div class="logo verify-otp-logo">
+                <img src="Assests/images/logo.png" alt="orb-Ed Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="logo-icon" style="display: none;"></div>
+            </div>
+            
+            <div class="verify-otp-description">Enter the code we sent to your email to continue.</div>
+            <h1 class="title-primary">Verify Your OTP</h1>
+            
+            <form class="verify-otp-form">
+                <div class="otp-input-container">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                </div>
+                
+                <div class="otp-timer">05 : 02</div>
+                
+                <div class="resend-code-container">
+                    <span class="resend-code-text">Don't Receive Any Code?</span>
+                    <a href="#" class="resend-code-link">Resend Code</a>
+                </div>
+                
+                <button type="submit" class="btn-primary verify-otp-btn">Continue</button>
+            </form>
+            
+            <div class="verify-otp-back-link">
+                <span class="verify-otp-back-text">Remember?</span>
+                <a href="#" class="link-primary back-to-login-link">Back To Login</a>
+            </div>
+        </div>
+        
+        <div class="verify-otp-right-section">
+            <div class="verify-otp-illustration-container">
+                <!-- SVG background is applied via CSS -->
+            </div>
+        </div>
+    </div>
+    <script src="Assests/scripts/verify-otp.js"></script>
+</body>
+</html>

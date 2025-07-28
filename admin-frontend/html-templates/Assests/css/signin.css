@@ -1,0 +1,152 @@
+/* ===== SIGNIN PAGE SPECIFIC STYLES ===== */
+
+/* Sign In Page Layout */
+.signin-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.signin-left-section {
+    flex: 1;
+    padding: 30px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: white;
+    max-width: 50%;
+    position: relative;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.signin-right-section {
+    flex: 1;
+    background: white url('../../Assests/images/Group 34670.svg') no-repeat center center;
+    background-size: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    max-width: 50%;
+    height: 100vh;
+}
+
+/* Sign In Logo Specific Positioning */
+.signin-logo {
+    margin-bottom: 40px;
+}
+
+.signin-logo img {
+    width: 80px;
+    height: 105px;
+}
+
+/* Sign In Form Specific Styling */
+.signin-form {
+    width: 100%;
+}
+
+.signin-forgot-password {
+    text-align: right;
+    margin-top: 10px;
+}
+
+.signin-btn {
+    margin-top: 20px;
+}
+
+.signin-privacy-link {
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* Sign In Illustration Container */
+.signin-illustration-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+/* ===== SIGNIN PAGE RESPONSIVE ===== */
+@media (max-width: 1024px) {
+    .signin-left-section {
+        padding: 30px 50px;
+    }
+    
+    .signin-right-section {
+        padding: 0;
+        background-size: cover;
+    }
+    
+    .signin-logo {
+        margin-bottom: 30px;
+    }
+    
+    .signin-logo img {
+        width: 70px;
+        height: 92px;
+    }
+}
+
+@media (max-width: 768px) {
+    .signin-container {
+        overflow-y: auto;
+    }
+    
+    .signin-left-section,
+    .signin-right-section {
+        max-width: 100%;
+        flex: none;
+        height: auto;
+    }
+
+    .signin-left-section {
+        padding: 30px 25px;
+        order: 1;
+        min-height: 50vh;
+    }
+
+    .signin-right-section {
+        padding: 0;
+        order: 2;
+        min-height: 400px;
+        background-size: cover;
+    }
+
+    .signin-logo {
+        margin-bottom: 25px;
+    }
+    
+    .signin-logo img {
+        width: 60px;
+        height: 79px;
+    }
+}
+
+@media (max-width: 480px) {
+    .signin-left-section {
+        padding: 25px 20px;
+        min-height: 50vh;
+    }
+
+    .signin-right-section {
+        padding: 0;
+        min-height: 300px;
+        background-size: cover;
+    }
+
+    .signin-logo {
+        margin-bottom: 20px;
+    }
+    
+    .signin-logo img {
+        width: 50px;
+        height: 66px;
+    }
+}
