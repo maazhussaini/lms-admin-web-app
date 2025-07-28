@@ -3,7 +3,7 @@ export const specializations = [
   {
     tenant_id: 1,
     program_id: 1,
-    specialization_name: 'Software Engineering',
+    specialization_name: 'Business - Omar Altaf',
     specialization_thumbnail_url: null,
     is_active: true,
     is_deleted: false,
@@ -19,7 +19,7 @@ export const specializations = [
   {
     tenant_id: 1,
     program_id: 1,
-    specialization_name: 'Data Science',
+    specialization_name: 'Physics - Nawaid Ali',
     specialization_thumbnail_url: null,
     is_active: true,
     is_deleted: false,
@@ -33,9 +33,9 @@ export const specializations = [
     updated_ip: '10.1.2.4',
   },
   {
-    tenant_id: 2,
+    tenant_id: 1,
     program_id: 2,
-    specialization_name: 'Marketing',
+    specialization_name: 'Accounting - Shehroz Iqbal',
     specialization_thumbnail_url: null,
     is_active: true,
     is_deleted: false,
