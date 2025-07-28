@@ -51,6 +51,55 @@ export function formatDateRange(
 }
 
 /**
+ * Format date to "MMM DD, YYYY" format (e.g., "Apr 23, 2025")
+ * @param date Date to format (can be Date object, string, or null)
+ * @returns Formatted date string or null if date is null/invalid
+ */
+export function formatDateToShort(date: Date | string | null): string | null {
+  if (!date) {
+    return null;
+  }
+
+  try {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    // Check if date is valid
+    if (isNaN(dateObj.getTime())) {
+      return null;
+    }
+
+    const shortMonthNames = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+
+    const month = shortMonthNames[dateObj.getMonth()];
+    const day = dateObj.getDate();
+    const year = dateObj.getFullYear();
+
+    return `${month} ${day}, ${year}`;
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * Format date range to "MMM DD, YYYY" format
+ * @param startDate Start date
+ * @param endDate End date
+ * @returns Object with formatted start and end dates
+ */
+export function formatDateRangeShort(
+  startDate: Date | string | null,
+  endDate: Date | string | null
+): { start_date: string | null; end_date: string | null } {
+  return {
+    start_date: formatDateToShort(startDate),
+    end_date: formatDateToShort(endDate)
+  };
+}
+
+/**
  * Format decimal hours to "X hrs Y min" format
  * @param decimalHours Decimal hours (e.g., 1.25 = 1 hour 15 minutes)
  * @returns Formatted string (e.g., "1 hr 15 min", "30 min", "2 hrs") or null if invalid

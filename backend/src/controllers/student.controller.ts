@@ -17,8 +17,8 @@ import { PrismaClient } from '@prisma/client';
 import logger from '@/config/logger';
 import { UserType } from '@/types/enums.types';
 
-// Initialize student service and prisma
-const studentService = new StudentService();
+// Get student service singleton instance
+const studentService = StudentService.getInstance();
 const prisma = new PrismaClient();
 
 export class StudentController {
@@ -37,50 +37,15 @@ export class StudentController {
       const studentData = req.validatedData as CreateStudentDto;
       const requestingUser = req.user;
       
-      // Determine tenant ID based on user type
-      let tenantId: number;
-      
-      if (requestingUser.user_type === UserType.SUPER_ADMIN) {
-        // SUPER_ADMIN must provide tenant_id in request body
-        if (!studentData.tenant_id) {
-          throw new ApiError('Tenant ID is required when creating a student as SUPER_ADMIN', 400, 'MISSING_TENANT_ID');
-        }
-        tenantId = studentData.tenant_id;
-      } else {
-        // Regular admins use their own tenant
-        if (!requestingUser.tenantId) {
-          throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
-        }
-        tenantId = requestingUser.tenantId;
-        
-        // Ignore tenant_id from body for non-SUPER_ADMIN users
-        if (studentData.tenant_id && studentData.tenant_id !== tenantId) {
-          logger.warn('Non-SUPER_ADMIN user attempted to specify different tenant_id', {
-            userId: requestingUser.id,
-            userType: requestingUser.user_type,
-            requestedTenantId: studentData.tenant_id,
-            userTenantId: tenantId
-          });
-        }
-      }
-
-      // Extract admin user ID from authenticated user
-      const adminUserId = requestingUser.id;
-      if (!adminUserId) {
-        throw new ApiError('Admin user ID is required', 400, 'MISSING_ADMIN_USER_ID');
-      }
-      
       logger.debug('Creating student', {
         username: studentData.username,
-        tenantId,
         userId: requestingUser.id,
         role: requestingUser.user_type
       });
       
       return await studentService.createStudent(
         studentData, 
-        tenantId,
-        adminUserId,
+        requestingUser,
         req.ip || undefined
       );
     },
@@ -288,8 +253,8 @@ export class StudentController {
    * @route GET /api/v1/student/profile/enrollments
    * @access Private (STUDENT only)
    */
-  static getStudentProfileEnrollmentsHandler = createRouteHandler(
-    async (req: AuthenticatedRequest) => {
+  static getStudentProfileEnrollmentsHandler = createListHandler(
+    async (params: ExtendedPaginationWithFilters, req: AuthenticatedRequest) => {
       if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
@@ -323,25 +288,29 @@ export class StudentController {
         throw new ApiError('Student profile not found', 404, 'STUDENT_NOT_FOUND');
       }
 
-      // Get query parameters
-      const searchQuery = (req.query['search_query'] as string) || '';
+      // Get query parameters for additional filtering
       const enrollmentStatus = req.query['enrollment_status'] as string;
       const includeProgress = req.query['include_progress'] === 'true';
       
       logger.debug('Getting enrolled courses for current student profile', {
         studentId: student.student_id,
-        searchQuery,
+        paginationParams: params,
         enrollmentStatus,
         includeProgress,
         requestingUserId: requestingUser.id,
         userType: requestingUser.user_type
       });
       
-      return await studentService.getEnrolledCoursesByStudentId(
+      const result = await studentService.getEnrolledCoursesByStudentId(
         student.student_id,
-        searchQuery,
-        requestingUser
+        requestingUser,
+        params
       );
+
+      return {
+        items: result.items,
+        total: result.pagination.total
+      };
     },
     {
       message: 'Student enrolled courses retrieved successfully'

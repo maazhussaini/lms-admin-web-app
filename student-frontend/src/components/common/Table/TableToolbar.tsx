@@ -367,7 +367,7 @@ function TableToolbar<T>({
     // Save the page size preference to localStorage
     try {
       localStorage.setItem('tablePreferredPageSize', newPageSize.toString());
-    } catch (e) {
+    } catch {
       // Silently fail if localStorage is not available
     }
     
@@ -383,7 +383,7 @@ function TableToolbar<T>({
       if (savedPageSize && pageSizeOptions.some(opt => opt.value === Number(savedPageSize))) {
         onPageSizeChange(Number(savedPageSize));
       }
-    } catch (e) {
+    } catch {
       // Silently fail if localStorage is not available
     }
   }, []);

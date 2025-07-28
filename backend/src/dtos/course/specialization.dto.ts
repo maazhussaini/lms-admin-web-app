@@ -1,5 +1,49 @@
 // import { Specialization } from '@shared/types/course.types';
 import { body } from 'express-validator';
+import { BaseFilterDto } from '@/utils/service.types';
+
+/**
+ * Filter DTO for specialization queries extending BaseFilterDto
+ */
+export interface SpecializationFilterDto extends BaseFilterDto {
+  search?: string;
+  program_id?: number;
+  is_active?: boolean;
+  dateRange?: {
+    start?: string;
+    end?: string;
+  };
+  createdAtRange?: {
+    start?: string;
+    end?: string;
+  };
+  updatedAtRange?: {
+    start?: string;
+    end?: string;
+  };
+}
+
+/**
+ * Response DTO for specialization data
+ */
+export interface SpecializationResponseDto {
+  specialization_id: number;
+  specialization_name: string;
+  specialization_description?: string;
+  specialization_code?: string;
+  specialization_thumbnail_url?: string;
+  tenant_id: number;
+  is_active: boolean;
+  is_deleted: boolean;
+  created_at: Date;
+  updated_at: Date;
+  created_by: number;
+  updated_by: number;
+  deleted_at?: Date;
+  deleted_by?: number;
+  created_ip?: string;
+  updated_ip?: string;
+}
 
 /**
  * DTO for creating a specialization

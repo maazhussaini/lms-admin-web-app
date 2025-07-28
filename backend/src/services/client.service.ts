@@ -7,32 +7,79 @@ import { PrismaClient } from '@prisma/client';
 import {
   CreateClientDto,
   UpdateClientDto,
-  CreateClientTenantDto
+  CreateClientTenantDto,
+  ClientFilterDto
 } from '@/dtos/client/client.dto';
 import { NotFoundError, ConflictError, ForbiddenError } from '@/utils/api-error.utils';
 import { TokenPayload } from '@/utils/jwt.utils';
-import { getPrismaQueryOptions, SortOrder } from '@/utils/pagination.utils';
 import { tryCatch } from '@/utils/error-wrapper.utils';
-import { ExtendedPaginationWithFilters, SafeFilterParams } from '@/utils/async-handler.utils';
+import { ExtendedPaginationWithFilters } from '@/utils/async-handler.utils';
 import { 
   ClientStatus,
   UserType
 } from '@/types/enums.types';
 import logger from '@/config/logger';
+import { BaseListService } from '@/utils/base-list.service';
+import { BaseServiceConfig } from '@/utils/service.types';
+import { CLIENT_FIELD_MAPPINGS } from '@/utils/field-mapping.utils';
 
 // Initialize Prisma client
 const prisma = new PrismaClient();
 
 /**
- * Filter DTO for client queries
+ * Configuration for Client service operations
  */
-interface ClientFilterDto {
-  search?: string;
-  tenantId?: number;
-  status?: ClientStatus;
-}
+const CLIENT_SERVICE_CONFIG: BaseServiceConfig<ClientFilterDto> = {
+  entityName: 'client',
+  primaryKeyField: 'client_id',
+  fieldMapping: CLIENT_FIELD_MAPPINGS,
+  filterConversion: {
+    stringFields: ['fullName', 'emailAddress', 'search'],
+    booleanFields: [],
+    numberFields: ['tenantId'],
+    enumFields: {
+      status: ClientStatus
+    }
+  },
+  defaultSortField: 'created_at',
+  defaultSortOrder: 'desc'
+};
 
-export class ClientService {
+export class ClientService extends BaseListService<any, ClientFilterDto> {
+  private static instance: ClientService;
+
+  private constructor() {
+    super(prisma, CLIENT_SERVICE_CONFIG);
+  }
+
+  /**
+   * Get singleton instance
+   */
+  static getInstance(): ClientService {
+    if (!ClientService.instance) {
+      ClientService.instance = new ClientService();
+    }
+    return ClientService.instance;
+  }
+
+  /**
+   * Get table name for queries
+   */
+  protected getTableName(): string {
+    return 'clients';
+  }
+
+  /**
+   * Build entity-specific filters
+   */
+  protected buildEntitySpecificFilters(_filters: ClientFilterDto): any {
+    const whereClause: any = {};
+
+    // Add client-specific filters here if needed
+    // For now, return empty object as base filters handle common cases
+    
+    return whereClause;
+  }
   /**
    * Create a new client
    * 
@@ -179,62 +226,7 @@ export class ClientService {
     requestingUser: TokenPayload,
     params: ExtendedPaginationWithFilters
   ) {
-    return tryCatch(async () => {
-      logger.debug('Getting all clients with params', {
-        requestingUserId: requestingUser.id,
-        requestingUserRole: requestingUser.user_type,
-        params: {
-          page: params.page,
-          limit: params.limit,
-          filters: Object.keys(params.filters)
-        }
-      });
-
-      // Convert filter params to structured DTO
-      const filterDto = this.convertClientFiltersToDto(params.filters);
-      
-      // Build filters using the structured DTO
-      const filters = this.buildClientFiltersFromDto(filterDto, requestingUser);
-      
-      // Use pagination utilities to build sorting
-      const sorting = this.buildClientSorting(params);
-      
-      // Get query options using pagination utilities
-      const queryOptions = getPrismaQueryOptions(
-        { page: params.page, limit: params.limit, skip: params.skip },
-        sorting
-      );
-
-      // Execute queries using Promise.all for better performance
-      const [clients, total] = await Promise.all([
-        prisma.client.findMany({
-          where: filters,
-          ...queryOptions
-        }),
-        prisma.client.count({ where: filters })
-      ]);
-
-      return {
-        items: clients,
-        pagination: {
-          page: params.page,
-          limit: params.limit,
-          total,
-          totalPages: Math.ceil(total / params.limit),
-          hasNext: params.page < Math.ceil(total / params.limit),
-          hasPrev: params.page > 1
-        }
-      };
-    }, {
-      context: {
-        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId },
-        params: {
-          page: params.page,
-          limit: params.limit,
-          filters: Object.keys(params.filters)
-        }
-      }
-    });
+    return this.getAllEntities(requestingUser, params);
   }
 
   /**
@@ -555,111 +547,10 @@ export class ClientService {
       }
     });
   }
-
-  /**
-   * Convert SafeFilterParams to structured client DTO
-   */
-  private convertClientFiltersToDto(filterParams: SafeFilterParams): ClientFilterDto {
-    const dto: ClientFilterDto = {};
-    
-    if (filterParams['search'] && typeof filterParams['search'] === 'string') {
-      dto.search = filterParams['search'];
-    }
-    
-    if (filterParams['tenantId']) {
-      dto.tenantId = typeof filterParams['tenantId'] === 'number' 
-        ? filterParams['tenantId'] 
-        : parseInt(filterParams['tenantId'] as string, 10);
-    }
-    
-    if (filterParams['status'] && typeof filterParams['status'] === 'string') {
-      dto.status = filterParams['status'] as ClientStatus;
-    }
-    
-    return dto;
-  }
-
-  /**
-   * Build Prisma filters from structured client DTO
-   */
-  private buildClientFiltersFromDto(filterDto: ClientFilterDto, requestingUser: TokenPayload): Record<string, any> {
-    const where: Record<string, any> = {
-      is_deleted: false
-    };
-
-    // Apply tenant isolation
-    let tenantId = requestingUser.tenantId;
-    
-    // SUPER_ADMIN can override tenant filter with query param
-    if (requestingUser.user_type === UserType.SUPER_ADMIN && filterDto.tenantId) {
-      tenantId = filterDto.tenantId;
-    } else if (requestingUser.user_type !== UserType.SUPER_ADMIN) {
-      // Non-SUPER_ADMIN can only see clients in their tenant
-      tenantId = requestingUser.tenantId;
-    }
-
-    // SUPER_ADMIN can view all clients if no tenantId specified
-    if (requestingUser.user_type !== UserType.SUPER_ADMIN || filterDto.tenantId) {
-      where['tenant_id'] = tenantId;
-    }
-
-    // Add optional filters
-    if (filterDto.search) {
-      where['OR'] = [
-        {
-          full_name: {
-            contains: filterDto.search,
-            mode: 'insensitive'
-          }
-        },
-        {
-          email_address: {
-            contains: filterDto.search,
-            mode: 'insensitive'
-          }
-        }
-      ];
-    }
-
-    if (filterDto.status) {
-      where['client_status'] = filterDto.status;
-    }
-
-    return where;
-  }
-
-  /**
-   * Build Prisma sorting from pagination parameters for clients
-   */
-  private buildClientSorting(params: ExtendedPaginationWithFilters): Record<string, SortOrder> {
-    const fieldMapping: Record<string, string> = {
-      'clientId': 'client_id',
-      'fullName': 'full_name',
-      'emailAddress': 'email_address',
-      'clientStatus': 'client_status',
-      'createdAt': 'created_at',
-      'updatedAt': 'updated_at'
-    };
-
-    if (params.sorting && Object.keys(params.sorting).length > 0) {
-      const mappedSorting: Record<string, SortOrder> = {};
-      Object.entries(params.sorting).forEach(([field, order]) => {
-        const dbField = fieldMapping[field] || field;
-        mappedSorting[dbField] = order;
-      });
-      return mappedSorting;
-    }
-
-    const sortBy = params.sortBy || 'created_at';
-    const sortOrder = params.sortOrder || 'desc';
-    const dbField = fieldMapping[sortBy] || sortBy;
-    
-    return { [dbField]: sortOrder };
-  }
 }
 
 /**
  * Export a singleton instance of ClientService
  */
-export const clientService = new ClientService();
+export const clientService = ClientService.getInstance();
 export default clientService;

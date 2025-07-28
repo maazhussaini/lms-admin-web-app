@@ -6,22 +6,99 @@
 import { PrismaClient } from '@prisma/client';
 import { CreateSystemUserDto, UpdateSystemUserDto, SystemUserFilterDto } from '@/dtos/user/system-user.dto';
 import { SystemUser } from '@shared/types/system-users.types';
+import { TListResponse } from '@shared/types';
 import { TokenPayload } from '@/utils/jwt.utils';
 import { BadRequestError, ForbiddenError, NotFoundError, ConflictError } from '@/utils/api-error.utils';
 import { hashPassword } from '@/utils/password.utils';
-import { getPrismaQueryOptions, SortOrder } from '@/utils/pagination.utils';
 import { tryCatch } from '@/utils/error-wrapper.utils';
 import { ExtendedPaginationWithFilters, SafeFilterParams } from '@/utils/async-handler.utils';
 import { UserType, SystemUserStatus } from '@/types/enums.types';
+import { BaseListService } from '@/utils/base-list.service';
+import { BaseServiceConfig } from '@/utils/service.types';
+import { SYSTEM_USER_FIELD_MAPPINGS } from '@/utils/field-mapping.utils';
+import { 
+  buildEnumFilter, 
+  mergeFilters 
+} from '@/utils/filter-builders.utils';
+
+/**
+ * Configuration for SystemUser service operations
+ */
+const SYSTEM_USER_SERVICE_CONFIG: BaseServiceConfig<SystemUserFilterDto> = {
+  entityName: 'systemUser',
+  primaryKeyField: 'system_user_id',
+  fieldMapping: SYSTEM_USER_FIELD_MAPPINGS,
+  filterConversion: {
+    stringFields: ['username', 'fullName', 'email', 'search'],
+    booleanFields: [],
+    numberFields: ['tenantId'],
+    enumFields: {}
+  },
+  defaultSortField: 'created_at',
+  defaultSortOrder: 'desc'
+};
 
 /**
  * System user service for managing system-level users
  */
-export class SystemUserService {
-  private prisma: PrismaClient;
+export class SystemUserService extends BaseListService<any, SystemUserFilterDto> {
+  private static instance: SystemUserService;
+  protected override prisma: PrismaClient;
 
-  constructor(prisma: PrismaClient) {
+  private constructor(prisma: PrismaClient) {
+    super(prisma, SYSTEM_USER_SERVICE_CONFIG);
     this.prisma = prisma;
+  }
+
+  /**
+   * Get the singleton instance of SystemUserService
+   */
+  static getInstance(prisma?: PrismaClient): SystemUserService {
+    if (!SystemUserService.instance) {
+      if (!prisma) {
+        throw new Error('PrismaClient is required for first-time instantiation');
+      }
+      SystemUserService.instance = new SystemUserService(prisma);
+    }
+    return SystemUserService.instance;
+  }
+
+  /**
+   * Get table name for this entity
+   */
+  getTableName(): string {
+    return 'systemUser';
+  }
+
+  /**
+   * Build entity-specific filters for system users
+   */
+  buildEntitySpecificFilters(filterDto: SystemUserFilterDto, requestingUser: TokenPayload): Record<string, any> {
+    const filters: Record<string, any> = {
+      is_deleted: false
+    };
+
+    // Apply tenant isolation for TENANT_ADMIN
+    if (requestingUser.user_type === UserType.TENANT_ADMIN) {
+      filters['tenant_id'] = requestingUser.tenantId;
+    } 
+    // SUPER_ADMIN can filter by tenant if specified
+    else if (filterDto.tenantId !== undefined) {
+      filters['tenant_id'] = filterDto.tenantId;
+    }
+
+    // Apply enum filters
+    if (filterDto.roleType) {
+      const roleFilter = buildEnumFilter(filterDto.roleType, UserType, 'role_type');
+      if (roleFilter) mergeFilters(filters, roleFilter);
+    }
+
+    if (filterDto.status) {
+      const statusFilter = buildEnumFilter(filterDto.status, SystemUserStatus, 'system_user_status');
+      if (statusFilter) mergeFilters(filters, statusFilter);
+    }
+
+    return filters;
   }
 
   /**
@@ -90,7 +167,7 @@ export class SystemUserService {
       // Hash the password
       const passwordHash = await hashPassword(data.password);
 
-      // Create the system user with validated tenant_id
+      // Create the system user
       const newUser = await this.prisma.systemUser.create({
         data: {
           username: data.username,
@@ -98,12 +175,12 @@ export class SystemUserService {
           email_address: data.email,
           password_hash: passwordHash,
           role_type: data.roleType,
-          tenant_id: data.tenantId,
+          tenant_id: data.tenantId || null,
           system_user_status: data.status || SystemUserStatus.ACTIVE,
-          created_by: requestingUser.id,
-          created_ip: '127.0.0.1',
           is_active: true,
-          is_deleted: false
+          is_deleted: false,
+          created_by: requestingUser.id,
+          created_ip: '127.0.0.1'
         }
       });
 
@@ -152,55 +229,20 @@ export class SystemUserService {
   }
 
   /**
-   * Get all system users with pagination and filtering (updated to use DTOs properly)
+   * Get all system users with pagination and filtering
    */
   async getAllSystemUsers(
-    params: ExtendedPaginationWithFilters,
-    requestingUser: TokenPayload
-  ): Promise<{ users: SystemUser[]; total: number }> {
-    return tryCatch(async () => {
-      // Convert filter params to structured DTO
-      const filterDto = this.convertFiltersToDto(params.filters);
-      
-      // Build filters using the structured DTO
-      const filters = this.buildSystemUserFiltersFromDto(filterDto, requestingUser);
-      
-      // Use pagination utilities to build sorting
-      const sorting = this.buildSystemUserSorting(params);
-      
-      // Get query options using pagination utilities
-      const queryOptions = getPrismaQueryOptions(
-        { page: params.page, limit: params.limit, skip: params.skip },
-        sorting
-      );
-
-      // Execute queries
-      const [users, total] = await Promise.all([
-        this.prisma.systemUser.findMany({
-          where: filters,
-          ...queryOptions
-        }),
-        this.prisma.systemUser.count({ where: filters })
-      ]);
-
-      return { users: users as SystemUser[], total };
-    }, {
-      context: {
-        params: {
-          page: params.page,
-          limit: params.limit,
-          filters: Object.keys(params.filters)
-        },
-        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId }
-      }
-    });
+    requestingUser: TokenPayload,
+    params: ExtendedPaginationWithFilters
+  ): Promise<TListResponse<any>> {
+    return this.getAllEntities(requestingUser, params);
   }
 
   /**
    * Convert SafeFilterParams to structured DTO
    * This bridges the gap between async handler extraction and service layer
    */
-  private convertFiltersToDto(filterParams: SafeFilterParams): SystemUserFilterDto {
+  protected override convertFiltersToDto(filterParams: SafeFilterParams): SystemUserFilterDto {
     const dto: SystemUserFilterDto = {};
     
     // Only include validated filter properties
@@ -223,91 +265,6 @@ export class SystemUserService {
     }
     
     return dto;
-  }
-
-  /**
-   * Build Prisma filters from structured DTO with proper validation
-   * Centralizes filter logic and tenant isolation using DTOs
-   * 
-   * @future Extract to shared QueryBuilder utility when similar 
-   * filtering logic appears in 3+ services
-   */
-  private buildSystemUserFiltersFromDto(
-    filterDto: SystemUserFilterDto,
-    requestingUser: TokenPayload
-  ): Record<string, any> {
-    // Base filter condition
-    const where: Record<string, any> = {
-      is_deleted: false
-    };
-
-    // Apply tenant isolation for TENANT_ADMIN
-    if (requestingUser.user_type === UserType.TENANT_ADMIN) {
-      where['tenant_id'] = requestingUser.tenantId;
-    } 
-    // SUPER_ADMIN can filter by tenant if specified
-    else if (filterDto.tenantId !== undefined) {
-      where['tenant_id'] = filterDto.tenantId;
-    }
-
-    // Apply filters using validated DTO properties
-    if (filterDto.roleType !== undefined) {
-      where['role_type'] = filterDto.roleType;
-    }
-
-    if (filterDto.status !== undefined) {
-      where['system_user_status'] = filterDto.status;
-    }
-
-    // Apply search filter
-    if (filterDto.search !== undefined && filterDto.search.trim().length > 0) {
-      const searchTerm = filterDto.search.trim();
-      where['OR'] = [
-        { username: { contains: searchTerm, mode: 'insensitive' } },
-        { full_name: { contains: searchTerm, mode: 'insensitive' } },
-        { email_address: { contains: searchTerm, mode: 'insensitive' } }
-      ];
-    }
-
-    return where;
-  }
-
-  /**
-   * Build Prisma sorting from pagination parameters
-   * Centralizes field mapping logic
-   * 
-   * @future Extract field mappings to constants/field-mappings.ts
-   * when supporting multiple entity types
-   */
-  private buildSystemUserSorting(params: ExtendedPaginationWithFilters): Record<string, SortOrder> {
-    // Field mapping from API names to database column names
-    const fieldMapping: Record<string, string> = {
-      'createdAt': 'created_at',
-      'updatedAt': 'updated_at',
-      'fullName': 'full_name',
-      'email': 'email_address',
-      'roleType': 'role_type',
-      'status': 'system_user_status',
-      'tenantId': 'tenant_id',
-      'username': 'username'
-    };
-
-    // Use existing sorting if available
-    if (params.sorting && Object.keys(params.sorting).length > 0) {
-      const mappedSorting: Record<string, SortOrder> = {};
-      Object.entries(params.sorting).forEach(([field, order]) => {
-        const dbField = fieldMapping[field] || field;
-        mappedSorting[dbField] = order;
-      });
-      return mappedSorting;
-    }
-
-    // Fallback to individual sort parameters
-    const sortBy = params.sortBy || 'created_at';
-    const sortOrder = params.sortOrder || 'desc';
-    const dbField = fieldMapping[sortBy] || sortBy;
-    
-    return { [dbField]: sortOrder };
   }
 
   /**

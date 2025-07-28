@@ -23,8 +23,8 @@ import {
 import { ApiError } from '@/utils/api-error.utils';
 import logger from '@/config/logger';
 
-// Initialize tenant service
-const tenantService = new TenantService();
+// Use singleton tenant service
+const tenantService = TenantService.getInstance();
 
 export class TenantController {
   // ==================== TENANT MANAGEMENT ====================
@@ -105,8 +105,10 @@ export class TenantController {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
-      // Call the service with the params directly - service now handles ExtendedPaginationWithFilters
-      const result = await tenantService.getAllTenants(params);
+      const requestingUser = req.user;
+      
+      // Call the service with requestingUser and params
+      const result = await tenantService.getAllTenants(requestingUser, params);
       
       return {
         items: result.items,

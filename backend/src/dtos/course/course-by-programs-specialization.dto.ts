@@ -20,6 +20,8 @@ export interface CourseByProgramsAndSpecializationResponse {
   teacher_qualification: string | null;
   program_id: number | null;
   purchase_status: string;
+  is_purchased: boolean;
+  is_free: boolean;
 }
 
 export const getCoursesByProgramsAndSpecializationValidation = [

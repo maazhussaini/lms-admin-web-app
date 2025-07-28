@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { formatDurationFromSeconds } from '@shared/utils';
 import Button from '@/components/common/Button';
 import type { CourseVideo } from '@shared/types';
 
@@ -47,13 +48,6 @@ export const VideoPlayerControls: React.FC<VideoPlayerControlsProps> = ({
   nextVideo,
   className = ''
 }) => {
-  // Format duration for display
-  const formatDuration = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes} Mins ${remainingSeconds} Secs`;
-  };
-
   return (
     <motion.div
       className={`w-full px-4 py-6 sm:px-8 lg:px-16 sm:py-8 ${className}`}
@@ -115,7 +109,7 @@ export const VideoPlayerControls: React.FC<VideoPlayerControlsProps> = ({
                 </div>
                 <div className="text-xs text-neutral-500">
                   {previousVideo.duration_seconds 
-                    ? formatDuration(previousVideo.duration_seconds)
+                    ? formatDurationFromSeconds(previousVideo.duration_seconds, 'display')
                     : '30 Mins 12 Secs'
                   }
                 </div>
@@ -174,7 +168,7 @@ export const VideoPlayerControls: React.FC<VideoPlayerControlsProps> = ({
                 </div>
                 <div className="text-xs text-neutral-500">
                   {nextVideo.duration_seconds 
-                    ? formatDuration(nextVideo.duration_seconds)
+                    ? formatDurationFromSeconds(nextVideo.duration_seconds, 'display')
                     : '30 Mins 12 Secs'
                   }
                 </div>

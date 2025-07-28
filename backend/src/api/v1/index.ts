@@ -13,6 +13,7 @@ import systemUserRoutes from './routes/system-user.routes';
 import programRoutes from './routes/program.routes';
 import specializationRoutes from './routes/specialization.routes';
 import courseRoutes from './routes/course.routes';
+import moduleTopicRoutes from './routes/module-topic.routes';
 import tenantRoutes from './routes/tenant.routes';
 import clientRoutes from './routes/client.routes';
 import studentRoutes from './routes/student.routes';
@@ -38,10 +39,13 @@ router.get('/', (_req, res) => {
         '/api/v1/tenants',
         '/api/v1/clients',
         '/api/v1/programs',
+        '/api/v1/specializations',
         '/api/v1/courses',
+        '/api/v1/modules',
+        '/api/v1/topics',
+        '/api/v1/videos',
         '/api/v1/students',
         '/api/v1/student',
-        '/api/v1/specializations',
       ]
     },
     timestamp: new Date().toISOString(),
@@ -56,8 +60,9 @@ router.use('/system-users', systemUserRoutes);
 router.use('/tenants', tenantRoutes);
 router.use('/clients', clientRoutes);
 router.use('/programs', programRoutes);
-router.use('/courses', courseRoutes);
 router.use('/specializations', specializationRoutes);
+router.use('/courses', courseRoutes);
+router.use('/', moduleTopicRoutes);
 router.use('/students', studentRoutes);
 router.use('/student', studentProfileRoutes);
 

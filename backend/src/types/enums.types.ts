@@ -215,7 +215,8 @@ export enum BunnyEncodingPreset {
  */
 export enum CourseSessionStatus {
   DRAFT = 'DRAFT',
-  PUBLISHED = 'PUBLISHED',
+  PUBLIC = 'PUBLIC',
+  PRIVATE = 'PRIVATE',
   EXPIRED = 'EXPIRED',
 }
 
@@ -254,9 +255,18 @@ export enum VideoUploadStatus {
  */
 export enum CourseStatus {
   DRAFT = 'DRAFT',
-  PUBLISHED = 'PUBLISHED',
-  ARCHIVED = 'ARCHIVED',
-  SUSPENDED = 'SUSPENDED',
+  PUBLIC = 'PUBLIC',
+  PRIVATE = 'PRIVATE',
+}
+
+/**
+ * Course type enumeration
+ * @description Represents the type of course, such as free, paid, or purchased
+ */
+export enum CourseType {
+  FREE = 'FREE',
+  PAID = 'PAID',
+  PURCHASED = 'PURCHASED',
 }
 
 /**
@@ -450,6 +460,16 @@ export enum EnrollmentStatus {
   EXPELLED = 'EXPELLED',
   TRANSFERRED = 'TRANSFERRED',
   DEFERRED = 'DEFERRED',
+}
+
+/**
+ * Course Enrollment Enums
+ * @description Defines enums for course enrollment types
+ */
+export enum CourseEnrollmentType {
+  PAID_COURSE = 'PAID_COURSE',
+  FREE_COURSE = 'FREE_COURSE',
+  COURSE_SESSION = 'COURSE_SESSION',
 }
 
 /**

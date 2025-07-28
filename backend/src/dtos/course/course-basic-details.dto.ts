@@ -18,11 +18,15 @@ export interface CourseBasicDetailsResponse {
   overall_progress_percentage: number | null;
   teacher_name: string | null;
   profile_picture_url: string | null;
+  teacher_qualification: string | null;
   start_date: string | null;
   end_date: string | null;
+  course_total_hours: string | null;
   purchase_status: string;
   program_name: string | null;
   specialization_name: string | null;
+  is_purchased: boolean;
+  is_free: boolean;
 }
 
 /**

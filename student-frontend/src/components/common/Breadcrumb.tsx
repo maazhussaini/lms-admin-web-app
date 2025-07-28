@@ -11,6 +11,8 @@ export interface BreadcrumbItem {
   path?: string;
   /** Whether this is the current/active item */
   isActive?: boolean;
+  /** Custom click handler - if provided, overrides default navigation */
+  onClick?: () => void;
 }
 
 export interface BreadcrumbProps {
@@ -41,7 +43,11 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
 
   // Handle breadcrumb item click
   const handleItemClick = (item: BreadcrumbItem) => {
-    if (item.path && !item.isActive) {
+    if (item.onClick) {
+      // Use custom click handler if provided
+      item.onClick();
+    } else if (item.path && !item.isActive) {
+      // Default navigation behavior
       navigate(item.path);
     }
   };
@@ -107,7 +113,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
             <div className="flex items-center space-x-2 min-w-max">
               {items.map((item, index) => {
                 const isLast = index === items.length - 1;
-                const isClickable = item.path && !item.isActive && !isLast;
+                const isClickable = (item.onClick || (item.path && !item.isActive)) && !isLast;
 
                 return (
                   <div key={index} className="flex items-center space-x-2">
@@ -159,7 +165,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
         <ol className="flex items-center space-x-2 text-sm flex-wrap">
           {items.map((item, index) => {
             const isLast = index === items.length - 1;
-            const isClickable = item.path && !item.isActive && !isLast;
+            const isClickable = (item.onClick || (item.path && !item.isActive)) && !isLast;
 
             return (
               <li key={index} className="flex items-center space-x-2">

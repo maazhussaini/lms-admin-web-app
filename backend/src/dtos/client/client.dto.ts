@@ -5,6 +5,7 @@
 
 import { body, query, ValidationChain } from 'express-validator';
 import { ClientStatus } from '@/types/enums.types';
+import { BaseFilterDto } from '@/utils/service.types';
 
 /**
  * DTO interface for creating a new client
@@ -34,10 +35,26 @@ export interface UpdateClientDto {
 /**
  * DTO interface for filtering clients in list operations
  */
-export interface ClientFilterDto {
-  search?: string;
+export interface ClientFilterDto extends BaseFilterDto {
   tenantId?: number;
   status?: ClientStatus;
+}
+
+/**
+ * Response DTO for client entities
+ */
+export interface ClientResponseDto {
+  client_id: number;
+  full_name: string;
+  email_address: string;
+  dial_code?: string;
+  phone_number?: string;
+  address?: string;
+  client_status: ClientStatus;
+  tenant_id: number;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
 }
 
 /**

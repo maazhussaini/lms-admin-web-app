@@ -3,7 +3,7 @@ export const course_modules = [
   {
     tenant_id: 1,
     course_id: 1,
-    course_module_name: 'Getting Started with Python',
+    course_module_name: 'Unit 1',
     position: 1,
     is_active: true,
     is_deleted: false,
@@ -19,7 +19,7 @@ export const course_modules = [
   {
     tenant_id: 1,
     course_id: 1,
-    course_module_name: 'Control Structures',
+    course_module_name: 'Unit 2',
     position: 2,
     is_active: true,
     is_deleted: false,
@@ -34,8 +34,8 @@ export const course_modules = [
   },
   {
     tenant_id: 1,
-    course_id: 2,
-    course_module_name: 'Marketing Basics',
+    course_id: 1,
+    course_module_name: 'Unit 3',
     position: 1,
     is_active: true,
     is_deleted: false,
@@ -51,7 +51,7 @@ export const course_modules = [
   {
     tenant_id: 1,
     course_id: 3,
-    course_module_name: 'Solar Power',
+    course_module_name: 'Circular Motion',
     position: 1,
     is_active: true,
     is_deleted: false,
@@ -66,8 +66,8 @@ export const course_modules = [
   },
   {
     tenant_id: 1,
-    course_id: 4,
-    course_module_name: 'Data Analysis Tools',
+    course_id: 3,
+    course_module_name: 'Gravition',
     position: 1,
     is_active: true,
     is_deleted: false,
@@ -82,8 +82,8 @@ export const course_modules = [
   },
   {
     tenant_id: 1,
-    course_id: 5,
-    course_module_name: 'Foundations of Clinical Psychology',
+    course_id: 3,
+    course_module_name: 'Thermal',
     position: 1,
     is_active: true,
     is_deleted: false,

@@ -42,6 +42,7 @@ const limiter = rateLimit({
     HTTP_STATUS_CODES.TOO_MANY_REQUESTS,
     ERROR_CODES.RATE_LIMIT_EXCEEDED
   ),
+  skip: () => env.NODE_ENV === 'development',
 });
 
 // Configure CORS to allow frontend applications

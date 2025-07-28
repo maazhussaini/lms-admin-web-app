@@ -2,14 +2,14 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { FaArrowLeft, FaCommentDots } from 'react-icons/fa';
 import Button from '@/components/common/Button/Button';
-import { CourseDetailsData } from '@/pages/CourseDetailsPage/mockData';
+import { CourseBasicDetails } from '@/services/courseService';
 
 /**
  * Props for the CourseDetailsBanner component
  */
 interface CourseDetailsBannerProps {
   /** Course details data */
-  courseDetails: CourseDetailsData;
+  courseDetails: CourseBasicDetails;
   /** Callback function for back navigation */
   onBack: () => void;
   /** Callback function for feedback action */
@@ -35,16 +35,53 @@ export const CourseDetailsBanner: React.FC<CourseDetailsBannerProps> = ({
   onBack,
   onFeedback
 }) => {
-  const progressPercentage = courseDetails.progress?.overall_progress_percentage || 0;
-  const instructorName = courseDetails.instructor?.name || 'Unknown Instructor';
+  const progressPercentage = courseDetails.overall_progress_percentage || 0;
+  const instructorName = courseDetails.teacher_name || 'Unknown Instructor';
 
-  // Format course duration dates (May 2025 - July 2025)
-  const startDate = new Date(courseDetails.created_at || new Date());
-  const endDate = new Date(courseDetails.updated_at || new Date());
+  // Format course duration dates from API response (start_date, end_date)
+  const startDate = new Date(courseDetails.start_date);
+  const endDate = new Date(courseDetails.end_date);
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   };
   const courseDuration = `${formatDate(startDate)} - ${formatDate(endDate)}`;
+
+  // Determine course type from purchase status and payment info
+  const getCourseType = () => {
+    if (courseDetails.is_free) return 'FREE';
+    if (courseDetails.is_purchased) return 'PURCHASED';
+    return 'PAID';
+  };
+  const courseType = getCourseType();
+
+  /**
+   * Get purchase status badge CSS class based on course type
+   */
+  const getPurchaseStatusClass = () => {
+    if (courseType === 'PURCHASED') {
+      return 'badge-purchased';
+    }
+    
+    if (courseType === 'PAID') {
+      return 'badge-buy';
+    }
+    
+    // FREE or default
+    return 'badge-free';
+  };
+
+  /**
+   * Get progress bar CSS class based on completion percentage
+   */
+  const getProgressBarClass = (percentage: number) => {
+    if (percentage <= 0) {
+      return 'progress-neutral';
+    } else if (percentage >= 100) {
+      return 'progress-complete';
+    } else {
+      return 'progress-active';
+    }
+  };
 
   return (
     <motion.div
@@ -98,15 +135,15 @@ export const CourseDetailsBanner: React.FC<CourseDetailsBannerProps> = ({
               transition={{ delay: 0.2, duration: 0.6 }}
             >
               <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 xl:w-28 xl:h-28 rounded-full bg-white/10 backdrop-blur-sm border-2 border-white/20 overflow-hidden">
-                {courseDetails.instructor?.avatar ? (
+                {courseDetails.profile_picture_url ? (
                   <img
-                    src="/female.png"
+                    src={courseDetails.profile_picture_url}
                     alt={instructorName}
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl font-regular">
-                    {instructorName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    {instructorName.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
                   </div>
                 )}
               </div>
@@ -138,9 +175,9 @@ export const CourseDetailsBanner: React.FC<CourseDetailsBannerProps> = ({
 
               {/* Progress Bar */}
               <div className="max-w-6xl w-full">
-                <div className="w-full h-1 sm:h-1.5 md:h-2 bg-white/20 rounded-full overflow-hidden">
+                <div className="w-full h-1 sm:h-1.5 md:h-2 progress-bg rounded-full overflow-hidden">
                   <motion.div
-                    className="h-full bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full"
+                    className={`h-full rounded-full ${getProgressBarClass(progressPercentage)}`}
                     initial={{ width: 0 }}
                     animate={{ width: `${progressPercentage}%` }}
                     transition={{ delay: 0.8, duration: 1, ease: 'easeOut' }}
@@ -180,8 +217,8 @@ export const CourseDetailsBanner: React.FC<CourseDetailsBannerProps> = ({
 
             {/* Course Type Badge */}
             <div className="flex-shrink-0">
-              <span className="inline-flex items-center px-2 py-1 sm:px-3 md:px-4 lg:px-6 bg-blue-100 rounded-md text-xs sm:text-sm md:text-base font-medium text-blue-500 shadow-sm">
-                {courseDetails.course_type}
+              <span className={`inline-flex items-center px-2 py-1 sm:px-3 md:px-4 lg:px-6 rounded-md text-xs sm:text-sm md:text-base font-medium shadow-sm border ${getPurchaseStatusClass()}`}>
+                {courseType}
               </span>
             </div>
           </div>

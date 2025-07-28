@@ -1,11 +1,11 @@
-import React, { useRef, useState } from 'react';
-import { motion } from 'framer-motion';
-import clsx from 'clsx';
-import { CourseDetailsData } from '@/pages/CourseDetailsPage/mockData';
+import React, { useMemo } from 'react';
+import { ItemSelector } from '@/components/common/ItemSelector';
+import { CourseModule } from '@/services/courseService';
+import { parseModuleStats } from '@/utils/courseDetailsUtils';
 
 export interface ModuleSelectorProps {
-  /** Course details data containing all modules */
-  courseDetails: CourseDetailsData;
+  /** List of course modules */
+  modules: CourseModule[];
   /** Currently active module ID */
   currentModuleId: number;
   /** Handler for module selection */
@@ -18,12 +18,12 @@ export interface ModuleSelectorProps {
  * ModuleSelector - Interactive horizontal selector for navigating between course modules
  * 
  * Features:
- * - Horizontal scrollable list of modules with drag-to-scroll
- * - Current module highlighting with smooth animations
- * - Smart click vs drag detection
- * - Module information display (number, name, topic count)
- * - Responsive design with touch-friendly interactions
- * - Hover effects with proper container constraints
+ * - Business-approved white container with shadow design
+ * - Header with "Course Modules" title and module counter
+ * - Custom drag-to-scroll implementation
+ * - Active module highlighting with blue color scheme
+ * - Responsive design with minimum item widths
+ * - Smooth animations with Framer Motion
  * 
  * Security: This component assumes parent has proper authentication guards
  * 
@@ -31,209 +31,50 @@ export interface ModuleSelectorProps {
  * @returns JSX.Element
  */
 const ModuleSelector: React.FC<ModuleSelectorProps> = ({
-  courseDetails,
+  modules,
   currentModuleId,
   onModuleSelect,
   className
 }) => {
-  const modules = courseDetails.modules || [];
-  const currentIndex = modules.findIndex(module => module.course_module_id === currentModuleId);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStarted, setDragStarted] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
-  
-  // Handle drag-to-scroll functionality
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!scrollContainerRef.current) return;
-    
-    setDragStarted(true);
-    setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
-    setScrollLeft(scrollContainerRef.current.scrollLeft);
-    
-    // Prevent text selection during potential drag
-    e.preventDefault();
-  };
+  // Transform modules to items for the new ItemSelector
+  const items = useMemo(() => {
+    return modules.map((module, index) => {
+      const { topicCount, videoCount } = parseModuleStats(module.module_stats || '');
+      
+      return {
+        id: module.course_module_id.toString(),
+        title: `Module ${index + 1}`,
+        subtitle: module.course_module_name,
+        description: `${videoCount} Video Lectures`,
+        count: topicCount,
+        countLabel: 'Topics',
+      };
+    });
+  }, [modules]);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!dragStarted || !scrollContainerRef.current) return;
-    
-    e.preventDefault();
-    const x = e.pageX - scrollContainerRef.current.offsetLeft;
-    const walk = (x - startX) * 2; // Scroll speed multiplier
-    
-    // If mouse moved more than 5 pixels, consider it a drag
-    if (Math.abs(walk) > 5) {
-      setIsDragging(true);
-      scrollContainerRef.current.scrollLeft = scrollLeft - walk;
-    }
-  };
+  // Find current module index for display
+  const currentIndex = useMemo(() => {
+    const index = modules.findIndex(module => module.course_module_id === currentModuleId);
+    return index !== -1 ? index + 1 : 1;
+  }, [modules, currentModuleId]);
 
-  const handleMouseUp = () => {
-    setDragStarted(false);
-    // Reset dragging state after a small delay to allow click events
-    setTimeout(() => setIsDragging(false), 50);
+  // Handle module selection - convert string ID back to number
+  const handleModuleSelect = (item: { id: string; title: string; description?: string }) => {
+    const moduleId = parseInt(item.id, 10);
+    onModuleSelect(moduleId);
   };
-
-  const handleMouseLeave = () => {
-    setDragStarted(false);
-    setIsDragging(false);
-  };
-
-  // Get module display information
-  const getModuleInfo = (module: CourseDetailsData['modules'][0], index: number) => {
-    const topicCount = module.topics?.length || 0;
-    const videoCount = module.topics?.reduce((total: number, topic) => 
-      total + (topic.videos?.length || 0), 0
-    ) || 0;
-    
-    return {
-      number: index + 1,
-      name: module.course_module_name || `Module ${index + 1}`,
-      topicCount,
-      videoCount
-    };
-  };
-
-  if (modules.length === 0) {
-    return null;
-  }
 
   return (
-    <motion.div
-      className={clsx(
-        'w-full bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden',
-        className
-      )}
-      initial={{ y: 20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ delay: 0.1 }}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <h3 className="text-lg font-semibold text-primary-900">
-          Course Modules
-        </h3>
-        <span className="text-sm text-neutral-500">
-          {currentIndex + 1} of {modules.length}
-        </span>
-      </div>
-
-      {/* Modules Container - Scrollable with drag */}
-      <div className="px-4 pb-4">
-        <div 
-          ref={scrollContainerRef}
-          className={clsx(
-            'overflow-x-auto scrollbar-hide py-4 -my-2',
-            'select-none', // Prevent text selection during drag
-            {
-              'cursor-grab': !isDragging && !dragStarted,
-              'cursor-grabbing': isDragging || dragStarted,
-            }
-          )}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseLeave}
-          style={{
-            scrollbarWidth: 'none', // Firefox
-            msOverflowStyle: 'none', // Internet Explorer 10+
-          }}
-        >
-          <div className="flex gap-4 px-2" style={{ width: 'max-content' }}>
-            {modules.map((module, index) => {
-              const isActive = module.course_module_id === currentModuleId;
-              const moduleInfo = getModuleInfo(module, index);
-              
-              return (
-                <motion.button
-                  key={module.course_module_id}
-                  onClick={(e) => {
-                    // Only trigger click if not dragging
-                    if (!isDragging) {
-                      onModuleSelect(module.course_module_id);
-                    }
-                    e.stopPropagation();
-                  }}
-                  className={clsx(
-                    'flex-shrink-0 relative px-4 py-3 rounded-xl transition-all duration-200',
-                    'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
-                    'min-w-[200px]',
-                    {
-                      'bg-primary-900 text-white shadow-lg': isActive,
-                      'bg-neutral-100 text-neutral-700 hover:bg-neutral-200': !isActive,
-                      'cursor-pointer': !isDragging && !dragStarted,
-                      'cursor-grabbing': isDragging || dragStarted,
-                    }
-                  )}
-                  whileHover={{ 
-                    scale: isDragging || dragStarted ? 1 : 1.03,
-                    y: isDragging || dragStarted ? 0 : -2 
-                  }}
-                  whileTap={{ scale: isDragging || dragStarted ? 1 : 0.97 }}
-                  style={{ pointerEvents: 'auto' }}
-                >
-                  {/* Active indicator */}
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeModule"
-                      className="absolute inset-0 bg-primary-900 rounded-xl shadow-lg"
-                      initial={false}
-                      transition={{
-                        type: "spring",
-                        stiffness: 500,
-                        damping: 30
-                      }}
-                    />
-                  )}
-                  
-                  {/* Module content */}
-                  <div className="relative z-10 text-left">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-semibold text-sm">
-                        Module {moduleInfo.number}
-                      </span>
-                      <span 
-                        className={clsx(
-                          'text-xs px-2 py-1 rounded-full font-medium',
-                          {
-                            'bg-white/20 text-white': isActive,
-                            'bg-primary-100 text-primary-700': !isActive
-                          }
-                        )}
-                      >
-                        {moduleInfo.topicCount} topics
-                      </span>
-                    </div>
-                    <p className={clsx(
-                      'text-xs font-medium truncate',
-                      {
-                        'text-primary-100': isActive,
-                        'text-neutral-600': !isActive
-                      }
-                    )}>
-                      {moduleInfo.name}
-                    </p>
-                    <p className={clsx(
-                      'text-xs mt-1',
-                      {
-                        'text-primary-200': isActive,
-                        'text-neutral-500': !isActive
-                      }
-                    )}>
-                      {moduleInfo.videoCount} video lectures
-                    </p>
-                  </div>
-                </motion.button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </motion.div>
+    <ItemSelector
+      items={items}
+      selectedItemId={currentModuleId.toString()}
+      onItemSelect={handleModuleSelect}
+      title="Course Modules"
+      totalCount={modules.length}
+      currentIndex={currentIndex}
+      className={className}
+    />
   );
 };
 
-export { ModuleSelector };
 export default ModuleSelector;

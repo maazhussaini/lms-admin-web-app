@@ -5,6 +5,7 @@
 
 import { body, query, ValidationChain } from 'express-validator';
 import { UserType, SystemUserStatus } from '@/types/enums.types';
+import { BaseFilterDto } from '@/utils/service.types';
 
 /**
  * DTO interface for creating a new system user
@@ -33,11 +34,25 @@ export interface UpdateSystemUserDto {
 /**
  * DTO interface for filtering system users in list operations
  */
-export interface SystemUserFilterDto {
+export interface SystemUserFilterDto extends BaseFilterDto {
   roleType?: UserType;
   status?: SystemUserStatus;
   tenantId?: number | null;
-  search?: string;
+}
+
+/**
+ * DTO interface for system user response
+ */
+export interface SystemUserResponseDto {
+  id: number;
+  username: string;
+  fullName: string;
+  email: string;
+  roleType: UserType;
+  status: SystemUserStatus;
+  tenantId?: number | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**

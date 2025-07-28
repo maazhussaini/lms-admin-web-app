@@ -1,17 +1,24 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Card from '@/components/common/Card';
-import Badge from '@/components/common/Badge';
-import type { Course, StudentCourseProgress } from '@shared/types';
+import type { StudentCourseProgress } from '@shared/types';
+import type { ExtendedCourse } from '@/types/course.ui.types';
+import { 
+  formatCourseDuration, 
+  getInstructorAvatarUrl, 
+  getProgressBarClass,
+  getPurchaseStatusClassFromFlags
+} from '@/utils/courseUIUtils';
+import { DEFAULT_INSTRUCTOR, COURSE_CARD_ANIMATIONS } from '@/constants/courseUI.constants';
 
 /**
  * Props for the CourseCard component
  */
 export interface CourseCardProps {
   /**
-   * Course data from the API
+   * Course data from the API (using ExtendedCourse for UI-specific fields)
    */
-  course: Course;
+  course: ExtendedCourse;
   
   /**
    * Optional progress data for the student
@@ -33,10 +40,25 @@ export interface CourseCardProps {
   programName?: string;
   
   /**
-   * Whether the course is free or paid
+   * Custom purchase status text to display instead of Free/Paid
    */
-  isFree?: boolean;
-  
+  purchaseStatusText?: string;
+
+  /**
+   * Whether to show progress bar (typically only for enrolled courses)
+   */
+  showProgress?: boolean;
+
+  /**
+   * Course start date
+   */
+  startDate?: string;
+
+  /**
+   * Course end date
+   */
+  endDate?: string;
+
   /**
    * Click handler for the card
    */
@@ -65,13 +87,12 @@ export interface CourseCardProps {
 const CourseCard: React.FC<CourseCardProps> = ({
   course,
   progress,
-  instructor = {
-    name: 'Chris Evans',
-    title: 'CS Professor',
-    avatar_url: undefined
-  },
+  instructor = DEFAULT_INSTRUCTOR,
   programName,
-  isFree = true,
+  purchaseStatusText,
+  showProgress = false,
+  startDate,
+  endDate,
   onClick,
   className = '',
   loading = false
@@ -85,37 +106,24 @@ const CourseCard: React.FC<CourseCardProps> = ({
     }
   };
 
-  /**
-   * Format duration for display to match design exactly
-   */
-  const formatDuration = (hours?: number | null): string => {
-    if (!hours) return 'Duration TBD';
-    
-    const wholeHours = Math.floor(hours);
-    const minutes = Math.round((hours - wholeHours) * 60);
-    
-    if (wholeHours === 0) {
-      return `${minutes} Min`;
-    }
-    
-    if (minutes === 0) {
-      return `${wholeHours} Hrs`;
-    }
-    
-    return `${wholeHours} Hrs ${minutes} Min`;
-  };
-
-  /**
-   * Get instructor avatar or default placeholder
-   */
-  const getInstructorAvatar = (): string => {
-    if (instructor.avatar_url) {
-      return instructor.avatar_url;
-    }
-    
-    // Generate a placeholder avatar based on instructor name using API service with pink background to match design
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(instructor.name)}&background=ffc0cb&color=fff&bold=true&format=svg`;
-  };
+  // Use shared utility functions instead of local ones
+  const instructorAvatar = getInstructorAvatarUrl(instructor.name, instructor.avatar_url);
+  
+  // Format duration - handle string format from API like "24 hrs"
+  const formattedDuration = typeof course.course_total_hours === 'string' 
+    ? course.course_total_hours 
+    : formatCourseDuration(course.course_total_hours);
+  
+  // Use purchase_status from API response for display text
+  const displayPurchaseStatus = purchaseStatusText || 
+    course.purchase_status || 
+    (course.is_purchased ? 'Purchased' : (course.is_free ? 'Free' : 'Paid'));
+  
+  // Use modular approach with boolean flags (same logic as working implementation)
+  const purchaseStatusClass = getPurchaseStatusClassFromFlags(
+    course.is_purchased || false, 
+    course.is_free || false
+  );
 
   if (loading) {
     return (
@@ -146,9 +154,9 @@ const CourseCard: React.FC<CourseCardProps> = ({
 
   return (
     <motion.div
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.2, ease: 'easeInOut' }}
+      whileHover={COURSE_CARD_ANIMATIONS.hover}
+      whileTap={COURSE_CARD_ANIMATIONS.tap}
+      transition={COURSE_CARD_ANIMATIONS.transition}
       className={className}
     >
       <Card
@@ -160,7 +168,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
           <div className="flex items-center gap-2">
             <div className="relative">
               <img
-                src={getInstructorAvatar()}
+                src={instructorAvatar}
                 alt={`${instructor.name} avatar`}
                 className="w-16 h-16 rounded-full object-cover"
                 onError={(e) => {
@@ -202,43 +210,48 @@ const CourseCard: React.FC<CourseCardProps> = ({
 
             {/* Program/Category */}
             {programName && (
-              <p className="text-xs font-regular text-[#43277e]">
+              <p className="text-sm font-regular text-[#43277e]">
                 {programName}
+              </p>
+            )}
+
+            {/* Course Date Range */}
+            {startDate && endDate && (
+              <p className="text-sm text-[#737373] font-regular">
+                {startDate} - {endDate}
               </p>
             )}
 
             {/* Bottom Row: Duration and Price/Status */}
             <div className="flex items-center justify-between pt-2 mt-auto">
-              <span className="text-xs text-[#737373] font-regular">
-                {formatDuration(course.course_total_hours)}
+              <span className="text-sm text-[#737373] font-regular">
+                {formattedDuration}
               </span>
               
-              <Badge
-                color={isFree ? 'info' : 'warning'}
-                size="md"
-                className="px-3 py-1 text-xs font-medium"
+              <div
+                className={`px-3 py-1 text-sm font-medium rounded-full border ${purchaseStatusClass}`}
               >
-                {isFree ? 'Free' : 'Paid'}
-              </Badge>
+                {displayPurchaseStatus}
+              </div>
             </div>
 
-            {/* Progress Bar (if enrolled and has progress) */}
-            {/* {progress && progress.overall_progress_percentage > 0 && (
+            {/* Progress Bar (only show for enrolled courses when showProgress is true) */}
+            {showProgress && progress && typeof progress.overall_progress_percentage === 'number' && progress.overall_progress_percentage >= 0 && (
               <div className="space-y-2 pt-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-base font-medium text-neutral-600">Progress</span>
-                  <span className="text-base font-semibold text-[#7040e6]">
+                  <span className="text-sm font-regular text-neutral-600">Progress</span>
+                  <span className="text-sm font-regular text-neutral-600">
                     {Math.round(progress.overall_progress_percentage)}%
                   </span>
                 </div>
-                <div className="w-full bg-neutral-200 rounded-full h-3">
+                <div className="w-full progress-bg rounded-full h-3">
                   <div
-                    className="bg-[#7040e6] h-3 rounded-full transition-all duration-300 ease-out"
-                    style={{ width: `${progress.overall_progress_percentage}%` }}
+                    className={`h-3 rounded-full transition-all duration-300 ease-out ${getProgressBarClass(progress.overall_progress_percentage)}`}
+                    style={{ width: `${Math.max(0, progress.overall_progress_percentage)}%` }}
                   />
                 </div>
               </div>
-            )} */}
+            )}
           </div>
         </div>
       </Card>

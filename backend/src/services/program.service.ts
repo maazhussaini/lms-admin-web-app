@@ -4,41 +4,145 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { CreateProgramDto, UpdateProgramDto, ProgramResponseDto } from '@/dtos/course/program.dto';
+import { CreateProgramDto, UpdateProgramDto, ProgramResponseDto, ProgramFilterDto } from '@/dtos/course/program.dto';
 import { ProgramsByTenantResponse } from '@/dtos/course/programs-by-tenant.dto';
 import { ApiError } from '@/utils/api-error.utils';
 import { TListResponse } from '@shared/types';
+import { TokenPayload } from '@/utils/jwt.utils';
+import { ExtendedPaginationWithFilters } from '@/utils/async-handler.utils';
+import { BaseListService } from '@/utils/base-list.service';
+import { BaseServiceConfig } from '@/utils/service.types';
+import { PROGRAM_FIELD_MAPPINGS } from '@/utils/field-mapping.utils';
+import { 
+  buildSearchFilters,
+  buildDateRangeFilter,
+  mergeFilters
+} from '@/utils/filter-builders.utils';
+import { 
+  buildEntityAccessFilters,
+  updateAuditFields,
+  deleteAuditFields
+} from '@/utils/tenant-isolation.utils';
 import logger from '@/config/logger';
 
 // Initialize Prisma client
 const prisma = new PrismaClient();
 
-export class ProgramService {
+export class ProgramService extends BaseListService<any, ProgramFilterDto> {
+  private static instance: ProgramService;
+
+  private constructor() {
+    // Configuration for the base service
+    const config: BaseServiceConfig<ProgramFilterDto> = {
+      entityName: 'program',
+      primaryKeyField: 'program_id',
+      fieldMapping: PROGRAM_FIELD_MAPPINGS,
+      filterConversion: {
+        stringFields: ['programName', 'search'],
+        booleanFields: ['isActive'],
+        numberFields: [],
+        enumFields: {}
+      },
+      defaultSortField: 'created_at',
+      defaultSortOrder: 'desc'
+    };
+
+    super(prisma, config);
+  }
+
   /**
-   * Create a new academic program
+   * Get singleton instance
+   */
+  static getInstance(): ProgramService {
+    if (!ProgramService.instance) {
+      ProgramService.instance = new ProgramService();
+    }
+    return ProgramService.instance;
+  }
+
+  /**
+   * Get Prisma table name
+   */
+  protected getTableName(): string {
+    return 'program';
+  }
+
+  /**
+   * Build entity-specific filters using utility functions
+   */
+  protected buildEntitySpecificFilters(
+    filterDto: ProgramFilterDto,
+    baseFilters: Record<string, any>
+  ): Record<string, any> {
+    // Start with base filters (includes tenant isolation and soft delete protection)
+    let filters = { ...baseFilters };
+
+    // Build search filters using utility
+    const searchFilters = this.buildSearchFilters(filterDto.search);
+    if (searchFilters) {
+      filters = mergeFilters(filters, searchFilters);
+    }
+
+    // Build individual field search filters
+    filters = mergeFilters(filters, buildSearchFilters(filterDto.programName, ['program_name']));
+    
+    // Apply individual field filters
+    if (filterDto.isActive !== undefined) filters['is_active'] = filterDto.isActive;
+
+    // Handle date range filters
+    if (filterDto.dateRange) {
+      const field = filterDto.dateRange.field === 'updatedAt' ? 'updated_at' : 'created_at';
+      filters = mergeFilters(filters, buildDateRangeFilter(
+        filterDto.dateRange.startDate,
+        filterDto.dateRange.endDate,
+        field
+      ));
+    }
+
+    // Handle legacy createdAtRange filter
+    if (filterDto.createdAtRange) {
+      filters = mergeFilters(filters, buildDateRangeFilter(
+        filterDto.createdAtRange.from,
+        filterDto.createdAtRange.to,
+        'created_at'
+      ));
+    }
+
+    // Handle legacy updatedAtRange filter
+    if (filterDto.updatedAtRange) {
+      filters = mergeFilters(filters, buildDateRangeFilter(
+        filterDto.updatedAtRange.from,
+        filterDto.updatedAtRange.to,
+        'updated_at'
+      ));
+    }
+
+    return filters;
+  }
+  /**
+   * Create a new academic program with tenant isolation
    * 
    * @param data Program data from validated DTO
-   * @param tenantId Current tenant ID for multi-tenancy
-   * @param userId System user ID for audit trail
+   * @param requestingUser User making the request
    * @returns Newly created program
    */
-  async createProgram(data: CreateProgramDto, tenantId: number, userId: number, ip?: string): Promise<ProgramResponseDto> {
+  async createProgram(data: CreateProgramDto, requestingUser: TokenPayload, ip?: string): Promise<ProgramResponseDto> {
     // Log the tenant context for debugging
     logger.debug('Creating program with tenant context', {
-      tenantId,
-      userId,
+      tenantId: requestingUser.tenantId,
+      userId: requestingUser.id,
       programName: data.program_name
     });
 
-    // Special handling for Super Admin (tenantId = 0)
-    const tenantFilter = tenantId === 0 ? {} : { tenant_id: tenantId };
+    // Build tenant filter for uniqueness check
+    const tenantFilter = requestingUser.tenantId === 0 ? {} : { tenant_id: requestingUser.tenantId };
 
     // Check if program with same name exists in this tenant
     const existingProgram = await prisma.program.findFirst({
       where: {
         program_name: data.program_name,
-        ...tenantFilter,
-        is_deleted: false
+        is_deleted: false,
+        ...tenantFilter
       }
     });
 
@@ -46,17 +150,19 @@ export class ProgramService {
       throw new ApiError('Program with this name already exists', 409, 'DUPLICATE_PROGRAM_NAME');
     }
 
+    // Prepare audit fields using utility
+    const auditData = updateAuditFields(requestingUser, ip);
+
     // Create new program with audit fields
     const newProgram = await prisma.program.create({
       data: {
         program_name: data.program_name,
-        tenant_id: tenantId,
+        tenant_id: requestingUser.tenantId,
         is_active: true,
         is_deleted: false,
-        created_by: userId,
-        updated_by: userId,
+        created_by: requestingUser.id,
         created_ip: ip || null,
-        updated_ip: ip || null
+        ...auditData
       }
     });
 
@@ -67,114 +173,54 @@ export class ProgramService {
    * Get program by ID with tenant isolation
    * 
    * @param programId Program identifier
-   * @param tenantId Current tenant ID for multi-tenancy
-   * @returns Program if found, null otherwise
+   * @param requestingUser User making the request
+   * @returns Program if found and belongs to tenant
    */
-  async getProgramById(programId: number, tenantId: number): Promise<ProgramResponseDto> {
+  async getProgramById(programId: number, requestingUser: TokenPayload): Promise<ProgramResponseDto> {
     // Log the tenant context for debugging
     logger.debug('Getting program by ID with tenant context', {
       programId,
-      tenantId
+      tenantId: requestingUser.tenantId
     });
 
-    // Special handling for Super Admin (tenantId = 0)
-    const tenantFilter = tenantId === 0 ? {} : { tenant_id: tenantId };
+    // Build tenant-specific filter using utility
+    const accessFilters = buildEntityAccessFilters(programId, requestingUser, 'program_id');
     
     const program = await prisma.program.findFirst({
       where: {
         program_id: programId,
-        ...tenantFilter,
-        is_deleted: false
+        is_deleted: false,
+        ...accessFilters
       }
     });
     
     if (!program) {
-      throw new ApiError('Program not found', 404, 'PROGRAM_NOT_FOUND');
+      throw new ApiError(
+        'Program not found', 
+        404, 
+        'PROGRAM_NOT_FOUND',
+        { context: { programId, tenantId: requestingUser.tenantId } }
+      );
     }
     
     return this.mapProgramToDto(program);
   }
   
   /**
-   * Get all programs for a tenant with pagination, sorting and filtering
+   * Get all programs with pagination, sorting and filtering (modernized)
    * 
-   * @param tenantId Current tenant ID for multi-tenancy
-   * @param options Pagination, sorting, and filtering options
+   * @param requestingUser Authenticated user (TokenPayload) 
+   * @param params ExtendedPaginationWithFilters
    * @returns List response with programs and pagination metadata
    */
   async getAllPrograms(
-    tenantId: number, 
-    options: {
-      page?: number | undefined;
-      limit?: number | undefined;
-      sortBy?: string | undefined;
-      order?: 'asc' | 'desc' | undefined;
-      search?: string | undefined;
-      is_active?: boolean | undefined;
-    } = {}
+    requestingUser: TokenPayload,
+    params: ExtendedPaginationWithFilters
   ): Promise<TListResponse<ProgramResponseDto>> {
-    // Log the tenant context for debugging
-    logger.debug('Getting all programs with tenant context', {
-      tenantId,
-      options
-    });
-
-    // Set default pagination options
-    const page = options.page || 1;
-    const limit = options.limit || 20;
-    const skip = (page - 1) * limit;
-    
-    // Build where clause with tenant isolation
-    // Special handling for Super Admin (tenantId = 0)
-    const where: any = {
-      is_deleted: false
-    };
-    
-    // Only add tenant filter if not Super Admin or Super Admin viewing specific tenant
-    if (tenantId !== 0) {
-      where.tenant_id = tenantId;
-    }
-    
-    // Add optional filters
-    if (options.search) {
-      where.program_name = {
-        contains: options.search,
-        mode: 'insensitive'
-      };
-    }
-    
-    if (options.is_active !== undefined) {
-      where.is_active = options.is_active;
-    }
-    
-    // Determine sort field and direction
-    const sortField = options.sortBy || 'created_at';
-    const sortOrder = options.order || 'desc';
-    
-    // Execute queries using Promise.all for better performance
-    const [programs, total] = await Promise.all([
-      prisma.program.findMany({
-        where,
-        orderBy: {
-          [sortField]: sortOrder
-        },
-        skip,
-        take: limit
-      }),
-      prisma.program.count({ where })
-    ]);
-    
-    // Map to DTOs and return with pagination metadata
+    const result = await this.getAllEntities(requestingUser, params);
     return {
-      items: programs.map(program => this.mapProgramToDto(program)),
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        hasNext: page < Math.ceil(total / limit),
-        hasPrev: page > 1
-      }
+      items: result.items.map(program => this.mapProgramToDto(program)),
+      pagination: result.pagination
     };
   }
   
@@ -183,30 +229,31 @@ export class ProgramService {
    * 
    * @param programId Program identifier
    * @param data Update data from validated DTO
-   * @param tenantId Current tenant ID for multi-tenancy
-   * @param userId System user ID for audit trail
+   * @param requestingUser User making the request
    * @returns Updated program
    */
   async updateProgram(
     programId: number, 
     data: UpdateProgramDto, 
-    tenantId: number, 
-    userId: number,
+    requestingUser: TokenPayload,
     ip?: string
   ): Promise<ProgramResponseDto> {
     // Verify program exists and belongs to tenant
-    await this.getProgramById(programId, tenantId);
+    await this.getProgramById(programId, requestingUser);
     
     // Check name uniqueness if updating name
     if (data.program_name) {
+      // Build tenant filter for uniqueness check
+      const tenantFilter = requestingUser.tenantId === 0 ? {} : { tenant_id: requestingUser.tenantId };
+      
       const existingProgram = await prisma.program.findFirst({
         where: {
           program_name: data.program_name,
-          tenant_id: tenantId,
           is_deleted: false,
           program_id: {
             not: programId
-          }
+          },
+          ...tenantFilter
         }
       });
       
@@ -215,6 +262,9 @@ export class ProgramService {
       }
     }
     
+    // Prepare audit fields using utility
+    const auditData = updateAuditFields(requestingUser, ip);
+    
     // Update program
     const updatedProgram = await prisma.program.update({
       where: {
@@ -222,9 +272,7 @@ export class ProgramService {
       },
       data: {
         ...data,
-        updated_by: userId,
-        updated_at: new Date(),
-        updated_ip: ip || null
+        ...auditData
       }
     });
     
@@ -235,13 +283,12 @@ export class ProgramService {
    * Soft delete program by ID with tenant isolation
    * 
    * @param programId Program identifier
-   * @param tenantId Current tenant ID for multi-tenancy
-   * @param userId System user ID for audit trail
+   * @param requestingUser User making the request
    * @returns Success message
    */
-  async deleteProgram(programId: number, tenantId: number, userId: number, ip?: string): Promise<{ message: string }> {
+  async deleteProgram(programId: number, requestingUser: TokenPayload, ip?: string): Promise<{ message: string }> {
     // Verify program exists and belongs to tenant
-    await this.getProgramById(programId, tenantId);
+    await this.getProgramById(programId, requestingUser);
     
     // Check if specializations exist for this program  
     const specializationsCount = await prisma.specializationProgram.count({
@@ -260,6 +307,9 @@ export class ProgramService {
       );
     }
     
+    // Prepare delete audit fields using utility
+    const deleteData = deleteAuditFields(requestingUser, ip);
+    
     // Soft delete by updating is_deleted flag
     await prisma.program.update({
       where: {
@@ -268,11 +318,7 @@ export class ProgramService {
       data: {
         is_deleted: true,
         is_active: false,
-        deleted_at: new Date(),
-        deleted_by: userId,
-        updated_by: userId,
-        updated_at: new Date(),
-        updated_ip: ip || null
+        ...deleteData
       }
     });
     
@@ -280,25 +326,22 @@ export class ProgramService {
   }
 
   /**
-   * Get programs by tenant with active status filtering
-   * 
-   * @param tenantId Tenant identifier for filtering programs
-   * @returns List of active programs for the specified tenant
-   */
-  /**
-   * Get all programs for the specified tenant with optional filtering
+   * Get all programs for the specified tenant with optional filtering and pagination
    * @param tenantId Tenant identifier for filtering programs (0 for SUPER_ADMIN means all tenants)
    * @param filters Optional filters for active status
-   * @returns List of programs for the specified tenant
+   * @param paginationParams Optional pagination parameters
+   * @returns List of programs for the specified tenant with pagination metadata
    */
   async getProgramsByTenant(
     tenantId: number, 
-    filters?: { is_active?: boolean }
-  ): Promise<ProgramsByTenantResponse[]> {
+    filters?: { is_active?: boolean },
+    paginationParams?: ExtendedPaginationWithFilters
+  ): Promise<{ items: ProgramsByTenantResponse[]; total: number }> {
     // Log the tenant context for debugging
     logger.debug('Getting programs by tenant', {
       tenantId,
-      filters
+      filters,
+      paginationParams
     });
 
     // Build where clause
@@ -320,12 +363,32 @@ export class ProgramService {
       whereClause.is_active = true;
     }
 
-    // Get programs for the specified tenant
+    // Add search filter if provided
+    if (paginationParams?.filters?.['search']) {
+      whereClause.program_name = {
+        contains: paginationParams.filters['search'] as string,
+        mode: 'insensitive' as const
+      };
+    }
+
+    // Get total count for pagination
+    const total = await prisma.program.count({
+      where: whereClause
+    });
+
+    // Calculate pagination
+    const page = paginationParams?.page || 1;
+    const limit = paginationParams?.limit || 10;
+    const skip = paginationParams?.skip ?? (page - 1) * limit;
+
+    // Get programs for the specified tenant with pagination
     const programs = await prisma.program.findMany({
       where: whereClause,
       orderBy: {
         program_name: 'asc'
-      }
+      },
+      skip,
+      take: limit
     });
 
     // Debug logging
@@ -333,7 +396,9 @@ export class ProgramService {
       tenantId,
       filters,
       whereClause,
+      paginationParams,
       resultCount: programs.length,
+      total,
       results: programs.map(p => ({
         program_id: p.program_id,
         program_name: p.program_name,
@@ -344,7 +409,7 @@ export class ProgramService {
     });
 
     // Map to response DTO format
-    return programs.map((program: any) => ({
+    const items = programs.map((program: any) => ({
       program_id: program.program_id,
       program_name: program.program_name,
       program_thumbnail_url: program.program_thumbnail_url,
@@ -354,6 +419,11 @@ export class ProgramService {
       created_at: program.created_at,
       updated_at: program.updated_at
     }));
+
+    return {
+      items,
+      total
+    };
   }
   
   /**

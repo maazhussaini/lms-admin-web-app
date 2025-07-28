@@ -5,6 +5,28 @@
 
 import { body } from 'express-validator';
 import { Program } from '@shared/types/course.types';
+import { BaseFilterDto } from '@/utils/service.types';
+
+/**
+ * DTO for filtering programs in list operations
+ */
+export interface ProgramFilterDto extends BaseFilterDto {
+  programName?: string;
+  isActive?: boolean;
+  dateRange?: {
+    startDate?: string;
+    endDate?: string;
+    field?: 'createdAt' | 'updatedAt';
+  };
+  createdAtRange?: {
+    from?: string;
+    to?: string;
+  };
+  updatedAtRange?: {
+    from?: string;
+    to?: string;
+  };
+}
 
 /**
  * DTO for creating a new academic program

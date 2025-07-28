@@ -1,4 +1,4 @@
-import { TAuthResponse, TRefreshTokenResponse } from '@shared/types/api.types';
+import { TAuthResponse } from '@shared/types/api.types';
 import { IAuthService, AuthError, AuthStatus, ITokenManager } from '@/types/auth.types';
 import { IApiClient } from '@/api/interfaces';
 import { 
@@ -333,13 +333,22 @@ export class AuthService implements IAuthService {
         return false;
       }
 
-      const response = await this.apiClient.post<TRefreshTokenResponse>(
+      const response = await this.apiClient.post<TAuthResponse>(
         '/auth/student/refresh',
         { refreshToken },
         { withAuth: false }
       );
 
-      await this.tokenManager.storeAccessToken(response.access_token, response.expires_in);
+      // Store both access and refresh tokens from the response
+      await this.tokenManager.storeAccessToken(response.tokens.access_token, response.tokens.expires_in);
+      await this.tokenManager.storeRefreshToken(response.tokens.refresh_token);
+      
+      // Update stored user data and permissions with latest info
+      const storableAuthData = {
+        user: response.user,
+        permissions: response.permissions
+      };
+      localStorage.setItem(AUTH_DATA_KEY, JSON.stringify(storableAuthData));
       
       // Reset circuit breaker on success
       if (circuitState.failures > 0) {

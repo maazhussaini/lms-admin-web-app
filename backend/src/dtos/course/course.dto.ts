@@ -1,4 +1,5 @@
 import { body } from 'express-validator';
+import { BaseFilterDto } from '@/utils/service.types';
 
 export interface CreateCourseDto {
   tenant_id?: number;
@@ -9,6 +10,26 @@ export interface CreateCourseDto {
   course_type?: string;
   course_price?: number;
   course_total_hours?: number;
+}
+
+export interface CourseFilterDto extends BaseFilterDto {
+  courseName?: string;
+  description?: string;
+  status?: string;
+  level?: string;
+  isActive?: boolean;
+  isPublished?: boolean;
+  durationInWeeks?: {
+    min?: number;
+    max?: number;
+  };
+  programId?: number[];
+  specializationId?: number[];
+  dateRange?: {
+    startDate?: string;
+    endDate?: string;
+    field?: 'createdAt' | 'updatedAt';
+  };
 }
 
 export interface UpdateCourseDto {

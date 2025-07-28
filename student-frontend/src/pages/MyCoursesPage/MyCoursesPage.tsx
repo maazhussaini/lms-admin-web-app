@@ -1,255 +1,131 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { MyCoursesSearchBar } from '@/components/common/SearchBar';
 import { CourseSelector } from '@/components/features/MyCourses/CourseSelector';
-import CourseCard from '@/components/features/MyCourses/CourseCard';
-import type { Course, StudentCourseProgress } from '@shared/types';
+import { FilterBar } from '@/components/features/MyCourses/ProgramNavigator';
+import CourseCardGrid from '@/components/features/MyCourses/CourseCardGrid';
+import { useCourseData } from '@/hooks/useCourseData';
+import { useBatchRetry } from '@/hooks/useApi';
+import type { CourseTypeFilter } from '@/components/common/SearchBar/CourseTypeFilterDropdown';
 
 /**
- * MyCoursesPage - Static UI scaffold for the student courses page
+ * MyCoursesPage - Main page component with hierarchical navigation structure
+ *
+ * Structure:
+ * ├── CourseSelector (tabs)
+ * ├── SearchBar
+ * └── ProgramNavigator (programs and specializations only)
+ * └── CourseCard Grid (courses display)
  *
  * Security: This page is protected and must be wrapped in StudentGuard at the route level.
- * No data is fetched yet; all content is static/dummy for UI scaffolding.
+ * 
+ * Architecture: Uses useCourseData hook for all business logic, following Single Responsibility Principle
  */
-const programCategories = [
-  { name: 'Science', color: 'bg-cyan-200' },
-  { name: 'Computer', color: 'bg-blue-200' },
-  { name: 'Arts', color: 'bg-pink-200' },
-  { name: 'Marketing', color: 'bg-yellow-200' },
-  { name: 'Finance', color: 'bg-green-200' },
-  { name: 'History', color: 'bg-orange-200' },
-  { name: 'Fashion', color: 'bg-purple-200' },
-  { name: 'Science', color: 'bg-cyan-200' },
-  { name: 'Computer', color: 'bg-blue-200' },
-  { name: 'Arts', color: 'bg-pink-200' },
-  { name: 'Marketing', color: 'bg-yellow-200' },
-];
-
-// Mock course data for UI demonstration
-const mockCourses: Course[] = [
-  {
-    course_id: 1,
-    course_name: 'Computer Science',
-    course_description: 'Software Engineering',
-    main_thumbnail_url: null,
-    course_status: 'PUBLIC',
-    course_total_hours: 3.25,
-    specialization_id: 1,
-    course_type: 'PAID',
-    course_price: 99.99,
-    tenant_id: 1,
-    is_active: true,
-    is_deleted: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    created_by: 1,
-    updated_by: 1,
-    created_ip: '127.0.0.1',
-    updated_ip: '127.0.0.1'
-  },
-  {
-    course_id: 2,
-    course_name: 'Introduction to React',
-    course_description: 'Learn the fundamentals of React development and modern web applications',
-    main_thumbnail_url: null,
-    course_status: 'PUBLIC',
-    course_total_hours: 8.5,
-    specialization_id: 1,
-    course_type: 'FREE',
-    course_price: 0,
-    tenant_id: 1,
-    is_active: true,
-    is_deleted: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    created_by: 1,
-    updated_by: 1,
-    created_ip: '127.0.0.1',
-    updated_ip: '127.0.0.1'
-  },
-  {
-    course_id: 3,
-    course_name: 'Advanced JavaScript',
-    course_description: 'Master advanced JavaScript concepts including ES6+, async programming, and design patterns',
-    main_thumbnail_url: null,
-    course_status: 'PUBLIC',
-    course_total_hours: 12.0,
-    specialization_id: 1,
-    course_type: 'PAID',
-    course_price: 149.99,
-    tenant_id: 1,
-    is_active: true,
-    is_deleted: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    created_by: 1,
-    updated_by: 1,
-    created_ip: '127.0.0.1',
-    updated_ip: '127.0.0.1'
-  },
-  {
-    course_id: 4,
-    course_name: 'Database Design',
-    course_description: 'Learn relational database design principles and SQL optimization',
-    main_thumbnail_url: null,
-    course_status: 'PUBLIC',
-    course_total_hours: 6.75,
-    specialization_id: 2,
-    course_type: 'PAID',
-    course_price: 79.99,
-    tenant_id: 1,
-    is_active: true,
-    is_deleted: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    created_by: 1,
-    updated_by: 1,
-    created_ip: '127.0.0.1',
-    updated_ip: '127.0.0.1'
-  },
-  {
-    course_id: 5,
-    course_name: 'UI/UX Design Fundamentals',
-    course_description: 'Master the principles of user interface and user experience design',
-    main_thumbnail_url: null,
-    course_status: 'PUBLIC',
-    course_total_hours: 10.5,
-    specialization_id: 3,
-    course_type: 'PAID',
-    course_price: 129.99,
-    tenant_id: 1,
-    is_active: true,
-    is_deleted: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    created_by: 1,
-    updated_by: 1,
-    created_ip: '127.0.0.1',
-    updated_ip: '127.0.0.1'
-  },
-  {
-    course_id: 6,
-    course_name: 'Digital Marketing Strategy',
-    course_description: 'Comprehensive guide to modern digital marketing techniques and tools',
-    main_thumbnail_url: null,
-    course_status: 'PUBLIC',
-    course_total_hours: 4.5,
-    specialization_id: 4,
-    course_type: 'FREE',
-    course_price: 0,
-    tenant_id: 1,
-    is_active: true,
-    is_deleted: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    created_by: 1,
-    updated_by: 1,
-    created_ip: '127.0.0.1',
-    updated_ip: '127.0.0.1'
-  }
-];
-
-// Mock instructors data
-const mockInstructors = [
-  { name: 'Chris Evans', title: 'CS Professor' },
-  { name: 'Sarah Johnson', title: 'React Specialist' },
-  { name: 'Michael Chen', title: 'JavaScript Expert' },
-  { name: 'Emily Rodriguez', title: 'Database Architect' },
-  { name: 'David Kim', title: 'UX Designer' },
-  { name: 'Lisa Thompson', title: 'Marketing Director' }
-];
-
-// Mock progress data
-const mockProgress: StudentCourseProgress[] = [
-  {
-    student_course_progress_id: 1,
-    student_id: 1,
-    course_id: 1,
-    overall_progress_percentage: 75,
-    modules_completed: 3,
-    videos_completed: 8,
-    quizzes_completed: 2,
-    assignments_completed: 1,
-    total_time_spent_minutes: 180,
-    last_accessed_at: new Date().toISOString(),
-    is_course_completed: false,
-    completion_date: null,
-    tenant_id: 1,
-    is_active: true,
-    is_deleted: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    created_by: 1,
-    updated_by: 1,
-    created_ip: '127.0.0.1',
-    updated_ip: '127.0.0.1'
-  },
-  {
-    student_course_progress_id: 2,
-    student_id: 1,
-    course_id: 2,
-    overall_progress_percentage: 45,
-    modules_completed: 2,
-    videos_completed: 5,
-    quizzes_completed: 1,
-    assignments_completed: 0,
-    total_time_spent_minutes: 240,
-    last_accessed_at: new Date().toISOString(),
-    is_course_completed: false,
-    completion_date: null,
-    tenant_id: 1,
-    is_active: true,
-    is_deleted: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    created_by: 1,
-    updated_by: 1,
-    created_ip: '127.0.0.1',
-    updated_ip: '127.0.0.1'
-  }
-];
-
 const MyCoursesPage: React.FC = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'all' | 'enrolled' | 'unenrolled'>('all');
-  const [hasActiveFilters, setHasActiveFilters] = useState(false);
+  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+
+  // All course-related logic is handled by the custom hook
+  const {
+    // Data
+    courses: filteredCourses,
+    progressData,
+    courseCounts,
+    
+    // State
+    activeTab,
+    setActiveTab,
+    
+    // Filter management
+    filterState,
+    updateSearchQuery,
+    updateProgram,
+    updateSpecialization,
+    updateCourseType,
+    clearProgram,
+    clearSpecialization,
+    clearAllFilters,
+    hasActiveFilters,
+    
+    // Loading and error states
+    isLoading,
+    error,
+    
+    // Raw API hooks for error handling
+    courseDiscoveryHook,
+    enrollmentsHook,
+  } = useCourseData();
+
+  // Batch retry for both API hooks
+  const { retryAll: retryAllData } = useBatchRetry([
+    courseDiscoveryHook,
+    enrollmentsHook,
+  ]);
 
   /**
-   * Handle course tab changes
+   * Handler functions following Single Responsibility Principle
    */
-  const handleTabChange = useCallback((tab: 'all' | 'enrolled' | 'unenrolled') => {
+  const handleTabChange = (tab: typeof activeTab) => {
     setActiveTab(tab);
-    // TODO: Implement filtering logic based on tab selection
-    // This will eventually trigger API calls to fetch filtered course data
-    console.log('Tab changed to:', tab);
-  }, []);
+  };
 
-  /**
-   * Handle search query changes
-   */
-  const handleSearch = useCallback((query: string) => {
-    setSearchQuery(query);
-    // TODO: Implement actual search functionality
-    console.log('Searching for:', query);
-  }, []);
+  const handleCourseTypeSelect = (courseType: CourseTypeFilter) => {
+    updateCourseType(courseType);
+    setIsFilterDropdownOpen(false);
+  };
 
-  /**
-   * Handle filter button click
-   */
-  const handleFilterClick = useCallback(() => {
-    // TODO: Implement filter modal/dropdown functionality
-    setHasActiveFilters(prev => !prev); // Temporary toggle for demo
-    console.log('Filter clicked');
-  }, []);
-
-  /**
-   * Handle course card click
-   */
-  const handleCourseClick = useCallback((courseId: number) => {
+  const handleCourseClick = (courseId: number) => {
     navigate(`/courses/${courseId}`);
-  }, [navigate]);
+  };
+
+  const handleRetry = () => {
+    retryAllData();
+  };
+
+  // Enhanced error handling with better UX
+  if (error) {
+    const canRetry = !isLoading;
+    const errorMessage = error.message || 'An unexpected error occurred';
+    
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full h-full flex items-center justify-center"
+      >
+        <div className="text-center py-12 px-6 max-w-md">
+          <div className="mb-6">
+            <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Unable to load courses</h2>
+          <p className="text-gray-600 mb-6">{errorMessage}</p>
+          <div className="space-y-3">
+            <button
+              onClick={handleRetry}
+              disabled={!canRetry}
+              className={`px-6 py-2 rounded-lg transition-colors ${
+                canRetry 
+                  ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              {isLoading ? 'Retrying...' : 'Retry'}
+            </button>
+            {canRetry && (
+              <p className="text-sm text-gray-500">
+                Click retry to reload the course data
+              </p>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -264,78 +140,59 @@ const MyCoursesPage: React.FC = () => {
         {/* Course Selector and Search Bar - Mobile First Responsive */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
           {/* Course Selector - Full width on mobile */}
-        <div className="w-full sm:w-full flex justify-center sm:justify-start">
-          <CourseSelector
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-            counts={{
-              all: 50,
-              enrolled: 4,
-              unenrolled: 0
-            }}
-            className="w-full sm:w-full"
-          />
-        </div>
+          <div className="w-full sm:w-full flex justify-center sm:justify-start">
+            <CourseSelector
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              counts={courseCounts}
+              className="w-full sm:w-full"
+            />
+          </div>
           
           {/* Search Bar - Full width on mobile, expanded on desktop */}
           <div className="w-full sm:w-full">
             <MyCoursesSearchBar
-              value={searchQuery}
-              onSearch={handleSearch}
-              onFilterClick={handleFilterClick}
+              value={filterState.searchQuery}
+              onSearch={updateSearchQuery}
+              onFilterClick={() => setIsFilterDropdownOpen(true)}
               hasActiveFilters={hasActiveFilters}
               placeholder="Search here"
               className="w-full"
+              selectedCourseType={filterState.selectedCourseType}
+              onCourseTypeSelect={handleCourseTypeSelect}
+              isFilterDropdownOpen={isFilterDropdownOpen}
+              onFilterDropdownClose={() => setIsFilterDropdownOpen(false)}
             />
           </div>
         </div>
 
-        {/* Programs Row - Mobile Optimized (Larger) */}
-        <section className="space-y-4 sm:space-y-6">
-          <div>
-            <h2 className="text-lg sm:text-2xl font-bold text-neutral-900 mb-4 sm:mb-6 tracking-tight">
-              Programs
-            </h2>
-          </div>
-          {/* Horizontal scroll on mobile, grid on larger screens */}
-          <div className="flex flex-row gap-1 sm:gap-2 overflow-x-auto pb-4 sm:overflow-x-visible sm:flex-wrap sm:justify-start">
-            {programCategories.map((cat, idx) => (
-              <div
-                key={cat.name + idx}
-                className="flex flex-col items-center min-w-[90px] sm:min-w-[110px] flex-shrink-0 sm:flex-shrink"
-              >
-                <div
-                  className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center ${cat.color} transition-transform hover:scale-110 active:scale-95 cursor-pointer shadow-md`}
-                >
-                  {/* Placeholder for icon */}
-                  <span className="text-3xl sm:text-4xl">🎓</span>
-                </div>
-                <span className="mt-3 text-sm sm:text-base font-semibold text-neutral-800 text-center leading-tight">
-                  {cat.name}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
+        {/* Filter Bar with loading state awareness */}
+        <div className="mb-8">
+          <FilterBar
+            selectedProgram={filterState.selectedProgram}
+            selectedSpecialization={filterState.selectedSpecialization}
+            onProgramSelect={updateProgram}
+            onSpecializationSelect={updateSpecialization}
+            onClearProgram={clearProgram}
+            onClearSpecialization={clearSpecialization}
+            onClearAllFilters={clearAllFilters}
+          />
+          {isLoading && (
+            <div className="mt-2 text-sm text-gray-500 flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+              <span>Updating course list...</span>
+            </div>
+          )}
+        </div>
 
-        {/* Courses Grid - Mobile First Responsive */}
-        <section className="space-y-2 sm:space-y-3">
-          {/* Responsive Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2 sm:gap-3">
-            {mockCourses.map((course, idx) => (
-              <CourseCard
-                key={course.course_id}
-                course={course}
-                instructor={mockInstructors[idx % mockInstructors.length]}
-                progress={mockProgress.find(p => p.course_id === course.course_id)}
-                programName={course.course_description?.split(' ')[0] || 'General'}
-                isFree={true}
-                onClick={handleCourseClick}
-                className="h-full w-full min-w-0 p-2 sm:p-3"
-              />
-            ))}
-          </div>
-        </section>
+        {/* Course Card Grid - Always shown */}
+        <CourseCardGrid
+          courses={filteredCourses}
+          loading={isLoading}
+          progressData={progressData}
+          onCourseClick={handleCourseClick}
+          activeTab={activeTab}
+        />
       </div>
     </motion.div>
   );

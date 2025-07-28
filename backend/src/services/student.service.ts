@@ -1,62 +1,204 @@
-import { PrismaClient } from '@prisma/client';
-import { CreateStudentDto, UpdateStudentDto, UpdateStudentProfileDto } from '@/dtos/student/student.dto';
-import { EnrolledCourseResponse } from '@/dtos/student/enrolled-courses-by-student.dto';
-import { 
-  NotFoundError, 
-  ConflictError, 
-  ForbiddenError 
-} from '@/utils/api-error.utils';
-import { hashPassword } from '@/utils/password.utils';
+/**
+ * @file services/student.service.ts
+ * @description Service for managing students with modern BaseListService pattern
+ */
+
+import { PrismaClient, CourseStatus } from '@prisma/client';
+import {
+  CreateStudentDto,
+  UpdateStudentDto,
+  UpdateStudentProfileDto,
+  StudentFilterDto
+} from '@/dtos/student/student.dto';
+import { NotFoundError, ConflictError, ForbiddenError, BadRequestError } from '@/utils/api-error.utils';
 import { TokenPayload } from '@/utils/jwt.utils';
-import { getPrismaQueryOptions, SortOrder } from '@/utils/pagination.utils';
 import { tryCatch } from '@/utils/error-wrapper.utils';
-import { ExtendedPaginationWithFilters, SafeFilterParams } from '@/utils/async-handler.utils';
-import { formatDateRange, formatDecimalHours } from '@/utils/date-format.utils';
+import { ExtendedPaginationWithFilters } from '@/utils/async-handler.utils';
+import { formatDateRangeShort, formatDecimalHours } from '@/utils/date-format.utils';
 import { 
-  Gender,
   StudentStatus,
+  Gender,
   UserType
 } from '@/types/enums.types';
 import logger from '@/config/logger';
+import { BaseListService, BaseListServiceConfig } from '@/utils/base-list.service';
+import { STUDENT_FIELD_MAPPINGS } from '@/utils/field-mapping.utils';
+import { hashPassword } from '@/utils/password.utils';
 
 // Initialize Prisma client
 const prisma = new PrismaClient();
 
 /**
- * Filter DTO for student queries
+ * Configuration for Student service operations
  */
-interface StudentFilterDto {
-  search?: string;
-  status?: StudentStatus;
-  gender?: Gender;
-  country_id?: number;
-  state_id?: number;
-  city_id?: number;
-  age_min?: number;
-  age_max?: number;
-}
+const STUDENT_SERVICE_CONFIG: BaseListServiceConfig<StudentFilterDto> = {
+  entityName: 'student',
+  primaryKeyField: 'student_id',
+  fieldMapping: STUDENT_FIELD_MAPPINGS,
+  filterConversion: {
+    stringFields: ['search'],
+    booleanFields: [],
+    numberFields: ['countryId', 'stateId', 'cityId', 'ageMin', 'ageMax'],
+    enumFields: {
+      status: StudentStatus,
+      gender: Gender
+    }
+  },
+  defaultSortField: 'created_at',
+  defaultSortOrder: 'desc',
+  searchFields: ['full_name', 'first_name', 'last_name', 'username'],
+  searchRelations: {
+    emails: ['email_address']
+  }
+};
 
-export class StudentService {
+export class StudentService extends BaseListService<any, StudentFilterDto> {
+  private static instance: StudentService;
+
+  private constructor() {
+    super(prisma, STUDENT_SERVICE_CONFIG);
+  }
+
+  /**
+   * Get singleton instance
+   */
+  static getInstance(): StudentService {
+    if (!StudentService.instance) {
+      StudentService.instance = new StudentService();
+    }
+    return StudentService.instance;
+  }
+
+  /**
+   * Get table name for queries
+   */
+  protected getTableName(): string {
+    return 'student';
+  }
+
+  /**
+   * Get include options for queries
+   */
+  protected override getIncludeOptions(): any {
+    return {
+      include: {
+        emails: {
+          where: {
+            is_primary: true,
+            is_deleted: false
+          },
+          select: {
+            email_address: true
+          },
+          take: 1
+        }
+      }
+    };
+  }
+
+  /**
+   * Build entity-specific filters
+   */
+  protected buildEntitySpecificFilters(filters: StudentFilterDto): any {
+    const whereClause: any = {};
+
+    // Age range filtering
+    if (filters.ageMin !== undefined || filters.ageMax !== undefined) {
+      whereClause.age = {};
+      if (filters.ageMin !== undefined) {
+        whereClause.age.gte = filters.ageMin;
+      }
+      if (filters.ageMax !== undefined) {
+        whereClause.age.lte = filters.ageMax;
+      }
+    }
+
+    // Geographic filters
+    if (filters.countryId !== undefined) {
+      whereClause.country_id = filters.countryId;
+    }
+    if (filters.stateId !== undefined) {
+      whereClause.state_id = filters.stateId;
+    }
+    if (filters.cityId !== undefined) {
+      whereClause.city_id = filters.cityId;
+    }
+
+    // Status and gender filters
+    if (filters.status !== undefined) {
+      whereClause.student_status = filters.status;
+    }
+    if (filters.gender !== undefined) {
+      whereClause.gender = filters.gender;
+    }
+
+    return whereClause;
+  }
+
+  /**
+   * Format entity response
+   */
+  protected formatEntityResponse(entity: any): any {
+    const { password_hash, ...studentWithoutPassword } = entity;
+    
+    // Format response to include primary email address directly
+    return {
+      ...studentWithoutPassword,
+      primary_email: entity.emails?.[0]?.email_address || null
+    };
+  }
+
   /**
    * Create a new student
    * 
    * @param data Student data from validated DTO
-   * @param tenantId Tenant ID for multi-tenant isolation
-   * @param adminUserId System user ID for audit trail
+   * @param requestingUser User requesting the student creation
    * @param clientIp IP address of the request
    * @returns Newly created student
    */
   async createStudent(
     data: CreateStudentDto,
-    tenantId: number,
-    adminUserId: number,
+    requestingUser: TokenPayload,
     clientIp?: string
   ) {
+    // Validate that we have a requesting user
+    if (!requestingUser || !requestingUser.user_type) {
+      throw new BadRequestError('Invalid requesting user context');
+    }
+
+    // Determine tenant ID based on user type
+    let tenantId: number;
+    
+    if (requestingUser.user_type === UserType.SUPER_ADMIN) {
+      // SUPER_ADMIN must provide tenant_id in request body
+      if (!data.tenant_id) {
+        throw new BadRequestError('Tenant ID is required when creating a student as SUPER_ADMIN', 'MISSING_TENANT_ID');
+      }
+      tenantId = data.tenant_id;
+    } else {
+      // Regular admins use their own tenant
+      if (!requestingUser.tenantId) {
+        throw new BadRequestError('Tenant ID is required', 'MISSING_TENANT_ID');
+      }
+      tenantId = requestingUser.tenantId;
+      
+      // Ignore tenant_id from body for non-SUPER_ADMIN users
+      if (data.tenant_id && data.tenant_id !== tenantId) {
+        logger.warn('Non-SUPER_ADMIN user attempted to specify different tenant_id', {
+          userId: requestingUser.id,
+          userType: requestingUser.user_type,
+          requestedTenantId: data.tenant_id,
+          userTenantId: tenantId
+        });
+      }
+    }
+
     return tryCatch(async () => {
       logger.debug('Creating student', {
         username: data.username,
         tenantId,
-        adminUserId
+        requestingUserId: requestingUser.id,
+        userType: requestingUser.user_type
       });
 
       // Check if username exists within tenant
@@ -69,7 +211,7 @@ export class StudentService {
       });
 
       if (existingUsername) {
-        throw new ConflictError('Username already exists within tenant', 'USERNAME_EXISTS');
+        throw new ConflictError('Username already exists in this tenant', 'DUPLICATE_USERNAME');
       }
 
       // Check if primary email address exists within tenant
@@ -82,7 +224,7 @@ export class StudentService {
       });
 
       if (existingEmail) {
-        throw new ConflictError('Email address already exists within tenant', 'EMAIL_EXISTS');
+        throw new ConflictError('Email address already exists in this tenant', 'DUPLICATE_EMAIL');
       }
 
       // Hash the password
@@ -91,52 +233,52 @@ export class StudentService {
       // Create student and associated email address within transaction
       const result = await prisma.$transaction(async (tx) => {
         // Create the student
-        const student = await tx.student.create({
+        const newStudent = await tx.student.create({
           data: {
             tenant_id: tenantId,
             full_name: data.full_name,
             first_name: data.first_name,
             middle_name: data.middle_name || null,
             last_name: data.last_name,
+            username: data.username,
+            password_hash: passwordHash,
             country_id: data.country_id,
             state_id: data.state_id,
             city_id: data.city_id,
             address: data.address || null,
-            date_of_birth: data.date_of_birth ? new Date(data.date_of_birth) : null,
+            date_of_birth: data.date_of_birth || null,
             profile_picture_url: data.profile_picture_url || null,
             zip_code: data.zip_code || null,
             age: data.age || null,
             gender: data.gender || null,
-            username: data.username,
-            password_hash: passwordHash,
             student_status: data.student_status || StudentStatus.ACTIVE,
             referral_type: data.referral_type || null,
             is_active: true,
             is_deleted: false,
-            created_by: adminUserId,
-            updated_by: adminUserId,
+            created_by: requestingUser.id,
+            updated_by: requestingUser.id,
             created_ip: clientIp || null,
             updated_ip: clientIp || null
           }
         });
 
-        // Create primary email address for the student
+        // Create the primary email address
         await tx.studentEmailAddress.create({
           data: {
+            student_id: newStudent.student_id,
             tenant_id: tenantId,
-            student_id: student.student_id,
             email_address: data.email_address,
             is_primary: true,
             is_active: true,
             is_deleted: false,
-            created_by: adminUserId,
-            updated_by: adminUserId,
+            created_by: requestingUser.id,
+            updated_by: requestingUser.id,
             created_ip: clientIp || null,
             updated_ip: clientIp || null
           }
         });
 
-        return student;
+        return newStudent;
       });
 
       // Return the created student (without password_hash)
@@ -145,7 +287,7 @@ export class StudentService {
     }, {
       context: {
         tenantId,
-        adminUserId,
+        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId },
         username: data.username
       }
     });
@@ -173,9 +315,9 @@ export class StudentService {
 
       // Super Admin can access any student
       if (requestingUser.user_type === UserType.SUPER_ADMIN) {
-        // No additional tenant restriction for super admin
+        // No additional tenant restriction needed
       } else {
-        // Regular users can only access students from their tenant
+        // Other users are restricted to their tenant
         whereClause.tenant_id = requestingUser.tenantId;
       }
 
@@ -197,14 +339,7 @@ export class StudentService {
         throw new NotFoundError('Student not found', 'STUDENT_NOT_FOUND');
       }
 
-      // Remove password_hash from response
-      const { password_hash, ...studentWithoutPassword } = student;
-      
-      // Format response to include primary email address directly
-      return {
-        ...studentWithoutPassword,
-        primary_email: student.emails[0]?.email_address || null
-      };
+      return this.formatEntityResponse(student);
     }, {
       context: {
         studentId,
@@ -215,6 +350,7 @@ export class StudentService {
 
   /**
    * Get all students with pagination, sorting, and filtering
+   * Uses the modern BaseListService pattern
    * 
    * @param requestingUser User requesting the students
    * @param params Extended pagination with filters
@@ -234,61 +370,15 @@ export class StudentService {
         }
       });
 
-      // Convert filter params to structured DTO
-      const filterDto = this.convertStudentFiltersToDto(params.filters);
+      // Use the BaseListService getAllEntities method
+      const result = await this.getAllEntities(requestingUser, params);
       
-      // Build filters using the structured DTO
-      const filters = this.buildStudentFiltersFromDto(filterDto, requestingUser);
-      
-      // Use pagination utilities to build sorting
-      const sorting = this.buildStudentSorting(params);
-      
-      // Get query options using pagination utilities
-      const queryOptions = getPrismaQueryOptions(
-        { page: params.page, limit: params.limit, skip: params.skip },
-        sorting
-      );
-
-      // Execute queries using Promise.all for better performance
-      const [students, total] = await Promise.all([
-        prisma.student.findMany({
-          where: filters,
-          ...queryOptions,
-          include: {
-            emails: {
-              where: {
-                is_primary: true,
-                is_deleted: false
-              },
-              select: {
-                email_address: true
-              },
-              take: 1
-            }
-          }
-        }),
-        prisma.student.count({ where: filters })
-      ]);
-
-      // Remove password_hash and format response
-      const formattedStudents = students.map(student => {
-        const { password_hash, ...studentData } = student;
-        return {
-          ...studentData,
-          primary_email: student.emails[0]?.email_address || null
-        };
-      });
+      // Format the response to match the expected structure
+      const formattedStudents = result.items.map(student => this.formatEntityResponse(student));
 
       return {
         items: formattedStudents,
-        pagination: {
-          page: params.page,
-          limit: params.limit,
-          total,
-          totalPages: Math.ceil(total / params.limit),
-          hasNext: params.page < Math.ceil(total / params.limit),
-          hasPrev: params.page > 1
-        }
+        pagination: result.pagination
       };
     }, {
       context: {
@@ -340,19 +430,16 @@ export class StudentService {
       });
 
       if (!existingStudent) {
-        if (requestingUser.user_type === UserType.SUPER_ADMIN) {
-          throw new NotFoundError('Student not found', 'STUDENT_NOT_FOUND');
-        } else {
-          throw new ForbiddenError('Cannot update student from another tenant');
-        }
+        throw new NotFoundError('Student not found', 'STUDENT_NOT_FOUND');
       }
 
       // Log tenant context for SUPER_ADMIN operations
       if (requestingUser.user_type === UserType.SUPER_ADMIN) {
-        logger.debug('SUPER_ADMIN updating student across tenant', {
+        logger.debug('SUPER_ADMIN updating student in different tenant', {
+          requestingUserId: requestingUser.id,
           studentId,
           studentTenantId: existingStudent.tenant_id,
-          adminUserId: requestingUser.id
+          adminTenantId: requestingUser.tenantId
         });
       }
 
@@ -435,19 +522,16 @@ export class StudentService {
       });
 
       if (!existingStudent) {
-        if (requestingUser.user_type === UserType.SUPER_ADMIN) {
-          throw new NotFoundError('Student not found', 'STUDENT_NOT_FOUND');
-        } else {
-          throw new ForbiddenError('Cannot delete student from another tenant');
-        }
+        throw new NotFoundError('Student not found', 'STUDENT_NOT_FOUND');
       }
 
       // Log tenant context for SUPER_ADMIN operations
       if (requestingUser.user_type === UserType.SUPER_ADMIN) {
-        logger.debug('SUPER_ADMIN deleting student across tenant', {
+        logger.debug('SUPER_ADMIN deleting student in different tenant', {
+          requestingUserId: requestingUser.id,
           studentId,
           studentTenantId: existingStudent.tenant_id,
-          adminUserId: requestingUser.id
+          adminTenantId: requestingUser.tenantId
         });
       }
 
@@ -491,26 +575,21 @@ export class StudentService {
 
       // Only students can access their own profile via this method
       if (requestingUser.user_type !== UserType.STUDENT) {
-        throw new ForbiddenError('Only students can access student profile endpoints');
+        throw new ForbiddenError('Only students can access student profiles', 'FORBIDDEN');
       }
 
-      // Find student record by username or email matching the authenticated user
-      // This assumes the JWT contains the student's username or email
+      // Find student record by email matching the authenticated user
       const student = await prisma.student.findFirst({
         where: {
-          OR: [
-            { username: requestingUser.email }, // If email is used as username
-            { 
-              emails: {
-                some: {
-                  email_address: requestingUser.email,
-                  is_deleted: false
-                }
-              }
+          is_active: true,
+          is_deleted: false,
+          emails: {
+            some: {
+              email_address: requestingUser.email,
+              is_primary: true,
+              is_deleted: false
             }
-          ],
-          tenant_id: requestingUser.tenantId,
-          is_deleted: false
+          }
         },
         include: {
           emails: {
@@ -527,23 +606,10 @@ export class StudentService {
       });
 
       if (!student) {
-        throw new NotFoundError('Student profile not found', 'STUDENT_PROFILE_NOT_FOUND');
+        throw new NotFoundError('Student profile not found', 'STUDENT_NOT_FOUND');
       }
 
-      // Return only profile-relevant fields (exclude sensitive data)
-      return {
-        student_id: student.student_id,
-        full_name: student.full_name,
-        first_name: student.first_name,
-        middle_name: student.middle_name,
-        last_name: student.last_name,
-        address: student.address,
-        date_of_birth: student.date_of_birth,
-        profile_picture_url: student.profile_picture_url,
-        primary_email: student.emails[0]?.email_address || null,
-        created_at: student.created_at,
-        updated_at: student.updated_at
-      };
+      return this.formatEntityResponse(student);
     }, {
       context: {
         requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId }
@@ -573,40 +639,36 @@ export class StudentService {
 
       // Only students can update their own profile via this method
       if (requestingUser.user_type !== UserType.STUDENT) {
-        throw new ForbiddenError('Only students can update student profile');
+        throw new ForbiddenError('Only students can update student profiles', 'FORBIDDEN');
       }
 
-      // Find student record by username or email matching the authenticated user
-      const existingStudent = await prisma.student.findFirst({
+      // Find student record by email matching the authenticated user
+      const student = await prisma.student.findFirst({
         where: {
-          OR: [
-            { username: requestingUser.email }, // If email is used as username
-            { 
-              emails: {
-                some: {
-                  email_address: requestingUser.email,
-                  is_deleted: false
-                }
-              }
+          is_active: true,
+          is_deleted: false,
+          emails: {
+            some: {
+              email_address: requestingUser.email,
+              is_primary: true,
+              is_deleted: false
             }
-          ],
-          tenant_id: requestingUser.tenantId,
-          is_deleted: false
+          }
         }
       });
 
-      if (!existingStudent) {
-        throw new NotFoundError('Student profile not found', 'STUDENT_PROFILE_NOT_FOUND');
+      if (!student) {
+        throw new NotFoundError('Student profile not found', 'STUDENT_NOT_FOUND');
       }
 
-      // Build update data with only allowed profile fields
-      // Note: We don't update audit fields (updated_by, updated_at) for student self-updates
-      // to avoid foreign key constraint issues with SystemUser table
+      // Build update data with only allowed fields for profile updates
       const updateData: any = {
+        updated_by: requestingUser.id,
+        updated_at: new Date(),
         updated_ip: clientIp || null
       };
 
-      // Only include profile fields that are provided in the update data
+      // Only include fields that are provided and allowed for profile updates
       if (data.full_name !== undefined) updateData.full_name = data.full_name;
       if (data.first_name !== undefined) updateData.first_name = data.first_name;
       if (data.middle_name !== undefined) updateData.middle_name = data.middle_name;
@@ -618,23 +680,24 @@ export class StudentService {
       // Update the student profile
       const updatedStudent = await prisma.student.update({
         where: {
-          student_id: existingStudent.student_id
+          student_id: student.student_id
         },
-        data: updateData
+        data: updateData,
+        include: {
+          emails: {
+            where: {
+              is_primary: true,
+              is_deleted: false
+            },
+            select: {
+              email_address: true
+            },
+            take: 1
+          }
+        }
       });
 
-      // Return only profile-relevant fields
-      return {
-        student_id: updatedStudent.student_id,
-        full_name: updatedStudent.full_name,
-        first_name: updatedStudent.first_name,
-        middle_name: updatedStudent.middle_name,
-        last_name: updatedStudent.last_name,
-        address: updatedStudent.address,
-        date_of_birth: updatedStudent.date_of_birth,
-        profile_picture_url: updatedStudent.profile_picture_url,
-        updated_at: updatedStudent.updated_at
-      };
+      return this.formatEntityResponse(updatedStudent);
     }, {
       context: {
         requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId }
@@ -643,166 +706,22 @@ export class StudentService {
   }
 
   /**
-   * Convert SafeFilterParams to structured student DTO
-   */
-  private convertStudentFiltersToDto(filterParams: SafeFilterParams): StudentFilterDto {
-    const dto: StudentFilterDto = {};
-    
-    if (filterParams['search'] && typeof filterParams['search'] === 'string') {
-      dto.search = filterParams['search'];
-    }
-    
-    if (filterParams['status']) {
-      dto.status = filterParams['status'] as StudentStatus;
-    }
-
-    if (filterParams['gender']) {
-      dto.gender = filterParams['gender'] as Gender;
-    }
-    
-    if (filterParams['country_id']) {
-      dto.country_id = typeof filterParams['country_id'] === 'number' 
-        ? filterParams['country_id'] 
-        : parseInt(filterParams['country_id'] as string, 10);
-    }
-
-    if (filterParams['state_id']) {
-      dto.state_id = typeof filterParams['state_id'] === 'number' 
-        ? filterParams['state_id'] 
-        : parseInt(filterParams['state_id'] as string, 10);
-    }
-
-    if (filterParams['city_id']) {
-      dto.city_id = typeof filterParams['city_id'] === 'number' 
-        ? filterParams['city_id'] 
-        : parseInt(filterParams['city_id'] as string, 10);
-    }
-
-    if (filterParams['age_min']) {
-      dto.age_min = typeof filterParams['age_min'] === 'number' 
-        ? filterParams['age_min'] 
-        : parseInt(filterParams['age_min'] as string, 10);
-    }
-
-    if (filterParams['age_max']) {
-      dto.age_max = typeof filterParams['age_max'] === 'number' 
-        ? filterParams['age_max'] 
-        : parseInt(filterParams['age_max'] as string, 10);
-    }
-    
-    return dto;
-  }
-
-  /**
-   * Build Prisma filters from structured student DTO
-   */
-  private buildStudentFiltersFromDto(filterDto: StudentFilterDto, requestingUser: TokenPayload): Record<string, any> {
-    const where: Record<string, any> = {
-      is_deleted: false
-    };
-
-    // Add tenant scoping for non-SUPER_ADMIN users
-    if (requestingUser.user_type !== UserType.SUPER_ADMIN) {
-      where['tenant_id'] = requestingUser.tenantId;
-    }
-    
-    if (filterDto.search) {
-      where['OR'] = [
-        { full_name: { contains: filterDto.search, mode: 'insensitive' } },
-        { username: { contains: filterDto.search, mode: 'insensitive' } },
-        {
-          emails: {
-            some: {
-              email_address: { contains: filterDto.search, mode: 'insensitive' },
-              is_deleted: false
-            }
-          }
-        }
-      ];
-    }
-
-    if (filterDto.status) {
-      where['student_status'] = filterDto.status;
-    }
-
-    if (filterDto.gender) {
-      where['gender'] = filterDto.gender;
-    }
-
-    if (filterDto.country_id) {
-      where['country_id'] = filterDto.country_id;
-    }
-
-    if (filterDto.state_id) {
-      where['state_id'] = filterDto.state_id;
-    }
-
-    if (filterDto.city_id) {
-      where['city_id'] = filterDto.city_id;
-    }
-
-    if (filterDto.age_min || filterDto.age_max) {
-      where['age'] = {};
-      if (filterDto.age_min) {
-        where['age']['gte'] = filterDto.age_min;
-      }
-      if (filterDto.age_max) {
-        where['age']['lte'] = filterDto.age_max;
-      }
-    }
-
-    return where;
-  }
-
-  /**
-   * Build Prisma sorting from pagination parameters for students
-   */
-  private buildStudentSorting(params: ExtendedPaginationWithFilters): Record<string, SortOrder> {
-    const fieldMapping: Record<string, string> = {
-      'studentId': 'student_id',
-      'fullName': 'full_name',
-      'firstName': 'first_name',
-      'lastName': 'last_name',
-      'username': 'username',
-      'createdAt': 'created_at',
-      'updatedAt': 'updated_at',
-      'studentStatus': 'student_status',
-      'age': 'age'
-    };
-
-    if (params.sorting && Object.keys(params.sorting).length > 0) {
-      const mappedSorting: Record<string, SortOrder> = {};
-      Object.entries(params.sorting).forEach(([field, order]) => {
-        const dbField = fieldMapping[field] || field;
-        mappedSorting[dbField] = order;
-      });
-      return mappedSorting;
-    }
-
-    const sortBy = params.sortBy || 'created_at';
-    const sortOrder = params.sortOrder || 'desc';
-    const dbField = fieldMapping[sortBy] || sortBy;
-    
-    return { [dbField]: sortOrder };
-  }
-
-  /**
-   * Get enrolled courses by student ID
+   * Get enrolled courses by student ID with pagination, sorting, and filtering
    * 
    * @param studentId Student identifier
-   * @param searchQuery Optional search query to filter course names
    * @param requestingUser User requesting the data
-   * @returns List of enrolled courses with comprehensive details
+   * @param params Pagination and filtering parameters
+   * @returns List of enrolled courses with pagination metadata
    */
   async getEnrolledCoursesByStudentId(
     studentId: number,
-    searchQuery: string = '',
-    requestingUser: TokenPayload
-  ): Promise<EnrolledCourseResponse[]> {
+    requestingUser: TokenPayload,
+    params: ExtendedPaginationWithFilters
+  ): Promise<{ items: any[]; pagination: any }> {
     return tryCatch(async () => {
       logger.debug('Getting enrolled courses by student ID', {
         studentId,
-        searchQuery,
+        paginationParams: params,
         requestingUserId: requestingUser.id
       });
 
@@ -829,33 +748,48 @@ export class StudentService {
         }
       }
 
-      // Build search filter
+      // Build search filter from pagination params
+      const searchQuery = params.filters?.['search'] || '';
       const searchFilter = searchQuery 
         ? {
             course_name: {
-              contains: searchQuery,
-              mode: 'insensitive' as any
+              contains: searchQuery as string,
+              mode: 'insensitive' as const
             }
           }
         : {};
 
-      // Query enrolled courses with all required joins
-      const enrolledCourses = await prisma.enrollment.findMany({
-        where: {
-          student_id: studentId,
+      // Calculate pagination
+      const page = params.page || 1;
+      const limit = params.limit || 10;
+      const skip = params.skip ?? (page - 1) * limit;
+
+      // Build where clause for enrolled courses
+      const whereClause = {
+        student_id: studentId,
+        is_active: true,
+        is_deleted: false,
+        course: {
           is_active: true,
           is_deleted: false,
-          course: {
-            is_active: true,
-            is_deleted: false,
-            course_status: 'PUBLIC',
-            tenant_id: student.tenant_id,
-            ...searchFilter
-          }
-        },
+          course_status: CourseStatus.PUBLIC,
+          tenant_id: student.tenant_id,
+          ...searchFilter
+        }
+      };
+
+      // Get total count for pagination
+      const total = await prisma.enrollment.count({
+        where: whereClause
+      });
+
+      // Query enrolled courses with pagination
+      const enrollments = await prisma.enrollment.findMany({
+        where: whereClause,
         include: {
           course: {
             include: {
+              // Include teacher information
               teacher_courses: {
                 where: {
                   is_active: true,
@@ -864,11 +798,15 @@ export class StudentService {
                 include: {
                   teacher: {
                     select: {
-                      full_name: true
+                      full_name: true,
+                      profile_picture_url: true,
+                      teacher_qualification: true
                     }
                   }
-                }
+                },
+                take: 1
               },
+              // Include course sessions for dates
               course_sessions: {
                 where: {
                   is_active: true,
@@ -882,18 +820,52 @@ export class StudentService {
                   start_date: 'asc'
                 },
                 take: 1
+              },
+              // Include specialization and program information
+              course_specialization: {
+                where: {
+                  is_active: true,
+                  is_deleted: false
+                },
+                include: {
+                  specialization: {
+                    select: {
+                      specialization_id: true,
+                      specialization_name: true,
+                      specialization_program: {
+                        where: {
+                          is_active: true,
+                          is_deleted: false
+                        },
+                        include: {
+                          program: {
+                            select: {
+                              program_id: true,
+                              program_name: true
+                            }
+                          }
+                        },
+                        take: 1
+                      }
+                    }
+                  }
+                },
+                take: 1
               }
             }
           },
+          // Include specialization program for enrollment details
           specialization_program: {
             include: {
               specialization: {
                 select: {
+                  specialization_id: true,
                   specialization_name: true
                 }
               },
               program: {
                 select: {
+                  program_id: true,
                   program_name: true
                 }
               }
@@ -902,16 +874,17 @@ export class StudentService {
         },
         orderBy: {
           enrolled_at: 'desc'
-        }
+        },
+        skip,
+        take: limit
       });
 
-      // Get student course progress separately
-      const studentProgressData = await prisma.studentCourseProgress.findMany({
+      // Get progress data for all courses
+      const courseIds = enrollments.map(enrollment => (enrollment as any).course.course_id);
+      const progressData = await prisma.studentCourseProgress.findMany({
         where: {
           student_id: studentId,
-          course_id: {
-            in: enrolledCourses.map(e => e.course_id)
-          },
+          course_id: { in: courseIds },
           is_active: true,
           is_deleted: false
         },
@@ -922,51 +895,81 @@ export class StudentService {
       });
 
       // Create a map for quick progress lookup
-      const progressMap = new Map(
-        studentProgressData.map(p => [p.course_id, p.overall_progress_percentage])
-      );
+      const progressMap = new Map();
+      progressData.forEach(progress => {
+        progressMap.set(progress.course_id, progress.overall_progress_percentage);
+      });
 
-      // Format the response
-      const formattedCourses = enrolledCourses.map(enrollment => {
-        const course = enrollment.course;
-        const specializationProgram = enrollment.specialization_program;
-        const teacher = course.teacher_courses[0]?.teacher;
-        const courseSession = course.course_sessions[0];
-        const progressPercentage = progressMap.get(course.course_id) || 0;
+      // Extract and format course objects with all required fields
+      const courses = enrollments.map(enrollment => {
+        const course = (enrollment as any).course;
+        const teacher = course.teacher_courses?.[0]?.teacher;
+        const courseSession = course.course_sessions?.[0];
+        const courseSpecialization = course.course_specialization?.[0];
+        const specialization = courseSpecialization?.specialization;
+        const specializationProgram = specialization?.specialization_program?.[0];
+        const enrollmentSpecializationProgram = (enrollment as any).specialization_program;
 
-        // Format dates
-        const formattedDates = formatDateRange(
+        // Format dates using utility function
+        const formattedDates = formatDateRangeShort(
           courseSession?.start_date || null,
           courseSession?.end_date || null
         );
 
-        // Format hours
+        // Format hours using utility function
         const formattedHours = formatDecimalHours(
-          course.course_total_hours ? Number(course.course_total_hours) : null
+          course.course_total_hours ? course.course_total_hours.toNumber() : null
         );
 
+        const progressPercentage = progressMap.get(course.course_id) || null;
+
         return {
-          enrollment_id: enrollment.enrollment_id,
-          specialization_program_id: enrollment.specialization_program_id,
+          enrollment_id: (enrollment as any).enrollment_id,
+          specialization_program_id: (enrollment as any).specialization_program_id,
           course_id: course.course_id,
-          specialization_id: specializationProgram?.specialization_id || null,
-          program_id: specializationProgram?.program_id || null,
+          specialization_id: enrollmentSpecializationProgram?.specialization?.specialization_id || 
+                           specializationProgram?.specialization?.specialization_id || 
+                           specialization?.specialization_id || null,
+          program_id: enrollmentSpecializationProgram?.program?.program_id || 
+                     specializationProgram?.program?.program_id || null,
           course_name: course.course_name,
           start_date: formattedDates.start_date,
           end_date: formattedDates.end_date,
-          specialization_name: specializationProgram?.specialization?.specialization_name || null,
-          program_name: specializationProgram?.program?.program_name || null,
+          specialization_name: enrollmentSpecializationProgram?.specialization?.specialization_name || 
+                              specializationProgram?.specialization?.specialization_name || 
+                              specialization?.specialization_name || null,
+          program_name: enrollmentSpecializationProgram?.program?.program_name || 
+                       specializationProgram?.program?.program_name || null,
           teacher_name: teacher?.full_name || 'Not Assigned',
+          profile_picture_url: teacher?.profile_picture_url || null,
+          teacher_qualification: teacher?.teacher_qualification || null,
           course_total_hours: formattedHours,
           overall_progress_percentage: progressPercentage
         };
       });
 
-      return formattedCourses;
+      // Calculate pagination metadata
+      const totalPages = Math.ceil(total / limit);
+      const hasNext = page < totalPages;
+      const hasPrev = page > 1;
+
+      const pagination = {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext,
+        hasPrev
+      };
+
+      return {
+        items: courses,
+        pagination
+      };
     }, {
       context: {
         studentId,
-        searchQuery,
+        paginationParams: params,
         requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId }
       }
     });
@@ -976,5 +979,5 @@ export class StudentService {
 /**
  * Export a singleton instance of StudentService
  */
-export const studentService = new StudentService();
+export const studentService = StudentService.getInstance();
 export default studentService;

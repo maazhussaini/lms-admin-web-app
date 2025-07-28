@@ -8,6 +8,7 @@ import {
   TenantStatus,
   ContactType
 } from '@/types/enums.types';
+import { BaseFilterDto } from '@/utils/service.types';
 
 /**
  * DTO interface for creating a new tenant
@@ -36,9 +37,23 @@ export interface UpdateTenantDto {
 /**
  * DTO interface for filtering tenants in list operations
  */
-export interface TenantFilterDto {
-  search?: string;
+export interface TenantFilterDto extends BaseFilterDto {
   status?: TenantStatus;
+}
+
+/**
+ * DTO interface for tenant response
+ */
+export interface TenantResponseDto {
+  id: number;
+  tenantName: string;
+  logoUrlLight?: string;
+  logoUrlDark?: string;
+  faviconUrl?: string;
+  theme?: Record<string, any>;
+  status: TenantStatus;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**

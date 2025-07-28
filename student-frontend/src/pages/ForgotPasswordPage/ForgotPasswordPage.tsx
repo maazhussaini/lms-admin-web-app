@@ -57,7 +57,7 @@ const ForgotPasswordPage: React.FC = () => {
       if (window.location.pathname !== '/forgot-password/check-email') {
         navigate('/forgot-password/check-email', { replace: true });
       }
-    } catch (err) {
+    } catch {
       setErrorMessage('Failed to send reset code. Please try again.');
     } finally {
       setIsSubmitting(false);

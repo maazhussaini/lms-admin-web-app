@@ -6,31 +6,21 @@
 import { Request, Response } from 'express';
 import { ProgramService } from '@/services/program.service';
 import { CreateProgramDto, UpdateProgramDto } from '../dtos/course/program.dto';
-import { ProgramsByTenantResponse } from '../dtos/course/programs-by-tenant.dto';
-import { asyncHandler } from '@/utils/async-handler.utils';
+import { asyncHandler, createListHandler, ExtendedPaginationWithFilters } from '@/utils/async-handler.utils';
 import { ApiError } from '@/utils/api-error.utils';
-import { getPaginationFromRequest, getSortParamsFromRequest } from '../utils/pagination.utils';
 import { TApiSuccessResponse } from '@shared/types/api.types';
+import { TokenPayload } from '@/utils/jwt.utils';
 import logger from '@/config/logger';
-import { UserType } from '@/types/enums.types';
 
 /**
  * Extended Request interface with authenticated user data
  */
 interface AuthenticatedRequest extends Request {
-  user?: {
-    id: number;
-    email: string;
-    role: string;
-    user_type: UserType;
-    tenantId: number; // Can be 0 for SUPER_ADMIN
-    permissions?: string[];
-    [key: string]: any;
-  };
+  user?: TokenPayload;
 }
 
-// Initialize program service
-const programService = new ProgramService();
+// Initialize program service - using singleton pattern
+const programService = ProgramService.getInstance();
 
 export class ProgramController {
   /**
@@ -65,13 +55,10 @@ export class ProgramController {
         throw new ApiError('Tenant context required', 400, 'TENANT_REQUIRED');
       }
       
-      const userId = req.user.id;
-      
       // Create program using service
       const program = await programService.createProgram(
         programData, 
-        tenantId, 
-        userId, 
+        req.user, 
         req.ip || undefined
       );
       
@@ -123,10 +110,9 @@ export class ProgramController {
       }
       
       // Super Admin can have tenantId = 0, which is valid
-      const tenantId = req.user.tenantId;
 
       // Get program using service
-      const program = await programService.getProgramById(programId, tenantId);
+      const program = await programService.getProgramById(programId, req.user);
       
       // Send successful response
       const response: TApiSuccessResponse = {
@@ -147,65 +133,20 @@ export class ProgramController {
    * @route GET /api/v1/programs
    * @access Private (Any authenticated user within tenant)
    */
-  static getAllProgramsHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
-      // Debug the user object to help troubleshoot
-      logger.debug('User object in get all programs handler', {
-        hasUser: !!req.user,
-        userId: req.user?.id,
-        role: req.user?.role,
-        tenantId: req.user?.tenantId,
-        path: req.path,
-        requestId: req.id
-      });
-
-      // Extract tenant ID from authenticated user
+  static getAllProgramsHandler = createListHandler(
+    async (params: ExtendedPaginationWithFilters, req: AuthenticatedRequest) => {
       if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
-      
-      // Super Admin can have tenantId = 0, which is valid
-      const tenantId = req.user.tenantId;
-
-      // Extract pagination and sorting from query parameters
-      const pagination = getPaginationFromRequest(req);
-      const { sortBy, order } = getSortParamsFromRequest(
-        req, 
-        'created_at', 
-        'desc', 
-        ['program_id', 'program_name', 'created_at', 'updated_at']
-      );
-      
-      // Extract additional filters
-      const search = req.query['search'] as string | undefined;
-      const isActive = req.query['is_active'] !== undefined 
-        ? req.query['is_active'] === 'true' 
-        : undefined;
-      
-      // Get programs using service
-      const result = await programService.getAllPrograms(tenantId, {
-        page: pagination.page,
-        limit: pagination.limit,
-        sortBy,
-        order,
-        search,
-        is_active: isActive
-      });
-      
-      // Send successful response
-      const response: TApiSuccessResponse = {
-        success: true,
-        statusCode: 200,
-        message: 'Programs retrieved successfully',
-        data: result.items,
-        timestamp: new Date().toISOString()
+      const requestingUser = req.user;
+      const result = await programService.getAllPrograms(requestingUser, params);
+      return {
+        items: result.items,
+        total: result.pagination.total
       };
-      
-      // Add pagination info to response
-      return res.status(200).json({
-        ...response,
-        pagination: result.pagination
-      });
+    },
+    {
+      message: 'Programs retrieved successfully'
     }
   );
   
@@ -236,15 +177,11 @@ export class ProgramController {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
       
-      const tenantId = req.user.tenantId;
-      const userId = req.user.id;
-      
       // Update program using service
       const updatedProgram = await programService.updateProgram(
         programId, 
         updateData, 
-        tenantId, 
-        userId,
+        req.user,
         req.ip || undefined
       );
       
@@ -284,15 +221,11 @@ export class ProgramController {
       if (!req.user?.tenantId || !req.user?.id) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
-      
-      const tenantId = req.user.tenantId;
-      const userId = req.user.id;
 
       // Delete program using service
       const result = await programService.deleteProgram(
         programId, 
-        tenantId, 
-        userId, 
+        req.user, 
         req.ip || undefined
       );
       
@@ -313,11 +246,11 @@ export class ProgramController {
    * Get programs by tenant - Retrieve all programs associated with the authenticated user's tenant
    * Query parameters for pagination and filtering
    * Authentication required - uses JWT token to determine tenant
+   * @param paginationParams ExtendedPaginationWithFilters - Pagination and filtering parameters
    * @param req AuthenticatedRequest - Express request with authenticated user context
-   * @param res Response - Express response object
    */
-  public static getProgramsByTenantHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+  public static getProgramsByTenantHandler = createListHandler(
+    async (paginationParams: ExtendedPaginationWithFilters, req: AuthenticatedRequest) => {
       // Extract tenant ID from authenticated user
       if (!req.user?.tenantId) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
@@ -335,6 +268,7 @@ export class ProgramController {
       logger.debug('Getting programs by tenant with filters', {
         tenantId,
         filters,
+        paginationParams,
         userInfo: {
           id: req.user.id,
           email: req.user.email,
@@ -344,13 +278,14 @@ export class ProgramController {
       });
 
       // Get programs by tenant using service
-      const programs = await programService.getProgramsByTenant(tenantId, filters);
+      const result = await programService.getProgramsByTenant(tenantId, filters, paginationParams);
       
       // Debug logging
       logger.debug('Programs retrieved', {
         tenantId,
-        programCount: programs.length,
-        programs: programs.map(p => ({ 
+        programCount: result.items.length,
+        total: result.total,
+        programs: result.items.map(p => ({ 
           id: p.program_id, 
           name: p.program_name, 
           is_active: p.is_active,
@@ -358,16 +293,13 @@ export class ProgramController {
         }))
       });
 
-      // Send successful response
-      const response: TApiSuccessResponse<ProgramsByTenantResponse[]> = {
-        success: true,
-        statusCode: 200,
-        message: 'Programs retrieved successfully',
-        data: programs,
-        timestamp: new Date().toISOString()
+      return {
+        items: result.items,
+        total: result.total
       };
-      
-      return res.status(200).json(response);
+    },
+    {
+      message: 'Programs retrieved successfully'
     }
   );
 }
