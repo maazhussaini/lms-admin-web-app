@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tenant Management - orb-Ed</title>
+    <link rel="stylesheet" href="Assests/css/main-theme.css">
+    <link rel="stylesheet" href="Assests/css/tenant.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="tenant-dashboard">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <img src="Assests/images/logo.png" alt="orb-Ed" class="logo-img">
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="menu-item">
+                <a href="#" class="menu-link">
+                    <i class="fas fa-th-large"></i>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="#" class="menu-link">
+                    <i class="fas fa-users"></i>
+                </a>
+            </li>
+            <li class="menu-item active">
+                <a href="#" class="menu-link">
+                    <i class="fas fa-user-friends"></i>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="#" class="menu-link">
+                    <i class="fas fa-globe"></i>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="#" class="menu-link">
+                    <i class="fas fa-credit-card"></i>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="#" class="menu-link">
+                    <i class="fas fa-tools"></i>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="#" class="menu-link">
+                    <i class="fas fa-cog"></i>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="#" class="menu-link">
+                    <i class="fas fa-dollar-sign"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="header-left">
+                <h1 class="page-title">Tenant</h1>
+            </div>
+            <div class="header-right">
+                <div class="header-actions">
+                    <button class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <div class="user-profile">
+                        <div class="user-avatar-placeholder">SP</div>
+                        <span class="user-name">Smith Phil</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <div class="search-container">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" placeholder="Search here">
+                    </div>
+                </div>
+                <div class="toolbar-center">
+                    <div class="showing-info">
+                        <span>Showing</span>
+                        <select class="showing-select">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="toolbar-right">
+                    <button class="filter-btn" id="filterBtn">
+                        <i class="fas fa-filter"></i>
+                    </button>
+                    <button class="add-btn" id="addTenantBtn">Add</button>
+                </div>
+            </div>
+
+            <!-- Bulk Actions -->
+            <div class="bulk-actions" id="bulkActions" style="display: none;">
+                <div class="bulk-actions-left">
+                    <button class="bulk-action-btn active-btn">
+                        <i class="fas fa-check"></i>
+                        Active
+                    </button>
+                    <button class="bulk-action-btn inactive-btn">
+                        <i class="fas fa-times"></i>
+                        In Active
+                    </button>
+                </div>
+                <div class="bulk-actions-right">
+                    <div class="selection-info">
+                        All <span id="selectedCount">10</span> rows on this page are selected. 
+                        <a href="#" class="select-all-link">Click to Select 127 rows</a> across all pages
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="table-container">
+                <table class="tenant-table">
+                    <thead>
+                        <tr>
+                            <th class="checkbox-col">
+                                <input type="checkbox" id="selectAll" class="table-checkbox">
+                            </th>
+                            <th class="logo-col">Logo <i class="fas fa-sort"></i></th>
+                            <th class="name-col">Tenant Name <i class="fas fa-sort"></i></th>
+                            <th class="clients-col">Clients Count <i class="fas fa-sort"></i></th>
+                            <th class="phone-col">Phone No <i class="fas fa-sort"></i></th>
+                            <th class="email-col">Email <i class="fas fa-sort"></i></th>
+                            <th class="created-col">Created At <i class="fas fa-sort"></i></th>
+                            <th class="updated-col">Updated At <i class="fas fa-sort"></i></th>
+                            <th class="status-col">Status</th>
+                            <th class="actions-col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tenantTableBody">
+                        <!-- Table rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    Showing 10 Out Of 100 Entries
+                </div>
+                <div class="pagination">
+                    <button class="pagination-btn" disabled>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="pagination-btn active">1</button>
+                    <button class="pagination-btn">2</button>
+                    <button class="pagination-btn">3</button>
+                    <span class="pagination-dots">• • • •</span>
+                    <button class="pagination-btn">8</button>
+                    <button class="pagination-btn">9</button>
+                    <button class="pagination-btn">10</button>
+                    <button class="pagination-btn">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Modal -->
+    <div class="modal-overlay" id="filterModal">
+        <div class="modal-content filter-modal">
+            <div class="modal-header">
+                <h3>Filters</h3>
+                <button class="modal-close" id="filterModalClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="filter-group">
+                    <label class="filter-label">Tenants</label>
+                    <div class="filter-options">
+                        <button class="filter-option-btn">Reset</button>
+                    </div>
+                    <select class="filter-select">
+                        <option value="">Select Tenant</option>
+                        <option value="tenant1">Tenant 1</option>
+                        <option value="tenant2">Tenant 2</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Status</label>
+                    <div class="filter-options">
+                        <button class="filter-option-btn">Reset</button>
+                    </div>
+                    <select class="filter-select">
+                        <option value="">Select Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="pending">Pending</option>
+                        <option value="progress">In Progress</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Start Date</label>
+                    <div class="filter-options">
+                        <button class="filter-option-btn">Reset</button>
+                    </div>
+                    <div class="date-input-container">
+                        <input type="date" class="filter-date-input" placeholder="select start Date">
+                        <i class="fas fa-calendar date-icon"></i>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">End Date</label>
+                    <div class="filter-options">
+                        <button class="filter-option-btn">Reset</button>
+                    </div>
+                    <div class="date-input-container">
+                        <input type="date" class="filter-date-input" placeholder="select End Date">
+                        <i class="fas fa-calendar date-icon"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="resetAllFilters">Reset All</button>
+                <button class="btn-primary" id="applyFilters">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Tenant Modal -->
+    <div class="modal-overlay" id="addTenantModal">
+        <div class="modal-content add-tenant-modal">
+            <div class="modal-header">
+                <button class="modal-close" id="addTenantModalClose">
+                    <i class="fas fa-times"></i>
+                </button>
+                <button class="btn-primary save-btn">Save</button>
+            </div>
+            <div class="modal-body">
+                <h2 class="modal-title">Add Tenant</h2>
+                
+                <form class="add-tenant-form">
+                    <div class="form-group">
+                        <label class="form-label">Tenant Name</label>
+                        <input type="text" class="form-input" placeholder="Enter Tenant Name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" class="form-input" placeholder="Enter Primary Email Address">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Phone Number</label>
+                        <div class="phone-input-container">
+                            <div class="country-code">
+                                <img src="https://flagcdn.com/w20/pk.png" alt="Pakistan">
+                                <span>+92</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <input type="tel" class="form-input phone-input" placeholder="(305) 760-1379">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <div class="select-container">
+                            <select class="form-select">
+                                <option value="">Select Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="pending">Pending</option>
+                            </select>
+                            <i class="fas fa-chevron-down select-arrow"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="theme-section">
+                        <h3 class="section-title">Light Mode</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Upload Dark Logo File</label>
+                            <div class="file-upload-container">
+                                <div class="file-upload-area">
+                                    <i class="fas fa-upload upload-icon"></i>
+                                    <p class="upload-text">
+                                        <span class="upload-link">Browse File</span> Or Drag & Drop JPG Or PNG (Max. 2MB)
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="color-group">
+                            <div class="form-group">
+                                <label class="form-label">Primary Color</label>
+                                <div class="color-input-container">
+                                    <div class="color-preview" style="background-color: #9AE0F7;"></div>
+                                    <input type="text" class="form-input color-input" value="#9AE0F7">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Secondary Color</label>
+                                <div class="color-input-container">
+                                    <div class="color-preview" style="background-color: #505050;"></div>
+                                    <input type="text" class="form-input color-input" value="#505050">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="theme-section">
+                        <h3 class="section-title">Dark Mode</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Upload Light Logo File</label>
+                            <div class="file-upload-container">
+                                <div class="file-upload-area">
+                                    <i class="fas fa-upload upload-icon"></i>
+                                    <p class="upload-text">
+                                        <span class="upload-link">Browse File</span> Or Drag & Drop JPG Or PNG (Max. 2MB)
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="color-group">
+                            <div class="form-group">
+                                <label class="form-label">Primary Color</label>
+                                <div class="color-input-container">
+                                    <div class="color-preview" style="background-color: #9AE0F7;"></div>
+                                    <input type="text" class="form-input color-input" value="#9AE0F7">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Secondary Color</label>
+                                <div class="color-input-container">
+                                    <div class="color-preview" style="background-color: #505050;"></div>
+                                    <input type="text" class="form-input color-input" value="#505050">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Menu -->
+    <div class="context-menu" id="actionMenu">
+        <div class="context-menu-item" data-action="view">
+            <i class="fas fa-eye"></i>
+            <span>View</span>
+        </div>
+        <div class="context-menu-item" data-action="edit">
+            <i class="fas fa-edit"></i>
+            <span>Edit</span>
+        </div>
+        <div class="context-menu-item delete" data-action="delete">
+            <i class="fas fa-trash"></i>
+            <span>Delete</span>
+        </div>
+    </div>
+
+    <script src="Assests/scripts/tenant.js"></script>
+</body>
+</html>
