@@ -6,13 +6,13 @@
 import { PrismaClient } from '@prisma/client';
 import { TokenPayload } from '@/utils/jwt.utils';
 import { ExtendedPaginationWithFilters } from '@/utils/async-handler.utils';
-import { UserType, StudentStatus, Gender } from '@/types/enums.types';
+import { StudentStatus, Gender } from '@/types/enums.types';
 
 // Import our new utilities
 import { BaseListService, BaseListServiceConfig } from '@/utils/base-list.service';
 import { BaseFilterDto } from '@/utils/service.types';
 import { STUDENT_FIELD_MAPPINGS } from '@/utils/field-mapping.utils';
-import { buildSearchFilters, buildEnumFilter, buildRangeFilter, mergeFilters } from '@/utils/filter-builders.utils';
+import { buildEnumFilter, buildRangeFilter, mergeFilters } from '@/utils/filter-builders.utils';
 
 /**
  * Example filter DTO extending BaseFilterDto
@@ -36,7 +36,7 @@ export class ModernStudentService extends BaseListService<any, ExampleStudentFil
 
   private constructor(prisma: PrismaClient) {
     // Configuration for the base service
-    const config: BaseListServiceConfig<ExampleStudentFilterDto> = {
+    const config: BaseListServiceConfig = {
       entityName: 'student',
       primaryKeyField: 'student_id',
       fieldMapping: STUDENT_FIELD_MAPPINGS,

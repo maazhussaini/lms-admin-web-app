@@ -33,7 +33,7 @@ import logger from '@/config/logger';
 /**
  * Configuration for base list service
  */
-export interface BaseListServiceConfig<TFilterDto extends BaseFilterDto> {
+export interface BaseListServiceConfig {
   entityName: string;
   primaryKeyField: string;
   fieldMapping: FieldMappingConfig;
@@ -50,9 +50,9 @@ export interface BaseListServiceConfig<TFilterDto extends BaseFilterDto> {
  */
 export abstract class BaseListService<TEntity, TFilterDto extends BaseFilterDto> {
   protected prisma: PrismaClient;
-  protected config: BaseListServiceConfig<TFilterDto>;
+  protected config: BaseListServiceConfig;
 
-  constructor(prisma: PrismaClient, config: BaseListServiceConfig<TFilterDto>) {
+  constructor(prisma: PrismaClient, config: BaseListServiceConfig) {
     this.prisma = prisma;
     this.config = config;
   }

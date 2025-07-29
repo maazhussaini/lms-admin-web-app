@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client';
 import { video_progresses } from '../seed-data/video_progresses';
-import { ensureNumber } from './utils/ensureNumber';
 
 export async function seedVideoProgresses(
   prisma: PrismaClient,

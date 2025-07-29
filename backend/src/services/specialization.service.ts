@@ -32,7 +32,7 @@ export class SpecializationService extends BaseListService<any, SpecializationFi
 
   private constructor() {
     // Configuration for the base service
-    const config: BaseServiceConfig<SpecializationFilterDto> = {
+    const config: BaseServiceConfig = {
       entityName: 'specialization',
       primaryKeyField: 'specialization_id',
       fieldMapping: SPECIALIZATION_FIELD_MAPPINGS,

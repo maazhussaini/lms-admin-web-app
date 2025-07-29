@@ -29,17 +29,17 @@ export async function seedRoleScreens(
       ? usernameToId[item.created_by]
       : auditUserId;
     let mappedUpdatedBy: number | null = (item.updated_by != null && usernameToId[item.updated_by] !== undefined)
-      ? usernameToId[item.updated_by]
+      ? usernameToId[item.updated_by]!
       : (item.updated_by != null ? auditUserId : null);
     let mappedDeletedBy: number | null = (item.deleted_by != null && usernameToId[item.deleted_by] !== undefined)
-      ? usernameToId[item.deleted_by]
+      ? usernameToId[item.deleted_by]!
       : (item.deleted_by != null ? auditUserId : null);
     await prisma.roleScreen.create({
       data: {
         ...item,
-        tenant_id: mappedTenantId,
-        screen_id: mappedScreenId,
-        created_by: mappedCreatedBy,
+        tenant_id: mappedTenantId!,
+        screen_id: mappedScreenId!,
+        created_by: mappedCreatedBy!,
         updated_by: mappedUpdatedBy,
         deleted_by: mappedDeletedBy,
       },

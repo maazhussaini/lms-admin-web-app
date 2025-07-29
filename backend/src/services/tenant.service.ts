@@ -45,7 +45,7 @@ const prisma = new PrismaClient();
 /**
  * Configuration for Tenant service operations
  */
-const TENANT_SERVICE_CONFIG: BaseServiceConfig<TenantFilterDto> = {
+const TENANT_SERVICE_CONFIG: BaseServiceConfig = {
   entityName: 'tenant',
   primaryKeyField: 'tenant_id',
   fieldMapping: TENANT_FIELD_MAPPINGS,

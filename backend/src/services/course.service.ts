@@ -49,7 +49,7 @@ export class CourseService extends BaseListService<any, CourseFilterDto> {
 
   private constructor() {
     // Configuration for the base service
-    const config: BaseServiceConfig<CourseFilterDto> = {
+    const config: BaseServiceConfig = {
       entityName: 'course',
       primaryKeyField: 'course_id',
       fieldMapping: COURSE_FIELD_MAPPINGS,

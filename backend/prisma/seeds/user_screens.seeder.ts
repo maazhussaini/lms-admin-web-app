@@ -30,7 +30,9 @@ export async function seedUserScreens(prisma: PrismaClient, tenantIds: number[],
         tenant_id: mappedTenantId,
         system_user_id: mappedSystemUserId,
         screen_id: mappedScreenId,
-        ...auditFields,
+        created_by: auditFields.created_by ?? bootstrapUserId,
+        updated_by: auditFields.updated_by ?? null,
+        deleted_by: auditFields.deleted_by ?? null,
       },
     });
   }

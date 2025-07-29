@@ -31,7 +31,7 @@ const prisma = new PrismaClient();
 /**
  * Configuration for Student service operations
  */
-const STUDENT_SERVICE_CONFIG: BaseListServiceConfig<StudentFilterDto> = {
+const STUDENT_SERVICE_CONFIG: BaseListServiceConfig = {
   entityName: 'student',
   primaryKeyField: 'student_id',
   fieldMapping: STUDENT_FIELD_MAPPINGS,

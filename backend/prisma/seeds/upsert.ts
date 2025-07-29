@@ -1,5 +1,3 @@
-import { PrismaClient } from '@prisma/client';
-
 export async function upsertMany({ model, data, uniqueKey, extraFields = {} }: {
   model: any,
   data: any[],

@@ -40,10 +40,10 @@ export async function seedStudents(
       if (cityObj && typeof cityObj.city_id === 'number') {
         mappedCityId = cityObj.city_id;
       } else {
-        mappedCityId = allCities[0]?.city_id;
+        mappedCityId = allCities[0]?.city_id || 1;
       }
     } else {
-      mappedCityId = allCities[0]?.city_id;
+      mappedCityId = allCities[0]?.city_id || 1;
     }
     let mappedCreatedBy = bootstrapUserId;
     if (item.created_by != null) {
@@ -73,13 +73,13 @@ export async function seedStudents(
     const passwordHash = await hashPassword(item.password);
     const student = await prisma.student.create({
       data: {
-        tenant_id: mappedTenantId,
+        tenant_id: mappedTenantId!,
         full_name: item.full_name,
         first_name: item.first_name,
         middle_name: item.middle_name,
         last_name: item.last_name,
-        country_id: mappedCountryId,
-        state_id: mappedStateId,
+        country_id: mappedCountryId!,
+        state_id: mappedStateId!,
         city_id: mappedCityId,
         address: item.address,
         date_of_birth: item.date_of_birth,

@@ -66,7 +66,6 @@ async function resetDatabase(prisma: PrismaClient) {
 }
 import { config } from 'dotenv';
 config({ path: '../backend/.env' });
-import { env } from '../src/config/environment';
 import { PrismaClient } from '@prisma/client';
 import * as seedData from './seed-data/index';
 const {
@@ -152,7 +151,7 @@ async function updateAuditFields({ model, data, uniqueKey, auditMaps }: {
 
 async function main() {
 
-  if (process.env.RESET_DB === 'true') {
+  if (process.env['RESET_DB'] === 'true') {
     await resetDatabase(prisma);
   }
 
@@ -200,7 +199,7 @@ async function main() {
   }
 
   // Modular system users seeding
-  await seedSystemUsers(prisma, tenantIds, bootstrapUser.system_user_id);
+  await seedSystemUsers(prisma, tenantIds);
 
   // Build audit maps
   const allUsers = await prisma.systemUser.findMany();
@@ -251,7 +250,7 @@ async function main() {
   const stateIds = await seedStates(prisma, countryIds, auditMaps, bootstrapUser.system_user_id);
 
   // 14. Modular cities seeding
-  const cityIds = await seedCities(prisma, stateIds, auditMaps, bootstrapUser.system_user_id);
+  await seedCities(prisma, stateIds, auditMaps, bootstrapUser.system_user_id);
   
   // Fetch all created cities for mapping
   const allCities = await prisma.city.findMany({ orderBy: { city_id: 'asc' } });

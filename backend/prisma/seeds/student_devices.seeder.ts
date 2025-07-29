@@ -43,8 +43,8 @@ export async function seedStudentDevices(
     }
     await prisma.studentDevice.create({
       data: {
-        tenant_id: mappedTenantId,
-        student_id: mappedStudentId,
+        tenant_id: mappedTenantId!,
+        student_id: mappedStudentId!,
         device_type: item.device_type,
         device_identifier: item.device_identifier,
         device_ip: item.device_ip,

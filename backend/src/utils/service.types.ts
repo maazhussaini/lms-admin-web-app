@@ -77,7 +77,7 @@ export interface FilterConversionConfig {
 /**
  * Base service configuration
  */
-export interface BaseServiceConfig<TFilterDto extends BaseFilterDto> {
+export interface BaseServiceConfig {
   entityName: string;
   primaryKeyField: string;
   fieldMapping: FieldMappingConfig;

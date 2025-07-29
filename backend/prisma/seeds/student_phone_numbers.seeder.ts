@@ -43,8 +43,8 @@ export async function seedStudentPhoneNumbers(
     }
     await prisma.studentPhoneNumber.create({
       data: {
-        tenant_id: mappedTenantId,
-        student_id: mappedStudentId,
+        tenant_id: mappedTenantId!,
+        student_id: mappedStudentId!,
         dial_code: item.dial_code,
         phone_number: item.phone_number,
         iso_country_code: item.iso_country_code,

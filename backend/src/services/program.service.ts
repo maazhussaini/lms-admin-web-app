@@ -33,7 +33,7 @@ export class ProgramService extends BaseListService<any, ProgramFilterDto> {
 
   private constructor() {
     // Configuration for the base service
-    const config: BaseServiceConfig<ProgramFilterDto> = {
+    const config: BaseServiceConfig = {
       entityName: 'program',
       primaryKeyField: 'program_id',
       fieldMapping: PROGRAM_FIELD_MAPPINGS,

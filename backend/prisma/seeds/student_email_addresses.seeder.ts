@@ -43,8 +43,8 @@ export async function seedStudentEmailAddresses(
     }
     await prisma.studentEmailAddress.create({
       data: {
-        tenant_id: mappedTenantId,
-        student_id: mappedStudentId,
+        tenant_id: mappedTenantId!,
+        student_id: mappedStudentId!,
         email_address: item.email_address,
         is_primary: item.is_primary,
         priority: item.priority,

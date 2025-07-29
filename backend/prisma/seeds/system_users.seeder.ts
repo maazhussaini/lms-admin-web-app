@@ -10,9 +10,8 @@ import { system_users } from '../seed-data/system_users';
  * The CLI utility (npm run hash-password) uses the same logic for manual password generation.
  */
 import { hashPassword } from '../../src/utils/password.utils';
-import { ensureNumber, mapAuditFields } from './helpers';
 
-export async function seedSystemUsers(prisma: PrismaClient, tenantIds: number[], bootstrapUserId: number) {
+export async function seedSystemUsers(prisma: PrismaClient, tenantIds: number[]) {
   for (const item of system_users) {
     // Skip bootstrap user (already seeded)
     if (item.username === 'bootstrap_admin') continue;

@@ -29,7 +29,7 @@ const prisma = new PrismaClient();
 /**
  * Configuration for Client service operations
  */
-const CLIENT_SERVICE_CONFIG: BaseServiceConfig<ClientFilterDto> = {
+const CLIENT_SERVICE_CONFIG: BaseServiceConfig = {
   entityName: 'client',
   primaryKeyField: 'client_id',
   fieldMapping: CLIENT_FIELD_MAPPINGS,

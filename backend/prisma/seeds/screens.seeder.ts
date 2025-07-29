@@ -16,7 +16,9 @@ export async function seedScreens(prisma: PrismaClient, usernameToId: Record<str
       data: {
         ...item,
         parent_screen_id: mappedParentScreenId,
-        ...auditFields,
+        created_by: auditFields.created_by ?? bootstrapUserId,
+        updated_by: auditFields.updated_by ?? null,
+        deleted_by: auditFields.deleted_by ?? null,
       },
     });
     screenIds.push(screen.screen_id);

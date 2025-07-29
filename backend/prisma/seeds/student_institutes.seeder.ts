@@ -48,9 +48,9 @@ export async function seedStudentInstitutes(
     }
     await prisma.studentInstitute.create({
       data: {
-        tenant_id: mappedTenantId,
-        student_id: mappedStudentId,
-        institute_id: mappedInstituteId,
+        tenant_id: mappedTenantId!,
+        student_id: mappedStudentId!,
+        institute_id: mappedInstituteId!,
         is_active: item.is_active,
         is_deleted: item.is_deleted,
         created_at: item.created_at,

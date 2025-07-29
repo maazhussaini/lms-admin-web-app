@@ -24,7 +24,7 @@ import {
 /**
  * Configuration for SystemUser service operations
  */
-const SYSTEM_USER_SERVICE_CONFIG: BaseServiceConfig<SystemUserFilterDto> = {
+const SYSTEM_USER_SERVICE_CONFIG: BaseServiceConfig = {
   entityName: 'systemUser',
   primaryKeyField: 'system_user_id',
   fieldMapping: SYSTEM_USER_FIELD_MAPPINGS,
