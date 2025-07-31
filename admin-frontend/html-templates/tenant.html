@@ -6,7 +6,7 @@
     <title>Tenant Management - orb-Ed</title>
     <link rel="stylesheet" href="Assests/css/main-theme.css">
     <link rel="stylesheet" href="Assests/css/tenant.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="Assests/icons/style.css">
 </head>
 <body class="tenant-dashboard">
     <!-- Sidebar Navigation -->
@@ -19,42 +19,42 @@
         <ul class="sidebar-menu">
             <li class="menu-item">
                 <a href="#" class="menu-link">
-                    <i class="fas fa-th-large"></i>
+                    <i class="ic-6"></i>
                 </a>
             </li>
             <li class="menu-item">
                 <a href="#" class="menu-link">
-                    <i class="fas fa-users"></i>
+                    <i class="ic-16"></i>
                 </a>
             </li>
             <li class="menu-item active">
                 <a href="#" class="menu-link">
-                    <i class="fas fa-user-friends"></i>
+                    <i class="ic-17"></i>
                 </a>
             </li>
             <li class="menu-item">
                 <a href="#" class="menu-link">
-                    <i class="fas fa-globe"></i>
+                    <i class="ic-7"></i>
                 </a>
             </li>
             <li class="menu-item">
                 <a href="#" class="menu-link">
-                    <i class="fas fa-credit-card"></i>
+                    <i class="ic-3"></i>
                 </a>
             </li>
             <li class="menu-item">
                 <a href="#" class="menu-link">
-                    <i class="fas fa-tools"></i>
+                    <i class="ic-9"></i>
                 </a>
             </li>
             <li class="menu-item">
                 <a href="#" class="menu-link">
-                    <i class="fas fa-cog"></i>
+                    <i class="ic-12"></i>
                 </a>
             </li>
             <li class="menu-item">
                 <a href="#" class="menu-link">
-                    <i class="fas fa-dollar-sign"></i>
+                    <i class="ic-8"></i>
                 </a>
             </li>
         </ul>
@@ -70,12 +70,12 @@
             <div class="header-right">
                 <div class="header-actions">
                     <button class="notification-btn">
-                        <i class="fas fa-bell"></i>
+                        <i class="ic-2"></i>
                     </button>
                     <div class="user-profile">
                         <div class="user-avatar-placeholder">SP</div>
                         <span class="user-name">Smith Phil</span>
-                        <i class="fas fa-chevron-down"></i>
+                        <i class="ic-1"></i>
                     </div>
                 </div>
             </div>
@@ -87,7 +87,7 @@
             <div class="toolbar">
                 <div class="toolbar-left">
                     <div class="search-container">
-                        <i class="fas fa-search search-icon"></i>
+                        <i class="ic-10 search-icon"></i>
                         <input type="text" class="search-input" placeholder="Search here">
                     </div>
                 </div>
@@ -104,7 +104,7 @@
                 </div>
                 <div class="toolbar-right">
                     <button class="filter-btn" id="filterBtn">
-                        <i class="fas fa-filter"></i>
+                        <i class="ic-19"></i>
                     </button>
                     <button class="add-btn" id="addTenantBtn">Add</button>
                 </div>
@@ -114,11 +114,11 @@
             <div class="bulk-actions" id="bulkActions" style="display: none;">
                 <div class="bulk-actions-left">
                     <button class="bulk-action-btn active-btn">
-                        <i class="fas fa-check"></i>
+                        <i class="ic-15"></i>
                         Active
                     </button>
                     <button class="bulk-action-btn inactive-btn">
-                        <i class="fas fa-times"></i>
+                        <i class="ic-20"></i>
                         In Active
                     </button>
                 </div>
@@ -138,13 +138,13 @@
                             <th class="checkbox-col">
                                 <input type="checkbox" id="selectAll" class="table-checkbox">
                             </th>
-                            <th class="logo-col">Logo <i class="fas fa-sort"></i></th>
-                            <th class="name-col">Tenant Name <i class="fas fa-sort"></i></th>
-                            <th class="clients-col">Clients Count <i class="fas fa-sort"></i></th>
-                            <th class="phone-col">Phone No <i class="fas fa-sort"></i></th>
-                            <th class="email-col">Email <i class="fas fa-sort"></i></th>
-                            <th class="created-col">Created At <i class="fas fa-sort"></i></th>
-                            <th class="updated-col">Updated At <i class="fas fa-sort"></i></th>
+                            <th class="logo-col">Logo <i class="ic-13"></i></th>
+                            <th class="name-col">Tenant Name <i class="ic-13"></i></th>
+                            <th class="clients-col">Clients Count <i class="ic-13"></i></th>
+                            <th class="phone-col">Phone No <i class="ic-13"></i></th>
+                            <th class="email-col">Email <i class="ic-13"></i></th>
+                            <th class="created-col">Created At <i class="ic-13"></i></th>
+                            <th class="updated-col">Updated At <i class="ic-13"></i></th>
                             <th class="status-col">Status</th>
                             <th class="actions-col">Actions</th>
                         </tr>
@@ -157,23 +157,25 @@
 
             <!-- Pagination -->
             <div class="pagination-container">
-                <div class="pagination-info">
-                    Showing 10 Out Of 100 Entries
-                </div>
-                <div class="pagination">
-                    <button class="pagination-btn" disabled>
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <button class="pagination-btn active">1</button>
-                    <button class="pagination-btn">2</button>
-                    <button class="pagination-btn">3</button>
-                    <span class="pagination-dots">• • • •</span>
-                    <button class="pagination-btn">8</button>
-                    <button class="pagination-btn">9</button>
-                    <button class="pagination-btn">10</button>
-                    <button class="pagination-btn">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
+                <div class="pagination-wrapper">
+                    <div class="pagination-info">
+                        Showing 10 Out Of 100 Entries
+                    </div>
+                    <div class="pagination">
+                        <button class="pagination-btn nav-btn" id="prevBtn" disabled>
+                            <i class="ic-4"></i>
+                        </button>
+                        <button class="pagination-btn page-btn active" data-page="1">1</button>
+                        <button class="pagination-btn page-btn" data-page="2">2</button>
+                        <button class="pagination-btn page-btn" data-page="3">3</button>
+                        <span class="pagination-dots">• • • •</span>
+                        <button class="pagination-btn page-btn" data-page="8">8</button>
+                        <button class="pagination-btn page-btn" data-page="9">9</button>
+                        <button class="pagination-btn page-btn" data-page="10">10</button>
+                        <button class="pagination-btn nav-btn" id="nextBtn">
+                            <i class="ic-11"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -185,7 +187,7 @@
             <div class="modal-header">
                 <h3>Filters</h3>
                 <button class="modal-close" id="filterModalClose">
-                    <i class="fas fa-times"></i>
+                    <i class="ic-20"></i>
                 </button>
             </div>
             <div class="modal-body">
@@ -220,7 +222,7 @@
                     </div>
                     <div class="date-input-container">
                         <input type="date" class="filter-date-input" placeholder="select start Date">
-                        <i class="fas fa-calendar date-icon"></i>
+                        <i class="icon-calendar date-icon"></i>
                     </div>
                 </div>
                 <div class="filter-group">
@@ -230,7 +232,7 @@
                     </div>
                     <div class="date-input-container">
                         <input type="date" class="filter-date-input" placeholder="select End Date">
-                        <i class="fas fa-calendar date-icon"></i>
+                        <i class="icon-calendar date-icon"></i>
                     </div>
                 </div>
             </div>
@@ -246,7 +248,7 @@
         <div class="modal-content add-tenant-modal">
             <div class="modal-header">
                 <button class="modal-close" id="addTenantModalClose">
-                    <i class="fas fa-times"></i>
+                    <i class="ic-20"></i>
                 </button>
                 <button class="btn-primary save-btn">Save</button>
             </div>
@@ -270,7 +272,7 @@
                             <div class="country-code">
                                 <img src="https://flagcdn.com/w20/pk.png" alt="Pakistan">
                                 <span>+92</span>
-                                <i class="fas fa-chevron-down"></i>
+                                <i class="icon-chevron-down"></i>
                             </div>
                             <input type="tel" class="form-input phone-input" placeholder="(305) 760-1379">
                         </div>
@@ -285,7 +287,7 @@
                                 <option value="inactive">Inactive</option>
                                 <option value="pending">Pending</option>
                             </select>
-                            <i class="fas fa-chevron-down select-arrow"></i>
+                            <i class="icon-chevron-down select-arrow"></i>
                         </div>
                     </div>
                     
@@ -296,7 +298,7 @@
                             <label class="form-label">Upload Dark Logo File</label>
                             <div class="file-upload-container">
                                 <div class="file-upload-area">
-                                    <i class="fas fa-upload upload-icon"></i>
+                                    <i class="icon-upload upload-icon"></i>
                                     <p class="upload-text">
                                         <span class="upload-link">Browse File</span> Or Drag & Drop JPG Or PNG (Max. 2MB)
                                     </p>
@@ -330,7 +332,7 @@
                             <label class="form-label">Upload Light Logo File</label>
                             <div class="file-upload-container">
                                 <div class="file-upload-area">
-                                    <i class="fas fa-upload upload-icon"></i>
+                                    <i class="icon-upload upload-icon"></i>
                                     <p class="upload-text">
                                         <span class="upload-link">Browse File</span> Or Drag & Drop JPG Or PNG (Max. 2MB)
                                     </p>
@@ -364,15 +366,15 @@
     <!-- Action Menu -->
     <div class="context-menu" id="actionMenu">
         <div class="context-menu-item" data-action="view">
-            <i class="fas fa-eye"></i>
+            <i class="ic-18"></i>
             <span>View</span>
         </div>
         <div class="context-menu-item" data-action="edit">
-            <i class="fas fa-edit"></i>
+            <i class="ic-5"></i>
             <span>Edit</span>
         </div>
         <div class="context-menu-item delete" data-action="delete">
-            <i class="fas fa-trash"></i>
+            <i class="ic-14"></i>
             <span>Delete</span>
         </div>
     </div>

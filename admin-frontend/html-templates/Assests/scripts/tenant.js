@@ -123,11 +123,26 @@ class TenantDashboard {
     }
 
     setupPagination() {
+        // Handle page button clicks
         document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('pagination-btn') && !e.target.disabled) {
-                const page = parseInt(e.target.textContent);
+            if (e.target.classList.contains('page-btn') && !e.target.disabled) {
+                const page = parseInt(e.target.dataset.page);
                 if (!isNaN(page)) {
                     this.goToPage(page);
+                }
+            }
+            
+            // Handle navigation buttons
+            if (e.target.closest('#prevBtn')) {
+                if (this.currentPage > 1) {
+                    this.goToPage(this.currentPage - 1);
+                }
+            }
+            
+            if (e.target.closest('#nextBtn')) {
+                const totalPages = Math.ceil(this.totalRows / this.rowsPerPage);
+                if (this.currentPage < totalPages) {
+                    this.goToPage(this.currentPage + 1);
                 }
             }
         });
@@ -139,15 +154,25 @@ class TenantDashboard {
 
         // Show context menu on action button click
         document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('action-btn')) {
+            // Check if clicked element is action button or icon inside it
+            const actionBtn = e.target.closest('.action-btn');
+            if (actionBtn) {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                currentRow = e.target.closest('tr');
-                const rect = e.target.getBoundingClientRect();
+                currentRow = actionBtn.closest('tr');
+                const rect = actionBtn.getBoundingClientRect();
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
                 
-                contextMenu.style.left = `${rect.left}px`;
-                contextMenu.style.top = `${rect.bottom + 5}px`;
+                // Position context menu 10px below the clicked action button
+                // Calculate proper position relative to document
+                const left = rect.left + scrollLeft - 60; // Adjust 100px to the left for better positioning
+                const top = rect.bottom + scrollTop + 5; // 10px below the button
+                
+                contextMenu.style.position = 'absolute';
+                contextMenu.style.left = `${left}px`;
+                contextMenu.style.top = `${top}px`;
                 contextMenu.classList.add('active');
             }
         });
@@ -165,7 +190,7 @@ class TenantDashboard {
 
         // Hide context menu on outside click
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.context-menu') && !e.target.classList.contains('action-btn')) {
+            if (!e.target.closest('.context-menu') && !e.target.closest('.action-btn')) {
                 contextMenu.classList.remove('active');
             }
         });
@@ -280,7 +305,7 @@ class TenantDashboard {
             </td>
             <td>
                 <button class="action-btn">
-                    <i class="fas fa-ellipsis-v"></i>
+                    <i class="ic-11"></i>
                 </button>
             </td>
         `;
@@ -377,24 +402,51 @@ class TenantDashboard {
         console.log(`Going to page: ${page}`);
         
         // Update pagination buttons
-        document.querySelectorAll('.pagination-btn').forEach(btn => {
+        document.querySelectorAll('.page-btn').forEach(btn => {
             btn.classList.remove('active');
-            if (btn.textContent == page) {
+            if (parseInt(btn.dataset.page) === page) {
                 btn.classList.add('active');
             }
         });
         
+        // Update navigation buttons
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const totalPages = Math.ceil(this.totalRows / this.rowsPerPage);
+        
+        if (prevBtn) {
+            prevBtn.disabled = page <= 1;
+        }
+        
+        if (nextBtn) {
+            nextBtn.disabled = page >= totalPages;
+        }
+        
         this.populateTable();
+        this.updatePagination();
     }
 
     updatePagination() {
         const totalPages = Math.ceil(this.totalRows / this.rowsPerPage);
+        
         // Update pagination info
         const paginationInfo = document.querySelector('.pagination-info');
         if (paginationInfo) {
             const start = (this.currentPage - 1) * this.rowsPerPage + 1;
             const end = Math.min(this.currentPage * this.rowsPerPage, this.totalRows);
             paginationInfo.textContent = `Showing ${this.rowsPerPage} Out Of ${this.totalRows} Entries`;
+        }
+        
+        // Update navigation buttons state
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        if (prevBtn) {
+            prevBtn.disabled = this.currentPage <= 1;
+        }
+        
+        if (nextBtn) {
+            nextBtn.disabled = this.currentPage >= totalPages;
         }
     }
 
