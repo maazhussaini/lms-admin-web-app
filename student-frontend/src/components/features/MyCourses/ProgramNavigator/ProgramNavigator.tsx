@@ -134,7 +134,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
     <div className={`space-y-4 ${className}`}>
       {/* Filter Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium text-gray-900">Filters</h3>
         {(selectedProgram || selectedSpecialization) && (
           <button
             onClick={onClearAllFilters}
@@ -148,7 +147,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
       {/* Program Filter Section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">Program:</span>
+          <span className="text-2xl font-medium text-primary-800">Programs</span>
           {selectedProgram && (
             <div className="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
               {selectedProgram.program_name}

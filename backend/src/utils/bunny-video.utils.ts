@@ -1014,3 +1014,82 @@ export const getVideoStreamStats = async (
     );
   }
 };
+
+/**
+ * Generate Bunny.net embed view token for secure video streaming
+ * Implements SHA256 hash-based token generation for iframe embedding
+ * 
+ * @param libraryId The Bunny library ID
+ * @param videoId The video ID within the library
+ * @param expires Unix timestamp when the token expires
+ * @returns SHA256 hash token for secure video embedding
+ * @throws {BadRequestError} If required parameters are invalid
+ * @throws {InternalServerError} If token generation fails
+ */
+export const generateEmbedViewToken = (
+  libraryId: number, 
+  videoId: string, 
+  expires: number
+): string => {
+  // Input validation with proper ApiError usage
+  if (!libraryId || libraryId <= 0) {
+    throw new BadRequestError('Valid library ID is required', 'INVALID_LIBRARY_ID');
+  }
+  
+  if (!videoId || videoId.trim() === '') {
+    throw new BadRequestError('Video ID is required', 'MISSING_VIDEO_ID');
+  }
+  
+  if (!expires || expires <= Math.floor(Date.now() / 1000)) {
+    throw new BadRequestError('Valid future expiration time required', 'INVALID_EXPIRATION');
+  }
+
+  try {
+    // Map library ID to auth key using environment configuration
+    let tokenKey = '';
+    if (libraryId.toString() === env.BUNNY_LIBRARY_ID) {
+      tokenKey = env.BUNNYCDN_TEST_LIBRARY_AUTH_KEY;
+      logger.debug('Using test library auth key for token generation', { 
+        libraryId,
+        hasKey: !!tokenKey
+      });
+    }
+    // Add more library mappings here as needed for other libraries
+
+    if (!tokenKey) {
+      logger.error('No embed token key configured for library', { libraryId });
+      throw new InternalServerError(
+        'Video streaming configuration error', 
+        'EMBED_TOKEN_CONFIG_ERROR'
+      );
+    }
+
+    // Generate SHA256 hash: tokenKey + videoId + expires
+    const input = tokenKey + videoId + expires;
+    const hash = crypto.createHash('sha256').update(input).digest('hex');
+    
+    logger.debug('Generated embed view token successfully', { 
+      videoId, 
+      libraryId, 
+      expires,
+      tokenPreview: hash.substring(0, 8) + '...' // Log preview for debugging
+    });
+    
+    return hash;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    
+    logger.error('Failed to generate embed token', { 
+      error: error instanceof Error ? error.message : String(error),
+      videoId, 
+      libraryId 
+    });
+    throw new InternalServerError(
+      'Token generation failed', 
+      'TOKEN_GENERATION_ERROR',
+      { cause: error as Error }
+    );
+  }
+};
