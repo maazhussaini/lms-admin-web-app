@@ -14,8 +14,8 @@ class TenantDashboard {
     }
 
     initializeEventListeners() {
-        // Modal controls
-        this.setupModalControls();
+        // Off-canvas controls
+        this.setupOffcanvasControls();
         
         // Table controls
         this.setupTableControls();
@@ -36,40 +36,81 @@ class TenantDashboard {
         this.setupFormControls();
     }
 
-    setupModalControls() {
-        // Add Tenant Modal
+    setupOffcanvasControls() {
+        // Add Tenant Off-canvas
         const addTenantBtn = document.getElementById('addTenantBtn');
-        const addTenantModal = document.getElementById('addTenantModal');
-        const addTenantModalClose = document.getElementById('addTenantModalClose');
+        const addTenantOffcanvas = document.getElementById('addTenantOffcanvas');
+        const addTenantOffcanvasClose = document.getElementById('addTenantOffcanvasClose');
 
         addTenantBtn?.addEventListener('click', () => {
-            addTenantModal.classList.add('active');
+            addTenantOffcanvas.classList.add('active');
         });
 
-        addTenantModalClose?.addEventListener('click', () => {
-            addTenantModal.classList.remove('active');
+        addTenantOffcanvasClose?.addEventListener('click', () => {
+            addTenantOffcanvas.classList.remove('active');
         });
 
-        // Filter Modal
+        // Filter Popup
         const filterBtn = document.getElementById('filterBtn');
-        const filterModal = document.getElementById('filterModal');
-        const filterModalClose = document.getElementById('filterModalClose');
+        const filterPopup = document.getElementById('filterPopup');
 
-        filterBtn?.addEventListener('click', () => {
-            filterModal.classList.add('active');
-        });
-
-        filterModalClose?.addEventListener('click', () => {
-            filterModal.classList.remove('active');
-        });
-
-        // Close modals on overlay click
-        document.querySelectorAll('.modal-overlay').forEach(modal => {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.classList.remove('active');
+        filterBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            
+            // Close any other open popups
+            document.querySelectorAll('.context-menu.active, .filter-popup.active').forEach(popup => {
+                if (popup !== filterPopup) {
+                    popup.classList.remove('active');
                 }
             });
+            
+            // Position the popup relative to the filter button
+            const rect = filterBtn.getBoundingClientRect();
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+            
+            // For mobile, use fixed positioning
+            if (window.innerWidth <= 480) {
+                filterPopup.style.position = 'fixed';
+                filterPopup.style.top = (rect.bottom + 8) + 'px';
+                filterPopup.style.right = '16px';
+                filterPopup.style.left = 'auto';
+            } else {
+                // For desktop, use absolute positioning
+                filterPopup.style.position = 'absolute';
+                filterPopup.style.top = (rect.bottom + scrollTop + 8) + 'px';
+                filterPopup.style.right = (window.innerWidth - rect.right) + 'px';
+                filterPopup.style.left = 'auto';
+            }
+            
+            // Toggle the popup
+            filterPopup.classList.toggle('active');
+        });
+
+        // Close filter popup when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!filterPopup?.contains(e.target) && !filterBtn?.contains(e.target)) {
+                filterPopup?.classList.remove('active');
+            }
+        });
+
+        // Close off-canvas on overlay click
+        addTenantOffcanvas?.addEventListener('click', (e) => {
+            if (e.target === addTenantOffcanvas) {
+                addTenantOffcanvas.classList.remove('active');
+            }
+        });
+
+        // Close off-canvas/popup on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (addTenantOffcanvas?.classList.contains('active')) {
+                    addTenantOffcanvas.classList.remove('active');
+                }
+                if (filterPopup?.classList.contains('active')) {
+                    filterPopup.classList.remove('active');
+                }
+            }
         });
     }
 
