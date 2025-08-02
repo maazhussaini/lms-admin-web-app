@@ -18,6 +18,7 @@ import tenantRoutes from './routes/tenant.routes';
 import clientRoutes from './routes/client.routes';
 import studentRoutes from './routes/student.routes';
 import studentProfileRoutes from './routes/student-profile.routes';
+import videoRoutes from './routes/video.routes';
 
 // Create router
 const router = Router();
@@ -44,6 +45,7 @@ router.get('/', (_req, res) => {
         '/api/v1/modules',
         '/api/v1/topics',
         '/api/v1/videos',
+        '/api/v1/video',
         '/api/v1/students',
         '/api/v1/student',
       ]
@@ -63,6 +65,7 @@ router.use('/programs', programRoutes);
 router.use('/specializations', specializationRoutes);
 router.use('/courses', courseRoutes);
 router.use('/', moduleTopicRoutes);
+router.use('/video', videoRoutes);
 router.use('/students', studentRoutes);
 router.use('/student', studentProfileRoutes);
 

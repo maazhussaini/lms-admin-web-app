@@ -45,3 +45,11 @@ export {
   studentService, 
   StudentService
 } from './studentService';
+
+// Export video service
+export {
+  videoService,
+  type BunnyEmbedTokenRequest,
+  type BunnyEmbedTokenResponse,
+  type BunnyVideoConfig
+} from './videoService';

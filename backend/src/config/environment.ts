@@ -50,6 +50,11 @@ interface EnvironmentConfig {
   BUNNY_PULL_ZONE_URL: string;
   BUNNY_DRM_USER_ID: string;
   BUNNY_DRM_API_KEY: string;
+  BUNNY_LIBRARY_ID: string;
+  BUNNY_LIBRARY_NAME: string;
+  BUNNYCDN_ACCOUNT_API_KEY: string;
+  BUNNYCDN_TEST_LIBRARY_KEY: string;
+  BUNNYCDN_TEST_LIBRARY_AUTH_KEY: string;
   
   // File Uploads
   MAX_FILE_SIZE_MB: number;
@@ -159,7 +164,12 @@ export const env: EnvironmentConfig = {
   BUNNY_PULL_ZONE_URL: getEnv('BUNNY_PULL_ZONE_URL') || '',
   BUNNY_DRM_USER_ID: getEnv('BUNNY_DRM_USER_ID') || '',
   BUNNY_DRM_API_KEY: getEnv('BUNNY_DRM_API_KEY') || '',
-  
+  BUNNY_LIBRARY_ID: getEnv('BUNNY_LIBRARY_ID') || '459051',
+  BUNNY_LIBRARY_NAME: getEnv('BUNNY_LIBRARY_NAME') || 'Test',
+  BUNNYCDN_ACCOUNT_API_KEY: getEnv('BUNNYCDN_ACCOUNT_API_KEY') || '',
+  BUNNYCDN_TEST_LIBRARY_KEY: getEnv('BUNNYCDN_TEST_LIBRARY_KEY') || '',
+  BUNNYCDN_TEST_LIBRARY_AUTH_KEY: getEnv('BUNNYCDN_TEST_LIBRARY_AUTH_KEY') || '',
+
   // File Uploads
   MAX_FILE_SIZE_MB: parseIntSafe(getEnv('MAX_FILE_SIZE_MB'), 10, 'MAX_FILE_SIZE_MB'),
   UPLOAD_TEMP_DIR: getEnv('UPLOAD_TEMP_DIR') || path.join(__dirname, '../../uploads/temp'),
