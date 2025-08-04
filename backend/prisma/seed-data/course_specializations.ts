@@ -30,6 +30,64 @@ export const course_specializations = [
   },
   {
     course_id: 3,
+    specialization_id: 1,
+    is_active: true,
+    is_deleted: false,
+    created_at: new Date(),
+    updated_at: new Date(),
+    created_by: 2,
+    updated_by: null,
+    deleted_at: null,
+    deleted_by: null,
+    created_ip: '11.1.2.5',
+    updated_ip: '11.1.2.6'
+  },
+  {
+    course_id: 4,
+    specialization_id: 1,
+    is_active: true,
+    is_deleted: false,
+    created_at: new Date(),
+    updated_at: new Date(),
+    created_by: 3,
+    updated_by: null,
+    deleted_at: null,
+    deleted_by: null,
+    created_ip: '11.1.2.7',
+    updated_ip: '11.1.2.8'
+  },
+  // -----------
+
+  {
+    course_id: 1,
+    specialization_id: 2,
+    is_active: true,
+    is_deleted: false,
+    created_at: new Date(),
+    updated_at: new Date(),
+    created_by: 1,
+    updated_by: null,
+    deleted_at: null,
+    deleted_by: null,
+    created_ip: '11.1.2.1',
+    updated_ip: '11.1.2.2'
+  },
+  {
+    course_id: 2,
+    specialization_id: 2,
+    is_active: true,
+    is_deleted: false,
+    created_at: new Date(),
+    updated_at: new Date(),
+    created_by: 1,
+    updated_by: null,
+    deleted_at: null,
+    deleted_by: null,
+    created_ip: '11.1.2.3',
+    updated_ip: '11.1.2.4'
+  },
+  {
+    course_id: 3,
     specialization_id: 2,
     is_active: true,
     is_deleted: false,
@@ -56,32 +114,5 @@ export const course_specializations = [
     created_ip: '11.1.2.7',
     updated_ip: '11.1.2.8'
   },
-  {
-    course_id: 4,
-    specialization_id: 3,
-    is_active: true,
-    is_deleted: false,
-    created_at: new Date(),
-    updated_at: new Date(),
-    created_by: 1,
-    updated_by: null,
-    deleted_at: null,
-    deleted_by: null,
-    created_ip: '11.1.2.9',
-    updated_ip: '11.1.3.0'
-  },
-  {
-    course_id: 5,
-    specialization_id: 6,
-    is_active: true,
-    is_deleted: false,
-    created_at: new Date(),
-    updated_at: new Date(),
-    created_by: 5,
-    updated_by: null,
-    deleted_at: null,
-    deleted_by: null,
-    created_ip: '11.1.3.1',
-    updated_ip: '11.1.3.2'
-  }
+  
 ];

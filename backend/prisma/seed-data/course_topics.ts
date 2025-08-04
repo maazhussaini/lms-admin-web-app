@@ -96,6 +96,9 @@ export const course_topics = [
     created_ip: '11.3.2.1',
     updated_ip: '11.3.2.2',
   },
+  
+  // COURSE BY OMAR ALTAF
+  
   {
     tenant_id: 1,
     module_id: 1,
