@@ -6,8 +6,7 @@ import type { ExtendedCourse } from '@/types/course.ui.types';
 import { 
   formatCourseDuration, 
   getInstructorAvatarUrl, 
-  getProgressBarClass,
-  getPurchaseStatusClassFromFlags
+  getProgressBarClass
 } from '@/utils/courseUIUtils';
 import { DEFAULT_INSTRUCTOR, COURSE_CARD_ANIMATIONS } from '@/constants/courseUI.constants';
 
@@ -119,11 +118,15 @@ const CourseCard: React.FC<CourseCardProps> = ({
     course.purchase_status || 
     (course.is_purchased ? 'Purchased' : (course.is_free ? 'Free' : 'Paid'));
   
-  // Use modular approach with boolean flags (same logic as working implementation)
-  const purchaseStatusClass = getPurchaseStatusClassFromFlags(
-    course.is_purchased || false, 
-    course.is_free || false
-  );
+  // Determine badge class from purchase_status string
+  const getPurchaseStatusClass = (status: string) => {
+    const statusLower = status?.toLowerCase();
+    if (statusLower === 'free') return 'badge-free';
+    if (statusLower === 'purchased') return 'badge-purchased';
+    return 'badge-buy'; // Default for 'paid', 'buy', or any other value
+  };
+
+  const purchaseStatusClass = getPurchaseStatusClass(displayPurchaseStatus);
 
   if (loading) {
     return (
@@ -229,7 +232,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
               </span>
               
               <div
-                className={`px-3 py-1 text-sm font-medium rounded-full border ${purchaseStatusClass}`}
+                className={`px-3 py-1 text-sm font-medium rounded-[7px] border ${purchaseStatusClass}`}
               >
                 {displayPurchaseStatus}
               </div>
