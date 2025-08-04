@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaRegCalendarAlt } from "react-icons/fa";
-import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
+import { HiOutlineChatBubbleLeftRight, HiOutlineClipboardDocumentList } from "react-icons/hi2";
 import { MdOutlinePlayCircle } from "react-icons/md";
 import { FiSettings, FiX, FiLogOut } from "react-icons/fi";
 import { useAuth } from '@/context/AuthContext';
@@ -21,7 +21,7 @@ const navIcons: NavIcon[] = [
     href: "/calendar",
   },
   {
-    icon: <HiOutlineChatBubbleLeftRight className="w-6 h-6 lg:w-7 lg:h-7 text-neutral-500" />,
+    icon: <HiOutlineClipboardDocumentList className="w-6 h-6 lg:w-7 lg:h-7 text-neutral-500" />,
     label: "Chat",
     active: false,
     href: "/chat",

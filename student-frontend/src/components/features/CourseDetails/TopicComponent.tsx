@@ -172,9 +172,9 @@ export const TopicComponent: React.FC<TopicComponentProps> = ({
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-medium text-primary-900 mb-3 lg:mb-4 leading-tight">
           {currentTopic.course_topic_name}
         </h2>
-        <p className="text-neutral-600 leading-relaxed text-sm sm:text-base">
+        {/* <p className="text-neutral-600 leading-relaxed text-sm sm:text-base">
           Topic description will be displayed here when available.
-        </p>
+        </p> */}
       </motion.div>
 
       {/* Topic Selector for Navigation - Always show */}

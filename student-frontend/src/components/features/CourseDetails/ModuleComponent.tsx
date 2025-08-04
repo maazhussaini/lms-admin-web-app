@@ -142,9 +142,9 @@ export const ModuleComponent: React.FC<ModuleComponentProps> = ({
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-medium text-primary-900 mb-3 lg:mb-4 leading-tight">
           {currentModule.course_module_name || `Module ${moduleId}`}
         </h2>
-        <p className="text-neutral-600 leading-relaxed text-sm sm:text-base">
+        {/* <p className="text-neutral-600 leading-relaxed text-sm sm:text-base">
           Module description will be displayed here when available.
-        </p>
+        </p> */}
       </motion.div>
 
       {/* Module Selector for Navigation - Always show */}
