@@ -15,8 +15,8 @@ export const course_specializations = [
     updated_ip: '11.1.2.2'
   },
   {
-    course_id: 1,
-    specialization_id: 2,
+    course_id: 2,
+    specialization_id: 1,
     is_active: true,
     is_deleted: false,
     created_at: new Date(),
@@ -29,8 +29,8 @@ export const course_specializations = [
     updated_ip: '11.1.2.4'
   },
   {
-    course_id: 2,
-    specialization_id: 3,
+    course_id: 3,
+    specialization_id: 2,
     is_active: true,
     is_deleted: false,
     created_at: new Date(),
@@ -43,8 +43,8 @@ export const course_specializations = [
     updated_ip: '11.1.2.6'
   },
   {
-    course_id: 3,
-    specialization_id: 5,
+    course_id: 4,
+    specialization_id: 2,
     is_active: true,
     is_deleted: false,
     created_at: new Date(),
@@ -58,7 +58,7 @@ export const course_specializations = [
   },
   {
     course_id: 4,
-    specialization_id: 2,
+    specialization_id: 3,
     is_active: true,
     is_deleted: false,
     created_at: new Date(),

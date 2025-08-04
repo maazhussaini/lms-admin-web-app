@@ -3,7 +3,7 @@
 export const institutes = [
   {
     tenant_id: 1,
-    institute_name: 'School of Engineering',
+    institute_name: 'Alpha Education Network',
     is_active: true,
     is_deleted: false,
     created_at: new Date(),

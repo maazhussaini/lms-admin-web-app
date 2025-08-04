@@ -18,7 +18,7 @@ export const course_topics = [
   },
   {
     tenant_id: 1,
-    module_id: 5,
+    module_id: 4,
     course_topic_name: 'Gravitation',
     position: 2,
     is_active: true,
@@ -34,7 +34,7 @@ export const course_topics = [
   },
   {
     tenant_id: 1,
-    module_id: 6,
+    module_id: 5,
     course_topic_name: 'Thermal Sec A',
     position: 1,
     is_active: true,
@@ -50,7 +50,7 @@ export const course_topics = [
   },
   {
     tenant_id: 1,
-    module_id: 6,
+    module_id: 5,
     course_topic_name: 'Thermal Sec B',
     position: 1,
     is_active: true,
@@ -66,7 +66,7 @@ export const course_topics = [
   },
   {
     tenant_id: 1,
-    module_id: 6,
+    module_id: 5,
     course_topic_name: 'Thermal Sec C',
     position: 1,
     is_active: true,
