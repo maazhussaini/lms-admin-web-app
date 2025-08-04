@@ -22,12 +22,16 @@ import { LOCAL_IMAGES, getOptimizationPreset } from '@/constants/images';
  * Determines whether to use CDN or local images based on environment variables
  */
 export const getImageEnvironmentConfig = (): ImageEnvironmentConfig => {
-  const useCDN = import.meta.env.VITE_BUNNY_CDN_ENABLED !== 'false' && 
-                 import.meta.env.PROD; // Use CDN in production by default
+  // Check if CDN is explicitly enabled via environment variable
+  const cdnEnabled = import.meta.env.VITE_BUNNY_CDN_ENABLED === 'true';
+  const isProduction = import.meta.env.PROD;
+  
+  // Use CDN only if explicitly enabled AND (in production OR development with CDN enabled)
+  const useCDN = cdnEnabled && (isProduction || import.meta.env.DEV);
   
   return {
     useCDN,
-    cdnBaseUrl: import.meta.env.VITE_BUNNY_CDN_URL || 'https://your-zone.b-cdn.net',
+    cdnBaseUrl: import.meta.env.VITE_BUNNY_CDN_BASE_URL || 'https://lmsbunny.b-cdn.net',
     localBasePath: '/',
     defaultOptimizations: {
       quality: 85,
@@ -63,20 +67,39 @@ export const buildOptimizationParams = (options: ImageOptimizationOptions = {}):
     params.append('quality', Math.min(100, Math.max(1, options.quality)).toString());
   }
   
-  // Apply fit mode
+  // Apply aspect ratio for fit mode (updated to use aspect_ratio)
   if (options.fit) {
-    params.append('aspect_ratio', options.fit);
+    // Convert fit mode to aspect_ratio parameter
+    switch (options.fit) {
+      case 'contain':
+      case 'inside':
+        // These will use width/height parameters naturally
+        break;
+      case 'cover':
+      case 'outside':
+        // For cover mode, we can use aspect_ratio with width/height
+        if (options.width && options.height) {
+          const ratio = `${options.width}:${options.height}`;
+          params.append('aspect_ratio', ratio);
+        }
+        break;
+      case 'fill':
+        // Fill mode uses exact dimensions - no aspect ratio needed
+        break;
+    }
   }
   
-  // Apply progressive loading for JPEG
-  if (options.progressive) {
-    params.append('progressive', 'true');
-  }
+  // Apply progressive loading for JPEG (this parameter may not be available in current API)
+  // Commenting out as it's not documented in current Bunny CDN API
+  // if (options.progressive) {
+  //   params.append('progressive', 'true');
+  // }
   
-  // Apply optimization flag
-  if (options.optimize) {
-    params.append('optimize', 'true');
-  }
+  // Apply optimization flag (this parameter may not be available in current API)
+  // Commenting out as it's not documented in current Bunny CDN API
+  // if (options.optimize) {
+  //   params.append('optimize', 'true');
+  // }
   
   const paramString = params.toString();
   return paramString ? `?${paramString}` : '';
@@ -95,7 +118,7 @@ export const getCDNImageUrl = (
 ): string => {
   const config = getImageEnvironmentConfig();
   
-  // If CDN is disabled or we're in development, return local path
+  // If CDN is disabled via environment variable, return local path
   if (!config.useCDN) {
     return getLocalImagePath(path);
   }
@@ -112,7 +135,7 @@ export const getCDNImageUrl = (
   const cleanPath = path.startsWith('/') ? path.slice(1) : path; // Remove leading slash
   const optimizations = buildOptimizationParams(mergedOptions);
   
-  return `${baseUrl}/static-assets/${cleanPath}${optimizations}`;
+  return `${baseUrl}/${cleanPath}${optimizations}`;
 };
 
 /**

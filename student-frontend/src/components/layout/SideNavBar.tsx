@@ -4,6 +4,7 @@ import { FiX } from "react-icons/fi";
 import { useAuth } from '@/context/AuthContext';
 import CustomIcon from '@/components/common/CustomIcon';
 import { FiLogOut } from 'react-icons/fi';
+import orbedLogoPurple from '@/assets/images/orbed_logo_purple_bg.png';
 
 type NavIcon = {
   icon: React.ReactNode;
@@ -76,7 +77,7 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ isOpen = false, onClose }) => {
       {/* Logo */}
       <div className="mb-10">
         <img
-          src="/orbed_logo_purple_bg.png"
+          src={orbedLogoPurple}
           alt="orb-Ed Logo"
           className="w-16 h-16 object-contain rounded-full shadow-lg"
         />

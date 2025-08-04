@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { FaArrowLeft, FaCommentDots } from 'react-icons/fa';
 import Button from '@/components/common/Button/Button';
 import { CourseBasicDetails } from '@/services/courseService';
+import courseDetailsBanner from '@/assets/images/course_details_banner.png';
 
 /**
  * Props for the CourseDetailsBanner component
@@ -94,7 +95,7 @@ export const CourseDetailsBanner: React.FC<CourseDetailsBannerProps> = ({
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url(/course_details_banner.png)`
+          backgroundImage: `url(${courseDetailsBanner})`
         }}
       >
         {/* Optional overlay for better text readability */}

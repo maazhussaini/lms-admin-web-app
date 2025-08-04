@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useApiItem } from '@/hooks/useApi';
 import { StudentProfileResponse } from '@/types/student-profile.types';
 import { getInstructorAvatarUrl } from '@shared/utils';
+import defaultProfilePicture from '@/assets/images/default_profile_picture.webp';
 
 interface HeaderProps {
   heading?: string;
@@ -27,7 +28,7 @@ const Header: React.FC<HeaderProps> = ({
 
   // Generate user avatar URL using the utility function
   const userAvatarUrl = studentProfile?.profile_picture_url || 
-    (studentProfile?.full_name ? getInstructorAvatarUrl(studentProfile.full_name) : '/default_profile_picture.webp');
+    (studentProfile?.full_name ? getInstructorAvatarUrl(studentProfile.full_name) : defaultProfilePicture);
 
   // Use student profile data or provide fallbacks
   const displayName = studentProfile?.full_name || 'Loading...';
