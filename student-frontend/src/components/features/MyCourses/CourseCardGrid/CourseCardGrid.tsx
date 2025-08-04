@@ -86,7 +86,7 @@ const CourseCardGrid: React.FC<CourseCardGridProps> = ({
     <section className={`space-y-6 ${className}`}>
       {/* Section Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-medium text-gray-900">
+        <h2 className="text-2xl font-medium text-primary-800">
           {activeTab === 'enrolled' && 'Enrolled Courses'}
           {activeTab === 'unenrolled' && 'Available Courses'}
           {activeTab === 'all' && 'All Courses'}

@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { HiOutlineMagnifyingGlass, HiOutlineAdjustmentsHorizontal } from 'react-icons/hi2';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import CourseTypeFilterDropdown, { type CourseTypeFilter } from './CourseTypeFilterDropdown';
+import CustomIcon from '@/components/common/CustomIcon';
 
 /**
  * Props for the MyCoursesSearchBar component
@@ -194,14 +194,16 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
           <div className={containerClasses}>
             {/* Search Icon */}
             <div className={iconClasses}>
-              <HiOutlineMagnifyingGlass 
+              <CustomIcon 
+                iconClass="ic-10"
+                size='xl'
                 className={clsx(
                   'w-full h-full',
                   {
                     'animate-pulse': loading
                   }
                 )}
-                aria-hidden="true"
+                aria-label="Search"
               />
             </div>
 
@@ -261,13 +263,16 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
             title={hasActiveFilters ? "Filter active" : "Filter courses"}
             aria-expanded={isFilterDropdownOpen}
           >
-            <HiOutlineAdjustmentsHorizontal 
+            <CustomIcon 
+              iconClass="ic-19"
+              size="lg"
               className={clsx(
                 'w-6 h-6 sm:w-7 sm:h-7 transition-transform duration-200', // Increased icon size
                 {
                   'scale-110': hasActiveFilters || isFilterDropdownOpen
                 }
               )}
+              aria-label="Filter"
             />
             {/* Active filter indicator */}
             {hasActiveFilters && (

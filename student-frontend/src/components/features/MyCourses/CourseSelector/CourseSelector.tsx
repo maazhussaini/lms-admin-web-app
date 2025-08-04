@@ -95,7 +95,7 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({
             
             {/* Tab content */}
             <span className="relative z-10 flex items-center justify-center gap-1.5 sm:gap-2.5 w-full">
-              <span className="truncate font-semibold">
+              <span className="truncate font-medium">
                 <span className="sm:hidden">{tab.shortLabel}</span>
                 <span className="hidden sm:inline">{tab.label}</span>
               </span>

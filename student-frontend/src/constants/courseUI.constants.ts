@@ -54,8 +54,8 @@ export const COURSE_CARD_ANIMATIONS = {
  * Grid layout configurations
  */
 export const GRID_LAYOUTS = {
-  PROGRAMS: 'grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-4',
-  SPECIALIZATIONS: 'grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-4',
+  PROGRAMS: 'grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-16 gap-4',
+  SPECIALIZATIONS: 'grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-10 gap-4',
   COURSES: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6',
 } as const;
 
