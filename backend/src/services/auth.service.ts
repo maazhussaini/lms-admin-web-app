@@ -1,6 +1,6 @@
 /**
  * @file services/auth.service.ts
- * @description Authentication service for user login, token management, and password operations
+ * @description Universal authentication service for system users and teachers
  */
 
 import { PrismaClient, SystemUserStatus as PrismaSystemUserStatus } from '@prisma/client';
@@ -31,42 +31,194 @@ const TOKEN_BLACKLIST = new Set<string>();
 const TOKEN_RESET_HASHES = new Map<string, { 
   userId: number, 
   hash: string, 
-  expiresAt: Date 
+  expiresAt: Date,
+  userType: 'ADMIN' | 'TEACHER'
 }>();
+
+interface UserSearchResult {
+  user: any;
+  type: 'ADMIN' | 'TEACHER';
+}
 
 export class AuthService {
   constructor(private prisma: PrismaClient) {}
 
   /**
-   * Authenticate a system user and generate auth tokens
-   * @param data Login credentials and optional tenant context
-   * @returns Authentication response with tokens and user info
+   * Extract domain from IIS headers and get tenant
+   * @param req Express request object with IIS headers
+   * @returns Tenant object or null
    */
-  async loginUser(data: LoginDto): Promise<TAuthResponse> {
-    const { email_address, password, tenant_context } = data;
+  private async getTenantFromDomain(req: any): Promise<any | null> {
+    const originalHost = req?.headers['x-original-host'] as string || 
+                        req?.headers['x-forwarded-host'] as string || 
+                        req?.headers.host as string;
 
-    // Find user by email address, ensuring they are active
-    const user = await this.prisma.systemUser.findFirst({
-      where: {
-        email_address,
-        system_user_status: PrismaSystemUserStatus.ACTIVE,
-        is_active: true,
-        is_deleted: false
-      },
-      include: {
-        role: {
-          select: {
-            role_id: true,
-            role_name: true
+    if (!originalHost) {
+      logger.warn('No domain found in request headers');
+      return null;
+    }
+
+    const domain = 'betaschool.com'//'epsilonuniversity.com'//originalHost.split(':')[0]; // Remove port
+    logger.info(`Extracting tenant for domain: ${domain}`);
+
+    
+    try {
+      // Use raw query to find tenant by domain since Prisma types might not be generated
+      const tenants = await this.prisma.$queryRaw`
+        SELECT * FROM tenants 
+        WHERE tenant_domain = ${domain} 
+        AND tenant_status IN ('ACTIVE', 'TRIAL')
+        AND is_active = true 
+        AND is_deleted = false 
+        LIMIT 1
+      ` as any[];
+      
+      const tenant = tenants.length > 0 ? tenants[0] : null;
+
+      if (tenant) {
+        logger.info(`Found tenant: ${tenant.tenant_name} (ID: ${tenant.tenant_id}) for domain: ${domain}`);
+      } else {
+        logger.warn(`No active tenant found for domain: ${domain}`);
+      }
+
+      return tenant;
+    } catch (error) {
+      logger.error('Error fetching tenant by domain:', { error, domain });
+      return null;
+    }
+  }
+
+  /**
+   * Find user across SystemUser and Teacher tables
+   * @param emailOrUsername Email address or username
+   * @returns User object with type or null
+   */
+  private async findUserAcrossAllTables(emailOrUsername: string): Promise<UserSearchResult | null> {
+    const queries = await Promise.allSettled([
+      // Check SystemUser (Admin/Super Admin)
+      this.prisma.systemUser.findFirst({
+        where: {
+          OR: [
+            { username: emailOrUsername },
+            { email_address: emailOrUsername }
+          ],
+          system_user_status: PrismaSystemUserStatus.ACTIVE,
+          is_active: true,
+          is_deleted: false
+        },
+        include: {
+          role: {
+            select: {
+              role_id: true,
+              role_name: true
+            }
           }
         }
-      }
-    });
+      }),
+      
+      // Check Teacher with complex email logic using raw query
+      this.prisma.$queryRaw`
+        SELECT 
+          t.*,
+          te.tenant_id as tenant_tenant_id,
+          te.tenant_name,
+          te.tenant_domain,
+          te.tenant_status,
+          tea.email_address as primary_email
+        FROM teachers t
+        LEFT JOIN teacher_email_addresses tea ON t.teacher_id = tea.teacher_id 
+          AND tea.is_active = true 
+          AND tea.is_deleted = false
+          AND tea.priority = 1
+        LEFT JOIN tenants te ON t.tenant_id = te.tenant_id
+        WHERE t.is_active = true 
+          AND t.is_deleted = false 
+          AND (
+            t.username = ${emailOrUsername} 
+            OR (tea.email_address = ${emailOrUsername} AND tea.priority = 1)
+          )
+        LIMIT 1
+      ` as Promise<any[]>,
+    ]);
 
-    if (!user) {
+    console.log('==>',emailOrUsername)
+
+    // Return first found user with type
+    if (queries[0].status === 'fulfilled' && queries[0].value) {
+      return { user: queries[0].value, type: 'ADMIN' };
+    }
+    
+    // Handle teacher query result (array from raw query)
+    if (queries[1].status === 'fulfilled' && queries[1].value) {
+      const teacherResults = queries[1].value as any[];
+      if (teacherResults.length > 0) {
+        const teacher = teacherResults[0];
+        // Map tenant data properly
+        if (teacher.tenant_tenant_id) {
+          teacher.tenant = {
+            tenant_id: teacher.tenant_tenant_id,
+            tenant_name: teacher.tenant_name,
+            tenant_domain: teacher.tenant_domain,
+            tenant_status: teacher.tenant_status
+          };
+        }
+        // Use primary_email if available, otherwise fallback to username-based email
+        if (teacher.primary_email) {
+          teacher.email_address = teacher.primary_email;
+        }
+        return { user: teacher, type: 'TEACHER' };
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Universal login for both system users and teachers
+   * @param data Login credentials
+   * @param req Express request object (for domain extraction)
+   * @returns Authentication response with tokens and user info
+   */
+  async loginUser(data: LoginDto, req?: any): Promise<TAuthResponse> {
+    const { email_address: emailOrUsername, password, tenant_context } = data;
+
+    // Extract tenant from domain (IIS headers)
+    const domainTenant = req ? await this.getTenantFromDomain(req) : null;
+    
+    // Find user across all tables
+    const userResult = await this.findUserAcrossAllTables(emailOrUsername);
+
+    if (!userResult) {
       throw new UnauthorizedError('Invalid credentials', 'INVALID_CREDENTIALS');
     }
 
+    const { user, type } = userResult;
+
+    console.log('Login attempt:', {
+      userType: type,
+      username: user.username,
+      domain: req?.headers['x-original-host'] || req?.headers.host,
+      tenantFound: domainTenant?.tenant_name || 'None'
+    });
+
+    if (type === 'ADMIN') {
+      return this.loginSystemUser(user, password, domainTenant, tenant_context);
+    } else if (type === 'TEACHER') {
+      return this.loginTeacher(user, password, domainTenant);
+    }
+
+    throw new UnauthorizedError('Invalid credentials', 'INVALID_CREDENTIALS');
+  }
+
+  /**
+   * Login system user (Admin/Super Admin) with domain-based tenant resolution
+   */
+  private async loginSystemUser(
+    user: any, 
+    password: string, 
+    domainTenant: any, 
+    tenant_context?: string
+  ): Promise<TAuthResponse> {
     // Check if account is locked due to too many failed attempts
     if (user.login_attempts && user.login_attempts >= 5) {
       throw new UnauthorizedError('Account is locked due to too many failed login attempts', 'ACCOUNT_LOCKED');
@@ -85,25 +237,77 @@ export class AuthService {
       throw new UnauthorizedError('Invalid credentials', 'INVALID_CREDENTIALS');
     }
 
-    // Check tenant context for SUPER_ADMIN users
-    if (user.role_type === SystemUserRole.SUPER_ADMIN && tenant_context) {
-      const tenant = await this.prisma.tenant.findFirst({
-        where: {
-          OR: [
-            ...(isNaN(Number(tenant_context)) ? [] : [{ tenant_id: Number(tenant_context) }]),
-            { tenant_name: tenant_context }
-          ],
-          is_active: true,
-          is_deleted: false
-        }
-      });
+    // Determine tenant context based on user role and domain
+    let finalTenantId: number | null = null;
 
-      if (!tenant) {
-        throw new NotFoundError('Tenant not found', 'TENANT_NOT_FOUND');
+    if (user.role_type === SystemUserRole.SUPER_ADMIN) {
+      // SUPER_ADMIN logic
+      if (tenant_context) {
+        // Manual tenant context provided - try multiple ways to find tenant
+        let tenant = null;
+        
+        // Try by ID first
+        if (!isNaN(Number(tenant_context))) {
+          tenant = await this.prisma.tenant.findFirst({
+            where: {
+              tenant_id: Number(tenant_context),
+              is_active: true,
+              is_deleted: false
+            }
+          });
+        }
+        
+        // Try by name if not found
+        if (!tenant) {
+          tenant = await this.prisma.tenant.findFirst({
+            where: {
+              tenant_name: tenant_context,
+              is_active: true,
+              is_deleted: false
+            }
+          });
+        }
+        
+        // Try by domain if not found
+        if (!tenant) {
+          tenant = await this.prisma.$queryRaw`
+            SELECT * FROM tenants 
+            WHERE tenant_domain = ${tenant_context} 
+            AND is_active = true 
+            AND is_deleted = false 
+            LIMIT 1
+          `;
+          tenant = Array.isArray(tenant) && tenant.length > 0 ? tenant[0] : null;
+        }
+
+        if (!tenant) {
+          throw new NotFoundError('Tenant not found', 'TENANT_NOT_FOUND');
+        }
+        finalTenantId = tenant.tenant_id;
+      } else if (domainTenant) {
+        // Use domain-based tenant
+        finalTenantId = domainTenant.tenant_id;
+      }
+      // If no tenant context and no domain tenant, SUPER_ADMIN gets global access (finalTenantId = null)
+    } else {
+      // TENANT_ADMIN must be associated with a tenant
+      if (domainTenant) {
+        // Verify TENANT_ADMIN has access to this domain's tenant
+        if (user.tenant_id && user.tenant_id !== domainTenant.tenant_id) {
+          throw new UnauthorizedError(
+            `Access denied. You don't have permission for ${domainTenant.tenant_domain}`, 
+            'TENANT_ACCESS_DENIED'
+          );
+        }
+        finalTenantId = domainTenant.tenant_id;
+      } else {
+        // Use user's assigned tenant
+        finalTenantId = user.tenant_id;
       }
 
-      // SUPER_ADMIN logging into a specific tenant context
-      user.tenant_id = tenant.tenant_id;
+      if (!finalTenantId) {
+        throw new UnauthorizedError('No tenant context available', 'NO_TENANT_CONTEXT');
+      }
     }
 
     // Reset login attempts on successful login
@@ -116,15 +320,15 @@ export class AuthService {
     });
 
     // Fetch user permissions
-    const permissions = await this.getUserPermissions(user.system_user_id, user.tenant_id);
+    const permissions = await this.getUserPermissions(user.system_user_id, finalTenantId);
 
     // Generate JWT tokens
     const tokenPayload: TokenPayload = {
       id: user.system_user_id,
       email: user.email_address,
       role: user.role.role_name,
-      user_type: user.role_type as UserType, // Use enum for role type
-      tenantId: user.tenant_id || 0, // 0 is a special case for SUPER_ADMIN with no tenant
+      user_type: user.role_type as UserType,
+      tenantId: finalTenantId || 0,
       permissions
     };
 
@@ -137,10 +341,10 @@ export class AuthService {
         full_name: user.full_name,
         email: user.email_address,
         role: {
-          role_type: user.role_type as UserType,  // System users have role_type
+          role_type: user.role_type as UserType,
           role_name: user.role.role_name
         },
-        tenant_id: user.tenant_id || 0,
+        tenant_id: finalTenantId || 0,
         user_type: user.role_type === UserType.SUPER_ADMIN ? UserType.SUPER_ADMIN : UserType.TENANT_ADMIN
       },
       tokens: {
@@ -154,9 +358,78 @@ export class AuthService {
   }
 
   /**
-   * Refresh user's access token using a valid refresh token
-   * @param data Refresh token DTO
-   * @returns New authentication response
+   * Login teacher with domain validation
+   */
+  private async loginTeacher(teacher: any, password: string, domainTenant: any): Promise<TAuthResponse> {
+    // Verify password
+    const isPasswordValid = await comparePassword(password, teacher.password_hash);
+    
+    if (!isPasswordValid) {
+      throw new UnauthorizedError('Invalid credentials', 'INVALID_CREDENTIALS');
+    }
+
+    // Validate teacher belongs to the domain's tenant
+    if (domainTenant && teacher.tenant_id !== domainTenant.tenant_id) {
+      throw new UnauthorizedError(
+        `Access denied. You don't have permission for ${domainTenant.tenant_domain}`, 
+        'TENANT_ACCESS_DENIED'
+      );
+    }
+
+    const finalTenantId = domainTenant?.tenant_id || teacher.tenant_id;
+
+    if (!finalTenantId) {
+      throw new UnauthorizedError('No tenant context available for teacher', 'NO_TENANT_CONTEXT');
+    }
+
+    // Update last login
+    await this.prisma.teacher.update({
+      where: { teacher_id: teacher.teacher_id },
+      data: {
+        last_login_at: new Date()
+      }
+    });
+
+    // Get primary email
+    const primaryEmail = teacher.email_address || `${teacher.username}@${domainTenant?.tenant_domain || 'teacher.com'}`;
+
+    // Generate JWT tokens
+    const tokenPayload: TokenPayload = {
+      id: teacher.teacher_id,
+      email: primaryEmail,
+      role: 'Teacher',
+      user_type: UserType.TEACHER,
+      tenantId: finalTenantId,
+      permissions: ['teacher:*']
+    };
+
+    const tokens = generateTokens(tokenPayload);
+
+    return {
+      user: {
+        id: teacher.teacher_id,
+        username: teacher.username,
+        full_name: teacher.full_name,
+        email: primaryEmail,
+        role: {
+          role_type: UserType.TEACHER,
+          role_name: 'Teacher'
+        },
+        tenant_id: finalTenantId,
+        user_type: UserType.TEACHER
+      },
+      tokens: {
+        access_token: tokens.accessToken,
+        refresh_token: tokens.refreshToken,
+        expires_in: tokens.expiresIn,
+        token_type: 'Bearer'
+      },
+      permissions: ['teacher:*']
+    };
+  }
+
+  /**
+   * Universal refresh token handler
    */
   async refreshUserToken(data: RefreshTokenDto): Promise<TAuthResponse> {
     const { refreshToken } = data;
@@ -170,42 +443,77 @@ export class AuthService {
       // Verify the refresh token
       const tokenData = verifyRefreshToken(refreshToken);
       
-      // Get user from database
-      const user = await this.prisma.systemUser.findFirst({
-        where: {
-          system_user_id: tokenData.id,
-          system_user_status: PrismaSystemUserStatus.ACTIVE,
-          is_active: true,
-          is_deleted: false
-        },
-        include: {
-          role: {
-            select: {
-              role_id: true,
-              role_name: true
+      // Determine user type from token and fetch user
+      let user: any;
+      let userType: 'ADMIN' | 'TEACHER';
+
+      // Try to find in both tables based on ID
+      const [adminUser, teacherUser] = await Promise.allSettled([
+        this.prisma.systemUser.findFirst({
+          where: {
+            system_user_id: tokenData.id,
+            system_user_status: PrismaSystemUserStatus.ACTIVE,
+            is_active: true,
+            is_deleted: false
+          },
+          include: {
+            role: {
+              select: {
+                role_id: true,
+                role_name: true
+              }
             }
           }
-        }
-      });
+        }),
+        this.prisma.teacher.findFirst({
+          where: {
+            teacher_id: tokenData.id,
+            is_active: true,
+            is_deleted: false
+          }
+        })
+      ]);
 
-      if (!user) {
+      if (adminUser.status === 'fulfilled' && adminUser.value) {
+        user = adminUser.value;
+        userType = 'ADMIN';
+      } else if (teacherUser.status === 'fulfilled' && teacherUser.value) {
+        user = teacherUser.value;
+        userType = 'TEACHER';
+      } else {
         throw new NotFoundError('User not found', 'USER_NOT_FOUND');
       }
 
-      // Fetch user permissions
-      const permissions = await this.getUserPermissions(user.system_user_id, user.tenant_id);
+      // Generate new tokens based on user type
+      let newTokenPayload: TokenPayload;
+      let permissions: string[];
 
-      // Generate new tokens
-      const tokenPayload: TokenPayload = {
-        id: user.system_user_id,
-        email: user.email_address,
-        role: user.role.role_name,
-        user_type: user.role_type as UserType, // Use enum for role type
-        tenantId: user.tenant_id || 0,
-        permissions
-      };
+      if (userType === 'TEACHER') {
+        const primaryEmail = user.email_address || `${user.username}@teacher.com`;
+        permissions = ['teacher:*'];
+        
+        newTokenPayload = {
+          id: user.teacher_id,
+          email: primaryEmail,
+          role: 'Teacher',
+          user_type: UserType.TEACHER,
+          tenantId: user.tenant_id,
+          permissions
+        };
+      } else {
+        permissions = await this.getUserPermissions(user.system_user_id, user.tenant_id);
+        
+        newTokenPayload = {
+          id: user.system_user_id,
+          email: user.email_address,
+          role: user.role.role_name,
+          user_type: user.role_type as UserType,
+          tenantId: user.tenant_id || 0,
+          permissions
+        };
+      }
 
-      const tokens = generateTokens(tokenPayload);
+      const tokens = generateTokens(newTokenPayload);
 
       // Add old refresh token to blacklist
       TOKEN_BLACKLIST.add(refreshToken);
@@ -215,14 +523,26 @@ export class AuthService {
         TOKEN_BLACKLIST.delete(refreshToken);
       }, 7 * 24 * 60 * 60 * 1000); // 7 days
 
+      // Return response based on user type
       return {
-        user: {
+        user: userType === 'TEACHER' ? {
+          id: user.teacher_id,
+          username: user.username,
+          full_name: user.full_name,
+          email: user.email_address || `${user.username}@teacher.com`,
+          role: {
+            role_type: UserType.TEACHER,
+            role_name: 'Teacher'
+          },
+          tenant_id: user.tenant_id,
+          user_type: UserType.TEACHER
+        } : {
           id: user.system_user_id,
           username: user.username,
           full_name: user.full_name,
           email: user.email_address,
           role: {
-            role_type: user.role_type as UserType,  // System users have role_type
+            role_type: user.role_type as UserType,
             role_name: user.role.role_name
           },
           tenant_id: user.tenant_id || 0,
@@ -275,26 +595,38 @@ export class AuthService {
   }
 
   /**
-   * Initiate password reset process
-   * @param data User's email address
+   * Universal forgot password handler
    */
-  async initiatePasswordReset(data: ForgotPasswordDto): Promise<void> {
-    const { email_address } = data;
+  async initiatePasswordReset(data: ForgotPasswordDto, req?: any): Promise<void> {
+    const { email_address: emailOrUsername } = data;
 
-    // Find user by email
-    const user = await this.prisma.systemUser.findFirst({
-      where: {
-        email_address,
-        is_active: true,
-        is_deleted: false
-      }
-    });
+    // Extract tenant from domain
+    const domainTenant = req ? await this.getTenantFromDomain(req) : null;
+    
+    // Find user across all tables
+    const userResult = await this.findUserAcrossAllTables(emailOrUsername);
 
-    // For security reasons, don't reveal if email exists or not
-    if (!user) {
+    if (!userResult) {
       // Log the attempt but return success to prevent email enumeration
-      logger.info(`Password reset requested for non-existent email: ${email_address}`);
+      logger.info(`Password reset requested for non-existent user: ${emailOrUsername}`);
       return;
+    }
+
+    const { user, type } = userResult;
+
+    // Validate tenant access for non-SUPER_ADMIN users
+    if (domainTenant && type === 'ADMIN' && user.role_type !== SystemUserRole.SUPER_ADMIN) {
+      if (user.tenant_id && user.tenant_id !== domainTenant.tenant_id) {
+        logger.warn(`Password reset denied for ${emailOrUsername} - wrong tenant domain`);
+        return; // Don't reveal that user exists but on wrong domain
+      }
+    }
+
+    if (domainTenant && type === 'TEACHER') {
+      if (user.tenant_id !== domainTenant.tenant_id) {
+        logger.warn(`Password reset denied for teacher ${emailOrUsername} - wrong tenant domain`);
+        return;
+      }
     }
 
     // Generate a secure random token
@@ -310,11 +642,12 @@ export class AuthService {
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 1);
 
-    // Store token information (in a real app, this would go in the database)
+    // Store token information
     TOKEN_RESET_HASHES.set(tokenHash, {
-      userId: user.system_user_id,
+      userId: type === 'ADMIN' ? user.system_user_id : user.teacher_id,
       hash: tokenHash,
-      expiresAt
+      expiresAt,
+      userType: type
     });
 
     // Auto-cleanup expired tokens
@@ -322,14 +655,12 @@ export class AuthService {
       TOKEN_RESET_HASHES.delete(tokenHash);
     }, 60 * 60 * 1000); // 1 hour
 
-    // In a real application, send an email to the user with the reset link
-    logger.info(`Password reset token generated for user ${user.username} (${email_address}): ${resetToken}`);
-    logger.info(`Reset URL would be: /reset-password?token=${resetToken}`);
+    const email = type === 'ADMIN' ? user.email_address : user.email_address || `${user.username}@${domainTenant?.tenant_domain || 'teacher.com'}`;
+    logger.info(`Password reset token generated for ${type} user ${user.username} (${email}): ${resetToken}`);
   }
 
   /**
-   * Complete password reset process
-   * @param data Reset token and new password
+   * Universal password reset handler
    */
   async finalizePasswordReset(data: ResetPasswordDto): Promise<void> {
     const { token, newPassword } = data;
@@ -353,39 +684,34 @@ export class AuthService {
       throw new BadRequestError('Password reset token has expired', 'EXPIRED_RESET_TOKEN');
     }
 
-    // Find the user
-    const user = await this.prisma.systemUser.findFirst({
-      where: {
-        system_user_id: resetData.userId,
-        is_active: true,
-        is_deleted: false
-      }
-    });
-
-    if (!user) {
-      throw new NotFoundError('User not found', 'USER_NOT_FOUND');
-    }
-
     // Hash the new password
     const passwordHash = await hashPassword(newPassword);
 
-    // Update the user's password
-    await this.prisma.systemUser.update({
-      where: { system_user_id: user.system_user_id },
-      data: {
-        password_hash: passwordHash,
-        login_attempts: 0, // Reset login attempts
-        system_user_status: PrismaSystemUserStatus.ACTIVE, // Ensure account is active
-        updated_at: new Date(),
-        updated_by: user.system_user_id, // Self-update
-        updated_ip: '127.0.0.1' // Would be captured from request in real implementation
-      }
-    });
+    // Update password based on user type
+    if (resetData.userType === 'ADMIN') {
+      await this.prisma.systemUser.update({
+        where: { system_user_id: resetData.userId },
+        data: {
+          password_hash: passwordHash,
+          login_attempts: 0,
+          system_user_status: PrismaSystemUserStatus.ACTIVE,
+          updated_at: new Date()
+        }
+      });
+    } else {
+      await this.prisma.teacher.update({
+        where: { teacher_id: resetData.userId },
+        data: {
+          password_hash: passwordHash,
+          updated_at: new Date()
+        }
+      });
+    }
 
     // Remove the used token
     TOKEN_RESET_HASHES.delete(tokenHash);
 
-    logger.info(`Password reset completed for user ${user.username}`);
+    logger.info(`Password reset completed for ${resetData.userType} user ${resetData.userId}`);
   }
 
   /**

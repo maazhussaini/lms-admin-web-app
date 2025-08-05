@@ -6,6 +6,7 @@ model Tenant {
   logo_url_dark  String? @db.VarChar(500)
   favicon_url    String? @db.VarChar(500)
   theme          Json?
+  tenant_domain String? @unique(map: "uq_tenants_tenant_domain") @db.VarChar(255)
   tenant_status  TenantStatus @default(ACTIVE)
 
   // Audit fields

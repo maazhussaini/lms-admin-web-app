@@ -1,6 +1,6 @@
 /**
  * @file controllers/auth.controller.ts
- * @description Authentication controller for handling user login, token refresh, and password operations
+ * @description Universal authentication controller for system users and teachers
  */
 
 import { Request, Response, NextFunction } from 'express';
@@ -16,13 +16,18 @@ const authService = new AuthService(prisma);
 
 export class AuthController {
   /**
-   * Handle user login
+   * Handle universal login for admins and teachers
    * @route POST /api/v1/auth/login
    */
   static loginHandler = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const loginData = req.validatedData || req.body;
     
-    const authResponse = await authService.loginUser(loginData);
+    // Log domain information for debugging
+    const domain = req.headers['x-original-host'] || req.headers['x-forwarded-host'] || req.headers.host;
+    console.log(`Login attempt from domain: ${domain}`);
+    
+    // Pass request object to auth service for domain extraction
+    const authResponse = await authService.loginUser(loginData, req);
     
     return res.status(200).json(
       createSuccessResponse(
@@ -36,7 +41,7 @@ export class AuthController {
   });
 
   /**
-   * Handle token refresh
+   * Handle universal token refresh
    * @route POST /api/v1/auth/refresh
    */
   static refreshTokenHandler = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
@@ -56,7 +61,7 @@ export class AuthController {
   });
 
   /**
-   * Handle user logout
+   * Handle universal user logout
    * @route POST /api/v1/auth/logout
    */
   static logoutHandler = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
@@ -87,13 +92,14 @@ export class AuthController {
   });
 
   /**
-   * Handle forgot password request
+   * Handle universal forgot password request
    * @route POST /api/v1/auth/forgot-password
    */
   static forgotPasswordHandler = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const forgotPasswordData = req.validatedData || req.body;
     
-    await authService.initiatePasswordReset(forgotPasswordData);
+    // Pass request object for domain-based tenant resolution
+    await authService.initiatePasswordReset(forgotPasswordData, req);
     
     // Always return success to prevent email enumeration
     return res.status(200).json(
@@ -108,7 +114,7 @@ export class AuthController {
   });
 
   /**
-   * Handle password reset
+   * Handle universal password reset
    * @route POST /api/v1/auth/reset-password
    */
   static resetPasswordHandler = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {

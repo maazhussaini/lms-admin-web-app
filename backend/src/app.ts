@@ -50,6 +50,7 @@ const corsOrigins = [
   'http://localhost:5173', // Student frontend dev server
   'http://localhost:3000', // Admin frontend dev server (if any)
   'http://localhost:4173', // Student frontend preview server
+  'http://localhost:4200', // Admin frontend Angular
   env.CORS_ORIGIN, // Environment-specified origins
 ].filter(Boolean); // Remove any undefined values
 
