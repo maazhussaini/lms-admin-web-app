@@ -10,10 +10,10 @@ import { Gender } from '@prisma/client';
 export const teachers = [
   {
     tenant_id: 1,
-    full_name: 'Dr. John Williams',
-    first_name: 'John',
+    full_name: 'Omar Altaf',
+    first_name: 'Omar',
     middle_name: null,
-    last_name: 'Williams',
+    last_name: 'Altaf',
     country_id: 1,
     state_id: 1,
     city_id: 1,
@@ -39,10 +39,10 @@ export const teachers = [
   },
   {
     tenant_id: 2,
-    full_name: 'Prof. Emily Clark',
-    first_name: 'Emily',
+    full_name: 'Nawaid Ali',
+    first_name: 'Nawaid',
     middle_name: null,
-    last_name: 'Clark',
+    last_name: 'Ali',
     country_id: 2,
     state_id: 3,
     city_id: 4,

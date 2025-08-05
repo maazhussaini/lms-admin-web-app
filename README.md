@@ -9,124 +9,128 @@ The Learning Management System (LMS) is an enterprise-grade, scalable platform d
 The LMS is broadly divided into an Admin/Instructor Panel for management and a Student Platform for learning and engagement.
 
 ### 🔑 Core & Differentiating Features
-*   **Enterprise Video Protection**:
-    *   Enterprise Multi-DRM (Widevine, PlayReady, FairPlay) via Bunny.net integration
-    *   Advanced token-based access with correlation ID tracking
-    *   Screenshot and screen recording prevention on supported platforms
-    *   Comprehensive video analytics and performance monitoring
-*   **Production-Ready Architecture**: 
-    *   Multi-tenant architecture with complete tenant isolation
-    *   Advanced API system with interceptors, caching, and error boundaries
-    *   Enterprise-level type system with 17+ domain-specific type files
-    *   Comprehensive constraint validation and performance optimization
-*   **Cross-Platform Excellence**: Unified experience across web (Admin & Student) and native mobile apps (Android & iOS for Students)
-*   **Developer Experience**: Type-safe development with correlation IDs, structured logging, and comprehensive tooling
+
+- **Enterprise Video Protection**:
+  - Enterprise Multi-DRM (Widevine, PlayReady, FairPlay) via Bunny.net integration
+  - Advanced token-based access with correlation ID tracking
+  - Screenshot and screen recording prevention on supported platforms
+  - Comprehensive video analytics and performance monitoring
+- **Production-Ready Architecture**:
+  - Multi-tenant architecture with complete tenant isolation
+  - Advanced API system with interceptors, caching, and error boundaries
+  - Enterprise-level type system with 17+ domain-specific type files
+  - Comprehensive constraint validation and performance optimization
+- **Cross-Platform Excellence**: Unified experience across web (Admin & Student) and native mobile apps (Android & iOS for Students)
+- **Developer Experience**: Type-safe development with correlation IDs, structured logging, and comprehensive tooling
 
 ### 🧑‍🏫 Admin/Instructor Panel (Web)
 
 The Web Admin Panel provides administrators and instructors with comprehensive tools to manage the educational ecosystem.
 
 1.  **User Management**:
-    *   CRUD operations for user accounts (students, instructors).
-    *   Assign roles and permissions.
-    *   View and edit student profiles.
-    *   Manage student enrollments in courses.
+    - CRUD operations for user accounts (students, instructors).
+    - Assign roles and permissions.
+    - View and edit student profiles.
+    - Manage student enrollments in courses.
 2.  **Course Management**:
-    *   CRUD operations for courses.
-    *   Course categorization and organization (modules, chapters).
-    *   Manage course materials (upload, edit, delete documents, presentations, etc.).
-    *   Schedule live video lectures.
+    - CRUD operations for courses.
+    - Course categorization and organization (modules, chapters).
+    - Manage course materials (upload, edit, delete documents, presentations, etc.).
+    - Schedule live video lectures.
 3.  **Content Management**:
-    *   Upload and manage lectures (video, audio, text).
-    *   Create and manage quizzes, exams, and assignments.
-    *   Organize course content structure.
+    - Upload and manage lectures (video, audio, text).
+    - Create and manage quizzes, exams, and assignments.
+    - Organize course content structure.
 4.  **Analytics and Reporting**:
-    *   View course analytics (enrollment numbers, completion rates).
-    *   Track student performance metrics.
-    *   Generate custom reports and export them (CSV, PDF).
-    *   Dashboard with key performance indicators.
+    - View course analytics (enrollment numbers, completion rates).
+    - Track student performance metrics.
+    - Generate custom reports and export them (CSV, PDF).
+    - Dashboard with key performance indicators.
 5.  **Notifications and Announcements**:
-    *   Create and send announcements to students or specific groups.
-    *   Schedule announcements for future delivery.
-    *   Manage notification preferences and view history.
+    - Create and send announcements to students or specific groups.
+    - Schedule announcements for future delivery.
+    - Manage notification preferences and view history.
 6.  **Assessment and Evaluation**:
-    *   Grade assignments, quizzes, and exams.
-    *   Provide detailed feedback on student submissions.
-    *   Track student progress and overall performance.
+    - Grade assignments, quizzes, and exams.
+    - Provide detailed feedback on student submissions.
+    - Track student progress and overall performance.
 7.  **Support and Help**:
-    *   Access to a help center and FAQs.
-    *   Interface for contacting technical support and managing support tickets.
+    - Access to a help center and FAQs.
+    - Interface for contacting technical support and managing support tickets.
 8.  **Feedback and Surveys**:
-    *   Create and distribute surveys to collect student feedback.
-    *   Analyze survey results to improve course content and delivery.
-    *   Respond to feedback.
+    - Create and distribute surveys to collect student feedback.
+    - Analyze survey results to improve course content and delivery.
+    - Respond to feedback.
 9.  **Calendar Management**:
-    *   Schedule live lectures, exams, and other important events.
-    *   Option to sync with personal calendars.
-    *   Set reminders for key dates and view an academic calendar.
+    - Schedule live lectures, exams, and other important events.
+    - Option to sync with personal calendars.
+    - Set reminders for key dates and view an academic calendar.
 
 ### 🎓 Student Platform (Web, Android, iOS)
 
 The Student Platform provides an engaging and interactive learning environment accessible via web browsers and native mobile applications.
 
 1.  **User Authentication**:
-    *   No sign-up by students and teacher only admin can create their accounts.
-    *   Secure login, and password recovery.
+    - No sign-up by students and teacher only admin can create their accounts.
+    - Secure login, and password recovery.
 2.  **User Profile**:
-    *   View and edit personal profile information.
-    *   Change password and manage account settings.
-    *   Upload a profile picture.
+    - View and edit personal profile information.
+    - Change password and manage account settings.
+    - Upload a profile picture.
 3.  **Course Content Access**:
-    *   View lectures (video, audio, text) with secure playback.
-    *   Cannot download lectures and course materials for offline access.
-    *   Participate in quizzes and exams.
-    *   Submit assignments through the platform.
+    - View lectures (video, audio, text) with secure playback.
+    - Cannot download lectures and course materials for offline access.
+    - Participate in quizzes and exams.
+    - Submit assignments through the platform.
 4.  **Progress Tracking**:
-    *   View individual course progress and completion status.
-    *   Track scores for quizzes and exams.
-    *   View grades and feedback for assignments.
+    - View individual course progress and completion status.
+    - Track scores for quizzes and exams.
+    - View grades and feedback for assignments.
 5.  **Notifications**:
-    *   Receive real-time push notifications (on mobile) and web notifications for course updates, assignment deadlines, quiz reminders, and instructor announcements.
+    - Receive real-time push notifications (on mobile) and web notifications for course updates, assignment deadlines, quiz reminders, and instructor announcements.
 6.  **Course Catalog & Enrollment**:
-    *   Browse the enrolled course catalog only.
-    *   Search and filter courses (by category, difficulty, instructor, etc.).
-    *   View detailed course descriptions.
+    - Browse the enrolled course catalog only.
+    - Search and filter courses (by category, difficulty, instructor, etc.).
+    - View detailed course descriptions.
 7.  **Support and Help**:
-    *   Access to a help center and FAQs.
-    *   Option to contact support.
+    - Access to a help center and FAQs.
+    - Option to contact support.
 8.  **Feedback and Ratings**:
-    *   Rate courses and provide feedback on lectures.
-    *   Review instructors and course content.
+    - Rate courses and provide feedback on lectures.
+    - Review instructors and course content.
 
 ## 🛠️ Tech Stack
 
-*   **Backend** ([Enterprise Documentation](backend/README.md)):
-    *   **Core**: TypeScript, Node.js, Express.js 5 with advanced middleware stack
-    *   **Database**: PostgreSQL with Prisma ORM and sophisticated constraint system
-    *   **Architecture**: Multi-tenant with complete isolation and context-aware operations
-    *   **Security**: JWT auth, rate limiting, security headers, and DRM integration
-    *   **Real-time**: Socket.IO for notifications and live updates
-    *   **Testing**: Comprehensive Jest and Supertest coverage with 40+ npm scripts
-    *   **Video Integration**: Bunny.net DRM, transcoding, and secure delivery
+- **Backend** ([Enterprise Documentation](backend/README.md)):
 
-*   **Student Frontend** ([Enhanced API Documentation](student-frontend/src/api/README.md)):
-    *   **Framework**: React 19 with TypeScript and modern development patterns
-    *   **Styling**: TailwindCSS 4 with responsive design and dark mode
-    *   **Build**: Vite with optimized production builds and hot reload
-    *   **State**: TanStack React Query with intelligent caching
-    *   **UI/UX**: Framer Motion animations and React Icons
-    *   **API System**: Enterprise-grade client with interceptors, correlation IDs, caching, and error boundaries
+  - **Core**: TypeScript, Node.js, Express.js 5 with advanced middleware stack
+  - **Database**: PostgreSQL with Prisma ORM and sophisticated constraint system
+  - **Architecture**: Multi-tenant with complete isolation and context-aware operations
+  - **Security**: JWT auth, rate limiting, security headers, and DRM integration
+  - **Real-time**: Socket.IO for notifications and live updates
+  - **Testing**: Comprehensive Jest and Supertest coverage with 40+ npm scripts
+  - **Video Integration**: Bunny.net DRM, transcoding, and secure delivery
 
-*   **Shared Type System** ([Comprehensive Documentation](shared/README.md)):
-    *   **Domain Modeling**: 17+ specialized type files covering all business domains
-    *   **Constraint System**: Advanced database validation with performance optimization
-    *   **Video Integration**: 573+ lines of Bunny.net DRM and streaming types
-    *   **Multi-Tenant**: Complete tenant isolation and context-aware type definitions
-    *   **Enterprise Patterns**: Audit trails, logging types, and production-ready validation
+- **Student Frontend** ([Enhanced API Documentation](student-frontend/src/api/README.md)):
 
-*   **Mobile Applications** (Future):
-    *   Android: Kotlin (Native) with enterprise security patterns - Planned
-    *   iOS: Swift (Native) with DRM compliance - Planned
+  - **Framework**: React 19 with TypeScript and modern development patterns
+  - **Styling**: TailwindCSS 4 with responsive design and dark mode
+  - **Build**: Vite with optimized production builds and hot reload
+  - **State**: TanStack React Query with intelligent caching
+  - **UI/UX**: Framer Motion animations and React Icons
+  - **API System**: Enterprise-grade client with interceptors, correlation IDs, caching, and error boundaries
+
+- **Shared Type System** ([Comprehensive Documentation](shared/README.md)):
+
+  - **Domain Modeling**: 17+ specialized type files covering all business domains
+  - **Constraint System**: Advanced database validation with performance optimization
+  - **Video Integration**: 573+ lines of Bunny.net DRM and streaming types
+  - **Multi-Tenant**: Complete tenant isolation and context-aware type definitions
+  - **Enterprise Patterns**: Audit trails, logging types, and production-ready validation
+
+- **Mobile Applications** (Future):
+  - Android: Kotlin (Native) with enterprise security patterns - Planned
+  - iOS: Swift (Native) with DRM compliance - Planned
 
 ## 📁 Folder Structure Overview
 
@@ -216,13 +220,13 @@ lms-admin-web-app/
 │   ├── ui-ux design documents/  # Design specifications
 │   └── extras/                  # Additional documentation
 │
-├── frontend/                    # Legacy/unused frontend folder
 ├── .gitignore
 ├── llms.txt                     # LLM context file
 └── README.md                    # This file
 ```
 
 This structure promotes:
+
 - **Enterprise Architecture**: Multi-tenant isolation, advanced security, and production-ready patterns
 - **Type Safety**: Comprehensive type system with 17+ domain-specific files and advanced constraints
 - **Scalability**: Microservice-ready modular architecture with sophisticated build system
@@ -282,21 +286,26 @@ npm run setup
 ### Starting Development Servers
 
 **Backend Server:**
+
 ```powershell
 cd backend
 npm run dev
 ```
+
 The backend server will run on `http://localhost:3000` (or configured port).
 
 **Student Frontend (React + Vite):**
+
 ```powershell
 cd student-frontend
 npm run dev
 ```
+
 The student portal will run on `http://localhost:5173` (default Vite port).
 
 **Running Both Simultaneously:**
 You can open multiple terminals to run both services:
+
 1. **Terminal 1:** `cd backend; npm run dev` (Backend server)
 2. **Terminal 2:** `cd student-frontend; npm run dev` (Frontend server)
 
@@ -362,6 +371,7 @@ See the [Enhanced API System Documentation](student-frontend/src/api/README.md) 
 ### Building for Production
 
 **Backend:**
+
 ```powershell
 cd backend
 npm run build                # Build TypeScript to JavaScript
@@ -369,6 +379,7 @@ npm run start:prod          # Start production server
 ```
 
 **Student Frontend:**
+
 ```powershell
 cd student-frontend
 npm run build               # Build React app for production
@@ -378,6 +389,7 @@ npm run preview             # Preview production build locally
 ### Testing
 
 **Backend Testing:**
+
 ```powershell
 cd backend
 npm run test                # Run all tests
@@ -387,6 +399,7 @@ npm run test:integration    # Run integration tests only
 ```
 
 **Frontend Testing:**
+
 ```powershell
 cd student-frontend
 npm run lint                # Run ESLint checks
@@ -396,6 +409,7 @@ npm run type-check          # TypeScript type checking
 ### Key Features
 
 #### Enterprise API System ([Full Documentation](student-frontend/src/api/README.md))
+
 - **Advanced Architecture**: Type-safe operations with metadata access and correlation ID tracking
 - **Production Monitoring**: Built-in performance metrics, timing analytics, and distributed tracing
 - **Intelligent Caching**: Automatic response caching with configurable TTL and cache management
@@ -403,6 +417,7 @@ npm run type-check          # TypeScript type checking
 - **Interceptor System**: Comprehensive request/response middleware for cross-cutting concerns
 
 #### Enterprise Backend ([Full Documentation](backend/README.md))
+
 - **Multi-Tenant Architecture**: Complete tenant isolation with context-aware middleware and operations
 - **Advanced Security**: JWT authentication, rate limiting, security headers, and comprehensive validation
 - **Video DRM Integration**: Bunny.net enterprise Multi-DRM with secure streaming and analytics
@@ -411,6 +426,7 @@ npm run type-check          # TypeScript type checking
 - **Comprehensive Testing**: Unit and integration tests with Jest, Supertest, and coverage reporting
 
 #### Enterprise Type System ([Full Documentation](shared/README.md))
+
 - **Domain Modeling**: 17+ specialized type files covering all business domains with comprehensive coverage
 - **Advanced Constraints**: Database-level validation rules, foreign keys, and performance optimization indexes
 - **Video Integration**: 573+ lines of Bunny.net DRM, streaming, and analytics type definitions
@@ -463,6 +479,7 @@ Contributions are welcome! Please follow these steps:
 ### Common Issues
 
 **Backend Database Issues:**
+
 ```powershell
 cd backend
 # Reset database if needed
@@ -472,11 +489,13 @@ npm run prisma:generate
 ```
 
 **Frontend API Issues:**
+
 - Check if backend server is running on correct port
 - Verify API endpoints match backend routes
 - Check browser console for correlation IDs in error messages
 
 **Type Errors:**
+
 ```powershell
 # Rebuild shared types
 cd shared
@@ -494,4 +513,4 @@ This project is licensed under the MIT License - see the `LICENSE.MD` file for d
 
 ---
 
-*This README reflects the current state of the LMS Admin Web App as of 2025.*
+_This README reflects the current state of the LMS Admin Web App as of 2025._

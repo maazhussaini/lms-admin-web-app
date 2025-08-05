@@ -10,9 +10,9 @@ import Button from '@/components/common/Button';
 import { PageTransition } from '@/components/common/PageTransition';
 import StateDisplay from '@/components/common/StateDisplay';
 
-import logo from '@public/orbed_logo.svg';
-import sideVector from '@public/signup_vector.png';
-import bgImage from '@public/bg.png';
+import logo from '@/assets/images/orbed_logo.svg';
+import sideVector from '@/assets/images/signup_vector.png';
+import bgImage from '@/assets/images/bg.png';
 
 interface SignUpFormData {
   name: string;

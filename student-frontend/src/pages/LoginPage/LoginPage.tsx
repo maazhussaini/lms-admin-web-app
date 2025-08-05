@@ -13,9 +13,9 @@ import StateDisplay from '@/components/common/StateDisplay';
 import { useAuth } from '@/context/AuthContext';
 
 // Import assets using proper path structure
-import logo from '@public/orbed_logo.svg';
-import sideVector from '@public/signin_vector.png';
-import bgImage from '@public/bg.png';
+import logo from '@/assets/images/orbed_logo.svg';
+import sideVector from '@/assets/images/signin_vector.png';
+import bgImage from '@/assets/images/bg.png';
 
 interface LoginFormData {
   email: string;

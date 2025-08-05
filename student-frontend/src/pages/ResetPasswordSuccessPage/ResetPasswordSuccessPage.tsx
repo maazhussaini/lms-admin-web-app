@@ -6,9 +6,9 @@ import clsx from 'clsx';
 import Button from '@/components/common/Button';
 import { PageTransition } from '@/components/common/PageTransition';
 
-import logo from '@public/orbed_logo.svg';
-import sideVector from '@public/reset_password_success_vector.png';
-import bgImage from '@public/bg.png';
+import logo from '@/assets/images/orbed_logo.svg';
+import sideVector from '@/assets/images/reset_password_success_vector.png';
+import bgImage from '@/assets/images/bg.png';
 
 const ResetPasswordSuccessPage: React.FC = () => {
   const navigate = useNavigate();

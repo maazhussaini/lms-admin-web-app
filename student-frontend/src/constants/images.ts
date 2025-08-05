@@ -3,12 +3,24 @@
  * 
  * Centralized constants for all application images with organized categorization.
  * Provides consistent image paths for both CDN and local development usage.
+ * Updated to use src/assets/images for better Vite optimization.
  * 
  * @author GitHub Copilot
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 import type { ImageConstants } from '@/types/image.types';
+
+// Import all images from assets for Vite optimization
+import bgImage from '@/assets/images/bg.png';
+import courseDetailsBanner from '@/assets/images/course_details_banner.png';
+import defaultProfilePicture from '@/assets/images/default_profile_picture.webp';
+import forgotPasswordVector from '@/assets/images/forgot_password_vector.png';
+import orbedLogoSvg from '@/assets/images/orbed_logo.svg';
+import orbedLogoPurpleBg from '@/assets/images/orbed_logo_purple_bg.png';
+import resetPasswordSuccessVector from '@/assets/images/reset_password_success_vector.png';
+import signinVector from '@/assets/images/signin_vector.png';
+import signupVector from '@/assets/images/signup_vector.png';
 
 /**
  * Main image constants following the established naming conventions
@@ -24,18 +36,19 @@ export const CDN_IMAGES: ImageConstants = {
   /**
    * Authentication flow images
    * These are typically large illustration images used in auth pages
+   * NOTE: Using 'images/' prefix to match actual CDN structure
    */
   auth: {
     /** Sign in page illustration */
-    signin: 'auth/signin-vector.webp',
+    signin: 'images/signin_vector.png',
     /** Sign up page illustration */
-    signup: 'auth/signup-vector.webp',
+    signup: 'images/signup_vector.png',
     /** Forgot password page illustration */
-    forgotPassword: 'auth/forgot-password-vector.webp',
+    forgotPassword: 'images/forgot_password_vector.png',
     /** Password reset success illustration */
-    resetSuccess: 'auth/reset-success-vector.webp',
-    /** Check email page illustration */
-    checkEmail: 'auth/check-email-vector.webp',
+    resetSuccess: 'images/reset_password_success_vector.png',
+    /** Check email page illustration - using forgot password as fallback */
+    checkEmail: 'images/forgot_password_vector.png',
   },
 
   /**
@@ -44,13 +57,13 @@ export const CDN_IMAGES: ImageConstants = {
    */
   ui: {
     /** Main hero/banner image */
-    heroImage: 'ui/hero-image.webp',
+    heroImage: 'images/bg.png',
     /** Background patterns or images */
-    background: 'ui/background.webp',
+    background: 'images/bg.png',
     /** Generic banner image */
-    banner: 'ui/banner.webp',
-    /** General placeholder image */
-    placeholder: 'ui/placeholder.webp',
+    banner: 'images/course_details_banner.png',
+    /** General placeholder image - using background as fallback */
+    placeholder: 'images/bg.png',
   },
 
   /**
@@ -59,11 +72,11 @@ export const CDN_IMAGES: ImageConstants = {
    */
   course: {
     /** Course details banner */
-    banner: 'course/details-banner.webp',
-    /** Course placeholder image */
-    placeholder: 'course/placeholder.webp',
-    /** Course completion badge */
-    completionBadge: 'course/completion-badge.webp',
+    banner: 'images/course_details_banner.png',
+    /** Course placeholder image - using course banner as fallback */
+    placeholder: 'images/course_details_banner.png',
+    /** Course completion badge - using course banner as fallback */
+    completionBadge: 'images/course_details_banner.png',
   },
 
   /**
@@ -71,12 +84,12 @@ export const CDN_IMAGES: ImageConstants = {
    * Company logos, branding elements, and identity assets
    */
   brand: {
-    /** Primary logo */
-    logo: 'brand/orbed-logo.svg',
+    /** Primary logo - using orbed_logo.png for CDN */
+    logo: 'images/orbed_logo.png',
     /** Logo with background */
-    logoWithBackground: 'brand/orbed-logo-purple-bg.png',
-    /** Favicon and small logo variants */
-    favicon: 'brand/favicon.ico',
+    logoWithBackground: 'images/orbed_logo_purple_bg.png',
+    /** Favicon - using logo as fallback */
+    favicon: 'images/orbed_logo.png',
   },
 
   /**
@@ -85,43 +98,43 @@ export const CDN_IMAGES: ImageConstants = {
    */
   profile: {
     /** Default profile picture */
-    default: 'profile/default-profile-picture.webp',
+    default: 'images/default_profile_picture.webp',
     /** Avatar placeholder for loading states */
-    avatarPlaceholder: 'profile/avatar-placeholder.webp',
+    avatarPlaceholder: 'images/default_profile_picture.webp',
   },
 } as const;
 
 /**
  * Local image paths for development and fallback usage
- * These correspond to files in the public directory
+ * These now use imported assets for better Vite optimization
  */
 export const LOCAL_IMAGES: ImageConstants = {
   auth: {
-    signin: '/signin_vector.png',
-    signup: '/signup_vector.png',
-    forgotPassword: '/forgot_password_vector.png',
-    resetSuccess: '/reset_password_success_vector.png',
-    checkEmail: '/forgot_password_vector.png', // Reusing forgot password image
+    signin: signinVector,
+    signup: signupVector,
+    forgotPassword: forgotPasswordVector,
+    resetSuccess: resetPasswordSuccessVector,
+    checkEmail: forgotPasswordVector, // Reusing forgot password image
   },
   ui: {
-    heroImage: '/group_12.png',
-    background: '/bg.png',
-    banner: '/course_details_banner.png',
-    placeholder: '/bg.png', // Fallback to background
+    heroImage: bgImage,
+    background: bgImage,
+    banner: courseDetailsBanner,
+    placeholder: bgImage, // Fallback to background
   },
   course: {
-    banner: '/course_details_banner.png',
-    placeholder: '/course_details_banner.png',
-    completionBadge: '/course_details_banner.png', // Placeholder for now
+    banner: courseDetailsBanner,
+    placeholder: courseDetailsBanner,
+    completionBadge: courseDetailsBanner, // Placeholder for now
   },
   brand: {
-    logo: '/orbed_logo.svg',
-    logoWithBackground: '/orbed_logo_purple_bg.png',
-    favicon: '/vite.svg', // Temporary fallback
+    logo: orbedLogoSvg,
+    logoWithBackground: orbedLogoPurpleBg,
+    favicon: orbedLogoSvg, // Using SVG for favicon
   },
   profile: {
-    default: '/default_profile_picture.webp',
-    avatarPlaceholder: '/default_profile_picture.webp',
+    default: defaultProfilePicture,
+    avatarPlaceholder: defaultProfilePicture,
   },
 } as const;
 

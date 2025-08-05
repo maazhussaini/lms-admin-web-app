@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaRegCalendarAlt } from "react-icons/fa";
-import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
-import { MdOutlinePlayCircle } from "react-icons/md";
-import { FiSettings, FiX, FiLogOut } from "react-icons/fi";
+import { FiX } from "react-icons/fi";
 import { useAuth } from '@/context/AuthContext';
+import CustomIcon from '@/components/common/CustomIcon';
+import { FiLogOut } from 'react-icons/fi';
+import orbedLogoPurple from '@/assets/images/orbed_logo_purple_bg.png';
 
 type NavIcon = {
   icon: React.ReactNode;
@@ -15,25 +15,25 @@ type NavIcon = {
 
 const navIcons: NavIcon[] = [
   {
-    icon: <FaRegCalendarAlt className="w-6 h-6 lg:w-7 lg:h-7 text-neutral-500" />,
+    icon: <CustomIcon iconClass="ic-3" size="lg" className="text-neutral-500 lg:text-2xl xl:text-3xl" aria-label="Calendar" />,
     label: "Calendar",
     active: false,
     href: "/calendar",
   },
   {
-    icon: <HiOutlineChatBubbleLeftRight className="w-6 h-6 lg:w-7 lg:h-7 text-neutral-500" />,
-    label: "Chat",
+    icon: <CustomIcon iconClass="ic-21" size="lg" className="text-neutral-500 lg:text-2xl xl:text-3xl" aria-label="Chat" />,
+    label: "Notice Board",
     active: false,
     href: "/chat",
   },
   {
-    icon: <MdOutlinePlayCircle className="w-6 h-6 lg:w-7 lg:h-7 text-primary-500" />,
+    icon: <CustomIcon iconClass="ic-20" size="lg" className="text-primary-500 lg:text-2xl xl:text-3xl" aria-label="Courses" />,
     label: "Courses",
     active: true,
     href: "/courses",
   },
   {
-    icon: <FiSettings className="w-6 h-6 lg:w-7 lg:h-7 text-neutral-500" />,
+    icon: <CustomIcon iconClass="ic-4" size="lg" className="text-neutral-500 lg:text-2xl xl:text-3xl" aria-label="Settings" />,
     label: "Settings",
     active: false,
     href: "/settings",
@@ -77,7 +77,7 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ isOpen = false, onClose }) => {
       {/* Logo */}
       <div className="mb-10">
         <img
-          src="/orbed_logo_purple_bg.png"
+          src={orbedLogoPurple}
           alt="orb-Ed Logo"
           className="w-16 h-16 object-contain rounded-full shadow-lg"
         />

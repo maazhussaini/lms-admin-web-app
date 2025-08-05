@@ -18,7 +18,7 @@ export const teacher_courses = [
   {
     tenant_id: 1,
     course_id: 2,
-    teacher_id: 2,
+    teacher_id: 1,
     is_active: true,
     is_deleted: false,
     created_at: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000), // 120 days ago
@@ -33,7 +33,7 @@ export const teacher_courses = [
   {
     tenant_id: 1,
     course_id: 3,
-    teacher_id: 3,
+    teacher_id: 2,
     is_active: true,
     is_deleted: false,
     created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
@@ -48,7 +48,7 @@ export const teacher_courses = [
   {
     tenant_id: 1,
     course_id: 4,
-    teacher_id: 4,
+    teacher_id: 2,
     is_active: true,
     is_deleted: false,
     created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000), // 20 days ago

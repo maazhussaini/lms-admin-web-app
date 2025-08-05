@@ -21,6 +21,9 @@ const SignUpPage = React.lazy(() => import('@/pages/SignUpPage'));
 const NotFoundPage = React.lazy(() => import('@/pages/NotFoundPage'));
 const UnauthorizedPage = React.lazy(() => import('@/pages/UnauthorizedPage'));
 
+// Development test pages
+const CdnTestPage = React.lazy(() => import('@/pages/CdnTestPage/CdnTestPage'));
+
 // Lazy load protected page components with correct import structure
 const MyCoursesPage = React.lazy(() => import('@/pages/MyCoursesPage').then(module => ({ default: module.MyCoursesPage })));
 const CourseDetailsPage = React.lazy(() => import('@/pages/CourseDetailsPage').then(module => ({ default: module.CourseDetailsPage })));
@@ -122,6 +125,13 @@ const AppRouter: React.FC = () => {
               <Route path="/404" element={
                 <Suspense fallback={<PageLoader message="Loading..." />}>
                   <NotFoundPage />
+                </Suspense>
+              } />
+              
+              {/* CDN Test Route - Available in all environments for testing */}
+              <Route path="/cdn-test" element={
+                <Suspense fallback={<PageLoader message="Loading CDN test..." />}>
+                  <CdnTestPage />
                 </Suspense>
               } />
               
