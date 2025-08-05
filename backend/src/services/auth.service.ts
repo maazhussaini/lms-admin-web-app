@@ -58,7 +58,7 @@ export class AuthService {
       return null;
     }
 
-    const domain = 'betaschool.com'//'epsilonuniversity.com'//originalHost.split(':')[0]; // Remove port
+    const domain = 'alphaacademy.com'//'betaschool.com'//'epsilonuniversity.com'//originalHost.split(':')[0]; // Remove port
     logger.info(`Extracting tenant for domain: ${domain}`);
 
     
@@ -202,7 +202,7 @@ export class AuthService {
     });
 
     if (type === 'ADMIN') {
-      return this.loginSystemUser(user, password, domainTenant, tenant_context);
+      return this.loginSystemUser(user, password, domainTenant);
     } else if (type === 'TEACHER') {
       return this.loginTeacher(user, password, domainTenant);
     }
@@ -216,8 +216,7 @@ export class AuthService {
   private async loginSystemUser(
     user: any, 
     password: string, 
-    domainTenant: any, 
-    tenant_context?: string
+    domainTenant: any
   ): Promise<TAuthResponse> {
     // Check if account is locked due to too many failed attempts
     if (user.login_attempts && user.login_attempts >= 5) {
@@ -240,55 +239,8 @@ export class AuthService {
     // Determine tenant context based on user role and domain
     let finalTenantId: number | null = null;
 
-    if (user.role_type === SystemUserRole.SUPER_ADMIN) {
-      // SUPER_ADMIN logic
-      if (tenant_context) {
-        // Manual tenant context provided - try multiple ways to find tenant
-        let tenant = null;
-        
-        // Try by ID first
-        if (!isNaN(Number(tenant_context))) {
-          tenant = await this.prisma.tenant.findFirst({
-            where: {
-              tenant_id: Number(tenant_context),
-              is_active: true,
-              is_deleted: false
-            }
-          });
-        }
-        
-        // Try by name if not found
-        if (!tenant) {
-          tenant = await this.prisma.tenant.findFirst({
-            where: {
-              tenant_name: tenant_context,
-              is_active: true,
-              is_deleted: false
-            }
-          });
-        }
-        
-        // Try by domain if not found
-        if (!tenant) {
-          tenant = await this.prisma.$queryRaw`
-            SELECT * FROM tenants 
-            WHERE tenant_domain = ${tenant_context} 
-            AND is_active = true 
-            AND is_deleted = false 
-            LIMIT 1
-          `;
-          tenant = Array.isArray(tenant) && tenant.length > 0 ? tenant[0] : null;
-        }
-
-        if (!tenant) {
-          throw new NotFoundError('Tenant not found', 'TENANT_NOT_FOUND');
-        }
-        finalTenantId = tenant.tenant_id;
-      } else if (domainTenant) {
-        // Use domain-based tenant
-        finalTenantId = domainTenant.tenant_id;
-      }
-      // If no tenant context and no domain tenant, SUPER_ADMIN gets global access (finalTenantId = null)
+    if (user.role_type === SystemUserRole.SUPER_ADMIN) {        
+      finalTenantId = null; // Global access
     } else {
       // TENANT_ADMIN must be associated with a tenant
       if (domainTenant) {
