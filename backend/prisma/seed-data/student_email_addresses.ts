@@ -4,7 +4,7 @@ export const student_email_addresses = [
   {
     tenant_id: 1,
     student_id: 1,
-    email_address: 'sarah.johnson@alpha-academy.edu',
+    email_address: 'maaz@hussaini.edu',
     is_primary: true,
     priority: 1,
     is_active: true,
