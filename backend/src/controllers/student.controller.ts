@@ -30,18 +30,16 @@ export class StudentController {
    */
   static createStudentHandler = createRouteHandler(
     async (req: AuthenticatedRequest) => {
-      if (!req.user) {
-        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
-      }
-
+      // if (!req.user) {
+      //   throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
+      // }
+      const tenant = await studentService.getTenantFromDomain(req);
       const studentData = req.validatedData as CreateStudentDto;
-      const requestingUser = req.user;
-      
-      logger.debug('Creating student', {
-        username: studentData.username,
-        userId: requestingUser.id,
-        role: requestingUser.user_type
-      });
+      let requestingUser:any = req.user || {};
+
+      if(requestingUser.user_type !== UserType.SUPER_ADMIN){
+        requestingUser.tenantId = tenant.tenant_id;
+      }
       
       return await studentService.createStudent(
         studentData, 

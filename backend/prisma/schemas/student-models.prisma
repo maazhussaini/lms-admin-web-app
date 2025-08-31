@@ -27,7 +27,7 @@ model Student {
   is_deleted              Boolean                @default(false)
   created_at              DateTime               @default(now())
   updated_at              DateTime               @updatedAt
-  created_by              Int
+  created_by              Int?
   updated_by              Int?
   deleted_at              DateTime?
   deleted_by              Int?
@@ -51,7 +51,7 @@ model Student {
   quiz_attempts           QuizAttempt[]
   
   // Audit trail relationships with SystemUser
-  created_by_user   SystemUser        @relation("StudentCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  created_by_user   SystemUser?        @relation("StudentCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user   SystemUser?       @relation("StudentUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
   deleted_by_user   SystemUser?       @relation("StudentDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 

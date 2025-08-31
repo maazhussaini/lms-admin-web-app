@@ -24,6 +24,7 @@ import logger from '@/config/logger';
 import { BaseListService, BaseListServiceConfig } from '@/utils/base-list.service';
 import { STUDENT_FIELD_MAPPINGS } from '@/utils/field-mapping.utils';
 import { hashPassword } from '@/utils/password.utils';
+import { env } from '@/config/environment';
 
 // Initialize Prisma client
 const prisma = new PrismaClient();
@@ -161,10 +162,12 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
     requestingUser: TokenPayload,
     clientIp?: string
   ) {
+   
+   
     // Validate that we have a requesting user
-    if (!requestingUser || !requestingUser.user_type) {
-      throw new BadRequestError('Invalid requesting user context');
-    }
+    // if (!requestingUser || !requestingUser.user_type) {
+    //   throw new BadRequestError('Invalid requesting user context');
+    // }
 
     // Determine tenant ID based on user type
     let tenantId: number;
@@ -175,7 +178,8 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
         throw new BadRequestError('Tenant ID is required when creating a student as SUPER_ADMIN', 'MISSING_TENANT_ID');
       }
       tenantId = data.tenant_id;
-    } else {
+    } 
+    else {
       // Regular admins use their own tenant
       if (!requestingUser.tenantId) {
         throw new BadRequestError('Tenant ID is required', 'MISSING_TENANT_ID');
@@ -186,26 +190,26 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       if (data.tenant_id && data.tenant_id !== tenantId) {
         logger.warn('Non-SUPER_ADMIN user attempted to specify different tenant_id', {
           userId: requestingUser.id,
-          userType: requestingUser.user_type,
+          userType: requestingUser.user_type ?? UserType.STUDENT,
           requestedTenantId: data.tenant_id,
           userTenantId: tenantId
         });
       }
     }
-
+*/
     return tryCatch(async () => {
-      logger.debug('Creating student', {
-        username: data.username,
-        tenantId,
-        requestingUserId: requestingUser.id,
-        userType: requestingUser.user_type
-      });
+      // logger.debug('Creating student', {
+      //   username: data.username,
+      //   tenantId,
+      //   requestingUserId: requestingUser.id,
+      //   userType: requestingUser.user_type
+      // });
 
       // Check if username exists within tenant
       const existingUsername = await prisma.student.findFirst({
         where: {
           username: data.username,
-          tenant_id: tenantId,
+          tenant_id: 1,
           is_deleted: false
         }
       });
@@ -218,7 +222,7 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       const existingEmail = await prisma.studentEmailAddress.findFirst({
         where: {
           email_address: data.email_address,
-          tenant_id: tenantId,
+          tenant_id: 1,
           is_deleted: false
         }
       });
@@ -235,7 +239,7 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
         // Create the student
         const newStudent = await tx.student.create({
           data: {
-            tenant_id: tenantId,
+            tenant_id: 1,
             full_name: data.full_name,
             first_name: data.first_name,
             middle_name: data.middle_name || null,
@@ -253,12 +257,14 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
             gender: data.gender || null,
             student_status: data.student_status || StudentStatus.ACTIVE,
             referral_type: data.referral_type || null,
-            is_active: true,
-            is_deleted: false,
-            created_by: requestingUser.id,
-            updated_by: requestingUser.id,
-            created_ip: clientIp || null,
-            updated_ip: clientIp || null
+            created_by: 1,
+            updated_by: 1,
+            created_ip: null,
+            updated_ip: null
+            // created_by: requestingUser.id,
+            // updated_by: requestingUser.id,
+            // created_ip: clientIp || null,
+            // updated_ip: clientIp || null
           }
         });
 
@@ -266,15 +272,13 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
         await tx.studentEmailAddress.create({
           data: {
             student_id: newStudent.student_id,
-            tenant_id: tenantId,
+            tenant_id: 1,
             email_address: data.email_address,
             is_primary: true,
-            is_active: true,
-            is_deleted: false,
-            created_by: requestingUser.id,
-            updated_by: requestingUser.id,
-            created_ip: clientIp || null,
-            updated_ip: clientIp || null
+            created_by: 1,
+            updated_by: 1,
+            created_ip: null,
+            updated_ip: null
           }
         });
 
@@ -286,10 +290,15 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       return studentWithoutPassword;
     }, {
       context: {
-        tenantId,
-        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId },
+        tenantId: 1,
+        requestingUser: { id: 1, role: UserType.STUDENT, tenantId: 1 },
         username: data.username
       }
+      // context: {
+      //   tenantId,
+      //   requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId },
+      //   username: data.username
+      // }
     });
   }
 
@@ -974,6 +983,53 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       }
     });
   }
+
+
+  /**
+   * Extract domain from IIS headers and get tenant
+   * @param req Express request object with IIS headers
+   * @returns Tenant object or null
+   */
+  public async getTenantFromDomain(req: any): Promise<any | null> {
+    const originalHost = req?.headers['x-original-host'] as string || 
+                        req?.headers['x-forwarded-host'] as string || 
+                        req?.headers.host as string;
+
+    if (!originalHost) {
+      logger.warn('No domain found in request headers');
+      return null;
+    }
+
+    const domain = env.IS_DEVELOPMENT ? 'alphaacademy.com' : originalHost;
+    logger.info(`Extracting tenant for domain: ${domain}`);
+
+    
+    try {
+      // Use raw query to find tenant by domain since Prisma types might not be generated
+      const tenants = await this.prisma.$queryRaw`
+        SELECT * FROM tenants 
+        WHERE tenant_domain = ${domain} 
+        AND tenant_status IN ('ACTIVE', 'TRIAL')
+        AND is_active = true 
+        AND is_deleted = false 
+        LIMIT 1
+      ` as any[];
+      
+      const tenant = tenants.length > 0 ? tenants[0] : null;
+
+      if (tenant) {
+        logger.info(`Found tenant: ${tenant.tenant_name} (ID: ${tenant.tenant_id}) for domain: ${domain}`);
+      } else {
+        logger.warn(`No active tenant found for domain: ${domain}`);
+      }
+
+      return tenant;
+    } catch (error) {
+      logger.error('Error fetching tenant by domain:', { error, domain });
+      return null;
+    }
+  }
+
 }
 
 /**

@@ -9,7 +9,7 @@
     "build:clean": "npm run clean && npm run build",
     "clean": "rimraf dist",
     "dev": "tsx watch --clear-screen=false src/server.ts",
-      "dev:debug": "nodemon --config nodemon.json --inspect",
+    "dev:debug": "nodemon --config nodemon.json --inspect",
     "start": "node dist/server.js",
     "start:prod": "cross-env NODE_ENV=production node dist/server.js",
     "type-check": "tsc --project tsconfig.development.json",
