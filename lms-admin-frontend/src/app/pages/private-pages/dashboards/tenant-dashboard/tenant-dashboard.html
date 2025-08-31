@@ -1,0 +1,40 @@
+<div class="tenant-dashboard">
+  <div class="dashboard-header">
+    <h1>Tenant Admin Dashboard</h1>
+    <div class="user-info">
+      <span>Welcome, {{ currentUser?.full_name }}</span>
+      <button (click)="logout()" class="btn btn-outline">Logout</button>
+    </div>
+  </div>
+  
+  <div class="dashboard-content">
+    <div class="stats-cards">
+      <div class="stat-card">
+        <h3>Total Teachers</h3>
+        <p class="stat-number">45</p>
+      </div>
+      <div class="stat-card">
+        <h3>Total Students</h3>
+        <p class="stat-number">1,248</p>
+      </div>
+      <div class="stat-card">
+        <h3>Active Courses</h3>
+        <p class="stat-number">32</p>
+      </div>
+    </div>
+    
+    <div class="user-details">
+      <h3>Tenant Information</h3>
+      <p><strong>Role:</strong> {{ currentUser?.role.role_name }}</p>
+      <p><strong>Email:</strong> {{ currentUser?.email }}</p>
+      <p><strong>User Type:</strong> {{ currentUser?.user_type }}</p>
+      
+      <div class="permissions" *ngIf="permissions.length > 0">
+        <h4>Permissions:</h4>
+        <ul>
+          <li *ngFor="let permission of permissions">{{ permission }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

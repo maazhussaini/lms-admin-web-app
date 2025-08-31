@@ -1,1 +1,95 @@
-<p>sign-in works!</p>
+<body class="signin-container">
+  <div class="container">
+    <div class="signin-left-section">
+      <div class="logo signin-logo">
+        <img src="assets/images/logo.png" alt="orb-Ed Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="logo-icon" style="display: none;"></div>
+      </div>
+      
+      <div class="text-welcome">welcome back!</div>
+      <h1 class="title-primary">Sign In To Your Account</h1>
+      
+      <form (ngSubmit)="onLogin()" #loginForm="ngForm" class="signin-form">
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <input 
+            type="email" 
+            id="email" 
+            class="form-input" 
+            placeholder="Enter Your Email" 
+            [(ngModel)]="credentials.email_address"
+            name="email"
+            required
+            autocomplete="email"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="password-container">
+            <input 
+              [type]="showPassword ? 'text' : 'password'" 
+              id="password" 
+              class="form-input" 
+              placeholder="Enter Your Password" 
+              [(ngModel)]="credentials.password"
+              name="password"
+              required
+              autocomplete="current-password"
+            >
+            <button type="button" class="password-toggle" (click)="togglePassword()">
+              {{ showPassword ? '🙈' : '👁' }}
+            </button>
+          </div>
+          <div class="signin-forgot-password">
+            <a href="javascript:;" (click)="onForgotPassword()" class="link-primary">Forgot Password?</a>
+          </div>
+        </div>
+              <!-- Messages -->
+      <div *ngIf="message" [ngClass]="'alert alert-' + (messageType === 'error' ? 'danger' : 'success')">
+        <i [ngClass]="messageType === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-check-circle'"></i>
+        {{ message }}
+      </div>
+        <button 
+          type="submit" 
+          class="btn-primary signin-btn"
+          [disabled]="loading || !loginForm.valid"
+        >
+          <span *ngIf="loading" class="spinner"></span>
+          {{ loading ? 'Signing In...' : 'Sign In' }}
+        </button>
+      </form>
+      
+      <div class="signin-privacy-link">
+        <a href="javascript:;" class="link-primary">Privacy Policy</a>
+      </div>
+      
+      <!-- User Info (for testing) -->
+      <div *ngIf="currentUser" class="user-info">
+        <div class="user-welcome">
+          <h4>Welcome, {{ currentUser.full_name }}!</h4>
+          <div class="user-details">
+            <p><strong>Role:</strong> {{ currentUser.role.role_name }}</p>
+            <p><strong>Email:</strong> {{ currentUser.email }}</p>
+            <p *ngIf="currentUser.tenant_id"><strong>Tenant ID:</strong> {{ currentUser.tenant_id }}</p>
+          </div>
+          
+          <div *ngIf="permissions.length > 0" class="permissions">
+            <strong>Permissions:</strong>
+            <ul>
+              <li *ngFor="let permission of permissions">{{ permission }}</li>
+            </ul>
+          </div>
+          
+          <p class="redirect-info">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="signin-right-section">
+      <div class="signin-illustration-container">
+        <!-- SVG background is applied via CSS -->
+      </div>
+    </div>
+  </div>
+</body>

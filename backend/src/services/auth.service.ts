@@ -25,6 +25,7 @@ import {
 import crypto from 'crypto';
 import logger from '@/config/logger';
 import { SystemUserRole, UserType } from '@/types/enums.types';
+import { env } from "@/config/environment";
 
 // Token blacklist - In production, this would be implemented with Redis
 const TOKEN_BLACKLIST = new Set<string>();
@@ -58,7 +59,7 @@ export class AuthService {
       return null;
     }
 
-    const domain = 'alphaacademy.com'//'betaschool.com'//'epsilonuniversity.com'//originalHost.split(':')[0]; // Remove port
+    const domain = env.IS_DEVELOPMENT ? 'alphaacademy.com' : originalHost;
     logger.info(`Extracting tenant for domain: ${domain}`);
 
     
@@ -180,7 +181,7 @@ export class AuthService {
    * @returns Authentication response with tokens and user info
    */
   async loginUser(data: LoginDto, req?: any): Promise<TAuthResponse> {
-    const { email_address: emailOrUsername, password, tenant_context } = data;
+    const { email_address: emailOrUsername, password, tenant_domain} = data;
 
     // Extract tenant from domain (IIS headers)
     const domainTenant = req ? await this.getTenantFromDomain(req) : null;

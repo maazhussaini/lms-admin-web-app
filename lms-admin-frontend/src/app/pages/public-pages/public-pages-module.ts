@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 import { PublicPagesRoutingModule } from './public-pages-routing-module';
 import { PublicPageLayout } from './public-page-layout/public-page-layout';
@@ -15,6 +16,7 @@ import { SignUp } from './auth/sign-up/sign-up';
   ],
   imports: [
     CommonModule,
+    FormsModule,
     PublicPagesRoutingModule
   ]
 })
