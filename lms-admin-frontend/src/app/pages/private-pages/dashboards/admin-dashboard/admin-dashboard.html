@@ -1,40 +1,246 @@
 <div class="admin-dashboard">
-  <div class="dashboard-header">
-    <h1>Super Admin Dashboard</h1>
-    <div class="user-info">
-      <span>Welcome, {{ currentUser?.full_name }}</span>
-      <button (click)="logout()" class="btn btn-outline">Logout</button>
+    <!-- Sidebar Navigation -->
+    <app-side-nav></app-side-nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Header -->
+        <app-header [pageTitle]="'Tenant'" [currentUser]="currentUser"></app-header>
+
+        <!-- Page Content -->
+        <div class="page-content">
+            <div class="content-wrapper">
+                <!-- Controls Section -->
+                <div class="controls-section">
+                    <div class="controls-left">
+                        <!-- Search Container -->
+                        <div class="search-container">
+                            <i class="ic-11 search-icon"></i>
+                            <input 
+                                type="text" 
+                                placeholder="Search here" 
+                                [(ngModel)]="searchTerm"
+                                (input)="onSearch()">
+                        </div>
+                    </div>
+                    
+                    <div class="controls-right">
+                        <!-- Items Per Page Selector -->
+                        <div class="per-page-selector">
+                            <span>Showing</span>
+                            <select [(ngModel)]="itemsPerPage" (change)="onItemsPerPageChange()">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
+
+                        <!-- Filter Button -->
+                        <div class="filter-container">
+                            <button class="filter-toggle" (click)="toggleFilterPopup()">
+                                <i class="ic-15"></i>
+                                Filter
+                            </button>
+                            
+                            <!-- Filter Popup -->
+                            <div class="filter-popup" *ngIf="showFilterPopup">
+                                <div class="filter-group">
+                                    <label>Status</label>
+                                    <select [(ngModel)]="filters.status">
+                                        <option value="">All Status</option>
+                                        <option value="Active">Active</option>
+                                        <option value="Pending">Pending</option>
+                                        <option value="In Progress">In Progress</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-group">
+                                    <label>Start Date</label>
+                                    <input type="date" [(ngModel)]="filters.startDate">
+                                </div>
+                                
+                                <div class="filter-group">
+                                    <label>End Date</label>
+                                    <input type="date" [(ngModel)]="filters.endDate">
+                                </div>
+                                
+                                <div class="filter-actions">
+                                    <button class="btn btn-secondary" (click)="resetAllFilters()">Reset</button>
+                                    <button class="btn btn-primary" (click)="applyFilters()">Apply</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Add Button -->
+                        <button class="btn btn-primary" (click)="openAddTenantOffcanvas()">
+                            <i class="ic-12"></i>
+                            Add
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table Container -->
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <div class="checkbox-wrapper">
+                                        <input 
+                                            type="checkbox" 
+                                            [checked]="isAllSelected()"
+                                            (change)="toggleAllSelection()">
+                                    </div>
+                                </th>
+                                <th>Logo <i class="ic-13"></i></th>
+                                <th>Tenant Name <i class="ic-13"></i></th>
+                                <th>Clients Count <i class="ic-13"></i></th>
+                                <th>Phone No <i class="ic-13"></i></th>
+                                <th>Email <i class="ic-13"></i></th>
+                                <th>Created At <i class="ic-13"></i></th>
+                                <th>Updated At <i class="ic-13"></i></th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let tenant of paginatedTenants; trackBy: trackByTenantId">
+                                <td>
+                                    <div class="checkbox-wrapper">
+                                        <input 
+                                            type="checkbox"
+                                            [checked]="isSelected(tenant.id)"
+                                            (change)="toggleSelection(tenant.id)">
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="tenant-logo" [ngClass]="tenant.logoClass">
+                                        {{ tenant.logoInitial }}
+                                    </div>
+                                </td>
+                                <td>{{ tenant.name }}</td>
+                                <td>{{ tenant.clientsCount }}</td>
+                                <td>{{ tenant.phone }}</td>
+                                <td>{{ tenant.email }}</td>
+                                <td>{{ tenant.createdAt | date:'dd-MM-yyyy' }}</td>
+                                <td>{{ tenant.updatedAt | date:'dd-MM-yyyy' }}</td>
+                                <td>
+                                    <span class="status-badge" 
+                                          [ngClass]="{
+                                            'active': tenant.status === 'Active',
+                                            'pending': tenant.status === 'Pending',
+                                            'in-progress': tenant.status === 'In Progress'
+                                          }">
+                                        {{ tenant.status }}
+                                    </span>
+                                </td>
+                                <td class="actions-cell">
+                                    <button class="action-toggle" (click)="showActionMenu($event, tenant)">
+                                        <i class="ic-18"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                </table>
+            </div>
+
+                <!-- Pagination Container -->
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        <span>Showing {{ getShowingInfo() }} Out Of {{ totalTenants }} Entries</span>
+                        <div class="select-info" *ngIf="selectedTenants.length > 0">
+                            {{ selectedTenants.length }} selected. 
+                            <a class="select-all-btn" (click)="selectAll()">Select all {{ totalTenants }}</a>
+                        </div>
+                    </div>
+                    
+                    <div class="pagination-controls">
+                        <button 
+                            class="pagination-btn" 
+                            [disabled]="currentPage === 1"
+                            (click)="previousPage()">
+                            <i class="ic-20"></i>
+                        </button>
+                        
+                        <button 
+                            *ngFor="let page of getVisiblePages()"
+                            class="pagination-btn"
+                            [class.active]="currentPage === page"
+                            (click)="goToPage(page)">
+                            {{ page }}
+                        </button>
+                        
+                        <span class="page-ellipsis" *ngIf="totalPages > 5 && currentPage < totalPages - 2">...</span>
+                        
+                        <button 
+                            class="pagination-btn" 
+                            [disabled]="currentPage === totalPages"
+                            (click)="nextPage()">
+                            <i class="ic-21"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-  
-  <div class="dashboard-content">
-    <div class="stats-cards">
-      <div class="stat-card">
-        <h3>Total Tenants</h3>
-        <p class="stat-number">12</p>
-      </div>
-      <div class="stat-card">
-        <h3>Total Users</h3>
-        <p class="stat-number">1,248</p>
-      </div>
-      <div class="stat-card">
-        <h3>Active Sessions</h3>
-        <p class="stat-number">89</p>
-      </div>
+
+    <!-- Action Menu -->
+    <div class="action-menu" 
+         [class.active]="showActionMenuFlag" 
+         [style.left.px]="actionMenuPosition.x" 
+         [style.top.px]="actionMenuPosition.y">
+        <div class="menu-item" (click)="viewTenant(selectedTenantForAction!)">
+            <i class="ic-18"></i>
+            <span>View</span>
+        </div>
+        <div class="menu-item" (click)="editTenant(selectedTenantForAction!)">
+            <i class="ic-5"></i>
+            <span>Edit</span>
+        </div>
+        <div class="menu-item danger" (click)="deleteTenant(selectedTenantForAction!)">
+            <i class="ic-14"></i>
+            <span>Delete</span>
+        </div>
     </div>
+
+    <!-- Offcanvas Backdrop -->
+    <div class="offcanvas-backdrop" *ngIf="showAddTenantOffcanvas" (click)="closeAddTenantOffcanvas()"></div>
     
-    <div class="user-details">
-      <h3>User Information</h3>
-      <p><strong>Role:</strong> {{ currentUser?.role.role_name }}</p>
-      <p><strong>Email:</strong> {{ currentUser?.email }}</p>
-      <p><strong>User Type:</strong> {{ currentUser?.user_type }}</p>
-      
-      <div class="permissions" *ngIf="permissions.length > 0">
-        <h4>Permissions:</h4>
-        <ul>
-          <li *ngFor="let permission of permissions">{{ permission }}</li>
-        </ul>
-      </div>
+    <!-- Add Tenant Offcanvas -->
+    <div class="offcanvas" *ngIf="showAddTenantOffcanvas">
+        <div class="offcanvas-header">
+            <h5>Add New Tenant</h5>
+            <button class="close-btn" (click)="closeAddTenantOffcanvas()">
+                <i class="ic-13"></i>
+            </button>
+        </div>
+        <div class="offcanvas-body">
+            <form>
+                <div class="form-group">
+                    <label>Tenant Name</label>
+                    <input type="text" [(ngModel)]="newTenant.name" name="name" placeholder="Enter tenant name">
+                </div>
+                
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" [(ngModel)]="newTenant.email" name="email" placeholder="Enter email">
+                </div>
+                
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" [(ngModel)]="newTenant.phone" name="phone" placeholder="Enter phone number">
+                </div>
+                
+                <div class="form-group">
+                    <label>Clients Count</label>
+                    <input type="number" [(ngModel)]="newTenant.clientsCount" name="clientsCount" placeholder="Enter clients count">
+                </div>
+                
+                <div class="form-actions">
+                    <button class="btn btn-secondary" (click)="closeAddTenantOffcanvas()">Cancel</button>
+                    <button class="btn btn-primary" (click)="saveTenant()">Save Tenant</button>
+                </div>
+            </form>
+        </div>
     </div>
-  </div>
 </div>

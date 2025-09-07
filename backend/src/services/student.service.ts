@@ -187,29 +187,23 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       tenantId = requestingUser.tenantId;
       
       // Ignore tenant_id from body for non-SUPER_ADMIN users
-      if (data.tenant_id && data.tenant_id !== tenantId) {
-        logger.warn('Non-SUPER_ADMIN user attempted to specify different tenant_id', {
-          userId: requestingUser.id,
-          userType: requestingUser.user_type ?? UserType.STUDENT,
-          requestedTenantId: data.tenant_id,
-          userTenantId: tenantId
-        });
-      }
+      // if (data.tenant_id && data.tenant_id !== tenantId) {
+      //   logger.warn('Non-SUPER_ADMIN user attempted to specify different tenant_id', {
+      //     userId: requestingUser.id,
+      //     userType: requestingUser.user_type ?? UserType.STUDENT,
+      //     requestedTenantId: data.tenant_id,
+      //     userTenantId: tenantId
+      //   });
+      // }
     }
-*/
+
     return tryCatch(async () => {
-      // logger.debug('Creating student', {
-      //   username: data.username,
-      //   tenantId,
-      //   requestingUserId: requestingUser.id,
-      //   userType: requestingUser.user_type
-      // });
 
       // Check if username exists within tenant
       const existingUsername = await prisma.student.findFirst({
         where: {
           username: data.username,
-          tenant_id: 1,
+          tenant_id: tenantId,
           is_deleted: false
         }
       });
@@ -222,7 +216,7 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       const existingEmail = await prisma.studentEmailAddress.findFirst({
         where: {
           email_address: data.email_address,
-          tenant_id: 1,
+          tenant_id: tenantId,
           is_deleted: false
         }
       });
@@ -239,7 +233,7 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
         // Create the student
         const newStudent = await tx.student.create({
           data: {
-            tenant_id: 1,
+            tenant_id: tenantId,
             full_name: data.full_name,
             first_name: data.first_name,
             middle_name: data.middle_name || null,
@@ -257,14 +251,10 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
             gender: data.gender || null,
             student_status: data.student_status || StudentStatus.ACTIVE,
             referral_type: data.referral_type || null,
-            created_by: 1,
-            updated_by: 1,
-            created_ip: null,
-            updated_ip: null
-            // created_by: requestingUser.id,
-            // updated_by: requestingUser.id,
-            // created_ip: clientIp || null,
-            // updated_ip: clientIp || null
+            created_ip: clientIp || null,
+            updated_ip: clientIp || null,
+            created_by: !requestingUser.id ? null : requestingUser.id,
+            updated_by: !requestingUser.id ? null : requestingUser.id
           }
         });
 
@@ -272,13 +262,13 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
         await tx.studentEmailAddress.create({
           data: {
             student_id: newStudent.student_id,
-            tenant_id: 1,
+            tenant_id: tenantId,
             email_address: data.email_address,
             is_primary: true,
-            created_by: 1,
-            updated_by: 1,
-            created_ip: null,
-            updated_ip: null
+            created_ip: clientIp || null,
+            updated_ip: clientIp || null,
+            created_by: requestingUser.id || 0,
+            updated_by: requestingUser.id || 0
           }
         });
 

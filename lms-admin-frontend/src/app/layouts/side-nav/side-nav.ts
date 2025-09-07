@@ -7,5 +7,9 @@ import { Component } from '@angular/core';
   styleUrl: './side-nav.scss'
 })
 export class SideNav {
+  activeMenuItem: string = 'tenants'; // Default active menu item
 
+  setActiveMenuItem(menuItem: string): void {
+    this.activeMenuItem = menuItem;
+  }
 }

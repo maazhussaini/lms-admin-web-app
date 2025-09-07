@@ -1,0 +1,85 @@
+<!-- Toolbar -->
+<div class="toolbar">
+    <div class="toolbar-left">
+        <div class="search-container">
+            <i class="ic-10 search-icon"></i>
+            <input 
+                type="text" 
+                class="search-input" 
+                [placeholder]="searchPlaceholder"
+                [value]="searchTerm"
+                (input)="onSearchInput($any($event.target).value)">
+        </div>
+    </div>
+    
+    <div class="toolbar-right">
+         <div class="showing-info">
+            Showing 
+            <select class="showing-select" [value]="itemsPerPage" (change)="onItemsPerPageSelect($any($event.target).value)">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </select>
+        </div>
+        <button class="filter-btn" (click)="toggleFilterPopup()">
+            <i class="ic-19"></i>
+        </button>
+        <button *ngIf="showAddButton" class="add-btn" (click)="onAddClick()">{{ addButtonText }}</button>
+        
+        <!-- Filter Popup -->
+        <div class="filter-popup" [class.active]="showFilterPopup">
+            <div class="filter-popup-content">
+                <div class="filter-popup-header">
+                    <h3>Filters</h3>
+                    <button class="filter-close-btn" (click)="toggleFilterPopup()">
+                        <i class="ic-13"></i>
+                    </button>
+                </div>
+                <div class="filter-popup-body">
+                    <div class="filter-group" *ngFor="let filterOption of filterOptions">
+                        <label class="filter-label">{{ filterOption.label }}</label>
+                        <div class="filter-options">
+                            <button class="filter-option-btn">All {{ filterOption.label }}</button>
+                        </div>
+                        <select class="filter-select" 
+                                [(ngModel)]="filters[filterOption.value]" 
+                                (ngModelChange)="onFilterChange()">
+                            <option value="">Select {{ filterOption.label }}</option>
+                            <option *ngFor="let option of filterOption.options" [value]="option.value">
+                                {{ option.label }}
+                            </option>
+                        </select>
+                    </div>
+                    
+                    <!-- Date filters if they exist -->
+                    <div class="filter-group" *ngIf="filters.hasOwnProperty('startDate')">
+                        <label class="filter-label">Start Date</label>
+                        <div class="date-input-container">
+                            <input 
+                                type="date" 
+                                class="filter-date-input" 
+                                [(ngModel)]="filters['startDate']"
+                                (ngModelChange)="onFilterChange()">
+                            <i class="ic-10 date-icon"></i>
+                        </div>
+                    </div>
+                    <div class="filter-group" *ngIf="filters.hasOwnProperty('endDate')">
+                        <label class="filter-label">End Date</label>
+                        <div class="date-input-container">
+                            <input 
+                                type="date" 
+                                class="filter-date-input" 
+                                [(ngModel)]="filters['endDate']"
+                                (ngModelChange)="onFilterChange()">
+                            <i class="ic-10 date-icon"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="filter-popup-footer">
+                    <button class="btn-secondary" (click)="onResetAllFilters()">Reset All</button>
+                    <button class="btn-primary" (click)="onApplyFilters()">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

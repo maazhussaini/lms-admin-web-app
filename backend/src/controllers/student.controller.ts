@@ -40,6 +40,9 @@ export class StudentController {
       if(requestingUser.user_type !== UserType.SUPER_ADMIN){
         requestingUser.tenantId = tenant.tenant_id;
       }
+      else{
+        studentData.tenant_id = tenant.tenant_id;
+      }
       
       return await studentService.createStudent(
         studentData, 
