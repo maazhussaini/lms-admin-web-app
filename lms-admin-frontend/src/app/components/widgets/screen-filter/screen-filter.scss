@@ -76,7 +76,7 @@
 }
 
 .showing-select {
-  padding: 6px 8px;
+  padding: 9px 8px;
   border: 1px solid #E5E7EB;
     border-radius: 6px;
     background: #F9FAFB;
@@ -105,9 +105,12 @@
   transition: all 0.2s ease;
 }
 
-.filter-btn:hover {
-  background: #F3F4F6;
-  border-color: #D1D5DB;
+.filter-btn,
+.showing-select {
+  &:hover {
+    background: #F3F4F6;
+    border-color: #D1D5DB;
+  }
 }
 
 .filter-btn i {
@@ -117,7 +120,7 @@
 /* ===== ADD BUTTON ===== */
 .add-btn {
   padding: 10px 55px;
-  background: #8B5CF6;
+  background: #4C1D95;
   color: white;
   border: none;
   border-radius: 6px;
