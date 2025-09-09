@@ -1,0 +1,424 @@
+// ===== OVERFLOW & OBJECT UTILITIES ===== //
+
+// Overflow
+.overflow-auto { overflow: auto; }
+.overflow-hidden { overflow: hidden; }
+.overflow-clip { overflow: clip; }
+.overflow-visible { overflow: visible; }
+.overflow-scroll { overflow: scroll; }
+
+.overflow-x-auto { overflow-x: auto; }
+.overflow-x-hidden { overflow-x: hidden; }
+.overflow-x-clip { overflow-x: clip; }
+.overflow-x-visible { overflow-x: visible; }
+.overflow-x-scroll { overflow-x: scroll; }
+
+.overflow-y-auto { overflow-y: auto; }
+.overflow-y-hidden { overflow-y: hidden; }
+.overflow-y-clip { overflow-y: clip; }
+.overflow-y-visible { overflow-y: visible; }
+.overflow-y-scroll { overflow-y: scroll; }
+
+// Overscroll behavior
+.overscroll-auto { overscroll-behavior: auto; }
+.overscroll-contain { overscroll-behavior: contain; }
+.overscroll-none { overscroll-behavior: none; }
+
+.overscroll-x-auto { overscroll-behavior-x: auto; }
+.overscroll-x-contain { overscroll-behavior-x: contain; }
+.overscroll-x-none { overscroll-behavior-x: none; }
+
+.overscroll-y-auto { overscroll-behavior-y: auto; }
+.overscroll-y-contain { overscroll-behavior-y: contain; }
+.overscroll-y-none { overscroll-behavior-y: none; }
+
+// Scroll behavior
+.scroll-auto { scroll-behavior: auto; }
+.scroll-smooth { scroll-behavior: smooth; }
+
+// Scroll margin
+.scroll-m-0 { scroll-margin: 0px; }
+.scroll-m-px { scroll-margin: 1px; }
+
+@each $key, $value in $spacing-scale {
+  .scroll-m-#{$key} { scroll-margin: #{$value}; }
+}
+
+.scroll-mx-0 { scroll-margin-left: 0px; scroll-margin-right: 0px; }
+.scroll-mx-px { scroll-margin-left: 1px; scroll-margin-right: 1px; }
+
+@each $key, $value in $spacing-scale {
+  .scroll-mx-#{$key} { scroll-margin-left: #{$value}; scroll-margin-right: #{$value}; }
+}
+
+.scroll-my-0 { scroll-margin-top: 0px; scroll-margin-bottom: 0px; }
+.scroll-my-px { scroll-margin-top: 1px; scroll-margin-bottom: 1px; }
+
+@each $key, $value in $spacing-scale {
+  .scroll-my-#{$key} { scroll-margin-top: #{$value}; scroll-margin-bottom: #{$value}; }
+}
+
+.scroll-mt-0 { scroll-margin-top: 0px; }
+.scroll-mt-px { scroll-margin-top: 1px; }
+
+@each $key, $value in $spacing-scale {
+  .scroll-mt-#{$key} { scroll-margin-top: #{$value}; }
+}
+
+.scroll-mr-0 { scroll-margin-right: 0px; }
+.scroll-mr-px { scroll-margin-right: 1px; }
+
+@each $key, $value in $spacing-scale {
+  .scroll-mr-#{$key} { scroll-margin-right: #{$value}; }
+}
+
+.scroll-mb-0 { scroll-margin-bottom: 0px; }
+.scroll-mb-px { scroll-margin-bottom: 1px; }
+
+@each $key, $value in $spacing-scale {
+  .scroll-mb-#{$key} { scroll-margin-bottom: #{$value}; }
+}
+
+.scroll-ml-0 { scroll-margin-left: 0px; }
+.scroll-ml-px { scroll-margin-left: 1px; }
+
+@each $key, $value in $spacing-scale {
+  .scroll-ml-#{$key} { scroll-margin-left: #{$value}; }
+}
+
+// Scroll padding
+.scroll-p-0 { scroll-padding: 0px; }
+.scroll-p-px { scroll-padding: 1px; }
+
+@each $key, $value in $spacing-scale {
+  .scroll-p-#{$key} { scroll-padding: #{$value}; }
+}
+
+.scroll-px-0 { scroll-padding-left: 0px; scroll-padding-right: 0px; }
+.scroll-px-px { scroll-padding-left: 1px; scroll-padding-right: 1px; }
+
+@each $key, $value in $spacing-scale {
+  .scroll-px-#{$key} { scroll-padding-left: #{$value}; scroll-padding-right: #{$value}; }
+}
+
+.scroll-py-0 { scroll-padding-top: 0px; scroll-padding-bottom: 0px; }
+.scroll-py-px { scroll-padding-top: 1px; scroll-padding-bottom: 1px; }
+
+@each $key, $value in $spacing-scale {
+  .scroll-py-#{$key} { scroll-padding-top: #{$value}; scroll-padding-bottom: #{$value}; }
+}
+
+.scroll-pt-0 { scroll-padding-top: 0px; }
+.scroll-pt-px { scroll-padding-top: 1px; }
+
+@each $key, $value in $spacing-scale {
+  .scroll-pt-#{$key} { scroll-padding-top: #{$value}; }
+}
+
+.scroll-pr-0 { scroll-padding-right: 0px; }
+.scroll-pr-px { scroll-padding-right: 1px; }
+
+@each $key, $value in $spacing-scale {
+  .scroll-pr-#{$key} { scroll-padding-right: #{$value}; }
+}
+
+.scroll-pb-0 { scroll-padding-bottom: 0px; }
+.scroll-pb-px { scroll-padding-bottom: 1px; }
+
+@each $key, $value in $spacing-scale {
+  .scroll-pb-#{$key} { scroll-padding-bottom: #{$value}; }
+}
+
+.scroll-pl-0 { scroll-padding-left: 0px; }
+.scroll-pl-px { scroll-padding-left: 1px; }
+
+@each $key, $value in $spacing-scale {
+  .scroll-pl-#{$key} { scroll-padding-left: #{$value}; }
+}
+
+// Scroll snap align
+.snap-start { scroll-snap-align: start; }
+.snap-end { scroll-snap-align: end; }
+.snap-center { scroll-snap-align: center; }
+.snap-align-none { scroll-snap-align: none; }
+
+// Scroll snap stop
+.snap-normal { scroll-snap-stop: normal; }
+.snap-always { scroll-snap-stop: always; }
+
+// Scroll snap type
+.snap-none { scroll-snap-type: none; }
+.snap-x { scroll-snap-type: x var(--scroll-snap-strictness); }
+.snap-y { scroll-snap-type: y var(--scroll-snap-strictness); }
+.snap-both { scroll-snap-type: both var(--scroll-snap-strictness); }
+
+.snap-mandatory { --scroll-snap-strictness: mandatory; }
+.snap-proximity { --scroll-snap-strictness: proximity; }
+
+// List style type
+.list-none { list-style-type: none; }
+.list-disc { list-style-type: disc; }
+.list-decimal { list-style-type: decimal; }
+
+// List style position
+.list-inside { list-style-position: inside; }
+.list-outside { list-style-position: outside; }
+
+// Appearance
+.appearance-none { appearance: none; }
+.appearance-auto { appearance: auto; }
+
+// Cursor
+.cursor-auto { cursor: auto; }
+.cursor-default { cursor: default; }
+.cursor-pointer { cursor: pointer; }
+.cursor-wait { cursor: wait; }
+.cursor-text { cursor: text; }
+.cursor-move { cursor: move; }
+.cursor-help { cursor: help; }
+.cursor-not-allowed { cursor: not-allowed; }
+.cursor-none { cursor: none; }
+.cursor-context-menu { cursor: context-menu; }
+.cursor-progress { cursor: progress; }
+.cursor-cell { cursor: cell; }
+.cursor-crosshair { cursor: crosshair; }
+.cursor-vertical-text { cursor: vertical-text; }
+.cursor-alias { cursor: alias; }
+.cursor-copy { cursor: copy; }
+.cursor-no-drop { cursor: no-drop; }
+.cursor-grab { cursor: grab; }
+.cursor-grabbing { cursor: grabbing; }
+.cursor-all-scroll { cursor: all-scroll; }
+.cursor-col-resize { cursor: col-resize; }
+.cursor-row-resize { cursor: row-resize; }
+.cursor-n-resize { cursor: n-resize; }
+.cursor-e-resize { cursor: e-resize; }
+.cursor-s-resize { cursor: s-resize; }
+.cursor-w-resize { cursor: w-resize; }
+.cursor-ne-resize { cursor: ne-resize; }
+.cursor-nw-resize { cursor: nw-resize; }
+.cursor-se-resize { cursor: se-resize; }
+.cursor-sw-resize { cursor: sw-resize; }
+.cursor-ew-resize { cursor: ew-resize; }
+.cursor-ns-resize { cursor: ns-resize; }
+.cursor-nesw-resize { cursor: nesw-resize; }
+.cursor-nwse-resize { cursor: nwse-resize; }
+.cursor-zoom-in { cursor: zoom-in; }
+.cursor-zoom-out { cursor: zoom-out; }
+
+// Pointer events
+.pointer-events-none { pointer-events: none; }
+.pointer-events-auto { pointer-events: auto; }
+
+// Resize
+.resize-none { resize: none; }
+.resize { resize: both; }
+.resize-y { resize: vertical; }
+.resize-x { resize: horizontal; }
+
+// User select
+.select-none { user-select: none; }
+.select-text { user-select: text; }
+.select-all { user-select: all; }
+.select-auto { user-select: auto; }
+
+// Touch action
+.touch-auto { touch-action: auto; }
+.touch-none { touch-action: none; }
+.touch-pan-x { touch-action: pan-x; }
+.touch-pan-left { touch-action: pan-left; }
+.touch-pan-right { touch-action: pan-right; }
+.touch-pan-y { touch-action: pan-y; }
+.touch-pan-up { touch-action: pan-up; }
+.touch-pan-down { touch-action: pan-down; }
+.touch-pinch-zoom { touch-action: pinch-zoom; }
+.touch-manipulation { touch-action: manipulation; }
+
+// Will change
+.will-change-auto { will-change: auto; }
+.will-change-scroll { will-change: scroll-position; }
+.will-change-contents { will-change: contents; }
+.will-change-transform { will-change: transform; }
+
+// Contain
+.contain-none { contain: none; }
+.contain-content { contain: content; }
+.contain-strict { contain: strict; }
+.contain-layout { contain: layout; }
+.contain-style { contain: style; }
+.contain-size { contain: size; }
+.contain-paint { contain: paint; }
+
+// Content visibility
+.content-auto { content-visibility: auto; }
+.content-hidden { content-visibility: hidden; }
+.content-visible { content-visibility: visible; }
+
+// Responsive variants
+@include sm {
+  .sm\:overflow-auto { overflow: auto; }
+  .sm\:overflow-hidden { overflow: hidden; }
+  .sm\:overflow-clip { overflow: clip; }
+  .sm\:overflow-visible { overflow: visible; }
+  .sm\:overflow-scroll { overflow: scroll; }
+  
+  .sm\:overflow-x-auto { overflow-x: auto; }
+  .sm\:overflow-x-hidden { overflow-x: hidden; }
+  .sm\:overflow-x-clip { overflow-x: clip; }
+  .sm\:overflow-x-visible { overflow-x: visible; }
+  .sm\:overflow-x-scroll { overflow-x: scroll; }
+  
+  .sm\:overflow-y-auto { overflow-y: auto; }
+  .sm\:overflow-y-hidden { overflow-y: hidden; }
+  .sm\:overflow-y-clip { overflow-y: clip; }
+  .sm\:overflow-y-visible { overflow-y: visible; }
+  .sm\:overflow-y-scroll { overflow-y: scroll; }
+  
+  .sm\:cursor-auto { cursor: auto; }
+  .sm\:cursor-default { cursor: default; }
+  .sm\:cursor-pointer { cursor: pointer; }
+  .sm\:cursor-wait { cursor: wait; }
+  .sm\:cursor-text { cursor: text; }
+  .sm\:cursor-move { cursor: move; }
+  .sm\:cursor-help { cursor: help; }
+  .sm\:cursor-not-allowed { cursor: not-allowed; }
+  
+  .sm\:pointer-events-none { pointer-events: none; }
+  .sm\:pointer-events-auto { pointer-events: auto; }
+  
+  .sm\:resize-none { resize: none; }
+  .sm\:resize { resize: both; }
+  .sm\:resize-y { resize: vertical; }
+  .sm\:resize-x { resize: horizontal; }
+  
+  .sm\:select-none { user-select: none; }
+  .sm\:select-text { user-select: text; }
+  .sm\:select-all { user-select: all; }
+  .sm\:select-auto { user-select: auto; }
+}
+
+@include md {
+  .md\:overflow-auto { overflow: auto; }
+  .md\:overflow-hidden { overflow: hidden; }
+  .md\:overflow-clip { overflow: clip; }
+  .md\:overflow-visible { overflow: visible; }
+  .md\:overflow-scroll { overflow: scroll; }
+  
+  .md\:overflow-x-auto { overflow-x: auto; }
+  .md\:overflow-x-hidden { overflow-x: hidden; }
+  .md\:overflow-x-clip { overflow-x: clip; }
+  .md\:overflow-x-visible { overflow-x: visible; }
+  .md\:overflow-x-scroll { overflow-x: scroll; }
+  
+  .md\:overflow-y-auto { overflow-y: auto; }
+  .md\:overflow-y-hidden { overflow-y: hidden; }
+  .md\:overflow-y-clip { overflow-y: clip; }
+  .md\:overflow-y-visible { overflow-y: visible; }
+  .md\:overflow-y-scroll { overflow-y: scroll; }
+  
+  .md\:cursor-auto { cursor: auto; }
+  .md\:cursor-default { cursor: default; }
+  .md\:cursor-pointer { cursor: pointer; }
+  .md\:cursor-wait { cursor: wait; }
+  .md\:cursor-text { cursor: text; }
+  .md\:cursor-move { cursor: move; }
+  .md\:cursor-help { cursor: help; }
+  .md\:cursor-not-allowed { cursor: not-allowed; }
+  
+  .md\:pointer-events-none { pointer-events: none; }
+  .md\:pointer-events-auto { pointer-events: auto; }
+  
+  .md\:resize-none { resize: none; }
+  .md\:resize { resize: both; }
+  .md\:resize-y { resize: vertical; }
+  .md\:resize-x { resize: horizontal; }
+  
+  .md\:select-none { user-select: none; }
+  .md\:select-text { user-select: text; }
+  .md\:select-all { user-select: all; }
+  .md\:select-auto { user-select: auto; }
+}
+
+@include lg {
+  .lg\:overflow-auto { overflow: auto; }
+  .lg\:overflow-hidden { overflow: hidden; }
+  .lg\:overflow-clip { overflow: clip; }
+  .lg\:overflow-visible { overflow: visible; }
+  .lg\:overflow-scroll { overflow: scroll; }
+  
+  .lg\:overflow-x-auto { overflow-x: auto; }
+  .lg\:overflow-x-hidden { overflow-x: hidden; }
+  .lg\:overflow-x-clip { overflow-x: clip; }
+  .lg\:overflow-x-visible { overflow-x: visible; }
+  .lg\:overflow-x-scroll { overflow-x: scroll; }
+  
+  .lg\:overflow-y-auto { overflow-y: auto; }
+  .lg\:overflow-y-hidden { overflow-y: hidden; }
+  .lg\:overflow-y-clip { overflow-y: clip; }
+  .lg\:overflow-y-visible { overflow-y: visible; }
+  .lg\:overflow-y-scroll { overflow-y: scroll; }
+  
+  .lg\:cursor-auto { cursor: auto; }
+  .lg\:cursor-default { cursor: default; }
+  .lg\:cursor-pointer { cursor: pointer; }
+  .lg\:cursor-wait { cursor: wait; }
+  .lg\:cursor-text { cursor: text; }
+  .lg\:cursor-move { cursor: move; }
+  .lg\:cursor-help { cursor: help; }
+  .lg\:cursor-not-allowed { cursor: not-allowed; }
+  
+  .lg\:pointer-events-none { pointer-events: none; }
+  .lg\:pointer-events-auto { pointer-events: auto; }
+  
+  .lg\:resize-none { resize: none; }
+  .lg\:resize { resize: both; }
+  .lg\:resize-y { resize: vertical; }
+  .lg\:resize-x { resize: horizontal; }
+  
+  .lg\:select-none { user-select: none; }
+  .lg\:select-text { user-select: text; }
+  .lg\:select-all { user-select: all; }
+  .lg\:select-auto { user-select: auto; }
+}
+
+@include xl {
+  .xl\:overflow-auto { overflow: auto; }
+  .xl\:overflow-hidden { overflow: hidden; }
+  .xl\:overflow-clip { overflow: clip; }
+  .xl\:overflow-visible { overflow: visible; }
+  .xl\:overflow-scroll { overflow: scroll; }
+  
+  .xl\:overflow-x-auto { overflow-x: auto; }
+  .xl\:overflow-x-hidden { overflow-x: hidden; }
+  .xl\:overflow-x-clip { overflow-x: clip; }
+  .xl\:overflow-x-visible { overflow-x: visible; }
+  .xl\:overflow-x-scroll { overflow-x: scroll; }
+  
+  .xl\:overflow-y-auto { overflow-y: auto; }
+  .xl\:overflow-y-hidden { overflow-y: hidden; }
+  .xl\:overflow-y-clip { overflow-y: clip; }
+  .xl\:overflow-y-visible { overflow-y: visible; }
+  .xl\:overflow-y-scroll { overflow-y: scroll; }
+  
+  .xl\:cursor-auto { cursor: auto; }
+  .xl\:cursor-default { cursor: default; }
+  .xl\:cursor-pointer { cursor: pointer; }
+  .xl\:cursor-wait { cursor: wait; }
+  .xl\:cursor-text { cursor: text; }
+  .xl\:cursor-move { cursor: move; }
+  .xl\:cursor-help { cursor: help; }
+  .xl\:cursor-not-allowed { cursor: not-allowed; }
+  
+  .xl\:pointer-events-none { pointer-events: none; }
+  .xl\:pointer-events-auto { pointer-events: auto; }
+  
+  .xl\:resize-none { resize: none; }
+  .xl\:resize { resize: both; }
+  .xl\:resize-y { resize: vertical; }
+  .xl\:resize-x { resize: horizontal; }
+  
+  .xl\:select-none { user-select: none; }
+  .xl\:select-text { user-select: text; }
+  .xl\:select-all { user-select: all; }
+  .xl\:select-auto { user-select: auto; }
+}

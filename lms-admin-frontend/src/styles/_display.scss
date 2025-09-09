@@ -1,0 +1,309 @@
+// ===== DISPLAY UTILITIES ===== //
+
+// Display values
+.block { display: block; }
+.inline-block { display: inline-block; }
+.inline { display: inline; }
+.flex { display: flex; }
+.inline-flex { display: inline-flex; }
+.table { display: table; }
+.inline-table { display: inline-table; }
+.table-caption { display: table-caption; }
+.table-cell { display: table-cell; }
+.table-column { display: table-column; }
+.table-column-group { display: table-column-group; }
+.table-footer-group { display: table-footer-group; }
+.table-header-group { display: table-header-group; }
+.table-row-group { display: table-row-group; }
+.table-row { display: table-row; }
+.flow-root { display: flow-root; }
+.grid { display: grid; }
+.inline-grid { display: inline-grid; }
+.contents { display: contents; }
+.list-item { display: list-item; }
+.hidden { display: none; }
+
+// Visibility
+.visible { visibility: visible; }
+.invisible { visibility: hidden; }
+.collapse { visibility: collapse; }
+
+// Box sizing
+.box-border { box-sizing: border-box; }
+.box-content { box-sizing: content-box; }
+
+// Float
+.float-right { float: right; }
+.float-left { float: left; }
+.float-none { float: none; }
+
+// Clear
+.clear-left { clear: left; }
+.clear-right { clear: right; }
+.clear-both { clear: both; }
+.clear-none { clear: none; }
+
+// Isolation
+.isolate { isolation: isolate; }
+.isolation-auto { isolation: auto; }
+
+// Object fit
+.object-contain { object-fit: contain; }
+.object-cover { object-fit: cover; }
+.object-fill { object-fit: fill; }
+.object-none { object-fit: none; }
+.object-scale-down { object-fit: scale-down; }
+
+// Object position
+.object-bottom { object-position: bottom; }
+.object-center { object-position: center; }
+.object-left { object-position: left; }
+.object-left-bottom { object-position: left bottom; }
+.object-left-top { object-position: left top; }
+.object-right { object-position: right; }
+.object-right-bottom { object-position: right bottom; }
+.object-right-top { object-position: right top; }
+.object-top { object-position: top; }
+
+// Aspect ratio
+.aspect-auto { aspect-ratio: auto; }
+.aspect-square { aspect-ratio: 1 / 1; }
+.aspect-video { aspect-ratio: 16 / 9; }
+
+// Container
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  
+  @include sm {
+    max-width: breakpoint('sm');
+  }
+  
+  @include md {
+    max-width: breakpoint('md');
+  }
+  
+  @include lg {
+    max-width: breakpoint('lg');
+  }
+  
+  @include xl {
+    max-width: breakpoint('xl');
+  }
+}
+
+// Responsive variants
+@include sm {
+  .sm\:block { display: block; }
+  .sm\:inline-block { display: inline-block; }
+  .sm\:inline { display: inline; }
+  .sm\:flex { display: flex; }
+  .sm\:inline-flex { display: inline-flex; }
+  .sm\:table { display: table; }
+  .sm\:inline-table { display: inline-table; }
+  .sm\:table-caption { display: table-caption; }
+  .sm\:table-cell { display: table-cell; }
+  .sm\:table-column { display: table-column; }
+  .sm\:table-column-group { display: table-column-group; }
+  .sm\:table-footer-group { display: table-footer-group; }
+  .sm\:table-header-group { display: table-header-group; }
+  .sm\:table-row-group { display: table-row-group; }
+  .sm\:table-row { display: table-row; }
+  .sm\:flow-root { display: flow-root; }
+  .sm\:grid { display: grid; }
+  .sm\:inline-grid { display: inline-grid; }
+  .sm\:contents { display: contents; }
+  .sm\:list-item { display: list-item; }
+  .sm\:hidden { display: none; }
+  
+  .sm\:visible { visibility: visible; }
+  .sm\:invisible { visibility: hidden; }
+  .sm\:collapse { visibility: collapse; }
+  
+  .sm\:float-right { float: right; }
+  .sm\:float-left { float: left; }
+  .sm\:float-none { float: none; }
+  
+  .sm\:clear-left { clear: left; }
+  .sm\:clear-right { clear: right; }
+  .sm\:clear-both { clear: both; }
+  .sm\:clear-none { clear: none; }
+  
+  .sm\:object-contain { object-fit: contain; }
+  .sm\:object-cover { object-fit: cover; }
+  .sm\:object-fill { object-fit: fill; }
+  .sm\:object-none { object-fit: none; }
+  .sm\:object-scale-down { object-fit: scale-down; }
+  
+  .sm\:object-bottom { object-position: bottom; }
+  .sm\:object-center { object-position: center; }
+  .sm\:object-left { object-position: left; }
+  .sm\:object-left-bottom { object-position: left bottom; }
+  .sm\:object-left-top { object-position: left top; }
+  .sm\:object-right { object-position: right; }
+  .sm\:object-right-bottom { object-position: right bottom; }
+  .sm\:object-right-top { object-position: right top; }
+  .sm\:object-top { object-position: top; }
+}
+
+@include md {
+  .md\:block { display: block; }
+  .md\:inline-block { display: inline-block; }
+  .md\:inline { display: inline; }
+  .md\:flex { display: flex; }
+  .md\:inline-flex { display: inline-flex; }
+  .md\:table { display: table; }
+  .md\:inline-table { display: inline-table; }
+  .md\:table-caption { display: table-caption; }
+  .md\:table-cell { display: table-cell; }
+  .md\:table-column { display: table-column; }
+  .md\:table-column-group { display: table-column-group; }
+  .md\:table-footer-group { display: table-footer-group; }
+  .md\:table-header-group { display: table-header-group; }
+  .md\:table-row-group { display: table-row-group; }
+  .md\:table-row { display: table-row; }
+  .md\:flow-root { display: flow-root; }
+  .md\:grid { display: grid; }
+  .md\:inline-grid { display: inline-grid; }
+  .md\:contents { display: contents; }
+  .md\:list-item { display: list-item; }
+  .md\:hidden { display: none; }
+  
+  .md\:visible { visibility: visible; }
+  .md\:invisible { visibility: hidden; }
+  .md\:collapse { visibility: collapse; }
+  
+  .md\:float-right { float: right; }
+  .md\:float-left { float: left; }
+  .md\:float-none { float: none; }
+  
+  .md\:clear-left { clear: left; }
+  .md\:clear-right { clear: right; }
+  .md\:clear-both { clear: both; }
+  .md\:clear-none { clear: none; }
+  
+  .md\:object-contain { object-fit: contain; }
+  .md\:object-cover { object-fit: cover; }
+  .md\:object-fill { object-fit: fill; }
+  .md\:object-none { object-fit: none; }
+  .md\:object-scale-down { object-fit: scale-down; }
+  
+  .md\:object-bottom { object-position: bottom; }
+  .md\:object-center { object-position: center; }
+  .md\:object-left { object-position: left; }
+  .md\:object-left-bottom { object-position: left bottom; }
+  .md\:object-left-top { object-position: left top; }
+  .md\:object-right { object-position: right; }
+  .md\:object-right-bottom { object-position: right bottom; }
+  .md\:object-right-top { object-position: right top; }
+  .md\:object-top { object-position: top; }
+}
+
+@include lg {
+  .lg\:block { display: block; }
+  .lg\:inline-block { display: inline-block; }
+  .lg\:inline { display: inline; }
+  .lg\:flex { display: flex; }
+  .lg\:inline-flex { display: inline-flex; }
+  .lg\:table { display: table; }
+  .lg\:inline-table { display: inline-table; }
+  .lg\:table-caption { display: table-caption; }
+  .lg\:table-cell { display: table-cell; }
+  .lg\:table-column { display: table-column; }
+  .lg\:table-column-group { display: table-column-group; }
+  .lg\:table-footer-group { display: table-footer-group; }
+  .lg\:table-header-group { display: table-header-group; }
+  .lg\:table-row-group { display: table-row-group; }
+  .lg\:table-row { display: table-row; }
+  .lg\:flow-root { display: flow-root; }
+  .lg\:grid { display: grid; }
+  .lg\:inline-grid { display: inline-grid; }
+  .lg\:contents { display: contents; }
+  .lg\:list-item { display: list-item; }
+  .lg\:hidden { display: none; }
+  
+  .lg\:visible { visibility: visible; }
+  .lg\:invisible { visibility: hidden; }
+  .lg\:collapse { visibility: collapse; }
+  
+  .lg\:float-right { float: right; }
+  .lg\:float-left { float: left; }
+  .lg\:float-none { float: none; }
+  
+  .lg\:clear-left { clear: left; }
+  .lg\:clear-right { clear: right; }
+  .lg\:clear-both { clear: both; }
+  .lg\:clear-none { clear: none; }
+  
+  .lg\:object-contain { object-fit: contain; }
+  .lg\:object-cover { object-fit: cover; }
+  .lg\:object-fill { object-fit: fill; }
+  .lg\:object-none { object-fit: none; }
+  .lg\:object-scale-down { object-fit: scale-down; }
+  
+  .lg\:object-bottom { object-position: bottom; }
+  .lg\:object-center { object-position: center; }
+  .lg\:object-left { object-position: left; }
+  .lg\:object-left-bottom { object-position: left bottom; }
+  .lg\:object-left-top { object-position: left top; }
+  .lg\:object-right { object-position: right; }
+  .lg\:object-right-bottom { object-position: right bottom; }
+  .lg\:object-right-top { object-position: right top; }
+  .lg\:object-top { object-position: top; }
+}
+
+@include xl {
+  .xl\:block { display: block; }
+  .xl\:inline-block { display: inline-block; }
+  .xl\:inline { display: inline; }
+  .xl\:flex { display: flex; }
+  .xl\:inline-flex { display: inline-flex; }
+  .xl\:table { display: table; }
+  .xl\:inline-table { display: inline-table; }
+  .xl\:table-caption { display: table-caption; }
+  .xl\:table-cell { display: table-cell; }
+  .xl\:table-column { display: table-column; }
+  .xl\:table-column-group { display: table-column-group; }
+  .xl\:table-footer-group { display: table-footer-group; }
+  .xl\:table-header-group { display: table-header-group; }
+  .xl\:table-row-group { display: table-row-group; }
+  .xl\:table-row { display: table-row; }
+  .xl\:flow-root { display: flow-root; }
+  .xl\:grid { display: grid; }
+  .xl\:inline-grid { display: inline-grid; }
+  .xl\:contents { display: contents; }
+  .xl\:list-item { display: list-item; }
+  .xl\:hidden { display: none; }
+  
+  .xl\:visible { visibility: visible; }
+  .xl\:invisible { visibility: hidden; }
+  .xl\:collapse { visibility: collapse; }
+  
+  .xl\:float-right { float: right; }
+  .xl\:float-left { float: left; }
+  .xl\:float-none { float: none; }
+  
+  .xl\:clear-left { clear: left; }
+  .xl\:clear-right { clear: right; }
+  .xl\:clear-both { clear: both; }
+  .xl\:clear-none { clear: none; }
+  
+  .xl\:object-contain { object-fit: contain; }
+  .xl\:object-cover { object-fit: cover; }
+  .xl\:object-fill { object-fit: fill; }
+  .xl\:object-none { object-fit: none; }
+  .xl\:object-scale-down { object-fit: scale-down; }
+  
+  .xl\:object-bottom { object-position: bottom; }
+  .xl\:object-center { object-position: center; }
+  .xl\:object-left { object-position: left; }
+  .xl\:object-left-bottom { object-position: left bottom; }
+  .xl\:object-left-top { object-position: left top; }
+  .xl\:object-right { object-position: right; }
+  .xl\:object-right-bottom { object-position: right bottom; }
+  .xl\:object-right-top { object-position: right top; }
+  .xl\:object-top { object-position: top; }
+}

@@ -1,0 +1,175 @@
+// ===== THEMES ===== //
+
+// Light Theme (from your documentation)
+$light-theme: (
+  // Primary Colors
+  primary: #4C1D95,
+  primary-light: #8B5CF6,
+  primary-dark: #3C1A78,
+  
+  // Theme Colors
+  deep-purple: #43277E,
+  dark-purple: #2D175C,
+  medium-purple: #5C3BA0,
+  light-purple: #7754C2,
+  soft-purple: #9671E4,
+  pale-purple: #B28EFF,
+  
+  // Extended Palette
+  lavender: #C3A7FF,
+  light-lavender: #D5C1FF,
+  pale-lavender: #E6DAFF,
+  
+  // Neutrals
+  white: #FFFFFF,
+  background: #F7F3FF,
+  light-gray: #F4F4F5,
+  medium-gray: #505050,
+  black: #050708,
+  
+  // Text colors
+  text-primary: #1F2937,
+  text-secondary: #6B7280,
+  text-muted: #9CA3AF,
+  
+  // Border colors
+  border-light: #F3F4F6,
+  border: #E5E7EB,
+  border-dark: #D1D5DB,
+  
+  // State colors
+  success: #10B981,
+  warning: #F59E0B,
+  error: #EF4444,
+  info: #3B82F6,
+  
+  // Typography
+  font-family: #{$font-family-base},
+  
+  // Component specific
+  card-bg: #FFFFFF,
+  input-bg: #FFFFFF,
+  input-border: #E5E7EB,
+  input-focus: #6366F1,
+  
+  // Shadows
+  shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05),
+  shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1),
+  shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+  shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+  shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1)
+);
+
+// Dark Theme
+$dark-theme: (
+  // Primary Colors  
+  primary: #8B5CF6,
+  primary-light: #A78BFA,
+  primary-dark: #7C3AED,
+  
+  // Theme Colors
+  deep-purple: #5C3BA0,
+  dark-purple: #4C1D95,
+  medium-purple: #7754C2,
+  light-purple: #9671E4,
+  soft-purple: #B28EFF,
+  pale-purple: #C3A7FF,
+  
+  // Extended Palette
+  lavender: #D5C1FF,
+  light-lavender: #E6DAFF,
+  pale-lavender: #F3F0FF,
+  
+  // Neutrals
+  white: #FFFFFF,
+  background: #0F0F23,
+  light-gray: #1F2937,
+  medium-gray: #9CA3AF,
+  black: #000000,
+  
+  // Text colors
+  text-primary: #F9FAFB,
+  text-secondary: #D1D5DB,
+  text-muted: #9CA3AF,
+  
+  // Border colors
+  border-light: #374151,
+  border: #4B5563,
+  border-dark: #6B7280,
+  
+  // State colors
+  success: #059669,
+  warning: #D97706,
+  error: #DC2626,
+  info: #2563EB,
+  
+  // Typography
+  font-family: #{$font-family-base},
+  
+  // Component specific
+  card-bg: #1F2937,
+  input-bg: #374151,
+  input-border: #4B5563,
+  input-focus: #8B5CF6,
+  
+  // Shadows
+  shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3),
+  shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4),
+  shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4),
+  shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4),
+  shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4)
+);
+
+// All themes
+$themes: (
+  light: $light-theme,
+  dark: $dark-theme
+);
+
+// Function to convert theme map to CSS variables
+@mixin export-theme($theme-name, $theme-map) {
+  .theme-#{$theme-name} {
+    @each $key, $value in $theme-map {
+      --#{$key}: #{$value};
+    }
+
+    // Export spacing scale as CSS vars
+    @each $step, $val in $spacing-scale {
+      --space-#{$step}: #{$val};
+    }
+    
+    // Export font sizes as CSS vars
+    @each $size, $val in $text-sizes {
+      --text-#{$size}: #{$val};
+    }
+    
+    // Export font weights as CSS vars
+    @each $weight, $val in $font-weights {
+      --font-#{$weight}: #{$val};
+    }
+  }
+}
+
+// Generate all theme classes automatically
+@each $name, $map in $themes {
+  @include export-theme($name, $map);
+}
+
+// Default theme (light)
+:root {
+  @each $key, $value in $light-theme {
+    --#{$key}: #{$value};
+  }
+  
+  @each $step, $val in $spacing-scale {
+    --space-#{$step}: #{$val};
+  }
+  
+  @each $size, $val in $text-sizes {
+    --text-#{$size}: #{$val};
+  }
+  
+  @each $weight, $val in $font-weights {
+    --font-#{$weight}: #{$val};
+  }
+}

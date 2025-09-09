@@ -1,20 +1,11 @@
-// ===== GLOBAL RESET & BASE STYLES =====
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+// ===== ORBED THEME SYSTEM - MAIN IMPORT =====
+@import './styles/main.scss';
 
+// ===== APP-SPECIFIC OVERRIDES =====
 html, body {
-  margin: 0;
-  padding: 0;
   height: 100%;
   width: 100%;
   overflow-x: hidden;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #F7F3FF;
-  color: #374151;
-  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -26,27 +17,6 @@ app-root {
   height: 100%;
   margin: 0;
   padding: 0;
-}
-
-// Remove default margins from common elements
-h1, h2, h3, h4, h5, h6, p, ul, ol, li {
-  margin: 0;
-  padding: 0;
-}
-
-// Remove default button styles
-button {
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-// Remove default input styles
-input, textarea, select {
-  font-family: inherit;
-  border: none;
-  outline: none;
 }
 
 // Remove default link styles
@@ -76,6 +46,7 @@ a {
   align-items: center !important;
 }
 
+// ===== LEGACY UTILITIES FOR COMPATIBILITY =====
 .text-center {
   text-align: center !important;
 }
@@ -88,189 +59,38 @@ a {
   height: 100% !important;
 }
 
-// Responsive breakpoints
-$breakpoints: (
-  'xs': 0,
-  'sm': 576px,
-  'md': 768px,
-  'lg': 992px,
-  'xl': 1200px,
-  'xxl': 1400px
-);
-
-// Color variables
-:root {
-  --primary-color: #667eea;
-  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --success-color: #28a745;
-  --danger-color: #dc3545;
-  --warning-color: #ffc107;
-  --info-color: #17a2b8;
-  --light-color: #f8f9fa;
-  --dark-color: #343a40;
-  --border-radius: 8px;
-  --box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  --transition: all 0.3s ease;
+// ===== CUSTOM SCROLLBAR STYLING =====
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-// Common button styles
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 1rem;
-  border-radius: var(--border-radius);
-  font-weight: 500;
-  text-decoration: none;
-  transition: var(--transition);
-  cursor: pointer;
-  border: 1px solid transparent;
-  
-  &.btn-primary {
-    background: var(--primary-gradient);
-    color: white;
-    
-    &:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-    }
-  }
-  
-  &.btn-outline {
-    background: transparent;
-    color: var(--danger-color);
-    border-color: var(--danger-color);
-    
-    &:hover {
-      background: var(--danger-color);
-      color: white;
-    }
-  }
-  
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none !important;
-    box-shadow: none !important;
-  }
+::-webkit-scrollbar-track {
+  background: var(--color-border);
 }
 
-// Form styles
-.form-group {
-  margin-bottom: 1rem;
-  
-  label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: #555;
-  }
-  
-  .form-control {
-    width: 100%;
-    padding: 0.75rem;
-    border: 2px solid #e1e5e9;
-    border-radius: var(--border-radius);
-    transition: var(--transition);
-    
-    &:focus {
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-    
-    &::placeholder {
-      color: #aaa;
-    }
-  }
+::-webkit-scrollbar-thumb {
+  background: var(--color-text-muted);
+  border-radius: 4px;
 }
 
-// Alert styles
-.alert {
-  padding: 0.75rem;
-  border-radius: var(--border-radius);
-  margin-bottom: 1rem;
-  
-  &.alert-danger {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-  }
-  
-  &.alert-success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-  }
-  
-  &.alert-warning {
-    background-color: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeaa7;
-  }
-  
-  &.alert-info {
-    background-color: #d1ecf1;
-    color: #0c5460;
-    border: 1px solid #bee5eb;
-  }
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text);
 }
 
-// Card styles
-.card {
-  background: white;
-  border-radius: var(--border-radius);
-  box-shadow: var(--box-shadow);
-  padding: 1.5rem;
-  margin-bottom: 1rem;
+// ===== ANGULAR MATERIAL OVERRIDES =====
+.mat-form-field {
+  width: 100%;
 }
 
-// Loading spinner
-.spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid transparent;
-  border-top: 2px solid currentColor;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-// Responsive utilities
-@media (max-width: 768px) {
+// ===== RESPONSIVE OVERRIDES =====
+@include sm {
   .container {
-    padding: 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
   
   .btn {
     width: 100%;
     justify-content: center;
   }
-}
-
-// Override Angular Material or other framework defaults if needed
-.mat-form-field {
-  width: 100%;
-}
-
-// Scrollbar styling
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
 }

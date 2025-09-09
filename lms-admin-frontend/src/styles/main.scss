@@ -1,0 +1,500 @@
+// ===== ORBED THEME SYSTEM - MAIN IMPORT FILE ===== //
+
+// Base configuration
+@import 'variables';
+@import 'functions';
+@import 'mixins';
+@import 'themes';
+
+// Utility classes
+@import 'grid';
+@import 'flex';
+@import 'spacing';
+@import 'typography';
+@import 'display';
+@import 'position';
+@import 'borders';
+@import 'backgrounds-shadows';
+@import 'sizes';
+@import 'overflow-object';
+
+// ===== BASE STYLES ===== //
+
+// CSS Custom Property Initialization
+:root {
+  // Initialize theme variables with light theme by default
+  @include generate-theme-variables($light-theme);
+  
+  // Base font stacks
+  --font-sans: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  --font-serif: 'Georgia', 'Cambria', 'Times New Roman', Times, serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+  
+  // Initialize ring variables
+  --ring-inset: ;
+  --ring-offset-width: 0px;
+  --ring-offset-color: #fff;
+  --ring-color: rgba(59, 130, 246, 0.5);
+  
+  // Initialize scroll snap strictness
+  --scroll-snap-strictness: proximity;
+}
+
+// Dark theme
+[data-theme="dark"] {
+  @include generate-theme-variables($dark-theme);
+  --ring-offset-color: #1f2937;
+}
+
+// Theme switching utility
+.theme-light {
+  @include generate-theme-variables($light-theme);
+}
+
+.theme-dark {
+  @include generate-theme-variables($dark-theme);
+}
+
+// ===== GLOBAL RESETS ===== //
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: var(--color-border);
+}
+
+html {
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  -moz-tab-size: 4;
+  tab-size: 4;
+  font-family: var(--font-sans);
+  font-feature-settings: normal;
+  font-variation-settings: normal;
+}
+
+body {
+  margin: 0;
+  line-height: inherit;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: inherit;
+  @include transition-colors;
+}
+
+hr {
+  height: 0;
+  color: inherit;
+  border-top-width: 1px;
+}
+
+abbr:where([title]) {
+  text-decoration: underline dotted;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: inherit;
+  font-weight: inherit;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+b,
+strong {
+  font-weight: bolder;
+}
+
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-mono);
+  font-size: 1em;
+}
+
+small {
+  font-size: 80%;
+}
+
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+sub {
+  bottom: -0.25em;
+}
+
+sup {
+  top: -0.5em;
+}
+
+table {
+  text-indent: 0;
+  border-color: inherit;
+  border-collapse: collapse;
+}
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: inherit;
+  font-feature-settings: inherit;
+  font-variation-settings: inherit;
+  font-size: 100%;
+  font-weight: inherit;
+  line-height: inherit;
+  color: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+button,
+select {
+  text-transform: none;
+}
+
+button,
+[type='button'],
+[type='reset'],
+[type='submit'] {
+  -webkit-appearance: button;
+  appearance: button;
+  background-color: transparent;
+  background-image: none;
+}
+
+:-moz-focusring {
+  outline: auto;
+}
+
+:-moz-ui-invalid {
+  box-shadow: none;
+}
+
+progress {
+  vertical-align: baseline;
+}
+
+::-webkit-inner-spin-button,
+::-webkit-outer-spin-button {
+  height: auto;
+}
+
+[type='search'] {
+  -webkit-appearance: textfield;
+  appearance: textfield;
+  outline-offset: -2px;
+}
+
+::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+::-webkit-file-upload-button {
+  -webkit-appearance: button;
+  font: inherit;
+}
+
+summary {
+  display: list-item;
+}
+
+blockquote,
+dl,
+dd,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+hr,
+figure,
+p,
+pre {
+  margin: 0;
+}
+
+fieldset {
+  margin: 0;
+  padding: 0;
+}
+
+legend {
+  padding: 0;
+}
+
+ol,
+ul,
+menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+dialog {
+  padding: 0;
+}
+
+textarea {
+  resize: vertical;
+}
+
+input::placeholder,
+textarea::placeholder {
+  opacity: 1;
+  color: var(--color-text-muted);
+}
+
+button,
+[role="button"] {
+  cursor: pointer;
+}
+
+:disabled {
+  cursor: default;
+}
+
+img,
+svg,
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
+  display: block;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+[hidden] {
+  display: none;
+}
+
+// ===== COMPONENT BASE STYLES ===== //
+
+// Form controls
+.form-input,
+.form-select,
+.form-textarea {
+  @include input-base;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+}
+
+// Buttons
+.btn {
+  @include button-base;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+  
+  &:hover {
+    background-color: var(--color-primary-dark);
+  }
+  
+  &:focus {
+    @include focus-ring;
+  }
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-text-inverse);
+  
+  &:hover {
+    opacity: 0.9;
+  }
+  
+  &:focus {
+    @include focus-ring;
+  }
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  
+  &:hover {
+    background-color: var(--color-primary);
+    color: var(--color-text-inverse);
+  }
+  
+  &:focus {
+    @include focus-ring;
+  }
+}
+
+// Cards
+.card {
+  @include card;
+}
+
+// Utilities for screen readers
+.sr-only {
+  @include sr-only;
+}
+
+// Focus visible utilities
+.focus\:ring:focus-visible {
+  @include focus-ring;
+}
+
+.focus\:ring-primary:focus-visible {
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+}
+
+// Hover utilities
+.hover\:bg-primary-dark:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.hover\:bg-opacity-90:hover {
+  background-color: rgba(var(--color-primary-rgb), 0.9);
+}
+
+.hover\:text-primary:hover {
+  color: var(--color-primary);
+}
+
+.hover\:border-primary:hover {
+  border-color: var(--color-primary);
+}
+
+// Transition utilities
+.transition {
+  @include transition;
+}
+
+.transition-colors {
+  @include transition-colors;
+}
+
+.transition-all {
+  @include transition(all);
+}
+
+.transition-opacity {
+  @include transition(opacity);
+}
+
+.transition-transform {
+  @include transition(transform);
+}
+
+// Animation utilities
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: .5;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8,0,1,1);
+  }
+  50% {
+    transform: none;
+    animation-timing-function: cubic-bezier(0,0,0.2,1);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.animate-ping {
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+// Print utilities
+@media print {
+  .print\:hidden {
+    display: none !important;
+  }
+}
+
+// ===== DOCUMENTATION NOTE ===== //
+/*
+ORBED THEME SYSTEM USAGE:
+
+1. Theme Switching:
+   - Add data-theme="dark" to <html> or <body> for dark mode
+   - Use .theme-light or .theme-dark classes for component-level theming
+
+2. Utility Classes:
+   - All utilities follow Tailwind-like naming conventions
+   - Responsive prefixes: sm:, md:, lg:, xl:
+   - Example: "flex items-center justify-between p-4 bg-surface text-primary"
+
+3. CSS Variables:
+   - All theme colors are available as CSS variables
+   - Example: var(--color-primary), var(--color-surface)
+
+4. Mixins Available:
+   - @include flex-center, @include card, @include button-base
+   - @include sm, @include md, @include lg, @include xl for responsive styles
+
+5. Functions Available:
+   - breakpoint(), space(), text-size(), font-weight()
+   - Example: width: breakpoint('md')
+
+6. Color System:
+   - Based on orb-Ed design system
+   - Primary: Blue tones, Secondary: Green tones, Accent: Orange tones
+   - Status colors: Success (green), Warning (yellow), Danger (red), Info (blue)
+*/

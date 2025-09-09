@@ -1,0 +1,45 @@
+// ===== FUNCTIONS ===== //
+
+// Get breakpoint value
+@function breakpoint($name) {
+  @return map-get($breakpoints, $name);
+}
+
+// Get spacing value
+@function space($step) {
+  @return map-get($spacing-scale, $step);
+}
+
+// Get font size
+@function text-size($size) {
+  @return map-get($text-sizes, $size);
+}
+
+// Get font weight
+@function font-weight($weight) {
+  @return map-get($font-weights, $weight);
+}
+
+// Convert px to rem
+@function rem($pixels, $base: 16) {
+  @return ($pixels / $base) * 1rem;
+}
+
+// Strip units from a value
+@function strip-unit($value) {
+  @return $value / ($value * 0 + 1);
+}
+
+// Color manipulation functions
+@function tint($color, $percentage) {
+  @return mix(white, $color, $percentage);
+}
+
+@function shade($color, $percentage) {
+  @return mix(black, $color, $percentage);
+}
+
+// Z-index function
+@function z($layer) {
+  @return map-get($z-index-scale, $layer);
+}
