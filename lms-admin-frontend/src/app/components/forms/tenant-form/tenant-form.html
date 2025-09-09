@@ -1,0 +1,198 @@
+<form class="tenant-form">
+  <!-- Tenant Name -->
+  <div class="form-group">
+    <label class="form-label">Tenant Name</label>
+    <input 
+      type="text" 
+      class="form-input" 
+      placeholder="Enter Tenant Name"
+      [(ngModel)]="formData.name"
+      name="name"
+      (ngModelChange)="onFormChange()"
+      required>
+  </div>
+
+  <!-- Email Address -->
+  <div class="form-group">
+    <label class="form-label">Email Address</label>
+    <input 
+      type="email" 
+      class="form-input" 
+      placeholder="Enter Primary Email Address"
+      [(ngModel)]="formData.email"
+      name="email"
+      (ngModelChange)="onFormChange()"
+      required>
+  </div>
+
+  <!-- Phone Number -->
+  <div class="form-group">
+    <label class="form-label">Phone Number</label>
+    <div class="phone-input-group">
+      <div class="country-code">
+        <div class="flag-icon">🇵🇰</div>
+        <span>+92</span>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M3 4.5L6 7.5L9 4.5" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <input 
+        type="tel" 
+        class="form-input phone-input" 
+        placeholder="(305) 760-1379"
+        [(ngModel)]="formData.phone"
+        name="phone"
+        (ngModelChange)="onFormChange()"
+        required>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div class="form-group">
+    <label class="form-label">Status</label>
+    <div class="select-wrapper">
+      <select 
+        class="form-select"
+        [(ngModel)]="formData.status"
+        name="status"
+        (ngModelChange)="onFormChange()"
+        required>
+        <option value="" disabled>Select Status</option>
+        <option *ngFor="let option of statusOptions" [value]="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+      <svg class="select-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M3 4.5L6 7.5L9 4.5" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Light Mode Section -->
+  <div class="mode-section">
+    <h3 class="mode-title">Light Mode</h3>
+    
+    <!-- Light Mode Logo Upload -->
+    <div class="form-group">
+      <label class="form-label">Upload Dark Logo File</label>
+      <div class="upload-area" (click)="triggerLightLogoUpload()">
+        <input 
+          type="file" 
+          id="lightLogoInput"
+          accept=".jpg,.jpeg,.png" 
+          (change)="onLightLogoUpload($event)"
+          style="display: none;">
+        <div class="upload-content">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="upload-icon">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="7,10 12,15 17,10" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <line x1="12" y1="15" x2="12" y2="3" stroke="#6B7280" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <div class="upload-text">
+            <span class="browse-text">Browse File</span>
+            <span class="upload-hint">Or Drag & Drop JPG Or PNG (Max. 2MB)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Light Mode Colors -->
+    <div class="color-row">
+      <div class="form-group">
+        <label class="form-label">Primary Color</label>
+        <div class="color-input-group">
+          <div 
+            class="color-preview" 
+            [style.background-color]="formData.lightModePrimaryColor">
+          </div>
+          <input 
+            type="text" 
+            class="form-input color-input" 
+            [(ngModel)]="formData.lightModePrimaryColor"
+            name="lightModePrimaryColor"
+            (ngModelChange)="onFormChange()">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Secondary Color</label>
+        <div class="color-input-group">
+          <div 
+            class="color-preview" 
+            [style.background-color]="formData.lightModeSecondaryColor">
+          </div>
+          <input 
+            type="text" 
+            class="form-input color-input" 
+            [(ngModel)]="formData.lightModeSecondaryColor"
+            name="lightModeSecondaryColor"
+            (ngModelChange)="onFormChange()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dark Mode Section -->
+  <div class="mode-section">
+    <h3 class="mode-title">Dark Mode</h3>
+    
+    <!-- Dark Mode Logo Upload -->
+    <div class="form-group">
+      <label class="form-label">Upload Light Logo File</label>
+      <div class="upload-area" (click)="triggerDarkLogoUpload()">
+        <input 
+          type="file" 
+          id="darkLogoInput"
+          accept=".jpg,.jpeg,.png" 
+          (change)="onDarkLogoUpload($event)"
+          style="display: none;">
+        <div class="upload-content">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="upload-icon">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="7,10 12,15 17,10" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <line x1="12" y1="15" x2="12" y2="3" stroke="#6B7280" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <div class="upload-text">
+            <span class="browse-text">Browse File</span>
+            <span class="upload-hint">Or Drag & Drop JPG Or PNG (Max. 2MB)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dark Mode Colors -->
+    <div class="color-row">
+      <div class="form-group">
+        <label class="form-label">Primary Color</label>
+        <div class="color-input-group">
+          <div 
+            class="color-preview" 
+            [style.background-color]="formData.darkModePrimaryColor">
+          </div>
+          <input 
+            type="text" 
+            class="form-input color-input" 
+            [(ngModel)]="formData.darkModePrimaryColor"
+            name="darkModePrimaryColor"
+            (ngModelChange)="onFormChange()">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Secondary Color</label>
+        <div class="color-input-group">
+          <div 
+            class="color-preview" 
+            [style.background-color]="formData.darkModeSecondaryColor">
+          </div>
+          <input 
+            type="text" 
+            class="form-input color-input" 
+            [(ngModel)]="formData.darkModeSecondaryColor"
+            name="darkModeSecondaryColor"
+            (ngModelChange)="onFormChange()">
+        </div>
+      </div>
+    </div>
+  </div>
+</form>

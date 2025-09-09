@@ -1,7 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ScreenFilter, FilterOptions } from '../../../../components/screen-filter/screen-filter';
+import { FilterOptions, ScreenFilter } from '../../../../components/widgets/screen-filter/screen-filter';
+import { Paginator } from '../../../../components/widgets/paginator/paginator';
+import { CrudMenuComponent, CrudMenuOptions } from '../../../../components/widgets/crud-menu/crud-menu';
+import { OffCanvasWrapper } from '../../../../components/widgets/off-canvas-wrapper/off-canvas-wrapper';
+import { BasicTenantForm, BasicTenantFormData } from '../../../../components/forms/basic-tenant-form/basic-tenant-form';
 
 export interface Tenant {
   id: number;
@@ -33,7 +37,7 @@ export interface Filters {
 @Component({
   selector: 'app-tenant-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, ScreenFilter],
+  imports: [CommonModule, FormsModule, ScreenFilter, Paginator, CrudMenuComponent, OffCanvasWrapper, BasicTenantForm],
   templateUrl: './tenant-dashboard.html',
   styleUrls: ['./tenant-dashboard.scss']
 })
@@ -72,7 +76,6 @@ export class TenantDashboard implements OnInit {
 
   // Selection
   selectedTenants: number[] = [];
-  selectedTenantForAction: Tenant | null = null;
 
   // Pagination
   currentPage: number = 1;
@@ -82,16 +85,37 @@ export class TenantDashboard implements OnInit {
 
   // UI state
   showAddTenantOffcanvas: boolean = false;
-  showActionMenuFlag: boolean = false;
-  actionMenuPosition = { x: 0, y: 0 };
+
+  // CRUD Menu options
+  crudMenuOptions: CrudMenuOptions = {
+    view: true,
+    edit: true,
+    delete: true,
+    customActions: [
+      {
+        label: 'Duplicate',
+        icon: 'ic-9',
+        action: 'duplicate',
+        color: 'info'
+      },
+      {
+        label: 'Archive',
+        icon: 'ic-10',
+        action: 'archive',
+        color: 'warning'
+      }
+    ]
+  };
 
   // New tenant form
-  newTenant: NewTenant = {
+  newTenantData: BasicTenantFormData = {
     name: '',
     email: '',
     phone: '',
-    clientsCount: 0
+    status: ''
   };
+
+  canSaveTenant: boolean = false;
 
   constructor() {}
 
@@ -430,50 +454,50 @@ export class TenantDashboard implements OnInit {
     // Implement bulk deactivate logic
   }
 
-  // Action menu
-  showActionMenu(event: Event, tenant: Tenant): void {
-    event.preventDefault();
-    event.stopPropagation();
-    
-    const target = event.target as HTMLElement;
-    const rect = target.getBoundingClientRect();
-    
-    this.actionMenuPosition = {
-      x: rect.left,
-      y: rect.bottom
-    };
-    
-    this.selectedTenantForAction = tenant;
-    this.showActionMenuFlag = true;
-    
-    // Close menu when clicking outside
-    setTimeout(() => {
-      document.addEventListener('click', this.closeActionMenu.bind(this), { once: true });
-    });
+  // Pagination methods
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.updatePaginatedTenants();
   }
 
-  closeActionMenu(): void {
-    this.showActionMenuFlag = false;
-    this.selectedTenantForAction = null;
-  }
-
-  // Tenant actions
-  viewTenant(tenant: Tenant): void {
-    console.log('View tenant:', tenant);
-    this.closeActionMenu();
+  // CRUD Menu methods
+  onViewTenant(tenantId: number): void {
+    console.log('View tenant:', tenantId);
     // Implement view tenant logic
   }
 
-  editTenant(tenant: Tenant): void {
-    console.log('Edit tenant:', tenant);
-    this.closeActionMenu();
+  onEditTenant(tenantId: number): void {
+    console.log('Edit tenant:', tenantId);
     // Implement edit tenant logic
   }
 
-  deleteTenant(tenant: Tenant): void {
-    console.log('Delete tenant:', tenant);
-    this.closeActionMenu();
-    // Implement delete tenant logic
+  onDeleteTenant(tenantId: number): void {
+    console.log('Delete tenant:', tenantId);
+    if (confirm('Are you sure you want to delete this tenant?')) {
+      this.allTenants = this.allTenants.filter(t => t.id !== tenantId);
+      this.applyFilters();
+    }
+  }
+
+  onCustomAction(event: { action: string, itemId: any }): void {
+    const { action, itemId } = event;
+    
+    switch (action) {
+      case 'duplicate':
+        console.log('Duplicate tenant:', itemId);
+        // Implement duplicate logic
+        break;
+      case 'archive':
+        console.log('Archive tenant:', itemId);
+        // Implement archive logic
+        break;
+      default:
+        console.log('Unknown action:', action, itemId);
+    }
+  }
+
+  onCrudMenuClosed(): void {
+    // Menu closed - no action needed for inline dropdown
   }
 
   // Add tenant functionality
@@ -487,18 +511,29 @@ export class TenantDashboard implements OnInit {
   }
 
   saveTenant(): void {
-    console.log('Save tenant:', this.newTenant);
-    // Implement save tenant logic
-    this.closeAddTenantOffcanvas();
+    if (this.canSaveTenant) {
+      console.log('Save tenant:', this.newTenantData);
+      // Implement save tenant logic
+      this.closeAddTenantOffcanvas();
+    }
+  }
+
+  onTenantFormDataChange(data: BasicTenantFormData): void {
+    this.newTenantData = data;
+  }
+
+  onTenantFormValidityChange(isValid: boolean): void {
+    this.canSaveTenant = isValid;
   }
 
   resetNewTenantForm(): void {
-    this.newTenant = {
+    this.newTenantData = {
       name: '',
       email: '',
       phone: '',
-      clientsCount: 0
+      status: ''
     };
+    this.canSaveTenant = false;
   }
 
   // Track by function for ngFor
