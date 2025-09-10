@@ -22,6 +22,7 @@ export class SignIn implements OnInit {
   currentUser: User | null = null;
   permissions: string[] = [];
   showPassword = false;
+  isDarkTheme = false;
 
   constructor(
     private authService: AuthService,
@@ -29,6 +30,9 @@ export class SignIn implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Initialize theme state
+    this.initializeTheme();
+    
     // Subscribe to current user changes
     this.authService.currentUser$.subscribe((user: User | null) => {
       this.currentUser = user;
@@ -120,9 +124,35 @@ export class SignIn implements OnInit {
     this.showPassword = !this.showPassword;
   }
 
+  initializeTheme(): void {
+    // Check for saved theme preference in localStorage
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Determine initial theme
+    const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+    
+    // Set theme state
+    this.isDarkTheme = initialTheme === 'dark';
+    
+    // Apply theme to document
+    document.documentElement.setAttribute('data-theme', initialTheme);
+  }
+
   toggleTheme(): void {
-    const currentTheme = document.body.getAttribute('data-theme') || 'light';
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    document.body.setAttribute('data-theme', newTheme);
+    // Toggle theme state
+    this.isDarkTheme = !this.isDarkTheme;
+    
+    // Determine new theme
+    const newTheme = this.isDarkTheme ? 'dark' : 'light';
+    
+    // Apply theme to document
+    document.documentElement.setAttribute('data-theme', newTheme);
+    
+    // Save theme preference
+    localStorage.setItem('theme', newTheme);
+    
+    // Optional: Dispatch theme change event for other components
+    window.dispatchEvent(new CustomEvent('themeChanged', { detail: newTheme }));
   }
 }

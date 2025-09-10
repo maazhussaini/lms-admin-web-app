@@ -1,1 +1,186 @@
-<p>sign-up works!</p>
+<body class="min-h-screen overflow-hidden">
+        
+  <div class="w-full min-h-screen flex relative">
+    <div class="flex-1 px-8 md:px-12 pt-6 md:pt-6  flex flex-col bg-surface max-w-half relative h-screen">
+      <!-- Content Container with padding for scrolling -->
+      <div class="pb-4 flex-1 flex flex-col">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center">
+            <img src="assets/images/logo.png" alt="orb-Ed Logo" class="w-16 h-20 mr-3" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="logo-fallback" style="display: none;"></div>
+          </div>
+          
+          <!-- Theme Toggle Switch -->
+      <div class="toggle-with-label">
+            <span class="toggle-label text-xs" [title]="isDarkTheme ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+              {{ isDarkTheme ? '🌙' : '☀️' }}
+            </span>
+            <label class="toggle toggle-primary toggle-sm">
+              <input 
+                type="checkbox" 
+                [checked]="isDarkTheme"
+                (change)="toggleTheme()"
+              >
+              <div class="toggle-track"></div>
+            </label>
+          </div>
+        </div>
+        
+        <div class="text-muted text-base mb-1 font-normal">join our community!</div>
+        <h1 class="text-2xl md:text-3xl font-bold text-primary mb-3 leading-tight">Create Your Account</h1>
+      
+      <form (ngSubmit)="onSignUp()" #signUpForm="ngForm" class="w-full">
+        <!-- Full Name -->
+        <div class="mb-3">
+          <label class="block text-sm font-medium text-gray-700 mb-2" for="fullName">Full Name</label>
+          <input 
+            type="text" 
+            id="fullName" 
+            class="input-md w-full border border-border bg-white text-gray-700" 
+            placeholder="Enter Your Full Name" 
+            [(ngModel)]="credentials.full_name"
+            name="fullName"
+            required
+            autocomplete="name"
+          >
+        </div>
+
+        <!-- Email -->
+        <div class="mb-3">
+          <label class="block text-sm font-medium text-gray-700 mb-2" for="email">Email Address</label>
+          <input 
+            type="email" 
+            id="email" 
+            class="input-md w-full border border-border bg-white text-gray-700" 
+            placeholder="Enter Your Email Address" 
+            [(ngModel)]="credentials.email_address"
+            name="email"
+            required
+            autocomplete="email"
+          >
+        </div>
+        
+        <!-- Password -->
+        <div class="mb-3">
+          <label class="block text-sm font-medium text-gray-700 mb-2" for="password">Password</label>
+          <div class="relative">
+            <input 
+              [type]="showPassword ? 'text' : 'password'" 
+              id="password" 
+              class="input-md w-full pr-12 border border-border bg-white text-gray-700" 
+              placeholder="Create a Strong Password" 
+              [(ngModel)]="credentials.password"
+              (ngModelChange)="onPasswordChange()"
+              name="password"
+              required
+              autocomplete="new-password"
+            >
+            <button type="button" class="password-toggle absolute right-4 top-2 transform -translate-y-1/2" (click)="togglePassword()">
+              {{ showPassword ? '🙈' : '👁️' }}
+            </button>
+          </div>
+          
+          <!-- Password Strength Indicator -->
+          <div *ngIf="credentials.password && passwordStrength" class="mt-2 flex items-center gap-2">
+            <div class="flex gap-1">
+              <div class="h-1.5 w-5 rounded-full" 
+                   [ngClass]="passwordStrength === 'weak' ? 'bg-error' : 'bg-gray-200'"></div>
+              <div class="h-1.5 w-5 rounded-full" 
+                   [ngClass]="passwordStrength === 'medium' || passwordStrength === 'strong' ? 'bg-warning' : 'bg-gray-200'"></div>
+              <div class="h-1.5 w-5 rounded-full" 
+                   [ngClass]="passwordStrength === 'strong' ? 'bg-success' : 'bg-gray-200'"></div>
+            </div>
+            <span class="text-xs font-medium" 
+                  [ngClass]="passwordStrength === 'weak' ? 'text-error' : passwordStrength === 'medium' ? 'text-warning' : 'text-success'">
+              {{ passwordStrength | titlecase }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="mb-3">
+          <label class="block text-sm font-medium text-gray-700 mb-2" for="confirmPassword">Confirm Password</label>
+          <div class="relative">
+            <input 
+              [type]="showConfirmPassword ? 'text' : 'password'" 
+              id="confirmPassword" 
+              class="input-md w-full pr-12 border border-border bg-white text-gray-700"
+              [ngClass]="!passwordMatch && credentials.confirm_password ? 'input-error' : ''"
+              placeholder="Confirm Your Password" 
+              [(ngModel)]="credentials.confirm_password"
+              (ngModelChange)="onConfirmPasswordChange()"
+              name="confirmPassword"
+              required
+              autocomplete="new-password"
+            >
+            <button type="button" class="password-toggle absolute right-4 top-2 transform -translate-y-1/2" (click)="toggleConfirmPassword()">
+              {{ showConfirmPassword ? '🙈' : '👁️' }}
+            </button>
+          </div>
+          
+          <!-- Password Match Indicator -->
+          <div *ngIf="credentials.confirm_password && !passwordMatch" class="mt-1.5 flex items-center gap-2 text-error">
+            <i class="fas fa-exclamation-circle text-xs"></i>
+            <span class="text-xs font-medium">Passwords do not match</span>
+          </div>
+          <div *ngIf="credentials.confirm_password && passwordMatch && credentials.password" class="mt-1.5 flex items-center gap-2 text-success">
+            <i class="fas fa-check-circle text-xs"></i>
+            <span class="text-xs font-medium">Passwords match</span>
+          </div>
+        </div>
+
+        <!-- Terms and Conditions -->
+        <div class="mb-3">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="credentials.terms_accepted"
+              name="termsAccepted"
+              required
+              class="mt-1 h-4 w-4 text-primary border-border rounded focus:ring-primary focus:ring-2 flex-shrink-0"
+            >
+            <span class="text-xs text-gray-700 leading-relaxed">
+              I agree to the 
+              <a href="javascript:;" class="text-primary-light hover:underline font-medium">Terms of Service</a> 
+              and 
+              <a href="javascript:;" class="text-primary-light hover:underline font-medium">Privacy Policy</a>
+            </span>
+          </label>
+        </div>
+
+        <!-- Messages -->
+        <div *ngIf="message" class="alert p-2.5 rounded-lg mb-4 flex items-center gap-2 text-xs font-medium" 
+             [ngClass]="messageType === 'error' ? 'alert-danger' : 'alert-success'">
+          <i [ngClass]="messageType === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-check-circle'" class="text-sm"></i>
+          {{ message }}
+        </div>
+        
+        <!-- Sign Up Button -->
+        <button 
+          type="submit" 
+          class="btn btn-primary btn-md w-full mb-3"
+          [disabled]="loading || !signUpForm.valid || !passwordMatch"
+        >
+          <span *ngIf="loading" class="spinner mr-2"></span>
+          {{ loading ? 'Creating Account...' : 'Create Account' }}
+        </button>
+
+        <!-- Sign In Link -->
+        <div class="text-center">
+          <span class="text-gray-700 text-sm">Already have an account? </span>
+          <button type="button" (click)="navigateToSignIn()" class="text-primary-light hover:underline font-medium text-sm">
+            Sign In
+          </button>
+        </div>
+      </form>
+           
+      </div>
+    </div>
+    
+    <div class="flex-1 bg-white bg-cover bg-center bg-no-repeat flex items-center justify-center p-0 max-w-half h-screen signup-bg">
+      <div class="signup-illustration-container w-full h-full flex items-center justify-center relative">
+        <!-- SVG background is applied via CSS -->
+      </div>
+    </div>
+  </div>
+</body>

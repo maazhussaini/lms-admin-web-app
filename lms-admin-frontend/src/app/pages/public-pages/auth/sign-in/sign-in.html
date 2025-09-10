@@ -7,10 +7,20 @@
           <div class="logo-fallback" style="display: none;"></div>
         </div>
         
-        <!-- Theme Toggle Button -->
-        <button type="button" (click)="toggleTheme()" class="btn btn-outline-secondary btn-sm">
-          🌓
-        </button>
+        <!-- Theme Toggle Switch -->
+        <div class="toggle-with-label">
+          <span class="toggle-label text-sm" [title]="isDarkTheme ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+            {{ isDarkTheme ? '🌙' : '☀️' }}
+          </span>
+          <label class="toggle toggle-secondary toggle-sm">
+            <input 
+              type="checkbox" 
+              [checked]="isDarkTheme"
+              (change)="toggleTheme()"
+            >
+            <div class="toggle-track"></div>
+          </label>
+        </div>
       </div>
       
       <div class="text-muted text-base mb-2 font-normal">welcome back!</div>

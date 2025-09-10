@@ -203,6 +203,186 @@
                 </div>
             </div>
         </section>
+
+        <!-- Toggle Examples -->
+        <section class="bg-surface rounded-lg p-6 border border-border">
+            <h2 class="text-2xl font-semibold text-primary mb-6">Toggle Components</h2>
+            
+            <!-- Toggle Sizes -->
+            <div class="mb-8">
+                <h3 class="text-lg font-medium mb-4 text-gray-700">Toggle Sizes</h3>
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-2">
+                        <label class="toggle toggle-primary toggle-sm">
+                            <input type="checkbox">
+                            <div class="toggle-track"></div>
+                        </label>
+                        <span class="text-sm text-muted">Small</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-2">
+                        <label class="toggle toggle-primary toggle-md">
+                            <input type="checkbox" checked>
+                            <div class="toggle-track"></div>
+                        </label>
+                        <span class="text-sm text-muted">Medium</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-2">
+                        <label class="toggle toggle-primary toggle-lg">
+                            <input type="checkbox">
+                            <div class="toggle-track"></div>
+                        </label>
+                        <span class="text-sm text-muted">Large</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toggle Variants -->
+            <div class="mb-8">
+                <h3 class="text-lg font-medium mb-4 text-gray-700">Color Variants</h3>
+                <div class="flex flex-wrap gap-6">
+                    <div class="flex items-center gap-2">
+                        <label class="toggle toggle-primary">
+                            <input type="checkbox" checked>
+                            <div class="toggle-track"></div>
+                        </label>
+                        <span class="text-sm text-muted">Primary</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-2">
+                        <label class="toggle toggle-secondary">
+                            <input type="checkbox" checked>
+                            <div class="toggle-track"></div>
+                        </label>
+                        <span class="text-sm text-muted">Secondary</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-2">
+                        <label class="toggle toggle-success">
+                            <input type="checkbox" checked>
+                            <div class="toggle-track"></div>
+                        </label>
+                        <span class="text-sm text-muted">Success</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-2">
+                        <label class="toggle toggle-warning">
+                            <input type="checkbox" checked>
+                            <div class="toggle-track"></div>
+                        </label>
+                        <span class="text-sm text-muted">Warning</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-2">
+                        <label class="toggle toggle-danger">
+                            <input type="checkbox" checked>
+                            <div class="toggle-track"></div>
+                        </label>
+                        <span class="text-sm text-muted">Danger</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toggle with Labels -->
+            <div class="mb-8">
+                <h3 class="text-lg font-medium mb-4 text-gray-700">Labeled Toggles</h3>
+                <div class="space-y-4 max-w-md">
+                    <div class="toggle-with-label justify-between">
+                        <span class="toggle-label">Email Notifications</span>
+                        <label class="toggle toggle-primary">
+                            <input type="checkbox" checked>
+                            <div class="toggle-track"></div>
+                        </label>
+                    </div>
+                    
+                    <div class="toggle-with-label justify-between">
+                        <span class="toggle-label">Push Notifications</span>
+                        <label class="toggle toggle-success">
+                            <input type="checkbox">
+                            <div class="toggle-track"></div>
+                        </label>
+                    </div>
+                    
+                    <div class="toggle-with-label justify-between">
+                        <span class="toggle-label">Marketing Updates</span>
+                        <label class="toggle toggle-warning">
+                            <input type="checkbox">
+                            <div class="toggle-track"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Animated Toggle -->
+            <div class="mb-8">
+                <h3 class="text-lg font-medium mb-4 text-gray-700">Animated Toggle</h3>
+                <div class="flex items-center gap-4">
+                    <label class="toggle toggle-primary toggle-animated toggle-lg">
+                        <input type="checkbox">
+                        <div class="toggle-track"></div>
+                    </label>
+                    <span class="text-sm text-muted">Toggle with shine animation</span>
+                </div>
+            </div>
+
+            <!-- Settings Panel Example -->
+            <div class="mb-8">
+                <h3 class="text-lg font-medium mb-4 text-gray-700">Settings Panel Example</h3>
+                <div class="card p-4 bg-background border border-border max-w-md">
+                    <h4 class="font-semibold text-primary mb-3">User Preferences</h4>
+                    <div class="space-y-3">
+                        <div class="toggle-with-label justify-between">
+                            <span class="toggle-label">Dark Mode</span>
+                            <label class="toggle toggle-secondary toggle-sm">
+                                <input type="checkbox" onchange="toggleTheme()">
+                                <div class="toggle-track"></div>
+                            </label>
+                        </div>
+                        
+                        <div class="toggle-with-label justify-between">
+                            <span class="toggle-label">Auto-save</span>
+                            <label class="toggle toggle-primary toggle-sm">
+                                <input type="checkbox" checked>
+                                <div class="toggle-track"></div>
+                            </label>
+                        </div>
+                        
+                        <div class="toggle-with-label justify-between">
+                            <span class="toggle-label">Show tutorials</span>
+                            <label class="toggle toggle-success toggle-sm">
+                                <input type="checkbox">
+                                <div class="toggle-track"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toggle Classes Reference -->
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-lg font-medium mb-3 text-gray-700">Toggle Size Classes</h3>
+                    <div class="space-y-2 text-sm">
+                        <div><code class="bg-light px-2 py-1 rounded">toggle-sm</code> - Small toggle (32x18px)</div>
+                        <div><code class="bg-light px-2 py-1 rounded">toggle-md</code> - Medium toggle (44x24px)</div>
+                        <div><code class="bg-light px-2 py-1 rounded">toggle-lg</code> - Large toggle (56x30px)</div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-medium mb-3 text-gray-700">Toggle Variant Classes</h3>
+                    <div class="space-y-2 text-sm">
+                        <div><code class="bg-light px-2 py-1 rounded">toggle-primary</code> - Primary color</div>
+                        <div><code class="bg-light px-2 py-1 rounded">toggle-secondary</code> - Secondary color</div>
+                        <div><code class="bg-light px-2 py-1 rounded">toggle-success</code> - Success color</div>
+                        <div><code class="bg-light px-2 py-1 rounded">toggle-warning</code> - Warning color</div>
+                        <div><code class="bg-light px-2 py-1 rounded">toggle-danger</code> - Danger color</div>
+                        <div><code class="bg-light px-2 py-1 rounded">toggle-animated</code> - With shine effect</div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 
     <script>

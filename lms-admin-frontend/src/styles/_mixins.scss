@@ -199,6 +199,13 @@
 // Theme generation mixin
 @mixin generate-theme-variables($theme-map) {
   @each $key, $value in $theme-map {
-    --color-#{$key}: #{$value};
+    // Convert key to string and check if it starts with 'gray-'
+    $key-string: "#{$key}";
+    @if str-index($key-string, 'gray-') == 1 {
+      --#{$key}: #{$value};
+    } @else {
+      --color-#{$key}: #{$value};
+      --#{$key}: #{$value};
+    }
   }
 }

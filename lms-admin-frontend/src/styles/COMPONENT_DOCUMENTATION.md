@@ -254,4 +254,152 @@ All components include responsive design considerations:
 
 ---
 
+## 🔄 **Toggle Button Components**
+
+### **Basic Toggle Switches**
+```html
+<!-- Primary Toggle -->
+<label class="toggle toggle-primary">
+  <input type="checkbox">
+  <div class="toggle-track"></div>
+</label>
+
+<!-- Secondary Toggle -->
+<label class="toggle toggle-secondary">
+  <input type="checkbox" checked>
+  <div class="toggle-track"></div>
+</label>
+
+<!-- Success Toggle -->
+<label class="toggle toggle-success">
+  <input type="checkbox">
+  <div class="toggle-track"></div>
+</label>
+```
+
+### **Toggle Sizes**
+```html
+<!-- Small Toggle -->
+<label class="toggle toggle-primary toggle-sm">
+  <input type="checkbox">
+  <div class="toggle-track"></div>
+</label>
+
+<!-- Medium Toggle (Default) -->
+<label class="toggle toggle-primary toggle-md">
+  <input type="checkbox">
+  <div class="toggle-track"></div>
+</label>
+
+<!-- Large Toggle -->
+<label class="toggle toggle-primary toggle-lg">
+  <input type="checkbox">
+  <div class="toggle-track"></div>
+</label>
+```
+
+### **Toggle with Labels**
+```html
+<!-- Toggle with text label -->
+<div class="toggle-with-label">
+  <label class="toggle toggle-primary">
+    <input type="checkbox">
+    <div class="toggle-track"></div>
+  </label>
+  <span class="toggle-label">Enable Notifications</span>
+</div>
+
+<!-- Theme Toggle Example -->
+<div class="toggle-with-label">
+  <span class="toggle-label">Dark Mode</span>
+  <label class="toggle toggle-secondary">
+    <input type="checkbox" (change)="toggleTheme()">
+    <div class="toggle-track"></div>
+  </label>
+</div>
+```
+
+### **Animated Toggle (Enhanced)**
+```html
+<!-- Toggle with shine animation -->
+<label class="toggle toggle-primary toggle-animated">
+  <input type="checkbox">
+  <div class="toggle-track"></div>
+</label>
+```
+
+### **Toggle Variants**
+```html
+<!-- All color variants -->
+<div class="flex gap-4 items-center">
+  <label class="toggle toggle-primary">
+    <input type="checkbox">
+    <div class="toggle-track"></div>
+  </label>
+  
+  <label class="toggle toggle-secondary">
+    <input type="checkbox">
+    <div class="toggle-track"></div>
+  </label>
+  
+  <label class="toggle toggle-success">
+    <input type="checkbox">
+    <div class="toggle-track"></div>
+  </label>
+  
+  <label class="toggle toggle-warning">
+    <input type="checkbox">
+    <div class="toggle-track"></div>
+  </label>
+  
+  <label class="toggle toggle-danger">
+    <input type="checkbox">
+    <div class="toggle-track"></div>
+  </label>
+</div>
+```
+
+### **Settings Panel Example**
+```html
+<div class="card p-6">
+  <h3 class="text-lg font-semibold mb-4">Preferences</h3>
+  
+  <div class="space-y-4">
+    <!-- Individual setting toggles -->
+    <div class="toggle-with-label">
+      <span class="toggle-label">Email Notifications</span>
+      <label class="toggle toggle-primary">
+        <input type="checkbox" [(ngModel)]="emailNotifications">
+        <div class="toggle-track"></div>
+      </label>
+    </div>
+    
+    <div class="toggle-with-label">
+      <span class="toggle-label">Push Notifications</span>
+      <label class="toggle toggle-success">
+        <input type="checkbox" [(ngModel)]="pushNotifications">
+        <div class="toggle-track"></div>
+      </label>
+    </div>
+    
+    <div class="toggle-with-label">
+      <span class="toggle-label">Marketing Updates</span>
+      <label class="toggle toggle-warning">
+        <input type="checkbox" [(ngModel)]="marketingUpdates">
+        <div class="toggle-track"></div>
+      </label>
+    </div>
+  </div>
+</div>
+```
+
+### **Toggle Specifications**
+| Size | Width | Height | Thumb Size | Animation |
+|------|-------|--------|------------|-----------|
+| `toggle-sm` | 32px | 18px | 12px | Cubic Bezier |
+| `toggle-md` | 44px | 24px | 16px | Cubic Bezier |
+| `toggle-lg` | 56px | 30px | 20px | Cubic Bezier |
+
+---
+
 Your sign-in component is now the perfect example of this system in action! 🎉
