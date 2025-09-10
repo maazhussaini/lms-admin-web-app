@@ -20,6 +20,10 @@
 .bg-surface { background-color: var(--color-surface); }
 .bg-border { background-color: var(--color-border); }
 
+// Additional semantic backgrounds
+.bg-white { background-color: var(--color-white); }
+.bg-light { background-color: var(--color-light-gray); }
+
 // Background attachment
 .bg-fixed { background-attachment: fixed; }
 .bg-local { background-attachment: local; }

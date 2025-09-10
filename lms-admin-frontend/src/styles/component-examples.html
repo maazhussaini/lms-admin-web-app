@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>orb-Ed Component Examples</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="p-8 bg-background">
+    <div class="max-w-4xl mx-auto space-y-8">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-primary mb-4">orb-Ed Component System</h1>
+            <p class="text-muted text-lg">Comprehensive button and input components with theme support</p>
+            <button onclick="toggleTheme()" class="mt-4 p-2 rounded-lg border border-border bg-surface hover:bg-light transition-colors">
+                🌓 Toggle Theme
+            </button>
+        </div>
+
+        <!-- Input Examples -->
+        <section class="bg-surface rounded-lg p-6 border border-border">
+            <h2 class="text-2xl font-semibold text-primary mb-6">Form Inputs</h2>
+            
+            <!-- Input Sizes -->
+            <div class="mb-8">
+                <h3 class="text-lg font-medium mb-4 text-gray-700">Input Sizes</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Small Input</label>
+                        <input type="text" class="input-sm w-full border border-border" placeholder="Small input (input-sm)">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Medium Input (Default)</label>
+                        <input type="text" class="input-md w-full border border-border" placeholder="Medium input (input-md)">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Large Input</label>
+                        <input type="text" class="input-lg w-full border border-border" placeholder="Large input (input-lg)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Validation States -->
+            <div class="mb-8">
+                <h3 class="text-lg font-medium mb-4 text-gray-700">Validation States</h3>
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-success mb-2">Success State</label>
+                        <input type="text" class="input-md input-success w-full" placeholder="Success input" value="Valid input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-warning mb-2">Warning State</label>
+                        <input type="text" class="input-md input-warning w-full" placeholder="Warning input" value="Check this">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-error mb-2">Error State</label>
+                        <input type="text" class="input-md input-error w-full" placeholder="Error input" value="Invalid input">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Button Examples -->
+        <section class="bg-surface rounded-lg p-6 border border-border">
+            <h2 class="text-2xl font-semibold text-primary mb-6">Buttons</h2>
+
+            <!-- Button Sizes -->
+            <div class="mb-8">
+                <h3 class="text-lg font-medium mb-4 text-gray-700">Button Sizes</h3>
+                <div class="flex flex-wrap items-center gap-4">
+                    <button class="btn btn-primary btn-sm">Small Button</button>
+                    <button class="btn btn-primary btn-md">Medium Button</button>
+                    <button class="btn btn-primary btn-lg">Large Button</button>
+                    <button class="btn btn-primary btn-xl">Extra Large Button</button>
+                </div>
+            </div>
+
+            <!-- Solid Buttons -->
+            <div class="mb-8">
+                <h3 class="text-lg font-medium mb-4 text-gray-700">Solid Button Variants</h3>
+                <div class="flex flex-wrap gap-4">
+                    <button class="btn btn-primary">Primary</button>
+                    <button class="btn btn-secondary">Secondary</button>
+                    <button class="btn btn-success">Success</button>
+                    <button class="btn btn-warning">Warning</button>
+                    <button class="btn btn-error">Error</button>
+                </div>
+            </div>
+
+            <!-- Outlined Buttons -->
+            <div class="mb-8">
+                <h3 class="text-lg font-medium mb-4 text-gray-700">Outlined Button Variants</h3>
+                <div class="flex flex-wrap gap-4">
+                    <button class="btn btn-outline-primary">Primary</button>
+                    <button class="btn btn-outline-secondary">Secondary</button>
+                    <button class="btn btn-outline-success">Success</button>
+                    <button class="btn btn-outline-warning">Warning</button>
+                    <button class="btn btn-outline-error">Error</button>
+                </div>
+            </div>
+
+            <!-- Disabled States -->
+            <div class="mb-8">
+                <h3 class="text-lg font-medium mb-4 text-gray-700">Disabled States</h3>
+                <div class="flex flex-wrap gap-4">
+                    <button class="btn btn-primary" disabled>Primary Disabled</button>
+                    <button class="btn btn-outline-primary" disabled>Outlined Disabled</button>
+                </div>
+            </div>
+
+            <!-- Size Combinations -->
+            <div class="mb-8">
+                <h3 class="text-lg font-medium mb-4 text-gray-700">Size & Style Combinations</h3>
+                <div class="space-y-4">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <span class="text-sm text-muted font-medium w-20">Small:</span>
+                        <button class="btn btn-primary btn-sm">Primary</button>
+                        <button class="btn btn-outline-success btn-sm">Outlined</button>
+                        <button class="btn btn-warning btn-sm">Warning</button>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-4">
+                        <span class="text-sm text-muted font-medium w-20">Medium:</span>
+                        <button class="btn btn-primary btn-md">Primary</button>
+                        <button class="btn btn-outline-success btn-md">Outlined</button>
+                        <button class="btn btn-warning btn-md">Warning</button>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-4">
+                        <span class="text-sm text-muted font-medium w-20">Large:</span>
+                        <button class="btn btn-primary btn-lg">Primary</button>
+                        <button class="btn btn-outline-success btn-lg">Outlined</button>
+                        <button class="btn btn-warning btn-lg">Warning</button>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-4">
+                        <span class="text-sm text-muted font-medium w-20">X-Large:</span>
+                        <button class="btn btn-primary btn-xl">Primary</button>
+                        <button class="btn btn-outline-success btn-xl">Outlined</button>
+                        <button class="btn btn-warning btn-xl">Warning</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Usage Examples -->
+        <section class="bg-surface rounded-lg p-6 border border-border">
+            <h2 class="text-2xl font-semibold text-primary mb-6">Usage Examples</h2>
+            
+            <div class="mb-6">
+                <h3 class="text-lg font-medium mb-3 text-gray-700">Form Example</h3>
+                <form class="space-y-4 max-w-md">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" class="input-md w-full border border-border" placeholder="Enter your email">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                        <textarea class="input-md w-full border border-border h-24 resize-none" placeholder="Enter your message"></textarea>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-md">Send Message</button>
+                        <button type="button" class="btn btn-outline-secondary btn-md">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-medium mb-3 text-gray-700">Action Buttons Example</h3>
+                <div class="flex flex-wrap gap-2">
+                    <button class="btn btn-success btn-sm">✓ Approve</button>
+                    <button class="btn btn-outline-warning btn-sm">⚠ Review</button>
+                    <button class="btn btn-outline-error btn-sm">✕ Reject</button>
+                    <button class="btn btn-outline-primary btn-sm">📝 Edit</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- CSS Classes Reference -->
+        <section class="bg-surface rounded-lg p-6 border border-border">
+            <h2 class="text-2xl font-semibold text-primary mb-6">CSS Classes Reference</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-lg font-medium mb-3 text-gray-700">Input Classes</h3>
+                    <div class="space-y-2 text-sm">
+                        <div><code class="bg-light px-2 py-1 rounded">input-sm</code> - Small input</div>
+                        <div><code class="bg-light px-2 py-1 rounded">input-md</code> - Medium input (default)</div>
+                        <div><code class="bg-light px-2 py-1 rounded">input-lg</code> - Large input</div>
+                        <div><code class="bg-light px-2 py-1 rounded">input-success</code> - Success state</div>
+                        <div><code class="bg-light px-2 py-1 rounded">input-warning</code> - Warning state</div>
+                        <div><code class="bg-light px-2 py-1 rounded">input-error</code> - Error state</div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-medium mb-3 text-gray-700">Button Classes</h3>
+                    <div class="space-y-2 text-sm">
+                        <div><code class="bg-light px-2 py-1 rounded">btn-sm</code> - Small button</div>
+                        <div><code class="bg-light px-2 py-1 rounded">btn-md</code> - Medium button (default)</div>
+                        <div><code class="bg-light px-2 py-1 rounded">btn-lg</code> - Large button</div>
+                        <div><code class="bg-light px-2 py-1 rounded">btn-xl</code> - Extra large button</div>
+                        <div><code class="bg-light px-2 py-1 rounded">btn-primary</code> - Primary button</div>
+                        <div><code class="bg-light px-2 py-1 rounded">btn-outline-*</code> - Outlined variants</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', newTheme);
+        }
+    </script>
+</body>
+</html>

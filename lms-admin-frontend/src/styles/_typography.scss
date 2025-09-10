@@ -89,6 +89,11 @@
 .text-text-inverse { color: var(--color-text-inverse); }
 .text-border { color: var(--color-border); }
 
+// Additional semantic text colors  
+.text-muted { color: var(--color-text-muted); }
+.text-gray-700 { color: var(--color-text); }
+.text-primary-light { color: var(--color-primary-light); }
+
 // Text decoration
 .underline { text-decoration-line: underline; }
 .overline { text-decoration-line: overline; }

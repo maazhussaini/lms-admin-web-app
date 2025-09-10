@@ -68,6 +68,10 @@
   .p-#{$key} { padding: #{$value}; }
 }
 
+// Custom padding values
+.p-4\.5 { padding: 1.125rem; } // 18px (between p-4 and p-5)
+.p-15 { padding: 3.75rem; } // 60px (for larger screens)
+
 // Padding X (horizontal)
 @each $key, $value in $spacing-scale {
   .px-#{$key} { padding-left: #{$value}; padding-right: #{$value}; }
