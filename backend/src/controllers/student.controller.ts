@@ -293,10 +293,17 @@ export class StudentController {
       const enrollmentStatus = req.query['enrollment_status'] as string;
       const includeProgress = req.query['include_progress'] === 'true';
       
+      // Parse comma-separated enrollment statuses
+      let statusesArray: string[] | undefined;
+      if (enrollmentStatus) {
+        statusesArray = enrollmentStatus.split(',').map(s => s.trim().toUpperCase());
+      }
+      
       logger.debug('Getting enrolled courses for current student profile', {
         studentId: student.student_id,
         paginationParams: params,
         enrollmentStatus,
+        statusesArray,
         includeProgress,
         requestingUserId: requestingUser.id,
         userType: requestingUser.user_type
@@ -305,7 +312,8 @@ export class StudentController {
       const result = await studentService.getEnrolledCoursesByStudentId(
         student.student_id,
         requestingUser,
-        params
+        params,
+        statusesArray
       );
 
       return {
