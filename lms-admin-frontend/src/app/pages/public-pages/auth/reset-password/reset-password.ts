@@ -21,9 +21,7 @@ export class ResetPassword {
   isDarkTheme = false;
   
   // Password strength properties
-  passwordStrengthPercentage = 0;
-  passwordStrengthText = '';
-  passwordStrengthClass = '';
+  passwordStrength = '';
   
   // Password match properties
   passwordMatchText = '';
@@ -101,42 +99,32 @@ export class ResetPassword {
 
   calculatePasswordStrength() {
     const password = this.password;
-    let score = 0;
-    let feedback = '';
 
     if (password.length === 0) {
-      this.passwordStrengthPercentage = 0;
-      this.passwordStrengthText = '';
-      this.passwordStrengthClass = '';
+      this.passwordStrength = '';
       return;
     }
 
-    // Length check
-    if (password.length >= 8) score += 25;
+    let strengthScore = 0;
     
-    // Uppercase check
-    if (/[A-Z]/.test(password)) score += 25;
+    // Length checks
+    if (password.length >= 8) strengthScore++;
+    if (password.length >= 12) strengthScore++;
     
-    // Lowercase check
-    if (/[a-z]/.test(password)) score += 25;
-    
-    // Number or special character check
-    if (/[0-9]/.test(password) || /[^A-Za-z0-9]/.test(password)) score += 25;
+    // Character type checks  
+    if (/[a-z]/.test(password)) strengthScore++;
+    if (/[A-Z]/.test(password)) strengthScore++;
+    if (/[0-9]/.test(password)) strengthScore++;
+    if (/[^A-Za-z0-9]/.test(password)) strengthScore++;
 
-    this.passwordStrengthPercentage = score;
-
-    if (score < 50) {
-      feedback = 'Weak';
-      this.passwordStrengthClass = 'weak';
-    } else if (score < 75) {
-      feedback = 'Good';
-      this.passwordStrengthClass = 'good';
+    // Determine strength level
+    if (strengthScore <= 2) {
+      this.passwordStrength = 'weak';
+    } else if (strengthScore <= 4) {
+      this.passwordStrength = 'medium';
     } else {
-      feedback = 'Strong';
-      this.passwordStrengthClass = 'strong';
+      this.passwordStrength = 'strong';
     }
-
-    this.passwordStrengthText = feedback;
   }
 
   checkPasswordMatch() {
