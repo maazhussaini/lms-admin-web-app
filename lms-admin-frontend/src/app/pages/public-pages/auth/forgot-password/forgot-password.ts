@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../../services/auth.service';
 
@@ -8,17 +8,41 @@ import { AuthService } from '../../../../services/auth.service';
   templateUrl: './forgot-password.html',
   styleUrl: './forgot-password.scss'
 })
-export class ForgotPassword {
+export class ForgotPassword implements OnInit {
   
   resetEmail = '';
   loading = false;
   message = '';
   messageType: 'success' | 'error' = 'error';
+  isDarkTheme = false;
 
   constructor(
     private authService: AuthService,
     private router: Router
   ) {}
+
+  ngOnInit(): void {
+    this.initializeTheme();
+  }
+
+  private initializeTheme(): void {
+    // Check for saved theme preference or default to light mode
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    this.isDarkTheme = savedTheme === 'dark';
+    this.applyTheme();
+  }
+
+  toggleTheme(): void {
+    this.isDarkTheme = !this.isDarkTheme;
+    const theme = this.isDarkTheme ? 'dark' : 'light';
+    localStorage.setItem('theme', theme);
+    this.applyTheme();
+  }
+
+  private applyTheme(): void {
+    const theme = this.isDarkTheme ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+  }
 
   async onSendResetEmail(): Promise<void> {
     if (!this.resetEmail) {

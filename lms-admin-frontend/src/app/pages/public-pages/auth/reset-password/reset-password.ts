@@ -17,6 +17,9 @@ export class ResetPassword {
   messageType: 'success' | 'danger' = 'success';
   showLogoIcon = false;
   
+  // Theme management
+  isDarkTheme = false;
+  
   // Password strength properties
   passwordStrengthPercentage = 0;
   passwordStrengthText = '';
@@ -26,7 +29,42 @@ export class ResetPassword {
   passwordMatchText = '';
   passwordMatchClass = '';
   
-  constructor(private router: Router) {}
+  constructor(private router: Router) {
+    // Initialize theme from localStorage or system preference
+    this.initializeTheme();
+  }
+
+  private initializeTheme() {
+    // Check localStorage first
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      this.isDarkTheme = savedTheme === 'dark';
+    } else {
+      // Use system preference
+      this.isDarkTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    
+    this.applyTheme();
+  }
+
+  toggleTheme() {
+    this.isDarkTheme = !this.isDarkTheme;
+    this.applyTheme();
+    
+    // Save theme preference
+    localStorage.setItem('theme', this.isDarkTheme ? 'dark' : 'light');
+  }
+
+  private applyTheme() {
+    const root = document.documentElement;
+    if (this.isDarkTheme) {
+      root.setAttribute('data-theme', 'dark');
+      root.classList.add('dark');
+    } else {
+      root.setAttribute('data-theme', 'light');
+      root.classList.remove('dark');
+    }
+  }
 
   onImageError(event: Event) {
     const imgElement = event.target as HTMLImageElement;

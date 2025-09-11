@@ -1,123 +1,158 @@
-<div class="container verify-otp-container">
-  <div class="verify-otp-left-section">
-    <div class="logo verify-otp-logo">
-      <img src="/assets/images/logo.png" alt="orb-Ed Logo" (error)="onImageError($event)">
-      <div class="logo-icon" [style.display]="showLogoIcon ? 'flex' : 'none'"></div>
+<body class="min-h-screen overflow-hidden">
+  <div class="w-full min-h-screen flex relative">
+    <div class="flex-1 px-8 md:px-12 pt-6 md:pt-8 flex flex-col bg-surface max-w-half relative h-screen">
+      <!-- Content Container -->
+      <div class="pb-6 flex-1 flex flex-col justify-center">
+        
+        <!-- Header with Logo and Theme Toggle -->
+        <div class="flex items-center justify-between mb-8">
+          <div class="flex items-center">
+            <img src="assets/images/logo.png" alt="orb-Ed Logo" class="w-16 h-20 mr-3" (error)="onImageError($event)">
+            <div class="logo-fallback" [style.display]="showLogoIcon ? 'flex' : 'none'"></div>
+          </div>
+          
+          <!-- Theme Toggle Switch -->
+          <div class="toggle-with-label">
+            <span class="toggle-label text-xs" [title]="isDarkTheme ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+              {{ isDarkTheme ? '🌙' : '☀️' }}
+            </span>
+            <label class="toggle toggle-primary toggle-sm">
+              <input 
+                type="checkbox" 
+                [checked]="isDarkTheme"
+                (change)="toggleTheme()"
+              >
+              <div class="toggle-track"></div>
+            </label>
+          </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="text-muted text-base mb-2 font-normal">Enter the code we sent to your email to continue.</div>
+        <h1 class="text-3xl md:text-4xl font-bold text-primary mb-8 leading-tight">Verify Your OTP</h1>
+      
+        <form class="w-full" (ngSubmit)="onVerifyOtp()" #otpForm="ngForm">
+          <!-- OTP Input Fields -->
+          <div class="flex gap-3 md:gap-4 justify-center mb-6">
+            <input 
+              type="text" 
+              class="w-12 h-14 md:w-14 md:h-16 border-2 border-border bg-white text-gray-700 rounded-xl text-center text-xl font-semibold focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-20 transition-all duration-200" 
+              maxlength="1" 
+              pattern="[0-9]" 
+              inputmode="numeric"
+              [(ngModel)]="otpDigits[0]"
+              name="otp0"
+              (input)="onOtpInput($event, 0)"
+              (keydown)="onKeyDown($event, 0)"
+              #otp0>
+            <input 
+              type="text" 
+              class="w-12 h-14 md:w-14 md:h-16 border-2 border-border bg-white text-gray-700 rounded-xl text-center text-xl font-semibold focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-20 transition-all duration-200" 
+              maxlength="1" 
+              pattern="[0-9]" 
+              inputmode="numeric"
+              [(ngModel)]="otpDigits[1]"
+              name="otp1"
+              (input)="onOtpInput($event, 1)"
+              (keydown)="onKeyDown($event, 1)"
+              #otp1>
+            <input 
+              type="text" 
+              class="w-12 h-14 md:w-14 md:h-16 border-2 border-border bg-white text-gray-700 rounded-xl text-center text-xl font-semibold focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-20 transition-all duration-200" 
+              maxlength="1" 
+              pattern="[0-9]" 
+              inputmode="numeric"
+              [(ngModel)]="otpDigits[2]"
+              name="otp2"
+              (input)="onOtpInput($event, 2)"
+              (keydown)="onKeyDown($event, 2)"
+              #otp2>
+            <input 
+              type="text" 
+              class="w-12 h-14 md:w-14 md:h-16 border-2 border-border bg-white text-gray-700 rounded-xl text-center text-xl font-semibold focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-20 transition-all duration-200" 
+              maxlength="1" 
+              pattern="[0-9]" 
+              inputmode="numeric"
+              [(ngModel)]="otpDigits[3]"
+              name="otp3"
+              (input)="onOtpInput($event, 3)"
+              (keydown)="onKeyDown($event, 3)"
+              #otp3>
+            <input 
+              type="text" 
+              class="w-12 h-14 md:w-14 md:h-16 border-2 border-border bg-white text-gray-700 rounded-xl text-center text-xl font-semibold focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-20 transition-all duration-200" 
+              maxlength="1" 
+              pattern="[0-9]" 
+              inputmode="numeric"
+              [(ngModel)]="otpDigits[4]"
+              name="otp4"
+              (input)="onOtpInput($event, 4)"
+              (keydown)="onKeyDown($event, 4)"
+              #otp4>
+            <input 
+              type="text" 
+              class="w-12 h-14 md:w-14 md:h-16 border-2 border-border bg-white text-gray-700 rounded-xl text-center text-xl font-semibold focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-20 transition-all duration-200" 
+              maxlength="1" 
+              pattern="[0-9]" 
+              inputmode="numeric"
+              [(ngModel)]="otpDigits[5]"
+              name="otp5"
+              (input)="onOtpInput($event, 5)"
+              (keydown)="onKeyDown($event, 5)"
+              #otp5>
+          </div>
+          
+          <!-- Timer Display -->
+          <div class="text-center mb-6" *ngIf="timeRemaining > 0">
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-error-bg border border-error-border rounded-lg">
+              <i class="fas fa-clock text-error text-sm"></i>
+              <span class="text-error font-semibold font-mono text-lg">{{ formatTime(timeRemaining) }}</span>
+            </div>
+          </div>
+          
+          <!-- Resend Code Section -->
+          <div class="text-center mb-6">
+            <span class="text-gray-700 text-sm">Don't Receive Any Code? </span>
+            <button 
+              type="button"
+              class="text-primary-light hover:underline font-medium text-sm disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
+              [disabled]="timeRemaining > 0 || resendLoading"
+              (click)="onResendCode($event)">
+              {{ resendLoading ? 'Sending...' : 'Resend Code' }}
+            </button>
+          </div>
+          
+          <!-- Messages -->
+          <div *ngIf="message" class="alert p-3 rounded-lg mb-6 flex items-center gap-2 text-sm font-medium" 
+               [ngClass]="messageType === 'danger' ? 'alert-danger' : 'alert-success'">
+            <i [ngClass]="messageType === 'danger' ? 'fas fa-exclamation-circle' : 'fas fa-check-circle'" class="text-base"></i>
+            {{ message }}
+          </div>
+          
+          <!-- Continue Button -->
+          <button 
+            type="submit" 
+            class="btn btn-primary btn-lg w-full mb-6"
+            [disabled]="loading || !isOtpComplete()">
+            <span *ngIf="loading" class="spinner mr-2"></span>
+            {{ loading ? 'Verifying...' : 'Continue' }}
+          </button>
+          
+          <!-- Back to Login Link -->
+          <div class="text-center">
+            <span class="text-gray-700 text-sm">Remember? </span>
+            <button type="button" (click)="goBackToLogin($event)" class="text-primary-light hover:underline font-medium text-sm">
+              Back To Login
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
     
-    <div class="verify-otp-description">Enter the code we sent to your email to continue.</div>
-    <h1 class="title-primary">Verify Your OTP</h1>
-    
-    <form class="verify-otp-form" (ngSubmit)="onVerifyOtp()" #otpForm="ngForm">
-      <div class="otp-input-container">
-        <input 
-          type="text" 
-          class="otp-input" 
-          maxlength="1" 
-          pattern="[0-9]" 
-          inputmode="numeric"
-          [(ngModel)]="otpDigits[0]"
-          name="otp0"
-          (input)="onOtpInput($event, 0)"
-          (keydown)="onKeyDown($event, 0)"
-          #otp0>
-        <input 
-          type="text" 
-          class="otp-input" 
-          maxlength="1" 
-          pattern="[0-9]" 
-          inputmode="numeric"
-          [(ngModel)]="otpDigits[1]"
-          name="otp1"
-          (input)="onOtpInput($event, 1)"
-          (keydown)="onKeyDown($event, 1)"
-          #otp1>
-        <input 
-          type="text" 
-          class="otp-input" 
-          maxlength="1" 
-          pattern="[0-9]" 
-          inputmode="numeric"
-          [(ngModel)]="otpDigits[2]"
-          name="otp2"
-          (input)="onOtpInput($event, 2)"
-          (keydown)="onKeyDown($event, 2)"
-          #otp2>
-        <input 
-          type="text" 
-          class="otp-input" 
-          maxlength="1" 
-          pattern="[0-9]" 
-          inputmode="numeric"
-          [(ngModel)]="otpDigits[3]"
-          name="otp3"
-          (input)="onOtpInput($event, 3)"
-          (keydown)="onKeyDown($event, 3)"
-          #otp3>
-        <input 
-          type="text" 
-          class="otp-input" 
-          maxlength="1" 
-          pattern="[0-9]" 
-          inputmode="numeric"
-          [(ngModel)]="otpDigits[4]"
-          name="otp4"
-          (input)="onOtpInput($event, 4)"
-          (keydown)="onKeyDown($event, 4)"
-          #otp4>
-        <input 
-          type="text" 
-          class="otp-input" 
-          maxlength="1" 
-          pattern="[0-9]" 
-          inputmode="numeric"
-          [(ngModel)]="otpDigits[5]"
-          name="otp5"
-          (input)="onOtpInput($event, 5)"
-          (keydown)="onKeyDown($event, 5)"
-          #otp5>
+    <div class="flex-1 bg-white bg-cover bg-center bg-no-repeat flex items-center justify-center p-0 max-w-half h-screen verify-otp-bg">
+      <div class="verify-otp-illustration-container w-full h-full flex items-center justify-center relative">
+        <!-- SVG background is applied via CSS -->
       </div>
-      
-      <div class="otp-timer" *ngIf="timeRemaining > 0">
-        {{ formatTime(timeRemaining) }}
-      </div>
-      
-      <div class="resend-code-container">
-        <span class="resend-code-text">Don't Receive Any Code?</span>
-        <a 
-          href="#" 
-          class="resend-code-link" 
-          [class.disabled]="timeRemaining > 0 || resendLoading"
-          (click)="onResendCode($event)">
-          {{ resendLoading ? 'Sending...' : 'Resend Code' }}
-        </a>
-      </div>
-      
-      <button 
-        type="submit" 
-        class="btn-primary verify-otp-btn"
-        [disabled]="loading || !isOtpComplete()">
-        <span *ngIf="loading" class="spinner"></span>
-        {{ loading ? 'Verifying...' : 'Continue' }}
-      </button>
-
-      <!-- Success/Error Messages -->
-      <div *ngIf="message" class="alert" [ngClass]="'alert-' + messageType">
-        <i *ngIf="messageType === 'success'" class="checkmark">✓</i>
-        <i *ngIf="messageType === 'danger'" class="error">⚠</i>
-        {{ message }}
-      </div>
-    </form>
-    
-    <div class="verify-otp-back-link">
-      <span class="verify-otp-back-text">Remember?</span>
-      <a href="#" class="link-primary back-to-login-link" (click)="goBackToLogin($event)">Back To Login</a>
     </div>
   </div>
-  
-  <div class="verify-otp-right-section">
-    <div class="verify-otp-illustration-container">
-      <!-- SVG background is applied via CSS -->
-    </div>
-  </div>
-</div>
+</body>
