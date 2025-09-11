@@ -17,6 +17,7 @@ export class VerifyOtp implements OnInit, OnDestroy {
   timerInterval: any;
   email = ''; // This should be passed from the previous component
   showLogoIcon = false; // For fallback logo display
+  isDarkTheme = false;
   
   constructor(
     private router: Router
@@ -24,6 +25,7 @@ export class VerifyOtp implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.startTimer();
+    this.initializeTheme();
     // You might want to get email from route params or service
     // this.email = this.route.snapshot.queryParams['email'] || '';
   }
@@ -32,6 +34,25 @@ export class VerifyOtp implements OnInit, OnDestroy {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
     }
+  }
+
+  private initializeTheme(): void {
+    // Check for saved theme preference or default to light mode
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    this.isDarkTheme = savedTheme === 'dark';
+    this.applyTheme();
+  }
+
+  toggleTheme(): void {
+    this.isDarkTheme = !this.isDarkTheme;
+    const theme = this.isDarkTheme ? 'dark' : 'light';
+    localStorage.setItem('theme', theme);
+    this.applyTheme();
+  }
+
+  private applyTheme(): void {
+    const theme = this.isDarkTheme ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
   }
 
   startTimer() {

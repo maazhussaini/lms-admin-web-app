@@ -32,11 +32,11 @@
       <form (ngSubmit)="onSignUp()" #signUpForm="ngForm" class="w-full">
         <!-- Full Name -->
         <div class="mb-3">
-          <label class="block text-sm font-medium text-gray-700 mb-2" for="fullName">Full Name</label>
+          <label class="block text-sm font-medium text-secondary mb-2" for="fullName">Full Name</label>
           <input 
             type="text" 
             id="fullName" 
-            class="input-md w-full border border-border bg-white text-gray-700" 
+            class="input-md w-full border border-border bg-surface text-primary" 
             placeholder="Enter Your Full Name" 
             [(ngModel)]="credentials.full_name"
             name="fullName"
@@ -47,11 +47,11 @@
 
         <!-- Email -->
         <div class="mb-3">
-          <label class="block text-sm font-medium text-gray-700 mb-2" for="email">Email Address</label>
+          <label class="block text-sm font-medium text-secondary mb-2" for="email">Email Address</label>
           <input 
             type="email" 
             id="email" 
-            class="input-md w-full border border-border bg-white text-gray-700" 
+            class="input-md w-full border border-border bg-surface text-primary" 
             placeholder="Enter Your Email Address" 
             [(ngModel)]="credentials.email_address"
             name="email"
@@ -62,12 +62,12 @@
         
         <!-- Password -->
         <div class="mb-3">
-          <label class="block text-sm font-medium text-gray-700 mb-2" for="password">Password</label>
+          <label class="block text-sm font-medium text-secondary mb-2" for="password">Password</label>
           <div class="relative">
             <input 
               [type]="showPassword ? 'text' : 'password'" 
               id="password" 
-              class="input-md w-full pr-12 border border-border bg-white text-gray-700" 
+              class="input-md w-full pr-12 border border-border bg-surface text-primary" 
               placeholder="Create a Strong Password" 
               [(ngModel)]="credentials.password"
               (ngModelChange)="onPasswordChange()"
@@ -99,12 +99,12 @@
 
         <!-- Confirm Password -->
         <div class="mb-3">
-          <label class="block text-sm font-medium text-gray-700 mb-2" for="confirmPassword">Confirm Password</label>
+          <label class="block text-sm font-medium text-secondary mb-2" for="confirmPassword">Confirm Password</label>
           <div class="relative">
             <input 
               [type]="showConfirmPassword ? 'text' : 'password'" 
               id="confirmPassword" 
-              class="input-md w-full pr-12 border border-border bg-white text-gray-700"
+              class="input-md w-full pr-12 border border-border bg-surface text-primary"
               [ngClass]="!passwordMatch && credentials.confirm_password ? 'input-error' : ''"
               placeholder="Confirm Your Password" 
               [(ngModel)]="credentials.confirm_password"
@@ -139,7 +139,7 @@
               required
               class="mt-1 h-4 w-4 text-primary border-border rounded focus:ring-primary focus:ring-2 flex-shrink-0"
             >
-            <span class="text-xs text-gray-700 leading-relaxed">
+            <span class="text-xs text-secondary leading-relaxed">
               I agree to the 
               <a href="javascript:;" class="text-primary-light hover:underline font-medium">Terms of Service</a> 
               and 
@@ -167,7 +167,7 @@
 
         <!-- Sign In Link -->
         <div class="text-center">
-          <span class="text-gray-700 text-sm">Already have an account? </span>
+          <span class="text-secondary text-sm">Already have an account? </span>
           <button type="button" (click)="navigateToSignIn()" class="text-primary-light hover:underline font-medium text-sm">
             Sign In
           </button>
@@ -177,7 +177,7 @@
       </div>
     </div>
     
-    <div class="flex-1 bg-white bg-cover bg-center bg-no-repeat flex items-center justify-center p-0 max-w-half h-screen signup-bg">
+    <div class="flex-1 bg-surface bg-cover bg-center bg-no-repeat flex items-center justify-center p-0 max-w-half h-screen signup-bg">
       <div class="signup-illustration-container w-full h-full flex items-center justify-center relative">
         <!-- SVG background is applied via CSS -->
       </div>
