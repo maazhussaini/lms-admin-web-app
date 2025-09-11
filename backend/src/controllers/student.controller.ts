@@ -30,18 +30,19 @@ export class StudentController {
    */
   static createStudentHandler = createRouteHandler(
     async (req: AuthenticatedRequest) => {
-      if (!req.user) {
-        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
-      }
-
+      // if (!req.user) {
+      //   throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
+      // }
+      const tenant = await studentService.getTenantFromDomain(req);
       const studentData = req.validatedData as CreateStudentDto;
-      const requestingUser = req.user;
-      
-      logger.debug('Creating student', {
-        username: studentData.username,
-        userId: requestingUser.id,
-        role: requestingUser.user_type
-      });
+      let requestingUser:any = req.user || {};
+
+      if(requestingUser.user_type !== UserType.SUPER_ADMIN){
+        requestingUser.tenantId = tenant.tenant_id;
+      }
+      else{
+        studentData.tenant_id = tenant.tenant_id;
+      }
       
       return await studentService.createStudent(
         studentData, 
@@ -292,10 +293,17 @@ export class StudentController {
       const enrollmentStatus = req.query['enrollment_status'] as string;
       const includeProgress = req.query['include_progress'] === 'true';
       
+      // Parse comma-separated enrollment statuses
+      let statusesArray: string[] | undefined;
+      if (enrollmentStatus) {
+        statusesArray = enrollmentStatus.split(',').map(s => s.trim().toUpperCase());
+      }
+      
       logger.debug('Getting enrolled courses for current student profile', {
         studentId: student.student_id,
         paginationParams: params,
         enrollmentStatus,
+        statusesArray,
         includeProgress,
         requestingUserId: requestingUser.id,
         userType: requestingUser.user_type
@@ -304,7 +312,8 @@ export class StudentController {
       const result = await studentService.getEnrolledCoursesByStudentId(
         student.student_id,
         requestingUser,
-        params
+        params,
+        statusesArray
       );
 
       return {

@@ -8,8 +8,6 @@ import { UserType } from '@/types/enums.types';
 
 const router = Router();
 
-// Apply authentication to all routes
-router.use(authenticate);
 
 /**
  * Custom validation for SUPER_ADMIN tenant_id requirement
@@ -24,17 +22,23 @@ const validateTenantIdForSuperAdmin = [
     .toInt(),
 ];
 
+
 /**
  * @route POST /api/v1/students
  * @description Create a new student
  * @access Private (SUPER_ADMIN, TENANT_ADMIN)
  */
+
 router.post(
-  '/',
-  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
-  validate([...validateTenantIdForSuperAdmin, ...createStudentValidation]),
+  '/',validate([...validateTenantIdForSuperAdmin, ...createStudentValidation]),
   StudentController.createStudentHandler
 );
+
+// Apply authentication to all routes
+router.use(authenticate);
+
+
+
 
 /**
  * @route GET /api/v1/students

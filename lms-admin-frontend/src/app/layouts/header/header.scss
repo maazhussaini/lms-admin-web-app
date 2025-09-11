@@ -1,0 +1,87 @@
+/* ===== TOP HEADER ===== */
+.top-header {
+    background: white;
+    padding: 16px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #E5E7EB;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    height: 64px;
+    box-sizing: border-box;
+}
+
+.page-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #4C1D95;
+    margin: 0;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.notification-btn {
+    background: #F7F3FF;
+    border: none;
+    font-size: 18px;
+    color: #8B5CF6;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.notification-btn:hover {
+    background: #EDE9FE;
+    color: #7C3AED;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.user-profile:hover {
+    background: #F9FAFB;
+}
+
+.user-avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8B5CF6, #6366F1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.user-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+/* Header dropdown icon */
+.user-profile i {
+    color: #9CA3AF;
+    font-size: 16px;
+}

@@ -18,12 +18,14 @@ import { formatDateRangeShort, formatDecimalHours } from '@/utils/date-format.ut
 import { 
   StudentStatus,
   Gender,
-  UserType
+  UserType,
+  EnrollmentStatus
 } from '@/types/enums.types';
 import logger from '@/config/logger';
 import { BaseListService, BaseListServiceConfig } from '@/utils/base-list.service';
 import { STUDENT_FIELD_MAPPINGS } from '@/utils/field-mapping.utils';
 import { hashPassword } from '@/utils/password.utils';
+import { env } from '@/config/environment';
 
 // Initialize Prisma client
 const prisma = new PrismaClient();
@@ -161,10 +163,12 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
     requestingUser: TokenPayload,
     clientIp?: string
   ) {
+   
+   
     // Validate that we have a requesting user
-    if (!requestingUser || !requestingUser.user_type) {
-      throw new BadRequestError('Invalid requesting user context');
-    }
+    // if (!requestingUser || !requestingUser.user_type) {
+    //   throw new BadRequestError('Invalid requesting user context');
+    // }
 
     // Determine tenant ID based on user type
     let tenantId: number;
@@ -175,7 +179,8 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
         throw new BadRequestError('Tenant ID is required when creating a student as SUPER_ADMIN', 'MISSING_TENANT_ID');
       }
       tenantId = data.tenant_id;
-    } else {
+    } 
+    else {
       // Regular admins use their own tenant
       if (!requestingUser.tenantId) {
         throw new BadRequestError('Tenant ID is required', 'MISSING_TENANT_ID');
@@ -183,23 +188,17 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       tenantId = requestingUser.tenantId;
       
       // Ignore tenant_id from body for non-SUPER_ADMIN users
-      if (data.tenant_id && data.tenant_id !== tenantId) {
-        logger.warn('Non-SUPER_ADMIN user attempted to specify different tenant_id', {
-          userId: requestingUser.id,
-          userType: requestingUser.user_type,
-          requestedTenantId: data.tenant_id,
-          userTenantId: tenantId
-        });
-      }
+      // if (data.tenant_id && data.tenant_id !== tenantId) {
+      //   logger.warn('Non-SUPER_ADMIN user attempted to specify different tenant_id', {
+      //     userId: requestingUser.id,
+      //     userType: requestingUser.user_type ?? UserType.STUDENT,
+      //     requestedTenantId: data.tenant_id,
+      //     userTenantId: tenantId
+      //   });
+      // }
     }
 
     return tryCatch(async () => {
-      logger.debug('Creating student', {
-        username: data.username,
-        tenantId,
-        requestingUserId: requestingUser.id,
-        userType: requestingUser.user_type
-      });
 
       // Check if username exists within tenant
       const existingUsername = await prisma.student.findFirst({
@@ -253,12 +252,10 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
             gender: data.gender || null,
             student_status: data.student_status || StudentStatus.ACTIVE,
             referral_type: data.referral_type || null,
-            is_active: true,
-            is_deleted: false,
-            created_by: requestingUser.id,
-            updated_by: requestingUser.id,
             created_ip: clientIp || null,
-            updated_ip: clientIp || null
+            updated_ip: clientIp || null,
+            created_by: requestingUser.id,
+            updated_by: requestingUser.id
           }
         });
 
@@ -269,12 +266,10 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
             tenant_id: tenantId,
             email_address: data.email_address,
             is_primary: true,
-            is_active: true,
-            is_deleted: false,
-            created_by: requestingUser.id,
-            updated_by: requestingUser.id,
             created_ip: clientIp || null,
-            updated_ip: clientIp || null
+            updated_ip: clientIp || null,
+            created_by: requestingUser.id || 0,
+            updated_by: requestingUser.id || 0
           }
         });
 
@@ -286,10 +281,15 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       return studentWithoutPassword;
     }, {
       context: {
-        tenantId,
-        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId },
+        tenantId: 1,
+        requestingUser: { id: 1, role: UserType.STUDENT, tenantId: 1 },
         username: data.username
       }
+      // context: {
+      //   tenantId,
+      //   requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId },
+      //   username: data.username
+      // }
     });
   }
 
@@ -706,17 +706,49 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
   }
 
   /**
+   * Map frontend enrollment status values to backend enum values
+   * Frontend uses some status names that don't exist in our Prisma schema
+   * 
+   * @param statuses Array of frontend status strings
+   * @returns Array of valid Prisma enum values
+   */
+  private mapEnrollmentStatuses(statuses: string[]): EnrollmentStatus[] {
+    const statusMapping: Record<string, EnrollmentStatus> = {
+      // Direct mappings for existing statuses
+      'PENDING': EnrollmentStatus.PENDING,
+      'ACTIVE': EnrollmentStatus.ACTIVE,
+      'COMPLETED': EnrollmentStatus.COMPLETED,
+      'DROPPED': EnrollmentStatus.DROPPED,
+      'SUSPENDED': EnrollmentStatus.SUSPENDED,
+      'EXPELLED': EnrollmentStatus.EXPELLED,
+      'TRANSFERRED': EnrollmentStatus.TRANSFERRED,
+      'DEFERRED': EnrollmentStatus.DEFERRED,
+      
+      // Frontend-to-backend mappings for statuses that don't exist in Prisma
+      'INACTIVE': EnrollmentStatus.DROPPED,  // Map inactive to dropped
+      'CANCELLED': EnrollmentStatus.DROPPED, // Map cancelled to dropped
+    };
+
+    return statuses
+      .map(status => status.trim().toUpperCase())
+      .map(status => statusMapping[status])
+      .filter(status => status !== undefined); // Remove any unmapped statuses
+  }
+
+  /**
    * Get enrolled courses by student ID with pagination, sorting, and filtering
    * 
    * @param studentId Student identifier
    * @param requestingUser User requesting the data
    * @param params Pagination and filtering parameters
+   * @param enrollmentStatuses Optional array of enrollment statuses to filter by
    * @returns List of enrolled courses with pagination metadata
    */
   async getEnrolledCoursesByStudentId(
     studentId: number,
     requestingUser: TokenPayload,
-    params: ExtendedPaginationWithFilters
+    params: ExtendedPaginationWithFilters,
+    enrollmentStatuses?: string[]
   ): Promise<{ items: any[]; pagination: any }> {
     return tryCatch(async () => {
       logger.debug('Getting enrolled courses by student ID', {
@@ -764,11 +796,20 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       const limit = params.limit || 10;
       const skip = params.skip ?? (page - 1) * limit;
 
+      // Map frontend enrollment statuses to valid Prisma enum values
+      const mappedEnrollmentStatuses = enrollmentStatuses && enrollmentStatuses.length > 0 
+        ? this.mapEnrollmentStatuses(enrollmentStatuses)
+        : undefined;
+
       // Build where clause for enrolled courses
       const whereClause = {
         student_id: studentId,
         is_active: true,
         is_deleted: false,
+        // Filter by enrollment statuses if provided
+        ...(mappedEnrollmentStatuses && mappedEnrollmentStatuses.length > 0 && {
+          enrollment_status: { in: mappedEnrollmentStatuses }
+        }),
         course: {
           is_active: true,
           is_deleted: false,
@@ -777,6 +818,14 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
           ...searchFilter
         }
       };
+
+      logger.debug('Built where clause for enrollment query', {
+        studentId,
+        originalEnrollmentStatuses: enrollmentStatuses,
+        mappedEnrollmentStatuses,
+        searchQuery,
+        tenantId: student.tenant_id
+      });
 
       // Get total count for pagination
       const total = await prisma.enrollment.count({
@@ -974,6 +1023,53 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       }
     });
   }
+
+
+  /**
+   * Extract domain from IIS headers and get tenant
+   * @param req Express request object with IIS headers
+   * @returns Tenant object or null
+   */
+  public async getTenantFromDomain(req: any): Promise<any | null> {
+    const originalHost = req?.headers['x-original-host'] as string || 
+                        req?.headers['x-forwarded-host'] as string || 
+                        req?.headers.host as string;
+
+    if (!originalHost) {
+      logger.warn('No domain found in request headers');
+      return null;
+    }
+
+    const domain = env.IS_DEVELOPMENT ? 'alphaacademy.com' : originalHost;
+    logger.info(`Extracting tenant for domain: ${domain}`);
+
+    
+    try {
+      // Use raw query to find tenant by domain since Prisma types might not be generated
+      const tenants = await this.prisma.$queryRaw`
+        SELECT * FROM tenants 
+        WHERE tenant_domain = ${domain} 
+        AND tenant_status IN ('ACTIVE', 'TRIAL')
+        AND is_active = true 
+        AND is_deleted = false 
+        LIMIT 1
+      ` as any[];
+      
+      const tenant = tenants.length > 0 ? tenants[0] : null;
+
+      if (tenant) {
+        logger.info(`Found tenant: ${tenant.tenant_name} (ID: ${tenant.tenant_id}) for domain: ${domain}`);
+      } else {
+        logger.warn(`No active tenant found for domain: ${domain}`);
+      }
+
+      return tenant;
+    } catch (error) {
+      logger.error('Error fetching tenant by domain:', { error, domain });
+      return null;
+    }
+  }
+
 }
 
 /**

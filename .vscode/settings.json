@@ -1,4 +1,10 @@
 {
     "postman.settings.dotenv-detection-notification-visibility": false,
-    "chat.agent.maxRequests": 1000
+    "chat.agent.maxRequests": 1000,
+    "files.exclude": {
+        "documentation": true,
+        "llms.txt": true,
+        //"student-frontend": true,
+        ".vscode": true
+    }
 }

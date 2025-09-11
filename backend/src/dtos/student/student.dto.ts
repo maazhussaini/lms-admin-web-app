@@ -125,7 +125,7 @@ export const createStudentValidation: ValidationChain[] = [
     .isLength({ min: 1, max: 100 }).withMessage('First name must be between 1 and 100 characters'),
 
   body('middle_name')
-    .optional()
+    .optional({ checkFalsy: true })
     .isString().withMessage('Middle name must be a string')
     .trim()
     .isLength({ min: 1, max: 100 }).withMessage('Middle name must be between 1 and 100 characters'),

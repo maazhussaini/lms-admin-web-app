@@ -1,3 +1,5 @@
+// "dev:debug": "tsx watch --inspect --clear-screen=false src/server.ts",
+
 /**
  * @file api/v1/routes/auth.routes.ts
  * @description Authentication routes for user login, token refresh, and password operations

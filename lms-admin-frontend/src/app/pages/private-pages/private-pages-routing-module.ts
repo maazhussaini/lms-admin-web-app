@@ -1,6 +1,9 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { PrivatePageLayout } from './private-page-layout/private-page-layout';
+import { AdminDashboard } from './dashboards/admin-dashboard/admin-dashboard';
+import { TenantDashboard } from './dashboards/tenant-dashboard/tenant-dashboard';
+import { TeacherDashboard } from './dashboards/teacher-dashboard/teacher-dashboard';
 
 const routes: Routes = [
   {
@@ -14,7 +17,19 @@ const routes: Routes = [
       },
       {
         path: 'home',
-        component: PrivatePageLayout // Temporarily using layout as component
+        component: TenantDashboard // Default dashboard
+      },
+      {
+        path: 'admin',
+        component: AdminDashboard
+      },
+      {
+        path: 'tenant',
+        component: TenantDashboard
+      },
+      {
+        path: 'teacher',
+        component: TeacherDashboard
       }
     ]
   }

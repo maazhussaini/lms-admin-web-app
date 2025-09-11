@@ -1,0 +1,142 @@
+<!-- Screen Filter Component -->
+<app-screen-filter 
+    [searchTerm]="searchTerm"
+    [itemsPerPage]="itemsPerPage" 
+    [filters]="filters"
+    [filterOptions]="filterOptions"
+    [addButtonText]="'Add'"
+    [searchPlaceholder]="'Search here'"
+    (searchChange)="onSearchChange($event)"
+    (itemsPerPageChange)="onItemsPerPageChanged($event)"
+    (applyFilters)="onFiltersApplied($event)"
+    (resetFilters)="onFiltersReset()"
+    (addClick)="openAddTenantOffcanvas()">
+</app-screen-filter>
+
+<!-- Bulk Actions -->
+<div class="bulk-actions" [style.display]="selectedTenants.length > 0 ? 'flex' : 'none'">
+    <div class="bulk-actions-left">
+        <button class="bulk-action-btn active-btn" (click)="bulkActivate()">
+            <i class="ic-1"></i>
+            Active
+        </button>
+        <button class="bulk-action-btn inactive-btn" (click)="bulkDeactivate()">
+            <i class="ic-2"></i>
+            In Active
+        </button>
+    </div>
+    <div class="bulk-actions-right">
+        <div class="selection-info">
+            {{ selectedTenants.length }} selected. 
+            <a href="#" class="select-all-link" (click)="selectAll()">Select All</a>
+        </div>
+    </div>
+</div>
+
+<!-- Table Container -->
+<div class="table-container">
+    <table class="tenant-table">
+        <thead>
+            <tr>
+                <th class="checkbox-col">
+                    <input 
+                        type="checkbox" 
+                        class="table-checkbox"
+                        [checked]="isAllSelected()"
+                        (change)="toggleAllSelection()">
+                </th>
+                <th class="logo-col">
+                    Logo <i class="ic-13"></i>
+                </th>
+                <th class="name-col">
+                    Tenant Name <i class="ic-13"></i>
+                </th>
+                <!-- <th class="clients-col">
+                    Clients Count <i class="ic-13"></i>
+                </th> -->
+                <th class="phone-col">
+                    Phone No <i class="ic-13"></i>
+                </th>
+                <th class="email-col">
+                    Email <i class="ic-13"></i>
+                </th>
+                <th class="created-col">
+                    Created At <i class="ic-13"></i>
+                </th>
+                <th class="updated-col">
+                    Updated At <i class="ic-13"></i>
+                </th>
+                <th class="status-col">
+                    Status
+                </th>
+                <th class="actions-col">
+                    Actions
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let tenant of paginatedTenants; trackBy: trackByTenantId">
+                <td class="checkbox-col">
+                    <input 
+                        type="checkbox" 
+                        class="table-checkbox"
+                        [checked]="isSelected(tenant.id)"
+                        (change)="toggleSelection(tenant.id)">
+                </td>
+                <td class="logo-col">
+                    <div class="tenant-logo" [ngClass]="tenant.logoClass">
+                        {{ tenant.logoInitial }}
+                    </div>
+                </td>
+                <td class="name-col">{{ tenant.name }}</td>
+                <!-- <td class="clients-col">{{ tenant.clientsCount }}</td> -->
+                <td class="phone-col">{{ tenant.phone }}</td>
+                <td class="email-col">{{ tenant.email }}</td>
+                <td class="created-col">{{ tenant.createdAt | date:'dd-MM-yyyy' }}</td>
+                <td class="updated-col">{{ tenant.updatedAt | date:'dd-MM-yyyy' }}</td>
+                <td class="status-col">
+                    <span class="status-badge" [ngClass]="tenant.status.toLowerCase()">
+                        {{ tenant.status }}
+                    </span>
+                </td>
+                <td class="actions-col">
+                    <app-crud-menu
+                        [itemId]="tenant.id"
+                        [options]="crudMenuOptions"
+                        (viewAction)="onViewTenant($event)"
+                        (editAction)="onEditTenant($event)"
+                        (deleteAction)="onDeleteTenant($event)"
+                        (customAction)="onCustomAction($event)"
+                        (menuClosed)="onCrudMenuClosed()">
+                    </app-crud-menu>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Paginator Component -->
+<app-paginator
+    [currentPage]="currentPage"
+    [totalItems]="totalTenants"
+    [itemsPerPage]="itemsPerPage"
+    [maxVisiblePages]="10"
+    (pageChange)="onPageChange($event)">
+</app-paginator>
+
+<!-- Add Tenant Off-Canvas (Reusable Wrapper) -->
+<app-off-canvas-wrapper
+  [isOpen]="showAddTenantOffcanvas"
+  [title]="'Add Tenant'"
+  [saveButtonText]="'Save'"
+  [showSaveButton]="true"
+  [canSave]="canSaveTenant"
+  [isLoading]="false"
+  (onClose)="closeAddTenantOffcanvas()"
+  (onSubmit)="saveTenant()">
+  <app-basic-tenant-form 
+    [formData]="newTenantData"
+    (formDataChange)="onTenantFormDataChange($event)"
+    (validityChange)="onTenantFormValidityChange($event)">
+  </app-basic-tenant-form>
+</app-off-canvas-wrapper>
