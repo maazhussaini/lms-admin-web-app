@@ -181,7 +181,7 @@ export class AuthService {
    * @returns Authentication response with tokens and user info
    */
   async loginUser(data: LoginDto, req?: any): Promise<TAuthResponse> {
-    const { email_address: emailOrUsername, password, tenant_domain} = data;
+    const { email_address: emailOrUsername, password } = data; // tenant_domain is commented for now
 
     // Extract tenant from domain (IIS headers)
     const domainTenant = req ? await this.getTenantFromDomain(req) : null;

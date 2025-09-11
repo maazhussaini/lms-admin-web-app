@@ -254,8 +254,8 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
             referral_type: data.referral_type || null,
             created_ip: clientIp || null,
             updated_ip: clientIp || null,
-            created_by: !requestingUser.id ? null : requestingUser.id,
-            updated_by: !requestingUser.id ? null : requestingUser.id
+            created_by: requestingUser.id,
+            updated_by: requestingUser.id
           }
         });
 
