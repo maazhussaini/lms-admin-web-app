@@ -1,6 +1,11 @@
 // ===== VERIFY OTP COMPONENT-SPECIFIC STYLES ===== //
 // Uses the comprehensive orb-Ed theme system
 
+/* Component-specific utility overrides */
+.max-w-half {
+    max-width: 50%;
+}
+
 // OTP verification illustration background
 .verify-otp-bg {
   background-image: url('/assets/images/password-lottie.svg');
@@ -78,7 +83,13 @@
   }
 }
 
-// Responsive adjustments for mobile
+/* Responsive adjustments for mobile - matches other auth components */
+@media (max-width: 1024px) {
+  .flex-1 {
+    padding: 2rem;
+  }
+}
+
 @media (max-width: 768px) {
   body {
     overflow-y: auto;
@@ -88,17 +99,23 @@
     flex-direction: column;
   }
   
-  .flex-1.px-8 {
+  .flex-1 {
     max-width: 100%;
-    min-height: 60vh;
     order: 1;
     padding: 1.5rem;
+    min-height: 60vh;
+    overflow-y: auto;
   }
   
   .verify-otp-bg {
     max-width: 100%;
     order: 2;
-    height: 400px;
+    height: 300px;
+    min-height: 300px;
+  }
+  
+  .min-h-screen {
+    min-height: auto;
   }
   
   // Smaller OTP inputs on mobile
@@ -110,13 +127,18 @@
 }
 
 @media (max-width: 480px) {
-  .flex-1.px-8 {
-    padding: 1.25rem;
-    min-height: 50vh;
+  .flex-1 {
+    padding: 1rem;
   }
   
   .verify-otp-bg {
-    height: 300px;
+    height: 250px;
+    min-height: 250px;
+  }
+  
+  .w-20.h-26 {
+    width: 3.5rem;
+    height: 4.5rem;
   }
   
   // Even smaller OTP inputs on small mobile

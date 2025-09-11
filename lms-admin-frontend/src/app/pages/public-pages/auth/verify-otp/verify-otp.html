@@ -1,19 +1,16 @@
-<body class="min-h-screen overflow-hidden">
+<body class="flex items-center justify-center min-h-screen overflow-hidden">
   <div class="w-full min-h-screen flex relative">
-    <div class="flex-1 px-8 md:px-12 pt-6 md:pt-8 flex flex-col bg-surface max-w-half relative h-screen">
-      <!-- Content Container -->
-      <div class="pb-6 flex-1 flex flex-col justify-center">
-        
+    <div class="flex-1 p-10 md:p-15 flex flex-col justify-center bg-surface max-w-half relative h-screen overflow-hidden">
         <!-- Header with Logo and Theme Toggle -->
         <div class="flex items-center justify-between mb-8">
           <div class="flex items-center">
-            <img src="assets/images/logo.png" alt="orb-Ed Logo" class="w-16 h-20 mr-3" (error)="onImageError($event)">
+            <img src="assets/images/logo.png" alt="orb-Ed Logo" class="w-20 h-26 mr-3" (error)="onImageError($event)">
             <div class="logo-fallback" [style.display]="showLogoIcon ? 'flex' : 'none'"></div>
           </div>
           
           <!-- Theme Toggle Switch -->
           <div class="toggle-with-label">
-            <span class="toggle-label text-xs" [title]="isDarkTheme ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+            <span class="toggle-label text-sm" [title]="isDarkTheme ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
               {{ isDarkTheme ? '🌙' : '☀️' }}
             </span>
             <label class="toggle toggle-primary toggle-sm">
@@ -146,7 +143,6 @@
             </button>
           </div>
         </form>
-      </div>
     </div>
     
     <div class="flex-1 bg-surface bg-cover bg-center bg-no-repeat flex items-center justify-center p-0 max-w-half h-screen verify-otp-bg">
