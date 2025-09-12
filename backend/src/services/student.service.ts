@@ -18,7 +18,8 @@ import { formatDateRangeShort, formatDecimalHours } from '@/utils/date-format.ut
 import { 
   StudentStatus,
   Gender,
-  UserType
+  UserType,
+  EnrollmentStatus
 } from '@/types/enums.types';
 import logger from '@/config/logger';
 import { BaseListService, BaseListServiceConfig } from '@/utils/base-list.service';
@@ -253,8 +254,8 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
             referral_type: data.referral_type || null,
             created_ip: clientIp || null,
             updated_ip: clientIp || null,
-            created_by: !requestingUser.id ? null : requestingUser.id,
-            updated_by: !requestingUser.id ? null : requestingUser.id
+            created_by: requestingUser.id,
+            updated_by: requestingUser.id
           }
         });
 
@@ -705,17 +706,49 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
   }
 
   /**
+   * Map frontend enrollment status values to backend enum values
+   * Frontend uses some status names that don't exist in our Prisma schema
+   * 
+   * @param statuses Array of frontend status strings
+   * @returns Array of valid Prisma enum values
+   */
+  private mapEnrollmentStatuses(statuses: string[]): EnrollmentStatus[] {
+    const statusMapping: Record<string, EnrollmentStatus> = {
+      // Direct mappings for existing statuses
+      'PENDING': EnrollmentStatus.PENDING,
+      'ACTIVE': EnrollmentStatus.ACTIVE,
+      'COMPLETED': EnrollmentStatus.COMPLETED,
+      'DROPPED': EnrollmentStatus.DROPPED,
+      'SUSPENDED': EnrollmentStatus.SUSPENDED,
+      'EXPELLED': EnrollmentStatus.EXPELLED,
+      'TRANSFERRED': EnrollmentStatus.TRANSFERRED,
+      'DEFERRED': EnrollmentStatus.DEFERRED,
+      
+      // Frontend-to-backend mappings for statuses that don't exist in Prisma
+      'INACTIVE': EnrollmentStatus.DROPPED,  // Map inactive to dropped
+      'CANCELLED': EnrollmentStatus.DROPPED, // Map cancelled to dropped
+    };
+
+    return statuses
+      .map(status => status.trim().toUpperCase())
+      .map(status => statusMapping[status])
+      .filter(status => status !== undefined); // Remove any unmapped statuses
+  }
+
+  /**
    * Get enrolled courses by student ID with pagination, sorting, and filtering
    * 
    * @param studentId Student identifier
    * @param requestingUser User requesting the data
    * @param params Pagination and filtering parameters
+   * @param enrollmentStatuses Optional array of enrollment statuses to filter by
    * @returns List of enrolled courses with pagination metadata
    */
   async getEnrolledCoursesByStudentId(
     studentId: number,
     requestingUser: TokenPayload,
-    params: ExtendedPaginationWithFilters
+    params: ExtendedPaginationWithFilters,
+    enrollmentStatuses?: string[]
   ): Promise<{ items: any[]; pagination: any }> {
     return tryCatch(async () => {
       logger.debug('Getting enrolled courses by student ID', {
@@ -763,11 +796,20 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       const limit = params.limit || 10;
       const skip = params.skip ?? (page - 1) * limit;
 
+      // Map frontend enrollment statuses to valid Prisma enum values
+      const mappedEnrollmentStatuses = enrollmentStatuses && enrollmentStatuses.length > 0 
+        ? this.mapEnrollmentStatuses(enrollmentStatuses)
+        : undefined;
+
       // Build where clause for enrolled courses
       const whereClause = {
         student_id: studentId,
         is_active: true,
         is_deleted: false,
+        // Filter by enrollment statuses if provided
+        ...(mappedEnrollmentStatuses && mappedEnrollmentStatuses.length > 0 && {
+          enrollment_status: { in: mappedEnrollmentStatuses }
+        }),
         course: {
           is_active: true,
           is_deleted: false,
@@ -776,6 +818,14 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
           ...searchFilter
         }
       };
+
+      logger.debug('Built where clause for enrollment query', {
+        studentId,
+        originalEnrollmentStatuses: enrollmentStatuses,
+        mappedEnrollmentStatuses,
+        searchQuery,
+        tenantId: student.tenant_id
+      });
 
       // Get total count for pagination
       const total = await prisma.enrollment.count({
