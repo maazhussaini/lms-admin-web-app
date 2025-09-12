@@ -70,22 +70,39 @@
     box-shadow: 0 0 20px rgba(var(--color-primary-rgb, 76, 29, 149), 0.3);
   }
   
-  // Valid state
+  // Valid state (commented out for now)
   // &:valid:not(:placeholder-shown) {
-  //   border-color: var(--color-success);
-  //   background-color: var(--color-success-bg, #f0fdf4);
+  //   border-color: var(--success);
+  //   background-color: var(--success-bg, #f0fdf4);
   // }
   
-  // // Invalid state
+  // // Invalid state (commented out for now)
   // &:invalid:not(:placeholder-shown) {
-  //   border-color: var(--color-error);
-  //   background-color: var(--color-error-bg, #fef2f2);
+  //   border-color: var(--error);
+  //   background-color: var(--error-bg, #fef2f2);
   // }
 }
 
-/* Responsive adjustments for mobile - matches other auth components */
+/* Responsive adjustments for mobile and tablet - matches other auth components */
 @media (max-width: 1024px) {
+  .max-w-half {
+    max-width: 100%;
+  }
+  
+  /* Hide right section (image) on tablets and mobile */
+  .verify-otp-bg {
+    display: none !important;
+  }
+  
+  /* Stack layout on large tablets and below */
+  .w-full.min-h-screen.flex {
+    flex-direction: column;
+  }
+  
   .flex-1 {
+    order: 1;
+    max-width: 100%;
+    min-height: 100vh;
     padding: 2rem;
   }
 }
@@ -95,23 +112,10 @@
     overflow-y: auto;
   }
   
-  .w-full.min-h-screen.flex {
-    flex-direction: column;
-  }
-  
   .flex-1 {
-    max-width: 100%;
-    order: 1;
     padding: 1.5rem;
-    min-height: 60vh;
+    min-height: 100vh;
     overflow-y: auto;
-  }
-  
-  .verify-otp-bg {
-    max-width: 100%;
-    order: 2;
-    height: 300px;
-    min-height: 300px;
   }
   
   .min-h-screen {
@@ -129,11 +133,6 @@
 @media (max-width: 480px) {
   .flex-1 {
     padding: 1rem;
-  }
-  
-  .verify-otp-bg {
-    height: 250px;
-    min-height: 250px;
   }
   
   .w-20.h-26 {
@@ -157,26 +156,18 @@
 // Dark theme specific adjustments
 [data-theme="dark"] {
   .logo-fallback {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-  }
-  
-  .verify-otp-bg {
-    background-blend-mode: multiply;
-    
-    &::before {
-      opacity: 0.05;
-    }
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   }
   
   // Enhanced dark mode OTP inputs
   .w-12.h-14, .w-14.h-16 {
-    background-color: var(--color-surface, #1F2937);
-    border-color: var(--color-border, #4B5563);
-    color: var(--color-text-primary, #F9FAFB);
+    background-color: var(--surface, #1F2937);
+    border-color: var(--border, #4B5563);
+    color: var(--text-primary, #F9FAFB);
     
     &:focus {
-      background-color: var(--color-background, #0F0F23);
-      box-shadow: 0 0 20px rgba(var(--color-primary-rgb, 139, 92, 246), 0.4);
+      background-color: var(--background, #0F0F23);
+      box-shadow: 0 0 20px rgba(var(--primary-rgb, 139, 92, 246), 0.4);
     }
   }
 }

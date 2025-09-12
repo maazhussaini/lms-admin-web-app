@@ -87,9 +87,14 @@
 }
 
 /* Responsive Overrides */
-@media (max-width: 992px) {
+@media (max-width: 1024px) {
     .max-w-half {
         max-width: 100%;
+    }
+    
+    /* Hide right section (image) on tablets and mobile */
+    .signin-bg {
+        display: none !important;
     }
     
     /* Stack layout on large tablets and below */
@@ -100,14 +105,8 @@
     .flex-1 {
         order: 1;
         max-width: 100%;
-        min-height: 50vh;
+        min-height: 100vh;
         padding: 30px 50px;
-    }
-    
-    .signin-bg {
-        order: 2;
-        min-height: 400px;
-        max-width: 100%;
     }
 }
 
@@ -126,10 +125,6 @@
     
     .text-3xl {
         font-size: 28px;
-    }
-    
-    .signin-bg {
-        min-height: 300px;
     }
 }
 

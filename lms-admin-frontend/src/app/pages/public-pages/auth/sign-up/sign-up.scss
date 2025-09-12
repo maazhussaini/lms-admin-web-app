@@ -84,9 +84,14 @@ input[type="checkbox"] {
 }
 
 /* Responsive Overrides */
-@media (max-width: 992px) {
+@media (max-width: 1024px) {
   .max-w-half {
     max-width: 100%;
+  }
+  
+  /* Hide right section (image) on tablets and mobile */
+  .signup-bg {
+    display: none !important;
   }
   
   /* Stack layout on large tablets and below */
@@ -97,21 +102,15 @@ input[type="checkbox"] {
   .flex-1 {
     order: 1;
     max-width: 100%;
-    min-height: 60vh;
+    min-height: 100vh;
     padding: 30px 50px;
-  }
-  
-  .signup-bg {
-    order: 2;
-    min-height: 400px;
-    max-width: 100%;
   }
 }
 
 @media (max-width: 768px) {
   .flex-1 {
     padding: 30px 25px;
-    min-height: 70vh;
+    min-height: 100vh;
   }
   
   .w-20 {
@@ -125,16 +124,12 @@ input[type="checkbox"] {
   .text-3xl {
     font-size: 28px;
   }
-  
-  .signup-bg {
-    min-height: 300px;
-  }
 }
 
 @media (max-width: 576px) {
   .flex-1 {
     padding: 25px 20px;
-    min-height: 80vh;
+    min-height: 100vh;
   }
   
   .w-20 {
@@ -151,9 +146,5 @@ input[type="checkbox"] {
   
   .mb-6 {
     margin-bottom: 1.25rem;
-  }
-  
-  .signup-bg {
-    min-height: 250px;
   }
 }
