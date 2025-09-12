@@ -6,23 +6,23 @@
 .bg-inherit { background-color: inherit; }
 
 // Theme background colors
-.bg-primary { background-color: var(--color-primary); }
-.bg-primary-dark { background-color: var(--color-primary-dark); }
-.bg-primary-light { background-color: var(--color-primary-light); }
-.bg-secondary { background-color: var(--color-secondary); }
-.bg-accent { background-color: var(--color-accent); }
-.bg-success { background-color: var(--color-success); }
-.bg-warning { background-color: var(--color-warning); }
-.bg-danger { background-color: var(--color-danger); }
-.bg-info { background-color: var(--color-info); }
+.bg-primary { background-color: var(--primary); }
+.bg-primary-dark { background-color: var(--primary-dark); }
+.bg-primary-light { background-color: var(--primary-light); }
+.bg-secondary { background-color: var(--secondary); }
+.bg-accent { background-color: var(--primary-light); } // Using primary-light as accent fallback
+.bg-success { background-color: var(--success); }
+.bg-warning { background-color: var(--warning); }
+.bg-danger { background-color: var(--error); } // Map danger to error
+.bg-info { background-color: var(--info); }
 
-.bg-background { background-color: var(--color-background); }
-.bg-surface { background-color: var(--color-surface); }
-.bg-border { background-color: var(--color-border); }
+.bg-background { background-color: var(--background); }
+.bg-surface { background-color: var(--surface); }
+.bg-border { background-color: var(--border); }
 
 // Additional semantic backgrounds
-.bg-white { background-color: var(--color-white); }
-.bg-light { background-color: var(--color-light-gray); }
+.bg-white { background-color: var(--white); }
+.bg-light { background-color: var(--light-gray); }
 
 // Background attachment
 .bg-fixed { background-attachment: fixed; }
@@ -79,25 +79,25 @@
 .bg-gradient-to-tl { background-image: linear-gradient(to top left, var(--gradient-stops)); }
 
 // Gradient color stops
-.from-primary { --gradient-from-color: var(--color-primary); --gradient-stops: var(--gradient-from-color), var(--gradient-to-color, rgba(255, 255, 255, 0)); }
-.from-secondary { --gradient-from-color: var(--color-secondary); --gradient-stops: var(--gradient-from-color), var(--gradient-to-color, rgba(255, 255, 255, 0)); }
-.from-accent { --gradient-from-color: var(--color-accent); --gradient-stops: var(--gradient-from-color), var(--gradient-to-color, rgba(255, 255, 255, 0)); }
-.from-background { --gradient-from-color: var(--color-background); --gradient-stops: var(--gradient-from-color), var(--gradient-to-color, rgba(255, 255, 255, 0)); }
-.from-surface { --gradient-from-color: var(--color-surface); --gradient-stops: var(--gradient-from-color), var(--gradient-to-color, rgba(255, 255, 255, 0)); }
+.from-primary { --gradient-from-color: var(--primary); --gradient-stops: var(--gradient-from-color), var(--gradient-to-color, rgba(255, 255, 255, 0)); }
+.from-secondary { --gradient-from-color: var(--secondary); --gradient-stops: var(--gradient-from-color), var(--gradient-to-color, rgba(255, 255, 255, 0)); }
+.from-accent { --gradient-from-color: var(--primary-light); --gradient-stops: var(--gradient-from-color), var(--gradient-to-color, rgba(255, 255, 255, 0)); }
+.from-background { --gradient-from-color: var(--background); --gradient-stops: var(--gradient-from-color), var(--gradient-to-color, rgba(255, 255, 255, 0)); }
+.from-surface { --gradient-from-color: var(--surface); --gradient-stops: var(--gradient-from-color), var(--gradient-to-color, rgba(255, 255, 255, 0)); }
 .from-transparent { --gradient-from-color: transparent; --gradient-stops: var(--gradient-from-color), var(--gradient-to-color, transparent); }
 
-.via-primary { --gradient-stops: var(--gradient-from-color), var(--color-primary), var(--gradient-to-color, rgba(255, 255, 255, 0)); }
-.via-secondary { --gradient-stops: var(--gradient-from-color), var(--color-secondary), var(--gradient-to-color, rgba(255, 255, 255, 0)); }
-.via-accent { --gradient-stops: var(--gradient-from-color), var(--color-accent), var(--gradient-to-color, rgba(255, 255, 255, 0)); }
-.via-background { --gradient-stops: var(--gradient-from-color), var(--color-background), var(--gradient-to-color, rgba(255, 255, 255, 0)); }
-.via-surface { --gradient-stops: var(--gradient-from-color), var(--color-surface), var(--gradient-to-color, rgba(255, 255, 255, 0)); }
+.via-primary { --gradient-stops: var(--gradient-from-color), var(--primary), var(--gradient-to-color, rgba(255, 255, 255, 0)); }
+.via-secondary { --gradient-stops: var(--gradient-from-color), var(--secondary), var(--gradient-to-color, rgba(255, 255, 255, 0)); }
+.via-accent { --gradient-stops: var(--gradient-from-color), var(--primary-light), var(--gradient-to-color, rgba(255, 255, 255, 0)); }
+.via-background { --gradient-stops: var(--gradient-from-color), var(--background), var(--gradient-to-color, rgba(255, 255, 255, 0)); }
+.via-surface { --gradient-stops: var(--gradient-from-color), var(--surface), var(--gradient-to-color, rgba(255, 255, 255, 0)); }
 .via-transparent { --gradient-stops: var(--gradient-from-color), transparent, var(--gradient-to-color, transparent); }
 
-.to-primary { --gradient-to-color: var(--color-primary); }
-.to-secondary { --gradient-to-color: var(--color-secondary); }
-.to-accent { --gradient-to-color: var(--color-accent); }
-.to-background { --gradient-to-color: var(--color-background); }
-.to-surface { --gradient-to-color: var(--color-surface); }
+.to-primary { --gradient-to-color: var(--primary); }
+.to-secondary { --gradient-to-color: var(--secondary); }
+.to-accent { --gradient-to-color: var(--primary-light); }
+.to-background { --gradient-to-color: var(--background); }
+.to-surface { --gradient-to-color: var(--surface); }
 .to-transparent { --gradient-to-color: transparent; }
 
 // Box shadows
@@ -120,9 +120,9 @@
 .drop-shadow-2xl { filter: drop-shadow(0 25px 25px rgba(0, 0, 0, 0.15)); }
 
 // Shadow colors
-.shadow-primary { --shadow-color: var(--color-primary); --shadow: var(--shadow-colored); }
-.shadow-secondary { --shadow-color: var(--color-secondary); --shadow: var(--shadow-colored); }
-.shadow-accent { --shadow-color: var(--color-accent); --shadow: var(--shadow-colored); }
+.shadow-primary { --shadow-color: var(--primary); --shadow: var(--shadow-colored); }
+.shadow-secondary { --shadow-color: var(--secondary); --shadow: var(--shadow-colored); }
+.shadow-accent { --shadow-color: var(--accent); --shadow: var(--shadow-colored); }
 
 // Opacity
 .opacity-0 { opacity: 0; }
@@ -181,11 +181,11 @@
 // Responsive variants
 @include sm {
   .sm\:bg-transparent { background-color: transparent; }
-  .sm\:bg-primary { background-color: var(--color-primary); }
-  .sm\:bg-secondary { background-color: var(--color-secondary); }
-  .sm\:bg-accent { background-color: var(--color-accent); }
-  .sm\:bg-background { background-color: var(--color-background); }
-  .sm\:bg-surface { background-color: var(--color-surface); }
+  .sm\:bg-primary { background-color: var(--primary); }
+  .sm\:bg-secondary { background-color: var(--secondary); }
+  .sm\:bg-accent { background-color: var(--accent); }
+  .sm\:bg-background { background-color: var(--background); }
+  .sm\:bg-surface { background-color: var(--surface); }
   
   .sm\:bg-cover { background-size: cover; }
   .sm\:bg-contain { background-size: contain; }
@@ -220,11 +220,11 @@
 
 @include md {
   .md\:bg-transparent { background-color: transparent; }
-  .md\:bg-primary { background-color: var(--color-primary); }
-  .md\:bg-secondary { background-color: var(--color-secondary); }
-  .md\:bg-accent { background-color: var(--color-accent); }
-  .md\:bg-background { background-color: var(--color-background); }
-  .md\:bg-surface { background-color: var(--color-surface); }
+  .md\:bg-primary { background-color: var(--primary); }
+  .md\:bg-secondary { background-color: var(--secondary); }
+  .md\:bg-accent { background-color: var(--accent); }
+  .md\:bg-background { background-color: var(--background); }
+  .md\:bg-surface { background-color: var(--surface); }
   
   .md\:bg-cover { background-size: cover; }
   .md\:bg-contain { background-size: contain; }
@@ -259,11 +259,11 @@
 
 @include lg {
   .lg\:bg-transparent { background-color: transparent; }
-  .lg\:bg-primary { background-color: var(--color-primary); }
-  .lg\:bg-secondary { background-color: var(--color-secondary); }
-  .lg\:bg-accent { background-color: var(--color-accent); }
-  .lg\:bg-background { background-color: var(--color-background); }
-  .lg\:bg-surface { background-color: var(--color-surface); }
+  .lg\:bg-primary { background-color: var(--primary); }
+  .lg\:bg-secondary { background-color: var(--secondary); }
+  .lg\:bg-accent { background-color: var(--accent); }
+  .lg\:bg-background { background-color: var(--background); }
+  .lg\:bg-surface { background-color: var(--surface); }
   
   .lg\:bg-cover { background-size: cover; }
   .lg\:bg-contain { background-size: contain; }
@@ -298,11 +298,11 @@
 
 @include xl {
   .xl\:bg-transparent { background-color: transparent; }
-  .xl\:bg-primary { background-color: var(--color-primary); }
-  .xl\:bg-secondary { background-color: var(--color-secondary); }
-  .xl\:bg-accent { background-color: var(--color-accent); }
-  .xl\:bg-background { background-color: var(--color-background); }
-  .xl\:bg-surface { background-color: var(--color-surface); }
+  .xl\:bg-primary { background-color: var(--primary); }
+  .xl\:bg-secondary { background-color: var(--secondary); }
+  .xl\:bg-accent { background-color: var(--accent); }
+  .xl\:bg-background { background-color: var(--background); }
+  .xl\:bg-surface { background-color: var(--surface); }
   
   .xl\:bg-cover { background-size: cover; }
   .xl\:bg-contain { background-size: contain; }

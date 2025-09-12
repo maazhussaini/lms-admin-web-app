@@ -70,24 +70,24 @@
 .text-current { color: currentColor; }
 .text-inherit { color: inherit; }
 
-// Theme colors
-.text-primary { color: var(--color-primary); }
-.text-primary-dark { color: var(--color-primary-dark); }
-.text-primary-light { color: var(--color-primary-light); }
-.text-secondary { color: var(--color-secondary); }
-.text-accent { color: var(--color-accent); }
-.text-success { color: var(--color-success); }
-.text-warning { color: var(--color-warning); }
-.text-danger { color: var(--color-danger); }
-.text-info { color: var(--color-info); }
+// Theme colors - Using correct variable names from themes
+.text-primary { color: var(--primary); }
+.text-primary-dark { color: var(--primary-dark); }
+.text-primary-light { color: var(--primary-light); }
+.text-secondary { color: var(--secondary); }
+.text-accent { color: var(--primary-light); } // Using primary-light as accent fallback
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+.text-danger { color: var(--error); } // Map danger to error (as defined in themes)
+.text-info { color: var(--info); }
 
-// Text colors from theme
-.text-background { color: var(--color-background); }
-.text-surface { color: var(--color-surface); }
-.text-text { color: var(--color-text); }
-.text-text-muted { color: var(--color-text-muted); }
-.text-text-inverse { color: var(--color-text-inverse); }
-.text-border { color: var(--color-border); }
+// Text colors from theme - Using correct variable names
+.text-background { color: var(--background); }
+.text-surface { color: var(--surface); }
+.text-text { color: var(--text-primary); } // Use text-primary as base text color
+.text-text-muted { color: var(--text-muted); }
+.text-text-inverse { color: var(--white); } // Use white as inverse text
+.text-border { color: var(--border); }
 
 // Additional semantic text colors  
 .text-muted { color: var(--text-muted); }

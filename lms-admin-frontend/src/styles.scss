@@ -94,3 +94,17 @@ a {
     justify-content: center;
   }
 }
+
+.password-illustration {
+  .primary-light-fill {
+    fill: var(--primary-light);
+  }
+  
+  .primary-dark-fill {
+    fill: var(--primary-dark);
+  }
+  
+  .light-lavender-fill {
+    fill: var(--light-lavender);
+  }
+}

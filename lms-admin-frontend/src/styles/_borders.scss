@@ -151,19 +151,19 @@
 .border-inherit { border-color: inherit; }
 
 // Theme border colors
-.border-primary { border-color: var(--color-primary); }
-.border-primary-dark { border-color: var(--color-primary-dark); }
-.border-primary-light { border-color: var(--color-primary-light); }
-.border-secondary { border-color: var(--color-secondary); }
-.border-accent { border-color: var(--color-accent); }
-.border-success { border-color: var(--color-success); }
-.border-warning { border-color: var(--color-warning); }
-.border-danger { border-color: var(--color-danger); }
-.border-info { border-color: var(--color-info); }
+.border-primary { border-color: var(--primary); }
+.border-primary-dark { border-color: var(--primary-dark); }
+.border-primary-light { border-color: var(--primary-light); }
+.border-secondary { border-color: var(--secondary); }
+.border-accent { border-color: var(--primary-light); } // Using primary-light as accent fallback
+.border-success { border-color: var(--success); }
+.border-warning { border-color: var(--warning); }
+.border-danger { border-color: var(--error); } // Map danger to error
+.border-info { border-color: var(--info); }
 
-.border-background { border-color: var(--color-background); }
-.border-surface { border-color: var(--color-surface); }
-.border-border { border-color: var(--color-border); }
+.border-background { border-color: var(--background); }
+.border-surface { border-color: var(--surface); }
+.border-border { border-color: var(--border); }
 
 // Divide utilities (for child elements)
 .divide-x-0 > :not([hidden]) ~ :not([hidden]) {
@@ -237,8 +237,8 @@
 // Divide colors
 .divide-transparent > :not([hidden]) ~ :not([hidden]) { border-color: transparent; }
 .divide-current > :not([hidden]) ~ :not([hidden]) { border-color: currentColor; }
-.divide-primary > :not([hidden]) ~ :not([hidden]) { border-color: var(--color-primary); }
-.divide-border > :not([hidden]) ~ :not([hidden]) { border-color: var(--color-border); }
+.divide-primary > :not([hidden]) ~ :not([hidden]) { border-color: var(--primary); }
+.divide-border > :not([hidden]) ~ :not([hidden]) { border-color: var(--border); }
 
 // Divide styles
 .divide-solid > :not([hidden]) ~ :not([hidden]) { border-style: solid; }
@@ -262,8 +262,8 @@
 .outline-8 { outline-width: 8px; }
 
 // Outline colors
-.outline-primary { outline-color: var(--color-primary); }
-.outline-border { outline-color: var(--color-border); }
+.outline-primary { outline-color: var(--primary); }
+.outline-border { outline-color: var(--border); }
 .outline-transparent { outline-color: transparent; }
 
 // Outline offset
@@ -289,8 +289,8 @@
 .ring-inset { --ring-inset: inset; }
 
 // Ring colors
-.ring-primary { --ring-color: var(--color-primary); }
-.ring-border { --ring-color: var(--color-border); }
+.ring-primary { --ring-color: var(--primary); }
+.ring-border { --ring-color: var(--border); }
 .ring-transparent { --ring-color: transparent; }
 
 // Ring offset
@@ -301,8 +301,8 @@
 .ring-offset-8 { --ring-offset-width: 8px; }
 
 // Ring offset colors
-.ring-offset-primary { --ring-offset-color: var(--color-primary); }
-.ring-offset-background { --ring-offset-color: var(--color-background); }
+.ring-offset-primary { --ring-offset-color: var(--primary); }
+.ring-offset-background { --ring-offset-color: var(--background); }
 .ring-offset-transparent { --ring-offset-color: transparent; }
 
 // Responsive variants

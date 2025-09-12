@@ -79,19 +79,19 @@
   padding-right: 1rem;
   
   @include sm {
-    max-width: breakpoint('sm');
+    max-width: map-get($breakpoints, sm);
   }
   
   @include md {
-    max-width: breakpoint('md');
+    max-width: map-get($breakpoints, md);
   }
   
   @include lg {
-    max-width: breakpoint('lg');
+    max-width: map-get($breakpoints, lg);
   }
   
   @include xl {
-    max-width: breakpoint('xl');
+    max-width: map-get($breakpoints, xl);
   }
 }
 

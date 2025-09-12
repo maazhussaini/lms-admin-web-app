@@ -82,16 +82,16 @@
           
           <!-- Password Strength Indicator -->
           <div *ngIf="credentials.password && passwordStrength" class="mt-2 flex items-center gap-2">
-            <div class="flex gap-1">
+            <!-- <div class="flex gap-1">
               <div class="h-1.5 w-5 rounded-full" 
                    [ngClass]="passwordStrength === 'weak' ? 'bg-error' : 'bg-gray-200'"></div>
               <div class="h-1.5 w-5 rounded-full" 
                    [ngClass]="passwordStrength === 'medium' || passwordStrength === 'strong' ? 'bg-warning' : 'bg-gray-200'"></div>
               <div class="h-1.5 w-5 rounded-full" 
                    [ngClass]="passwordStrength === 'strong' ? 'bg-success' : 'bg-gray-200'"></div>
-            </div>
+            </div> -->
             <span class="text-xs font-medium" 
-                  [ngClass]="passwordStrength === 'weak' ? 'text-error' : passwordStrength === 'medium' ? 'text-warning' : 'text-success'">
+                  [ngClass]="passwordStrength === 'weak' ? 'text-danger' : passwordStrength === 'medium' ? 'text-warning' : 'text-success'">
               {{ passwordStrength | titlecase }}
             </span>
           </div>

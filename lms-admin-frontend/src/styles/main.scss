@@ -22,13 +22,25 @@
 
 // CSS Custom Property Initialization
 :root {
-  // Initialize theme variables with light theme by default
-  @include generate-theme-variables($light-theme);
+  // Initialize with light theme variables
+  @each $key, $value in $light-theme {
+    --#{$key}: #{$value};
+  }
   
-  // Base font stacks
-  --font-sans: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-  --font-serif: 'Georgia', 'Cambria', 'Times New Roman', Times, serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+  // Export spacing scale as CSS vars
+  @each $step, $val in $spacing-scale {
+    --space-#{$step}: #{$val};
+  }
+  
+  // Export font sizes as CSS vars
+  @each $size, $val in $text-sizes {
+    --text-#{$size}: #{$val};
+  }
+  
+  // Export font weights as CSS vars
+  @each $weight, $val in $font-weights {
+    --font-#{$weight}: #{$val};
+  }
   
   // Initialize ring variables
   --ring-inset: ;
@@ -42,17 +54,23 @@
 
 // Dark theme
 [data-theme="dark"] {
-  @include generate-theme-variables($dark-theme);
+  @each $key, $value in $dark-theme {
+    --#{$key}: #{$value};
+  }
   --ring-offset-color: #1f2937;
 }
 
 // Theme switching utility
 .theme-light {
-  @include generate-theme-variables($light-theme);
+  @each $key, $value in $light-theme {
+    --#{$key}: #{$value};
+  }
 }
 
 .theme-dark {
-  @include generate-theme-variables($dark-theme);
+  @each $key, $value in $dark-theme {
+    --#{$key}: #{$value};
+  }
 }
 
 // ===== GLOBAL RESETS ===== //
@@ -63,7 +81,7 @@
   box-sizing: border-box;
   border-width: 0;
   border-style: solid;
-  border-color: var(--color-border);
+  border-color: var(--border);
 }
 
 html {
@@ -79,10 +97,9 @@ html {
 body {
   margin: 0;
   line-height: inherit;
-  background-color: var(--color-background);
-  color: var(--color-text);
+  background-color: var(--background);
+  color: var(--text-primary);
   font-family: inherit;
-  @include transition-colors;
 }
 
 hr {
@@ -261,7 +278,7 @@ textarea {
 input::placeholder,
 textarea::placeholder {
   opacity: 1;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
 }
 
 button,
@@ -334,31 +351,31 @@ video {
 .input-md:focus,
 .input-lg:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
 }
 
 // Input validation states
 .input-error {
-  border-color: var(--color-error);
+  border-color: var(--error);
   &:focus {
-    border-color: var(--color-error);
+    border-color: var(--error);
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
   }
 }
 
 .input-success {
-  border-color: var(--color-success);
+  border-color: var(--success);
   &:focus {
-    border-color: var(--color-success);
+    border-color: var(--success);
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
   }
 }
 
 .input-warning {
-  border-color: var(--color-warning);
+  border-color: var(--warning);
   &:focus {
-    border-color: var(--color-warning);
+    border-color: var(--warning);
     box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
   }
 }
@@ -415,11 +432,11 @@ video {
 
 // Solid button variants
 .btn-primary {
-  background-color: var(--color-primary);
-  color: var(--color-white);
+  background-color: var(--primary);
+  color: var(--white);
   
   &:hover:not(:disabled) {
-    background-color: var(--color-primary-dark);
+    background-color: var(--primary-dark);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(76, 29, 149, 0.3);
   }
@@ -430,8 +447,8 @@ video {
 }
 
 .btn-secondary {
-  background-color: var(--color-secondary, #6B7280);
-  color: var(--color-white);
+  background-color: var(--secondary, #6B7280);
+  color: var(--white);
   
   &:hover:not(:disabled) {
     opacity: 0.9;
@@ -444,8 +461,8 @@ video {
 }
 
 .btn-success {
-  background-color: var(--color-success);
-  color: var(--color-white);
+  background-color: var(--success);
+  color: var(--white);
   
   &:hover:not(:disabled) {
     opacity: 0.9;
@@ -454,8 +471,8 @@ video {
 }
 
 .btn-warning {
-  background-color: var(--color-warning);
-  color: var(--color-white);
+  background-color: var(--warning);
+  color: var(--white);
   
   &:hover:not(:disabled) {
     opacity: 0.9;
@@ -465,8 +482,8 @@ video {
 
 .btn-error,
 .btn-danger {
-  background-color: var(--color-error);
-  color: var(--color-white);
+  background-color: var(--error);
+  color: var(--white);
   
   &:hover:not(:disabled) {
     opacity: 0.9;
@@ -477,12 +494,12 @@ video {
 // Outlined button variants
 .btn-outline-primary {
   background-color: transparent;
-  color: var(--color-primary);
-  border-color: var(--color-primary);
+  color: var(--primary);
+  border-color: var(--primary);
   
   &:hover:not(:disabled) {
-    background-color: var(--color-primary);
-    color: var(--color-white);
+    background-color: var(--primary);
+    color: var(--white);
     transform: translateY(-1px);
   }
   
@@ -493,36 +510,36 @@ video {
 
 .btn-outline-secondary {
   background-color: transparent;
-  color: var(--color-secondary, #6B7280);
-  border-color: var(--color-secondary, #6B7280);
+  color: var(--secondary, #6B7280);
+  border-color: var(--secondary, #6B7280);
   
   &:hover:not(:disabled) {
-    background-color: var(--color-secondary, #6B7280);
-    color: var(--color-white);
+    background-color: var(--secondary, #6B7280);
+    color: var(--white);
     transform: translateY(-1px);
   }
 }
 
 .btn-outline-success {
   background-color: transparent;
-  color: var(--color-success);
-  border-color: var(--color-success);
+  color: var(--success);
+  border-color: var(--success);
   
   &:hover:not(:disabled) {
-    background-color: var(--color-success);
-    color: var(--color-white);
+    background-color: var(--success);
+    color: var(--white);
     transform: translateY(-1px);
   }
 }
 
 .btn-outline-warning {
   background-color: transparent;
-  color: var(--color-warning);
-  border-color: var(--color-warning);
+  color: var(--warning);
+  border-color: var(--warning);
   
   &:hover:not(:disabled) {
-    background-color: var(--color-warning);
-    color: var(--color-white);
+    background-color: var(--warning);
+    color: var(--white);
     transform: translateY(-1px);
   }
 }
@@ -530,12 +547,12 @@ video {
 .btn-outline-error,
 .btn-outline-danger {
   background-color: transparent;
-  color: var(--color-error);
-  border-color: var(--color-error);
+  color: var(--error);
+  border-color: var(--error);
   
   &:hover:not(:disabled) {
-    background-color: var(--color-error);
-    color: var(--color-white);
+    background-color: var(--error);
+    color: var(--white);
     transform: translateY(-1px);
   }
 }
@@ -565,7 +582,7 @@ video {
   display: inline-block;
   width: 3rem; // 48px - wider for better aesthetics
   height: 1.75rem; // 28px - taller for better proportions
-  background-color: var(--color-border-dark, #D1D5DB); // Light gray when off
+  background-color: var(--border-dark, #D1D5DB); // Light gray when off
   border-radius: 1rem; // Fully rounded
   border: none;
   transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); // Bouncy easing
@@ -579,7 +596,7 @@ video {
     left: 0.1875rem; // 3px padding
     width: 1.375rem; // 22px
     height: 1.375rem; // 22px
-    background-color: var(--color-white);
+    background-color: var(--white);
     border-radius: 50%;
     transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); // Bouncy easing
     box-shadow: 
@@ -651,7 +668,7 @@ video {
 .toggle,
 .toggle-primary {
   input:checked + .toggle-track {
-    background-color: var(--color-primary); // Beautiful purple from your theme
+    background-color: var(--primary); // Beautiful purple from your theme
     
     // Slide the white circle to the right
     &::before {
@@ -661,7 +678,7 @@ video {
   
   input:focus + .toggle-track {
     box-shadow: 
-      0 0 0 3px var(--color-primary-light, rgba(139, 92, 246, 0.3)),
+      0 0 0 3px var(--primary-light, rgba(139, 92, 246, 0.3)),
       0 2px 4px rgba(0, 0, 0, 0.1);
   }
 }
@@ -669,7 +686,7 @@ video {
 // Toggle variants with theme colors
 .toggle-secondary {
   input:checked + .toggle-track {
-    background-color: var(--color-secondary, #6B7280);
+    background-color: var(--secondary, #6B7280);
     
     &::before {
       transform: translateX(1.25rem);
@@ -685,7 +702,7 @@ video {
 
 .toggle-success {
   input:checked + .toggle-track {
-    background-color: var(--color-success);
+    background-color: var(--success);
     
     &::before {
       transform: translateX(1.25rem);
@@ -701,7 +718,7 @@ video {
 
 .toggle-warning {
   input:checked + .toggle-track {
-    background-color: var(--color-warning);
+    background-color: var(--warning);
     
     &::before {
       transform: translateX(1.25rem);
@@ -717,7 +734,7 @@ video {
 
 .toggle-danger {
   input:checked + .toggle-track {
-    background-color: var(--color-error);
+    background-color: var(--error);
     
     &::before {
       transform: translateX(1.25rem);
@@ -740,7 +757,7 @@ video {
   .toggle-label {
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--color-text);
+    color: var(--text-primary);
   }
 }
 
@@ -752,7 +769,7 @@ video {
   }
   
   input:checked:disabled + .toggle-track {
-    background-color: var(--color-muted);
+    background-color: var(--text-muted);
   }
 }
 
@@ -823,24 +840,24 @@ video {
 }
 
 .focus\:ring-primary:focus-visible {
-  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
 }
 
 // Hover utilities
 .hover\:bg-primary-dark:hover {
-  background-color: var(--color-primary-dark);
+  background-color: var(--primary-dark);
 }
 
 .hover\:bg-opacity-90:hover {
-  background-color: rgba(var(--color-primary-rgb), 0.9);
+  background-color: rgba(var(--primary-rgb), 0.9);
 }
 
 .hover\:text-primary:hover {
-  color: var(--color-primary);
+  color: var(--primary);
 }
 
 .hover\:border-primary:hover {
-  border-color: var(--color-primary);
+  border-color: var(--primary);
 }
 
 // Transition utilities
@@ -933,7 +950,7 @@ ORBED THEME SYSTEM USAGE:
 
 3. CSS Variables:
    - All theme colors are available as CSS variables
-   - Example: var(--color-primary), var(--color-surface)
+   - Example: var(--primary), var(--surface)
 
 4. Mixins Available:
    - @include flex-center, @include card, @include button-base

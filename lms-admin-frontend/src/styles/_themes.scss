@@ -70,6 +70,11 @@ $light-theme: (
   // Typography
   font-family: #{$font-family-base},
   
+  // Font families for utility classes
+  font-sans: #{$font-family-base},
+  font-serif: 'Georgia, serif',
+  font-mono: 'Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+  
   // Component specific
   card-bg: #FFFFFF,
   input-bg: #FFFFFF,
@@ -137,7 +142,7 @@ $dark-theme: (
   border: #4B5563,
   border-dark: #6B7280,
   
-  // State colors
+  // State colors (adapted for dark theme)
   success: #059669,
   warning: #D97706,
   error: #DC2626,
@@ -153,6 +158,11 @@ $dark-theme: (
   
   // Typography
   font-family: #{$font-family-base},
+  
+  // Font families for utility classes
+  font-sans: #{$font-family-base},
+  font-serif: 'Georgia, serif',
+  font-mono: 'Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
   
   // Component specific
   card-bg: #1F2937,

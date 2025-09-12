@@ -71,16 +71,16 @@
   }
   
   // Valid state
-  &:valid:not(:placeholder-shown) {
-    border-color: var(--color-success);
-    background-color: var(--color-success-bg, #f0fdf4);
-  }
+  // &:valid:not(:placeholder-shown) {
+  //   border-color: var(--color-success);
+  //   background-color: var(--color-success-bg, #f0fdf4);
+  // }
   
-  // Invalid state
-  &:invalid:not(:placeholder-shown) {
-    border-color: var(--color-error);
-    background-color: var(--color-error-bg, #fef2f2);
-  }
+  // // Invalid state
+  // &:invalid:not(:placeholder-shown) {
+  //   border-color: var(--color-error);
+  //   background-color: var(--color-error-bg, #fef2f2);
+  // }
 }
 
 /* Responsive adjustments for mobile - matches other auth components */
