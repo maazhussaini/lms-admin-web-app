@@ -292,18 +292,31 @@ export class StudentController {
       // Get query parameters for additional filtering
       const enrollmentStatus = req.query['enrollment_status'] as string;
       const includeProgress = req.query['include_progress'] === 'true';
+      const isEnrolled = req.query['is_enrolled'] !== 'false'; // Default to true unless explicitly set to 'false'
       
-      // Parse comma-separated enrollment statuses
-      let statusesArray: string[] | undefined;
+      // Handle backward compatibility: if enrollment_status is provided, convert to isEnrolled boolean
+      let finalIsEnrolled = isEnrolled;
       if (enrollmentStatus) {
-        statusesArray = enrollmentStatus.split(',').map(s => s.trim().toUpperCase());
+        const statusesArray = enrollmentStatus.split(',').map(s => s.trim().toUpperCase());
+        // If the provided statuses include ACTIVE or COMPLETED, set isEnrolled to true
+        // If they only include other statuses (PENDING, DROPPED, etc.), set to false
+        const hasActiveOrCompleted = statusesArray.some(status => 
+          ['ACTIVE', 'COMPLETED'].includes(status)
+        );
+        const hasOtherStatuses = statusesArray.some(status => 
+          !['ACTIVE', 'COMPLETED'].includes(status)
+        );
+        
+        // If both types are requested, default to true (enrolled)
+        // If only non-active statuses are requested, set to false
+        finalIsEnrolled = hasActiveOrCompleted || !hasOtherStatuses;
       }
       
       logger.debug('Getting enrolled courses for current student profile', {
         studentId: student.student_id,
         paginationParams: params,
         enrollmentStatus,
-        statusesArray,
+        isEnrolled: finalIsEnrolled,
         includeProgress,
         requestingUserId: requestingUser.id,
         userType: requestingUser.user_type
@@ -313,7 +326,7 @@ export class StudentController {
         student.student_id,
         requestingUser,
         params,
-        statusesArray
+        finalIsEnrolled
       );
 
       return {
