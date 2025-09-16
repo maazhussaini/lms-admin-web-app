@@ -1,0 +1,967 @@
+// ===== ORBED THEME SYSTEM - MAIN IMPORT FILE ===== //
+
+// Base configuration
+@import 'variables';
+@import 'functions';
+@import 'mixins';
+@import 'themes';
+
+// Utility classes
+@import 'grid';
+@import 'flex';
+@import 'spacing';
+@import 'typography';
+@import 'display';
+@import 'position';
+@import 'borders';
+@import 'backgrounds-shadows';
+@import 'sizes';
+@import 'overflow-object';
+
+// ===== BASE STYLES ===== //
+
+// CSS Custom Property Initialization
+:root {
+  // Initialize with light theme variables
+  @each $key, $value in $light-theme {
+    --#{$key}: #{$value};
+  }
+  
+  // Export spacing scale as CSS vars
+  @each $step, $val in $spacing-scale {
+    --space-#{$step}: #{$val};
+  }
+  
+  // Export font sizes as CSS vars
+  @each $size, $val in $text-sizes {
+    --text-#{$size}: #{$val};
+  }
+  
+  // Export font weights as CSS vars
+  @each $weight, $val in $font-weights {
+    --font-#{$weight}: #{$val};
+  }
+  
+  // Initialize ring variables
+  --ring-inset: ;
+  --ring-offset-width: 0px;
+  --ring-offset-color: #fff;
+  --ring-color: rgba(59, 130, 246, 0.5);
+  
+  // Initialize scroll snap strictness
+  --scroll-snap-strictness: proximity;
+}
+
+// Dark theme
+[data-theme="dark"] {
+  @each $key, $value in $dark-theme {
+    --#{$key}: #{$value};
+  }
+  --ring-offset-color: #1f2937;
+}
+
+// Theme switching utility
+.theme-light {
+  @each $key, $value in $light-theme {
+    --#{$key}: #{$value};
+  }
+}
+
+.theme-dark {
+  @each $key, $value in $dark-theme {
+    --#{$key}: #{$value};
+  }
+}
+
+// ===== GLOBAL RESETS ===== //
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: var(--border);
+}
+
+html {
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  -moz-tab-size: 4;
+  tab-size: 4;
+  font-family: var(--font-sans);
+  font-feature-settings: normal;
+  font-variation-settings: normal;
+}
+
+body {
+  margin: 0;
+  line-height: inherit;
+  background-color: var(--background);
+  color: var(--text-primary);
+  font-family: inherit;
+}
+
+hr {
+  height: 0;
+  color: inherit;
+  border-top-width: 1px;
+}
+
+abbr:where([title]) {
+  text-decoration: underline dotted;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: inherit;
+  font-weight: inherit;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+b,
+strong {
+  font-weight: bolder;
+}
+
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-mono);
+  font-size: 1em;
+}
+
+small {
+  font-size: 80%;
+}
+
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+sub {
+  bottom: -0.25em;
+}
+
+sup {
+  top: -0.5em;
+}
+
+table {
+  text-indent: 0;
+  border-color: inherit;
+  border-collapse: collapse;
+}
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: inherit;
+  font-feature-settings: inherit;
+  font-variation-settings: inherit;
+  font-size: 100%;
+  font-weight: inherit;
+  line-height: inherit;
+  color: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+button,
+select {
+  text-transform: none;
+}
+
+button,
+[type='button'],
+[type='reset'],
+[type='submit'] {
+  -webkit-appearance: button;
+  appearance: button;
+  background-color: transparent;
+  background-image: none;
+}
+
+:-moz-focusring {
+  outline: auto;
+}
+
+:-moz-ui-invalid {
+  box-shadow: none;
+}
+
+progress {
+  vertical-align: baseline;
+}
+
+::-webkit-inner-spin-button,
+::-webkit-outer-spin-button {
+  height: auto;
+}
+
+[type='search'] {
+  -webkit-appearance: textfield;
+  appearance: textfield;
+  outline-offset: -2px;
+}
+
+::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+::-webkit-file-upload-button {
+  -webkit-appearance: button;
+  font: inherit;
+}
+
+summary {
+  display: list-item;
+}
+
+blockquote,
+dl,
+dd,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+hr,
+figure,
+p,
+pre {
+  margin: 0;
+}
+
+fieldset {
+  margin: 0;
+  padding: 0;
+}
+
+legend {
+  padding: 0;
+}
+
+ol,
+ul,
+menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+dialog {
+  padding: 0;
+}
+
+textarea {
+  resize: vertical;
+}
+
+input::placeholder,
+textarea::placeholder {
+  opacity: 1;
+  color: var(--text-muted);
+}
+
+button,
+[role="button"] {
+  cursor: pointer;
+}
+
+:disabled {
+  cursor: default;
+}
+
+img,
+svg,
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
+  display: block;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+[hidden] {
+  display: none;
+}
+
+// ===== COMPONENT BASE STYLES ===== //
+
+// ===== FORM INPUT COMPONENTS ===== //
+
+// Base input styles
+.form-input,
+.form-select,
+.form-textarea {
+  @include input-base;
+  transition: all 0.2s ease;
+}
+
+// Input sizes
+.input-sm {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 0.375rem;
+}
+
+.input-md,
+.form-input {
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border-radius: 0.5rem;
+}
+
+.input-lg {
+  padding: 1rem 1.25rem;
+  font-size: 1.125rem;
+  border-radius: 0.75rem;
+}
+
+// Input focus states
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus,
+.input-sm:focus,
+.input-md:focus,
+.input-lg:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+// Input validation states
+.input-error {
+  border-color: var(--error);
+  &:focus {
+    border-color: var(--error);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  }
+}
+
+.input-success {
+  border-color: var(--success);
+  &:focus {
+    border-color: var(--success);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  }
+}
+
+.input-warning {
+  border-color: var(--warning);
+  &:focus {
+    border-color: var(--warning);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+  }
+}
+
+// ===== BUTTON COMPONENTS ===== //
+
+// Base button styles
+.btn {
+  @include button-base;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+}
+
+// Button sizes
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  border-radius: 0.375rem;
+  min-height: 2rem;
+}
+
+.btn-md,
+.btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 0.5rem;
+  min-height: 2.5rem;
+}
+
+.btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  border-radius: 0.75rem;
+  min-height: 3rem;
+}
+
+.btn-xl {
+  padding: 1.25rem 2.5rem;
+  font-size: 1.25rem;
+  border-radius: 1rem;
+  min-height: 3.5rem;
+}
+
+// Solid button variants
+.btn-primary {
+  background-color: var(--primary);
+  color: var(--white);
+  
+  &:hover:not(:disabled) {
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(76, 29, 149, 0.3);
+  }
+  
+  &:focus {
+    @include focus-ring;
+  }
+}
+
+.btn-secondary {
+  background-color: var(--secondary, #6B7280);
+  color: var(--white);
+  
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+  
+  &:focus {
+    @include focus-ring;
+  }
+}
+
+.btn-success {
+  background-color: var(--success);
+  color: var(--white);
+  
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+}
+
+.btn-warning {
+  background-color: var(--warning);
+  color: var(--white);
+  
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+}
+
+.btn-error,
+.btn-danger {
+  background-color: var(--error);
+  color: var(--white);
+  
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+}
+
+// Outlined button variants
+.btn-outline-primary {
+  background-color: transparent;
+  color: var(--primary);
+  border-color: var(--primary);
+  
+  &:hover:not(:disabled) {
+    background-color: var(--primary);
+    color: var(--white);
+    transform: translateY(-1px);
+  }
+  
+  &:focus {
+    @include focus-ring;
+  }
+}
+
+.btn-outline-secondary {
+  background-color: transparent;
+  color: var(--secondary, #6B7280);
+  border-color: var(--secondary, #6B7280);
+  
+  &:hover:not(:disabled) {
+    background-color: var(--secondary, #6B7280);
+    color: var(--white);
+    transform: translateY(-1px);
+  }
+}
+
+.btn-outline-success {
+  background-color: transparent;
+  color: var(--success);
+  border-color: var(--success);
+  
+  &:hover:not(:disabled) {
+    background-color: var(--success);
+    color: var(--white);
+    transform: translateY(-1px);
+  }
+}
+
+.btn-outline-warning {
+  background-color: transparent;
+  color: var(--warning);
+  border-color: var(--warning);
+  
+  &:hover:not(:disabled) {
+    background-color: var(--warning);
+    color: var(--white);
+    transform: translateY(-1px);
+  }
+}
+
+.btn-outline-error,
+.btn-outline-danger {
+  background-color: transparent;
+  color: var(--error);
+  border-color: var(--error);
+  
+  &:hover:not(:disabled) {
+    background-color: var(--error);
+    color: var(--white);
+    transform: translateY(-1px);
+  }
+}
+
+// ===== TOGGLE BUTTON COMPONENTS ===== //
+
+// Base toggle switch
+.toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  
+  // Hide native checkbox
+  input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+}
+
+// Toggle switch track - Beautiful rounded design
+.toggle-track {
+  position: relative;
+  display: inline-block;
+  width: 3rem; // 48px - wider for better aesthetics
+  height: 1.75rem; // 28px - taller for better proportions
+  background-color: var(--border-dark, #D1D5DB); // Light gray when off
+  border-radius: 1rem; // Fully rounded
+  border: none;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); // Bouncy easing
+  cursor: pointer;
+  
+  // The sliding white circle
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0.1875rem; // 3px padding
+    left: 0.1875rem; // 3px padding
+    width: 1.375rem; // 22px
+    height: 1.375rem; // 22px
+    background-color: var(--white);
+    border-radius: 50%;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); // Bouncy easing
+    box-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.1),
+      0 4px 8px rgba(0, 0, 0, 0.05);
+    transform: translateX(0);
+  }
+  
+  // Hover effects
+  &:hover {
+    &::before {
+      box-shadow: 
+        0 3px 6px rgba(0, 0, 0, 0.15),
+        0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+// Toggle sizes
+.toggle-sm {
+  .toggle-track {
+    width: 2.5rem; // 40px
+    height: 1.4375rem; // 23px
+    
+    &::before {
+      width: 1.125rem; // 18px
+      height: 1.125rem; // 18px
+      top: 0.3rem; // 2.5px padding
+      left: 0.15625rem; // 2.5px padding
+    }
+  }
+  
+  // Override the checked state for small size
+  input:checked + .toggle-track::before {
+    transform: translateX(1.0625rem); // Move 17px to the right
+  }
+}
+
+.toggle-md,
+.toggle {
+  .toggle-track {
+    width: 3rem; // 48px - default beautiful size
+    height: 1.75rem; // 28px
+  }
+  
+  // This is handled in the main toggle variants above
+}
+
+.toggle-lg {
+  .toggle-track {
+    width: 3.75rem; // 60px
+    height: 2.125rem; // 34px
+    
+    &::before {
+      width: 1.625rem; // 26px
+      height: 1.625rem; // 26px
+      top: 0.25rem; // 4px padding
+      left: 0.25rem; // 4px padding
+    }
+  }
+  
+  // Override the checked state for large size
+  input:checked + .toggle-track::before {
+    transform: translateX(1.5rem); // Move 24px to the right
+  }
+}
+
+// Default toggle behavior (Primary by default)
+.toggle,
+.toggle-primary {
+  input:checked + .toggle-track {
+    background-color: var(--primary); // Beautiful purple from your theme
+    
+    // Slide the white circle to the right
+    &::before {
+      transform: translateX(1.25rem); // Move 20px to the right
+    }
+  }
+  
+  input:focus + .toggle-track {
+    box-shadow: 
+      0 0 0 3px var(--primary-light, rgba(139, 92, 246, 0.3)),
+      0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Toggle variants with theme colors
+.toggle-secondary {
+  input:checked + .toggle-track {
+    background-color: var(--secondary, #6B7280);
+    
+    &::before {
+      transform: translateX(1.25rem);
+    }
+  }
+  
+  input:focus + .toggle-track {
+    box-shadow: 
+      0 0 0 3px rgba(107, 114, 128, 0.3),
+      0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.toggle-success {
+  input:checked + .toggle-track {
+    background-color: var(--success);
+    
+    &::before {
+      transform: translateX(1.25rem);
+    }
+  }
+  
+  input:focus + .toggle-track {
+    box-shadow: 
+      0 0 0 3px rgba(16, 185, 129, 0.3),
+      0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.toggle-warning {
+  input:checked + .toggle-track {
+    background-color: var(--warning);
+    
+    &::before {
+      transform: translateX(1.25rem);
+    }
+  }
+  
+  input:focus + .toggle-track {
+    box-shadow: 
+      0 0 0 3px rgba(245, 158, 11, 0.3),
+      0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.toggle-danger {
+  input:checked + .toggle-track {
+    background-color: var(--error);
+    
+    &::before {
+      transform: translateX(1.25rem);
+    }
+  }
+  
+  input:focus + .toggle-track {
+    box-shadow: 
+      0 0 0 3px rgba(239, 68, 68, 0.3),
+      0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Toggle with labels
+.toggle-with-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  
+  .toggle-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+}
+
+// Toggle states
+.toggle {
+  input:disabled + .toggle-track {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  input:checked:disabled + .toggle-track {
+    background-color: var(--text-muted);
+  }
+}
+
+// Animated toggle (enhanced version with beautiful effects)
+.toggle-animated {
+  .toggle-track {
+    position: relative;
+    overflow: hidden;
+    
+    // Subtle shine effect
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%);
+      transform: translateX(-100%);
+      transition: transform 0.8s ease;
+    }
+    
+    // Enhanced glow when checked
+    &:hover::before {
+      transform: scale(1.05);
+    }
+  }
+  
+  input:checked + .toggle-track {
+    box-shadow: 
+      0 0 20px rgba(76, 29, 149, 0.3),
+      0 4px 8px rgba(0, 0, 0, 0.1);
+    
+    &::after {
+      transform: translateX(100%);
+    }
+  }
+}
+
+// Beautiful default styling improvements
+.toggle .toggle-track {
+  // Smooth scaling on interaction
+  &:active {
+    transform: scale(0.98);
+  }
+  
+  // Enhanced shadow when checked
+  input:checked + & {
+    box-shadow: 
+      0 4px 12px rgba(76, 29, 149, 0.25),
+      0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Cards
+.card {
+  @include card;
+}
+
+// Utilities for screen readers
+.sr-only {
+  @include sr-only;
+}
+
+// Focus visible utilities
+.focus\:ring:focus-visible {
+  @include focus-ring;
+}
+
+.focus\:ring-primary:focus-visible {
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+// Hover utilities
+.hover\:bg-primary-dark:hover {
+  background-color: var(--primary-dark);
+}
+
+.hover\:bg-opacity-90:hover {
+  background-color: rgba(var(--primary-rgb), 0.9);
+}
+
+.hover\:text-primary:hover {
+  color: var(--primary);
+}
+
+.hover\:border-primary:hover {
+  border-color: var(--primary);
+}
+
+// Transition utilities
+.transition {
+  @include transition;
+}
+
+.transition-colors {
+  @include transition-colors;
+}
+
+.transition-all {
+  @include transition(all);
+}
+
+.transition-opacity {
+  @include transition(opacity);
+}
+
+.transition-transform {
+  @include transition(transform);
+}
+
+// Animation utilities
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: .5;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8,0,1,1);
+  }
+  50% {
+    transform: none;
+    animation-timing-function: cubic-bezier(0,0,0.2,1);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.animate-ping {
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+// Print utilities
+@media print {
+  .print\:hidden {
+    display: none !important;
+  }
+}
+
+// ===== DOCUMENTATION NOTE ===== //
+/*
+ORBED THEME SYSTEM USAGE:
+
+1. Theme Switching:
+   - Add data-theme="dark" to <html> or <body> for dark mode
+   - Use .theme-light or .theme-dark classes for component-level theming
+
+2. Utility Classes:
+   - All utilities follow Tailwind-like naming conventions
+   - Responsive prefixes: sm:, md:, lg:, xl:
+   - Example: "flex items-center justify-between p-4 bg-surface text-primary"
+
+3. CSS Variables:
+   - All theme colors are available as CSS variables
+   - Example: var(--primary), var(--surface)
+
+4. Mixins Available:
+   - @include flex-center, @include card, @include button-base
+   - @include sm, @include md, @include lg, @include xl for responsive styles
+
+5. Functions Available:
+   - breakpoint(), space(), text-size(), font-weight()
+   - Example: width: breakpoint('md')
+
+6. Color System:
+   - Based on orb-Ed design system
+   - Primary: Blue tones, Secondary: Green tones, Accent: Orange tones
+   - Status colors: Success (green), Warning (yellow), Danger (red), Info (blue)
+*/

@@ -12,6 +12,7 @@ export interface LoginDto {
   email_address: string; // Changed from username to email_address for consistency
   password: string;
   tenant_context?: string;
+  tenant_domain?:string;
 }
 
 /**

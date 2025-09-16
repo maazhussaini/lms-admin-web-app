@@ -66,13 +66,40 @@ export const filterByCourseType = (
     return courses;
   }
 
-  return courses.filter(course => {
-    const isPaid = course.course_type === 'PAID' || (course.course_price && course.course_price > 0);
-    const isPurchased = course.is_purchased || false;
+  const filteredCourses = courses.filter(course => {
+    // Use the is_free field from API response as primary indicator
+    const isFree = course.is_free === true;
+    const isPurchased = course.is_purchased === true;
+    
+    // Fallback logic for determining if course is paid (when is_free is not available)
+    const isPaid = !isFree && (
+      course.course_type === 'PAID' || 
+      (course.course_price && course.course_price > 0) ||
+      (course.purchase_status && course.purchase_status.includes('Buy:'))
+    );
+    
+    // Debug logging for course type filtering
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔍 Course type filter debug:`, {
+        courseName: course.course_name,
+        isFree: course.is_free,
+        courseType: course.course_type,
+        coursePrice: course.course_price,
+        purchaseStatus: course.purchase_status,
+        isPurchased: course.is_purchased,
+        computed: { isFree, isPaid, isPurchased },
+        filterType: courseType,
+        willInclude: (
+          (courseType === COURSE_FILTER_TYPES.FREE && isFree) ||
+          (courseType === COURSE_FILTER_TYPES.PAID && isPaid && !isPurchased) ||
+          (courseType === COURSE_FILTER_TYPES.PURCHASED && isPurchased)
+        )
+      });
+    }
     
     switch (courseType) {
       case COURSE_FILTER_TYPES.FREE:
-        return !isPaid;
+        return isFree;
       case COURSE_FILTER_TYPES.PAID:
         return isPaid && !isPurchased;
       case COURSE_FILTER_TYPES.PURCHASED:
@@ -81,6 +108,12 @@ export const filterByCourseType = (
         return true;
     }
   });
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`🔍 Course type filtering: ${courses.length} → ${filteredCourses.length} courses (filter: ${courseType})`);
+  }
+  
+  return filteredCourses;
 };
 
 /**
@@ -108,27 +141,30 @@ export const filterBySearchQuery = (
  */
 export const applyAllFilters = (
   courses: ExtendedCourse[],
-  filterState: CourseFilterState
+  filterState: CourseFilterState,
+  skipApiLevelFilters: boolean = false
 ): ExtendedCourse[] => {
   const startTime = performance.now();
   
   let filteredCourses = courses;
 
-  // Apply program filter
-  if (filterState.selectedProgram) {
+  // Apply program filter only if not already filtered at API level
+  if (filterState.selectedProgram && !skipApiLevelFilters) {
     filteredCourses = filterByProgram(filteredCourses, filterState.selectedProgram);
   }
   
-  // Apply specialization filter
-  if (filterState.selectedSpecialization) {
+  // Apply specialization filter only if not already filtered at API level
+  if (filterState.selectedSpecialization && !skipApiLevelFilters) {
     filteredCourses = filterBySpecialization(filteredCourses, filterState.selectedSpecialization);
-  }  // Apply course type filter
+  }
+  
+  // Apply course type filter
   if (filterState.selectedCourseType !== COURSE_FILTER_TYPES.ALL) {
     filteredCourses = filterByCourseType(filteredCourses, filterState.selectedCourseType);
   }
 
-  // Apply search filter
-  if (filterState.searchQuery.trim()) {
+  // Apply search filter only if not already filtered at API level
+  if (filterState.searchQuery.trim() && !skipApiLevelFilters) {
     filteredCourses = filterBySearchQuery(filteredCourses, filterState.searchQuery);
   }
 

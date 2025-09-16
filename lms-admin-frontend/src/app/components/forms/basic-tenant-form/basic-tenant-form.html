@@ -1,0 +1,70 @@
+<form class="basic-tenant-form">
+  <!-- Tenant Name -->
+  <div class="form-group">
+    <label class="form-label">Tenant Name</label>
+    <input 
+      type="text" 
+      class="form-input" 
+      placeholder="Enter Tenant Name"
+      [(ngModel)]="formData.name"
+      name="name"
+      (ngModelChange)="onFormChange()"
+      required>
+  </div>
+
+  <!-- Email Address -->
+  <div class="form-group">
+    <label class="form-label">Email Address</label>
+    <input 
+      type="email" 
+      class="form-input" 
+      placeholder="Enter Primary Email Address"
+      [(ngModel)]="formData.email"
+      name="email"
+      (ngModelChange)="onFormChange()"
+      required>
+  </div>
+
+  <!-- Phone Number -->
+  <div class="form-group">
+    <label class="form-label">Phone Number</label>
+    <div class="phone-input-group">
+      <div class="country-code">
+        <div class="flag-icon">🇵🇰</div>
+        <span>+92</span>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M3 4.5L6 7.5L9 4.5" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <input 
+        type="tel" 
+        class="form-input phone-input" 
+        placeholder="(305) 760-1379"
+        [(ngModel)]="formData.phone"
+        name="phone"
+        (ngModelChange)="onFormChange()"
+        required>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div class="form-group">
+    <label class="form-label">Status</label>
+    <div class="select-wrapper">
+      <select 
+        class="form-select"
+        [(ngModel)]="formData.status"
+        name="status"
+        (ngModelChange)="onFormChange()"
+        required>
+        <option value="" disabled>Select Status</option>
+        @for (option of statusOptions; track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+      <svg class="select-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M3 4.5L6 7.5L9 4.5" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
+</form>

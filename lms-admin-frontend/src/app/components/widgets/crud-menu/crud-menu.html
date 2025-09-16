@@ -1,0 +1,48 @@
+<div class="crud-menu-container" (click)="$event.stopPropagation()">
+  <button 
+    class="crud-menu-trigger" 
+    [class.active]="isMenuOpen"
+    (click)="toggleMenu()"
+    type="button">
+    <span>⋮</span>
+  </button>
+  
+  <div class="crud-menu-dropdown" [class.show]="isMenuOpen" (click)="$event.stopPropagation()">
+    <button
+      *ngIf="options.view"
+      class="crud-menu-item"
+      (click)="onView($event)"
+      type="button">
+      <i class="ic-6"></i>
+      <span>View</span>
+    </button>
+    
+    <button
+      *ngIf="options.edit"
+      class="crud-menu-item"
+      (click)="onEdit($event)"
+      type="button">
+      <i class="ic-7"></i>
+      <span>Edit</span>
+    </button>
+    
+    <button
+      *ngIf="options.delete"
+      class="crud-menu-item danger"
+      (click)="onDelete($event)"
+      type="button">
+      <i class="ic-8"></i>
+      <span>Delete</span>
+    </button>
+    
+    <button
+      *ngFor="let action of options.customActions"
+      class="crud-menu-item"
+      [class]="action.color || ''"
+      (click)="onCustomAction($event, action.action)"
+      type="button">
+      <i [class]="action.icon"></i>
+      <span>{{ action.label }}</span>
+    </button>
+  </div>
+</div>

@@ -1,1 +1,110 @@
-/* You can add global styles to this file, and also import other style files */
+// ===== ORBED THEME SYSTEM - MAIN IMPORT =====
+@import './styles/main.scss';
+
+// ===== APP-SPECIFIC OVERRIDES =====
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Remove default app-root margins
+app-root {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+// Remove default link styles
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+// Utility classes
+.d-none {
+  display: none !important;
+}
+
+.d-block {
+  display: block !important;
+}
+
+.d-flex {
+  display: flex !important;
+}
+
+.justify-center {
+  justify-content: center !important;
+}
+
+.align-center {
+  align-items: center !important;
+}
+
+// ===== LEGACY UTILITIES FOR COMPATIBILITY =====
+.text-center {
+  text-align: center !important;
+}
+
+.w-100 {
+  width: 100% !important;
+}
+
+.h-100 {
+  height: 100% !important;
+}
+
+// ===== CUSTOM SCROLLBAR STYLING =====
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-border);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-text-muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text);
+}
+
+// ===== ANGULAR MATERIAL OVERRIDES =====
+.mat-form-field {
+  width: 100%;
+}
+
+// ===== RESPONSIVE OVERRIDES =====
+@include sm {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.password-illustration {
+  .primary-light-fill {
+    fill: var(--primary-light);
+  }
+  
+  .primary-dark-fill {
+    fill: var(--primary-dark);
+  }
+  
+  .light-lavender-fill {
+    fill: var(--light-lavender);
+  }
+}

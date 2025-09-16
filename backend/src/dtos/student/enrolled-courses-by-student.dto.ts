@@ -5,7 +5,7 @@ import { query, ValidationChain } from 'express-validator';
  */
 export interface GetEnrolledCoursesByStudentDto {
   search_query?: string;
-  enrollment_status?: string;
+  enrollment_status?: string; // Can be a single status or comma-separated values like "ACTIVE,COMPLETED"
   include_progress?: boolean;
 }
 
@@ -44,8 +44,23 @@ export const getEnrolledCoursesByStudentValidation: ValidationChain[] = [
     .optional()
     .isString()
     .withMessage('Enrollment status must be a string')
-    .isIn(['ACTIVE', 'INACTIVE', 'COMPLETED', 'CANCELLED'])
-    .withMessage('Invalid enrollment status. Must be ACTIVE, INACTIVE, COMPLETED, or CANCELLED'),
+    .custom((value) => {
+      if (!value) return true; // Optional field
+      
+      // Split by comma and validate each status
+      const statuses = value.split(',').map((s: string) => s.trim().toUpperCase());
+      // Note: INACTIVE and CANCELLED are supported by the frontend but mapped to DROPPED in the backend
+      const validStatuses = ['ACTIVE', 'INACTIVE', 'COMPLETED', 'CANCELLED', 'PENDING', 'DROPPED', 'SUSPENDED', 'EXPELLED', 'TRANSFERRED', 'DEFERRED'];
+      
+      for (const status of statuses) {
+        if (!validStatuses.includes(status)) {
+          throw new Error(`Invalid enrollment status: ${status}. Must be one of: ${validStatuses.join(', ')}`);
+        }
+      }
+      
+      return true;
+    })
+    .withMessage('Invalid enrollment status. Must be comma-separated values from: ACTIVE, INACTIVE, COMPLETED, CANCELLED, PENDING, DROPPED, SUSPENDED, EXPELLED, TRANSFERRED, DEFERRED'),
     
   query('include_progress')
     .optional()

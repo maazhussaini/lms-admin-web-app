@@ -30,18 +30,19 @@ export class StudentController {
    */
   static createStudentHandler = createRouteHandler(
     async (req: AuthenticatedRequest) => {
-      if (!req.user) {
-        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
-      }
-
+      // if (!req.user) {
+      //   throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
+      // }
+      const tenant = await studentService.getTenantFromDomain(req);
       const studentData = req.validatedData as CreateStudentDto;
-      const requestingUser = req.user;
-      
-      logger.debug('Creating student', {
-        username: studentData.username,
-        userId: requestingUser.id,
-        role: requestingUser.user_type
-      });
+      let requestingUser:any = req.user || {};
+
+      if(requestingUser.user_type !== UserType.SUPER_ADMIN){
+        requestingUser.tenantId = tenant.tenant_id;
+      }
+      else{
+        studentData.tenant_id = tenant.tenant_id;
+      }
       
       return await studentService.createStudent(
         studentData, 
@@ -291,11 +292,31 @@ export class StudentController {
       // Get query parameters for additional filtering
       const enrollmentStatus = req.query['enrollment_status'] as string;
       const includeProgress = req.query['include_progress'] === 'true';
+      const isEnrolled = req.query['is_enrolled'] !== 'false'; // Default to true unless explicitly set to 'false'
+      
+      // Handle backward compatibility: if enrollment_status is provided, convert to isEnrolled boolean
+      let finalIsEnrolled = isEnrolled;
+      if (enrollmentStatus) {
+        const statusesArray = enrollmentStatus.split(',').map(s => s.trim().toUpperCase());
+        // If the provided statuses include ACTIVE or COMPLETED, set isEnrolled to true
+        // If they only include other statuses (PENDING, DROPPED, etc.), set to false
+        const hasActiveOrCompleted = statusesArray.some(status => 
+          ['ACTIVE', 'COMPLETED'].includes(status)
+        );
+        const hasOtherStatuses = statusesArray.some(status => 
+          !['ACTIVE', 'COMPLETED'].includes(status)
+        );
+        
+        // If both types are requested, default to true (enrolled)
+        // If only non-active statuses are requested, set to false
+        finalIsEnrolled = hasActiveOrCompleted || !hasOtherStatuses;
+      }
       
       logger.debug('Getting enrolled courses for current student profile', {
         studentId: student.student_id,
         paginationParams: params,
         enrollmentStatus,
+        isEnrolled: finalIsEnrolled,
         includeProgress,
         requestingUserId: requestingUser.id,
         userType: requestingUser.user_type
@@ -304,7 +325,8 @@ export class StudentController {
       const result = await studentService.getEnrolledCoursesByStudentId(
         student.student_id,
         requestingUser,
-        params
+        params,
+        finalIsEnrolled
       );
 
       return {
