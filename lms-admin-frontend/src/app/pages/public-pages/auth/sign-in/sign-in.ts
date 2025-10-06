@@ -125,18 +125,15 @@ export class SignIn implements OnInit {
   }
 
   initializeTheme(): void {
-    // Check for saved theme preference in localStorage
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    // Determine initial theme
-    const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+    // Check for saved theme preference in localStorage only
+    // Default to light theme unless user has manually changed it
+    const savedTheme = localStorage.getItem('theme') || 'light';
     
     // Set theme state
-    this.isDarkTheme = initialTheme === 'dark';
+    this.isDarkTheme = savedTheme === 'dark';
     
     // Apply theme to document
-    document.documentElement.setAttribute('data-theme', initialTheme);
+    document.documentElement.setAttribute('data-theme', savedTheme);
   }
 
   toggleTheme(): void {

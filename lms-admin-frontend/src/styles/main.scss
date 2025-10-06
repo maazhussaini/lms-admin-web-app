@@ -6,6 +6,10 @@
 @import 'mixins';
 @import 'themes';
 
+// Layout and component systems (NEW)
+@import 'screen-layouts';
+@import 'components';
+
 // Utility classes
 @import 'grid';
 @import 'flex';

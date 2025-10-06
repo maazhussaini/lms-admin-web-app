@@ -1,0 +1,10 @@
+/* ===== SHARED COMPONENT IMPORTS ===== */
+/* This file provides access to the centralized design system for all components */
+
+@import 'variables';
+@import 'functions';
+@import 'mixins';
+@import 'themes';
+@import 'screen-layouts';
+@import 'components';
+@import 'global-overrides'; /* Must be last to override all other styles */

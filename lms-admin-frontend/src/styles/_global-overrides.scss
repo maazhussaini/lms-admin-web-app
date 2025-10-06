@@ -1,0 +1,47 @@
+/* ===== GLOBAL OVERRIDES AND ENFORCEMENT ===== */
+/* These styles are applied globally and will override any other styles */
+
+/* CRUD MENU ULTIMATE Z-INDEX FIX */
+/* Ultimate CRUD menu fix - Version 2 */
+/* Main container should be positioned relative */
+.crud-menu-container {
+  position: relative !important;
+  display: inline-block !important;
+}
+
+/* Dropdown should be absolutely positioned relative to its container */
+.crud-menu-dropdown {
+  position: absolute !important;
+  top: 100% !important;
+  right: 0 !important;
+  z-index: 2147483647 !important; /* Maximum possible z-index (2^31 - 1) */
+  display: none; /* Hidden by default */
+  margin-top: 5px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2) !important;
+  width: 160px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+}
+
+/* Simply show/hide the dropdown */
+.crud-menu-dropdown.show {
+  display: block !important; /* Only this property changes when showing */
+}
+
+/* Force any container that might clip the dropdown to have overflow visible */
+table td, table th, .actions-col, .crud-menu-container, .table-content, .data-table-wrapper {
+  overflow: visible !important;
+}
+
+/* Row with active menu should have higher z-index */
+tr:has(.crud-menu-dropdown.show) {
+  position: relative;
+  z-index: 10 !important;
+}
+
+/* Add visual feedback to active menu trigger */
+.crud-menu-trigger.active {
+  background: #8B5CF6 !important;
+  color: white !important;
+}

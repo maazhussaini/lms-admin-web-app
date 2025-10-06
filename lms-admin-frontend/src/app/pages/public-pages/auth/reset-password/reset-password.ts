@@ -33,14 +33,9 @@ export class ResetPassword {
   }
 
   private initializeTheme() {
-    // Check localStorage first
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      this.isDarkTheme = savedTheme === 'dark';
-    } else {
-      // Use system preference
-      this.isDarkTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
+    // Check localStorage only, default to light theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    this.isDarkTheme = savedTheme === 'dark';
     
     this.applyTheme();
   }

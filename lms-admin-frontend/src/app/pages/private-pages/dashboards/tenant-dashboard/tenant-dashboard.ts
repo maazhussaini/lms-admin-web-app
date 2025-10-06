@@ -1,9 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { FilterOptions, ScreenFilter } from '../../../../components/widgets/screen-filter/screen-filter';
 import { Paginator } from '../../../../components/widgets/paginator/paginator';
-import { CrudMenuComponent, CrudMenuOptions } from '../../../../components/widgets/crud-menu/crud-menu';
 import { OffCanvasWrapper } from '../../../../components/widgets/off-canvas-wrapper/off-canvas-wrapper';
 import { BasicTenantForm, BasicTenantFormData } from '../../../../components/forms/basic-tenant-form/basic-tenant-form';
 
@@ -37,11 +35,11 @@ export interface Filters {
 @Component({
   selector: 'app-tenant-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, ScreenFilter, Paginator, CrudMenuComponent, OffCanvasWrapper, BasicTenantForm],
+  imports: [CommonModule, FormsModule, Paginator, OffCanvasWrapper, BasicTenantForm],
   templateUrl: './tenant-dashboard.html',
   styleUrls: ['./tenant-dashboard.scss']
 })
-export class TenantDashboard implements OnInit {
+export class TenantDashboard implements OnInit, OnDestroy, AfterViewInit {
   
   currentUser: any = null;
   permissions: string[] = [];
@@ -55,19 +53,6 @@ export class TenantDashboard implements OnInit {
     startDate: '',
     endDate: ''
   };
-
-  // Filter options for the screen-filter component
-  filterOptions: FilterOptions[] = [
-    {
-      label: 'Status',
-      value: 'status',
-      options: [
-        { label: 'Active', value: 'Active' },
-        { label: 'Pending', value: 'Pending' },
-        { label: 'In Progress', value: 'In Progress' }
-      ]
-    }
-  ];
 
   // Tenant data
   allTenants: Tenant[] = [];
@@ -85,27 +70,7 @@ export class TenantDashboard implements OnInit {
 
   // UI state
   showAddTenantOffcanvas: boolean = false;
-
-  // CRUD Menu options
-  crudMenuOptions: CrudMenuOptions = {
-    view: true,
-    edit: true,
-    delete: true,
-    customActions: [
-      {
-        label: 'Duplicate',
-        icon: 'ic-9',
-        action: 'duplicate',
-        color: 'info'
-      },
-      {
-        label: 'Archive',
-        icon: 'ic-10',
-        action: 'archive',
-        color: 'warning'
-      }
-    ]
-  };
+  activeMenuId: number | null = null;
 
   // New tenant form
   newTenantData: BasicTenantFormData = {
@@ -130,6 +95,66 @@ export class TenantDashboard implements OnInit {
     this.permissions = ['/tenants:view', '/teachers:manage'];
     
     this.loadTenants();
+    
+    // Add click outside listeners
+    document.addEventListener('click', this.onDocumentClick.bind(this));
+    document.addEventListener('click', this.handleDocumentClick.bind(this));
+  }
+
+  ngOnDestroy(): void {
+    // Remove click outside listeners
+    document.removeEventListener('click', this.onDocumentClick.bind(this));
+    document.removeEventListener('click', this.handleDocumentClick.bind(this));
+  }
+
+  ngAfterViewInit(): void {
+    // Handle menu positioning directly
+    setTimeout(() => {
+      this.initializeMenuHandlers();
+    }, 100);
+  }
+  
+  // Custom menu handling to ensure menus stay with their rows during scroll
+  initializeMenuHandlers(): void {
+    // Select all CRUD menu triggers
+    const menuTriggers = document.querySelectorAll('.crud-menu-trigger');
+    
+    // Handle click on menu triggers
+    menuTriggers.forEach(trigger => {
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        
+        // Get the container and the dropdown
+        const container = trigger.closest('.crud-menu-container');
+        const dropdown = container?.querySelector('.crud-menu-dropdown');
+        const tenantId = dropdown?.getAttribute('data-menu-id');
+        
+        if (!dropdown || !tenantId) return;
+        
+        // Toggle dropdown using Angular binding
+        if (this.activeMenuId === Number(tenantId)) {
+          this.activeMenuId = null;
+        } else {
+          this.activeMenuId = Number(tenantId);
+        }
+      });
+    });
+  }
+
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    const filterContainer = document.querySelector('.filter-container');
+    const menuContainer = target.closest('.crud-menu-container');
+    
+    // Close filter popup if clicked outside
+    if (filterContainer && !filterContainer.contains(target)) {
+      this.showFilterPopup = false;
+    }
+    
+    // Close menu if clicked outside
+    if (!menuContainer && this.activeMenuId !== null) {
+      this.closeMenu();
+    }
   }
 
   loadTenants(): void {
@@ -301,6 +326,16 @@ export class TenantDashboard implements OnInit {
   // Filter functionality
   toggleFilterPopup(): void {
     this.showFilterPopup = !this.showFilterPopup;
+    console.log('Filter popup toggled:', this.showFilterPopup);
+    
+    // Debug: Check if element exists
+    setTimeout(() => {
+      const popup = document.querySelector('.filter-popup');
+      const container = document.querySelector('.filter-container');
+      console.log('Popup element:', popup);
+      console.log('Container element:', container);
+      console.log('Popup classes:', popup?.className);
+    }, 100);
   }
 
   applyFilters(): void {
@@ -347,6 +382,19 @@ export class TenantDashboard implements OnInit {
     };
     this.searchTerm = '';
     this.applyFilters();
+  }
+
+  // Individual filter reset methods
+  resetStatusFilter(): void {
+    this.filters.status = '';
+  }
+
+  resetStartDateFilter(): void {
+    this.filters.startDate = '';
+  }
+
+  resetEndDateFilter(): void {
+    this.filters.endDate = '';
   }
 
   // Pagination functionality
@@ -461,17 +509,51 @@ export class TenantDashboard implements OnInit {
   }
 
   // CRUD Menu methods
+  // Handle document clicks to close menu when clicking outside
+  handleDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.crud-menu-container')) {
+      this.closeMenu();
+    }
+  }
+
+  // This is just a wrapper around the actual toggle implementation in initializeMenuHandlers
+  // We keep this to maintain compatibility with the template
+  toggleMenu(tenantId: number, event: Event): void {
+    // Prevent propagation to document
+    event.stopPropagation();
+    
+    // Toggle the menu ID
+    if (this.activeMenuId === tenantId) {
+      this.activeMenuId = null;
+    } else {
+      this.activeMenuId = tenantId;
+    }
+    
+    // Debug
+    console.log('Menu toggled:', this.activeMenuId);
+  }
+
+  closeMenu(): void {
+    this.activeMenuId = null;
+  }
+
+  // Removed positionDropdown method - not needed with the simplified approach
+
   onViewTenant(tenantId: number): void {
+    this.closeMenu();
     console.log('View tenant:', tenantId);
     // Implement view tenant logic
   }
 
   onEditTenant(tenantId: number): void {
+    this.closeMenu();
     console.log('Edit tenant:', tenantId);
     // Implement edit tenant logic
   }
 
   onDeleteTenant(tenantId: number): void {
+    this.closeMenu();
     console.log('Delete tenant:', tenantId);
     if (confirm('Are you sure you want to delete this tenant?')) {
       this.allTenants = this.allTenants.filter(t => t.id !== tenantId);
@@ -479,25 +561,16 @@ export class TenantDashboard implements OnInit {
     }
   }
 
-  onCustomAction(event: { action: string, itemId: any }): void {
-    const { action, itemId } = event;
-    
-    switch (action) {
-      case 'duplicate':
-        console.log('Duplicate tenant:', itemId);
-        // Implement duplicate logic
-        break;
-      case 'archive':
-        console.log('Archive tenant:', itemId);
-        // Implement archive logic
-        break;
-      default:
-        console.log('Unknown action:', action, itemId);
-    }
+  onDuplicateTenant(tenantId: number): void {
+    this.closeMenu();
+    console.log('Duplicate tenant:', tenantId);
+    // Implement duplicate logic
   }
 
-  onCrudMenuClosed(): void {
-    // Menu closed - no action needed for inline dropdown
+  onArchiveTenant(tenantId: number): void {
+    this.closeMenu();
+    console.log('Archive tenant:', tenantId);
+    // Implement archive logic
   }
 
   // Add tenant functionality

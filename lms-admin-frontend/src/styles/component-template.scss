@@ -1,0 +1,172 @@
+/* ===== COMPONENT TEMPLATE - COPY AND CUSTOMIZE FOR NEW PAGES ===== */
+
+/*
+  INSTRUCTIONS:
+  1. Copy this file to your component folder
+  2. Replace "your-page" with your actual page name (e.g., "user", "course", "admin")
+  3. Replace "YourPage" with your actual page title
+  4. Update the @import path based on your component's depth:
+     - For components in src/app/pages/private-pages/dashboards/: @import '../../../../../styles/shared-imports';
+     - For components in src/app/pages/: @import '../../../styles/shared-imports';
+     - For components in src/app/components/: @import '../../styles/shared-imports';
+     - Or use the includePaths: @import 'shared-imports'; (if angular.json is configured)
+  5. Customize only the sections you need
+  6. Remove unused sections
+*/
+
+/* ===== YOUR PAGE DASHBOARD - USING CENTRALIZED DESIGN SYSTEM ===== */
+
+/* Import centralized design system */
+@import 'shared-imports';
+
+.your-page-dashboard {
+  /* Extend the master dashboard screen layout */
+  @extend .dashboard-screen;
+  
+  /* ===== PAGE-SPECIFIC CUSTOMIZATIONS ONLY ===== */
+  
+  /* Custom Logo/Avatar Component */
+  .your-page-logo {
+    @extend .avatar;
+    @extend .size-md;
+    
+    &.variant-1 { @extend .color-primary; }
+    &.variant-2 { @extend .color-success; }
+    &.variant-3 { @extend .color-warning; }
+  }
+  
+  /* Custom Name/Title Styling */
+  .your-page-name {
+    font-weight: 600;
+    color: var(--text-primary, #374151);
+    font-size: 14px;
+  }
+  
+  /* Custom Description/Secondary Text */
+  .your-page-description {
+    color: var(--text-secondary, #6B7280);
+    font-size: 13px;
+  }
+  
+  /* Custom Status Component */
+  .your-page-status {
+    @extend .status-badge;
+  }
+  
+  /* Custom Actions Dropdown */
+  .your-page-actions {
+    app-crud-menu {
+      position: relative;
+      display: inline-block;
+      
+      /* Boost z-index when dropdown is active */
+      &:has(.crud-menu-dropdown.show) {
+        z-index: 100;
+      }
+    }
+  }
+  
+  /* Table Specific Styles */
+  .your-page-table {
+    @extend .standard-table;
+    
+    /* Apply standard column classes */
+    .checkbox-col { @extend .col-checkbox; }
+    .avatar-col { @extend .col-avatar; }
+    .name-col { @extend .col-name; }
+    .email-col { @extend .col-email; }
+    .phone-col { @extend .col-phone; }
+    .date-col { @extend .col-date; }
+    .status-col { @extend .col-status; }
+    .actions-col { @extend .col-actions; }
+  }
+  
+  /* Toolbar Components */
+  .your-page-toolbar {
+    .your-page-search {
+      @extend .screen-search;
+    }
+    
+    .filter-btn {
+      @extend .btn-outline;
+      height: 40px;
+      min-width: 88px;
+    }
+    
+    .add-btn {
+      @extend .btn-primary;
+      height: 40px;
+      min-width: 100px;
+    }
+  }
+  
+  /* Bulk Actions */
+  .bulk-actions {
+    .bulk-action-btn {
+      @extend .btn;
+      padding: 8px 16px;
+      
+      &.primary-action {
+        @extend .btn-primary;
+      }
+      
+      &.secondary-action {
+        @extend .btn-secondary;
+      }
+      
+      &.danger-action {
+        @extend .btn-danger;
+      }
+    }
+  }
+  
+  /* Any page-specific card components */
+  .your-page-card {
+    @extend .card;
+    
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary, #374151);
+      margin-bottom: 8px;
+    }
+    
+    .card-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary, #6B7280);
+      margin-bottom: 16px;
+    }
+  }
+}
+
+/* ===== MINIMAL RESPONSIVE OVERRIDES ===== */
+@media (max-width: 768px) {
+  .your-page-dashboard {
+    /* Mobile-specific customizations */
+    .your-page-table {
+      /* Hide specific columns on mobile */
+      .phone-col,
+      .date-col:not(:last-child) {
+        display: none;
+      }
+    }
+    
+    .your-page-actions {
+      app-crud-menu .crud-menu-dropdown {
+        min-width: 140px;
+        right: -10px;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .your-page-dashboard {
+    .your-page-table {
+      /* Hide more columns on very small screens */
+      .email-col {
+        display: none;
+      }
+    }
+  }
+}
