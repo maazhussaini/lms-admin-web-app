@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Paginator } from '../../../../components/widgets/paginator/paginator';
@@ -39,7 +39,7 @@ export interface Filters {
   templateUrl: './tenant-dashboard.html',
   styleUrls: ['./tenant-dashboard.scss']
 })
-export class TenantDashboard implements OnInit, OnDestroy, AfterViewInit {
+export class TenantDashboard implements OnInit, OnDestroy {
   
   currentUser: any = null;
   permissions: string[] = [];
@@ -82,6 +82,20 @@ export class TenantDashboard implements OnInit, OnDestroy, AfterViewInit {
 
   canSaveTenant: boolean = false;
 
+  private readonly documentClickListener = (event: Event): void => {
+    const target = event.target as HTMLElement;
+    const filterContainer = document.querySelector('.filter-container');
+    const menuContainer = target.closest('.crud-menu-container');
+
+    if (filterContainer && !filterContainer.contains(target)) {
+      this.showFilterPopup = false;
+    }
+
+    if (!menuContainer && this.activeMenuId !== null) {
+      this.closeMenu();
+    }
+  };
+
   constructor() {}
 
   ngOnInit(): void {
@@ -97,64 +111,12 @@ export class TenantDashboard implements OnInit, OnDestroy, AfterViewInit {
     this.loadTenants();
     
     // Add click outside listeners
-    document.addEventListener('click', this.onDocumentClick.bind(this));
-    document.addEventListener('click', this.handleDocumentClick.bind(this));
+    document.addEventListener('click', this.documentClickListener);
   }
 
   ngOnDestroy(): void {
     // Remove click outside listeners
-    document.removeEventListener('click', this.onDocumentClick.bind(this));
-    document.removeEventListener('click', this.handleDocumentClick.bind(this));
-  }
-
-  ngAfterViewInit(): void {
-    // Handle menu positioning directly
-    setTimeout(() => {
-      this.initializeMenuHandlers();
-    }, 100);
-  }
-  
-  // Custom menu handling to ensure menus stay with their rows during scroll
-  initializeMenuHandlers(): void {
-    // Select all CRUD menu triggers
-    const menuTriggers = document.querySelectorAll('.crud-menu-trigger');
-    
-    // Handle click on menu triggers
-    menuTriggers.forEach(trigger => {
-      trigger.addEventListener('click', (e) => {
-        e.stopPropagation();
-        
-        // Get the container and the dropdown
-        const container = trigger.closest('.crud-menu-container');
-        const dropdown = container?.querySelector('.crud-menu-dropdown');
-        const tenantId = dropdown?.getAttribute('data-menu-id');
-        
-        if (!dropdown || !tenantId) return;
-        
-        // Toggle dropdown using Angular binding
-        if (this.activeMenuId === Number(tenantId)) {
-          this.activeMenuId = null;
-        } else {
-          this.activeMenuId = Number(tenantId);
-        }
-      });
-    });
-  }
-
-  onDocumentClick(event: Event): void {
-    const target = event.target as HTMLElement;
-    const filterContainer = document.querySelector('.filter-container');
-    const menuContainer = target.closest('.crud-menu-container');
-    
-    // Close filter popup if clicked outside
-    if (filterContainer && !filterContainer.contains(target)) {
-      this.showFilterPopup = false;
-    }
-    
-    // Close menu if clicked outside
-    if (!menuContainer && this.activeMenuId !== null) {
-      this.closeMenu();
-    }
+    document.removeEventListener('click', this.documentClickListener);
   }
 
   loadTenants(): void {
@@ -326,16 +288,6 @@ export class TenantDashboard implements OnInit, OnDestroy, AfterViewInit {
   // Filter functionality
   toggleFilterPopup(): void {
     this.showFilterPopup = !this.showFilterPopup;
-    console.log('Filter popup toggled:', this.showFilterPopup);
-    
-    // Debug: Check if element exists
-    setTimeout(() => {
-      const popup = document.querySelector('.filter-popup');
-      const container = document.querySelector('.filter-container');
-      console.log('Popup element:', popup);
-      console.log('Container element:', container);
-      console.log('Popup classes:', popup?.className);
-    }, 100);
   }
 
   applyFilters(): void {
@@ -493,13 +445,11 @@ export class TenantDashboard implements OnInit, OnDestroy, AfterViewInit {
 
   // Bulk actions
   bulkActivate(): void {
-    console.log('Bulk activate tenants:', this.selectedTenants);
-    // Implement bulk activate logic
+    // TODO: implement bulk activate logic
   }
 
   bulkDeactivate(): void {
-    console.log('Bulk deactivate tenants:', this.selectedTenants);
-    // Implement bulk deactivate logic
+    // TODO: implement bulk deactivate logic
   }
 
   // Pagination methods
@@ -509,16 +459,6 @@ export class TenantDashboard implements OnInit, OnDestroy, AfterViewInit {
   }
 
   // CRUD Menu methods
-  // Handle document clicks to close menu when clicking outside
-  handleDocumentClick(event: Event): void {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.crud-menu-container')) {
-      this.closeMenu();
-    }
-  }
-
-  // This is just a wrapper around the actual toggle implementation in initializeMenuHandlers
-  // We keep this to maintain compatibility with the template
   toggleMenu(tenantId: number, event: Event): void {
     // Prevent propagation to document
     event.stopPropagation();
@@ -529,9 +469,6 @@ export class TenantDashboard implements OnInit, OnDestroy, AfterViewInit {
     } else {
       this.activeMenuId = tenantId;
     }
-    
-    // Debug
-    console.log('Menu toggled:', this.activeMenuId);
   }
 
   closeMenu(): void {
@@ -542,19 +479,16 @@ export class TenantDashboard implements OnInit, OnDestroy, AfterViewInit {
 
   onViewTenant(tenantId: number): void {
     this.closeMenu();
-    console.log('View tenant:', tenantId);
-    // Implement view tenant logic
+    // TODO: implement view tenant logic
   }
 
   onEditTenant(tenantId: number): void {
     this.closeMenu();
-    console.log('Edit tenant:', tenantId);
-    // Implement edit tenant logic
+    // TODO: implement edit tenant logic
   }
 
   onDeleteTenant(tenantId: number): void {
     this.closeMenu();
-    console.log('Delete tenant:', tenantId);
     if (confirm('Are you sure you want to delete this tenant?')) {
       this.allTenants = this.allTenants.filter(t => t.id !== tenantId);
       this.applyFilters();
@@ -563,14 +497,12 @@ export class TenantDashboard implements OnInit, OnDestroy, AfterViewInit {
 
   onDuplicateTenant(tenantId: number): void {
     this.closeMenu();
-    console.log('Duplicate tenant:', tenantId);
-    // Implement duplicate logic
+    // TODO: implement duplicate tenant logic
   }
 
   onArchiveTenant(tenantId: number): void {
     this.closeMenu();
-    console.log('Archive tenant:', tenantId);
-    // Implement archive logic
+    // TODO: implement archive tenant logic
   }
 
   // Add tenant functionality
@@ -585,8 +517,7 @@ export class TenantDashboard implements OnInit, OnDestroy, AfterViewInit {
 
   saveTenant(): void {
     if (this.canSaveTenant) {
-      console.log('Save tenant:', this.newTenantData);
-      // Implement save tenant logic
+      // TODO: implement save tenant logic
       this.closeAddTenantOffcanvas();
     }
   }
@@ -615,6 +546,6 @@ export class TenantDashboard implements OnInit, OnDestroy, AfterViewInit {
   }
 
   logout(): void {
-    console.log('Logout functionality will be added');
+    // TODO: implement logout functionality
   }
 }

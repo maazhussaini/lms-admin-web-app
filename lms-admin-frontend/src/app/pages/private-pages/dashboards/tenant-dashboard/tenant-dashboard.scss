@@ -1,35 +1,10 @@
 /* ===== TENANT DASHBOARD - USING CENTRALIZED DESIGN SYSTEM ===== */
 
-/* Import centralized design system */
 @import '../../../../../styles/shared-imports';
 
-/* Ensure CRUD menu dropdowns are not clipped by table overflow */
 .tenant-dashboard {
-  .tenant-table {
-    tbody tr {
-      /* Allow dropdowns to escape row clipping */
-      position: relative; /* Make sure all rows have position context */
-    }
-    
-    .actions-col {
-      /* Ensure actions column doesn't clip dropdown */
-      overflow: visible !important;
-      position: relative;
-    }
-    
-    .crud-menu-container {
-      /* Ensure container has proper positioning */
-      position: relative;
-      display: inline-block;
-    }
-  }
-}
-
-.tenant-dashboard {
-  /* Extend the master dashboard screen layout */
   @extend .dashboard-screen;
-  
-  /* ===== OVERRIDE TOOLBAR STYLING TO MATCH ORIGINAL ===== */
+
   .screen-toolbar {
     background: var(--surface, white);
     border: 1px solid var(--border, #E5E7EB);
@@ -40,14 +15,14 @@
     align-items: center;
     justify-content: space-between;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    
+
     .toolbar-left {
       flex: 1;
-      
+
       .tenant-search {
         position: relative;
         max-width: 300px;
-        
+
         .search-icon {
           position: absolute;
           left: 12px;
@@ -56,7 +31,7 @@
           color: var(--text-muted, #9CA3AF);
           font-size: 16px;
         }
-        
+
         .search-input {
           width: 100%;
           padding: 10px 12px 10px 40px;
@@ -65,11 +40,11 @@
           background: var(--surface, white);
           font-size: 14px;
           color: var(--text-primary, #374151);
-          
+
           &::placeholder {
             color: var(--text-muted, #9CA3AF);
           }
-          
+
           &:focus {
             outline: none;
             border-color: var(--primary, #8B5CF6);
@@ -78,14 +53,14 @@
         }
       }
     }
-    
+
     .toolbar-center {
       display: flex;
       align-items: center;
       gap: 8px;
       color: var(--text-secondary, #6B7280);
       font-size: 14px;
-      
+
       .showing-select {
         padding: 6px 8px;
         border: 1px solid var(--border, #E5E7EB);
@@ -94,19 +69,19 @@
         font-size: 14px;
         color: var(--text-primary, #374151);
         cursor: pointer;
-        
+
         &:focus {
           outline: none;
           border-color: var(--primary, #8B5CF6);
         }
       }
     }
-    
+
     .toolbar-right {
       display: flex;
       align-items: center;
       gap: 12px;
-      
+
       .filter-btn {
         position: relative;
         display: flex;
@@ -121,17 +96,17 @@
         font-weight: 500;
         cursor: pointer;
         transition: all 0.2s ease;
-        
+
         &:hover {
           background: var(--gray-50, #F9FAFB);
           border-color: var(--gray-300, #D1D5DB);
         }
-        
+
         i {
           font-size: 16px;
         }
       }
-      
+
       .add-btn {
         display: flex;
         align-items: center;
@@ -145,349 +120,38 @@
         font-weight: 500;
         cursor: pointer;
         transition: all 0.2s ease;
-        
+
         &:hover {
           background: var(--primary-dark, #7C3AED);
           border-color: var(--primary-dark, #7C3AED);
         }
-        
+
         i {
           font-size: 16px;
         }
       }
     }
   }
-  
-  /* ===== TENANT-SPECIFIC CUSTOMIZATI  /* ===== FILTER POPUP ===== */
+
+  .filter-container {
+    position: relative;
+    display: inline-block;
+  }
+
   .filter-popup {
     position: absolute;
-    background: var(--surface, white);
-    border: 1px solid var(--border, #E5E7EB);
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-    padding: 0;
-    width: 280px;
-    z-index: 99999 !important;
-    display: none;
     top: calc(100% + 8px);
     right: 0;
-    max-height: 500px;
-    overflow: hidden;
-
-    &.active {
-      display: block;
-    }
-  }
-  
-  /* ===== TENANT-SPECIFIC CUSTOMIZATIONS ONLY ===== */
-  
-  /* Tenant Logo Component */
-  .tenant-logo {
-    @extend .avatar;
-    @extend .size-md;
-    
-    &.green { @extend .color-success; }
-    &.blue { @extend .color-info; }
-    &.orange { @extend .color-warning; }
-    &.purple { @extend .color-primary; }
-  }
-  
-  /* Tenant Name Styling */
-  .tenant-name {
-    font-weight: 600;
-    color: var(--text-primary, #374151);
-    font-size: 14px;
-  }
-  
-  /* Tenant Email Styling */
-  .tenant-email {
-    color: var(--text-secondary, #6B7280);
-    font-size: 13px;
-  }
-  
-  /* Tenant Status Badges */
-  .tenant-status {
-    @extend .status-badge;
-  }
-  
-  /* Ensure actions column is relative for dropdown positioning */
-  .actions-col {
-    position: relative;
-    z-index: 9999;
-    overflow: visible !important;
-  }
-  
-  /* Tenant Table Specific Styles */
-  .tenant-table {
-    @extend .standard-table;
-    
-    /* Apply standard column classes */
-    .checkbox-col { @extend .col-checkbox; }
-    .logo-col { @extend .col-avatar; }
-    .name-col { @extend .col-name; }
-    .clients-col { @extend .col-clients; }
-    .phone-col { @extend .col-phone; }
-    .email-col { @extend .col-email; }
-    .created-col { @extend .col-date; }
-    .updated-col { @extend .col-date; }
-    .status-col { @extend .col-status; }
-    .actions-col { @extend .col-actions; }
-  }
-  
-  /* Tenant Toolbar Components */
-  .tenant-toolbar {
-    .tenant-search {
-      @extend .screen-search;
-    }
-    
-    .showing-select {
-      @extend .screen-select;
-    }
-    
-    .filter-btn {
-      @extend .btn-outline;
-      height: 40px;
-      min-width: 88px;
-      
-      i {
-        font-size: 16px;
-      }
-    }
-    
-    .add-btn {
-      @extend .btn-primary;
-      height: 40px;
-      min-width: 100px;
-      padding: 10px 32px;
-    }
-  }
-  
-  /* Tenant Bulk Actions */
-  .bulk-actions {
-    .bulk-action-btn {
-      @extend .btn;
-      padding: 8px 16px;
-      
-      &.active-btn {
-        @extend .btn-success;
-      }
-      
-      &.inactive-btn {
-        @extend .btn-danger;
-      }
-    }
-    
-    .selection-info {
-      font-size: 14px;
-      color: var(--warning-text, #92400E);
-    }
-    
-    .select-all-link {
-      @extend .select-all-link;
-    }
-  }
-  
-  /* Tenant Pagination */
-  .pagination-container {
-    @extend .pagination-container;
-  }
-  
-  /* Tenant Filter Popup */
-  .filter-popup {
-    @extend .filter-popup;
-    
-    .filter-group {
-      margin-bottom: 20px;
-      
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
-    
-    .filter-label {
-      @extend .form-label;
-      margin-bottom: 8px;
-    }
-    
-    .filter-select {
-      @extend .form-select;
-    }
-    
-    .filter-date-input {
-      @extend .form-input;
-      
-      &::-webkit-calendar-picker-indicator {
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor'%3e%3cpath fill-rule='evenodd' d='M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z' clip-rule='evenodd'/%3e%3c/svg%3e");
-        background-size: 16px;
-        background-repeat: no-repeat;
-        background-position: center;
-      }
-    }
-    
-    .date-icon {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-muted, #9CA3AF);
-      font-size: 16px;
-      pointer-events: none;
-    }
-    
-    .btn-secondary {
-      @extend .btn-secondary;
-    }
-    
-    .btn-primary {
-      @extend .btn-primary;
-    }
-  }
-  
-  /* Tenant Off-canvas */
-  .add-tenant-offcanvas {
-    width: 500px;
-    
-    .offcanvas-title {
-      font-size: 24px;
-      font-weight: 600;
-      color: var(--text-primary, #374151);
-      margin-bottom: 24px;
-    }
-    
-    .add-tenant-form {
-      .form-group {
-        @extend .form-group;
-      }
-      
-      .form-label {
-        @extend .form-label;
-      }
-      
-      .form-input {
-        @extend .form-input;
-      }
-      
-      .phone-input-container {
-        display: flex;
-        align-items: center;
-        gap: 0;
-        
-        .country-code {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 12px 16px;
-          background: var(--gray-50, #F9FAFB);
-          border: 1px solid var(--border, #E5E7EB);
-          border-right: none;
-          border-radius: 8px 0 0 8px;
-          font-size: 14px;
-          color: var(--text-primary, #374151);
-          white-space: nowrap;
-          
-          img {
-            width: 20px;
-            height: 15px;
-            object-fit: cover;
-          }
-        }
-        
-        .phone-input {
-          border-radius: 0 8px 8px 0 !important;
-          flex: 1;
-        }
-      }
-    }
-    
-    .save-btn {
-      @extend .btn-primary;
-      width: auto;
-      padding: 10px 20px;
-    }
-  }
-  
-  /* Context Menu */
-  .context-menu {
-    position: fixed;
-    width: 150px;
-    background: var(--surface, white);
-    border: 1px solid var(--border, #E5E7EB);
-    border-radius: 8px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
-    z-index: 1002;
-    opacity: 0;
-    visibility: hidden;
-    transform: scale(0.95);
-    transition: all 0.15s ease;
-    overflow: hidden;
-    
-    &.active {
-      opacity: 1;
-      visibility: visible;
-      transform: scale(1);
-    }
-    
-    .context-menu-item {
-      @extend .dropdown-item;
-      
-      &.delete {
-        @extend .danger;
-      }
-    }
-  }
-}
-
-/* ===== MINIMAL RESPONSIVE OVERRIDES ===== */
-@media (max-width: 768px) {
-  .tenant-dashboard {
-    /* Mobile-specific tenant customizations */
-    .tenant-table {
-      /* Hide specific columns on mobile */
-      .clients-col,
-      .created-col {
-        display: none;
-      }
-    }
-    
-    .tenant-actions {
-      app-crud-menu .crud-menu-dropdown {
-        min-width: 140px;
-        right: -10px;
-        // z-index: 999999999 !important;
-      }
-    }
-  }
-}
-
-@media (max-width: 480px) {
-  .tenant-dashboard {
-    .tenant-table {
-      /* Hide more columns on very small screens */
-      .updated-col,
-      .phone-col {
-        display: none;
-      }
-    }
-  }
-}
-
-/* ===== FILTER POPUP ===== */
-.tenant-dashboard {
-  .filter-popup {
-    position: absolute;
+    width: 280px;
     background: var(--surface, white);
     border: 1px solid var(--border, #E5E7EB);
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    margin: 0;
     padding: 0;
-    width: 280px;
-    z-index: 9999;
     display: none;
-    top: 100%;
-    right: 0;
-    margin-top: 8px;
-    max-height: 500px;
     overflow: hidden;
+    z-index: 99999;
 
     &.active {
       display: block;
@@ -635,30 +299,180 @@
     }
   }
 
-  /* Position filter button as relative for popup positioning */
-  .filter-btn {
-    position: relative;
+  .tenant-table {
+    @extend .standard-table;
+
+    tbody tr {
+      position: relative;
+    }
+
+    .checkbox-col { @extend .col-checkbox; }
+    .logo-col { @extend .col-avatar; }
+    .name-col { @extend .col-name; }
+    .clients-col { @extend .col-clients; }
+    .phone-col { @extend .col-phone; }
+    .email-col { @extend .col-email; }
+    .created-col { @extend .col-date; }
+    .updated-col { @extend .col-date; }
+    .status-col { @extend .col-status; }
+    .actions-col {
+      @extend .col-actions;
+      position: relative;
+      overflow: visible !important;
+      z-index: 2;
+    }
+  }
+
+  .tenant-logo {
+    @extend .avatar;
+    @extend .size-md;
+
+    &.green { @extend .color-success; }
+    &.blue { @extend .color-info; }
+    &.orange { @extend .color-warning; }
+    &.purple { @extend .color-primary; }
+  }
+
+  .tenant-name {
+    font-weight: 600;
+    color: var(--text-primary, #374151);
+    font-size: 14px;
+  }
+
+  .tenant-email {
+    color: var(--text-secondary, #6B7280);
+    font-size: 13px;
+  }
+
+  .tenant-status {
+    @extend .status-badge;
+  }
+
+  .tenant-toolbar {
+    .tenant-search { @extend .screen-search; }
+    .showing-select { @extend .screen-select; }
+
+    .filter-btn {
+      @extend .btn-outline;
+      height: 40px;
+      min-width: 88px;
+
+      i {
+        font-size: 16px;
+      }
+    }
+
+    .add-btn {
+      @extend .btn-primary;
+      height: 40px;
+      min-width: 100px;
+      padding: 10px 32px;
+    }
+  }
+
+  .bulk-actions {
+    .bulk-action-btn {
+      @extend .btn;
+      padding: 8px 16px;
+
+      &.active-btn { @extend .btn-success; }
+      &.inactive-btn { @extend .btn-danger; }
+    }
+
+    .selection-info {
+      font-size: 14px;
+      color: var(--warning-text, #92400E);
+    }
+
+    .select-all-link { @extend .select-all-link; }
+  }
+
+  .pagination-container {
+    @extend .pagination-container;
+  }
+
+  .add-tenant-offcanvas {
+    width: 500px;
+
+    .offcanvas-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary, #374151);
+      margin-bottom: 24px;
+    }
+
+    .add-tenant-form {
+      .form-group { @extend .form-group; }
+      .form-label { @extend .form-label; }
+      .form-input { @extend .form-input; }
+
+      .phone-input-container {
+        display: flex;
+        align-items: center;
+
+        .country-code {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 12px 16px;
+          background: var(--gray-50, #F9FAFB);
+          border: 1px solid var(--border, #E5E7EB);
+          border-right: none;
+          border-radius: 8px 0 0 8px;
+          font-size: 14px;
+          color: var(--text-primary, #374151);
+          white-space: nowrap;
+
+          img {
+            width: 20px;
+            height: 15px;
+            object-fit: cover;
+          }
+        }
+
+        .phone-input {
+          border-radius: 0 8px 8px 0 !important;
+          flex: 1;
+        }
+      }
+    }
+
+    .save-btn {
+      @extend .btn-primary;
+      width: auto;
+      padding: 10px 20px;
+    }
   }
 }
 
-/* Fix for filter container positioning */
-.tenant-dashboard .screen-toolbar .toolbar-right .filter-container {
-  position: relative;
-  display: inline-block;
+@media (max-width: 768px) {
+  .tenant-dashboard {
+    .tenant-table {
+      .clients-col,
+      .created-col {
+        display: none;
+      }
+    }
+  }
 }
 
-.tenant-dashboard .filter-container .filter-popup {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: 99999 !important;
-  
-  /* Ensure it appears above everything */
-  &.active {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
+@media (max-width: 480px) {
+  .tenant-dashboard {
+    .tenant-table {
+      .updated-col,
+      .phone-col {
+        display: none;
+      }
+    }
   }
 }
 
 
+
+// :host {
+
+//   position: fixed;
+//   top: 0;
+//   left: 0;
+//   z-index: 10000;
+// }
