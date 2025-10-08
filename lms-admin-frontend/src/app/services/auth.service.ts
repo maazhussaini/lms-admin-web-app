@@ -42,32 +42,29 @@ export class AuthService {
   async login(credentials: LoginRequest): Promise<{ success: boolean; message?: string; user?: User }> {
     try {
       const response = await this.httpRequests.login(credentials);
-      
-      if (response.is_success && response.data) {
-        const loginData = response.data as any; // Since response structure might vary
-        
-        // Handle the actual login response structure
-        if (loginData.success && loginData.data) {
-          const { user, tokens, permissions } = loginData.data;
-          
-          // Save all authentication data
+
+      const loginData = this.extractAuthPayload(response);
+      const isSuccess = this.isApiResponseSuccessful(response);
+
+      if (isSuccess && loginData) {
+        const { user, tokens, permissions = [] } = loginData;
+
+        if (tokens?.access_token && tokens?.refresh_token && user) {
           this.tokenStorage.saveLoginSession(user, tokens, permissions);
-          
-          // Update observables
           this.currentUserSubject.next(user);
           this.isLoggedInSubject.next(true);
-          
+
           return {
             success: true,
-            message: loginData.message || 'Login successful',
-            user: user
+            message: response?.message || 'Login successful',
+            user
           };
         }
       }
-      
+
       return {
         success: false,
-        message: response.message || 'Login failed'
+        message: response?.message || 'Login failed'
       };
     } catch (error: any) {
       console.error('Login error:', error);
@@ -114,16 +111,15 @@ export class AuthService {
       }
 
       const response = await this.httpRequests.refreshToken({ refresh_token: refreshToken });
-      
-      if (response.is_success && response.data) {
-        const refreshData = response.data as any;
-        
-        if (refreshData.success && refreshData.data?.tokens) {
-          this.tokenStorage.saveTokens(refreshData.data.tokens);
-          return true;
-        }
+
+      const refreshPayload = this.extractAuthPayload(response);
+      const isSuccess = this.isApiResponseSuccessful(response);
+
+      if (isSuccess && refreshPayload?.tokens) {
+        this.tokenStorage.saveTokens(refreshPayload.tokens);
+        return true;
       }
-      
+
       this.logout();
       return false;
     } catch (error) {
@@ -239,5 +235,49 @@ export class AuthService {
    */
   getPermissions(): string[] {
     return this.tokenStorage.getPermissions();
+  }
+
+  private isApiResponseSuccessful(response: any): boolean {
+    if (!response) {
+      return false;
+    }
+
+    if (typeof response.is_success === 'boolean') {
+      return response.is_success;
+    }
+
+    if (typeof response.success === 'boolean') {
+      return response.success;
+    }
+
+    if (typeof response.statusCode === 'number') {
+      return response.statusCode >= 200 && response.statusCode < 300;
+    }
+
+    if (typeof response.status === 'number') {
+      return response.status >= 200 && response.status < 300;
+    }
+
+    return false;
+  }
+
+  private extractAuthPayload(response: any): LoginResponse['data'] | null {
+    if (!response) {
+      return null;
+    }
+
+    const potentialPayloads = [
+      response?.data,
+      response?.data?.data,
+      response
+    ];
+
+    for (const payload of potentialPayloads) {
+      if (payload?.tokens && payload?.user) {
+        return payload as LoginResponse['data'];
+      }
+    }
+
+    return null;
   }
 }

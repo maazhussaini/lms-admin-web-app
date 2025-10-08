@@ -21,7 +21,8 @@
 
       .tenant-search {
         position: relative;
-        max-width: 300px;
+        // max-width: 300px;
+        min-width: 100%;
 
         .search-icon {
           position: absolute;
@@ -296,6 +297,32 @@
       color: var(--text-muted, #9CA3AF);
       pointer-events: none;
       font-size: 14px;
+    }
+  }
+
+  .table-content {
+    position: relative;
+
+    .table-state {
+      padding: 48px 16px;
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-secondary, #6B7280);
+
+      &.loading-state {
+        color: var(--primary, #8B5CF6);
+        font-weight: 500;
+      }
+
+      &.error-state {
+        color: var(--danger, #DC2626);
+        font-weight: 500;
+      }
+
+      &.empty-state {
+        color: var(--text-muted, #9CA3AF);
+      }
     }
   }
 

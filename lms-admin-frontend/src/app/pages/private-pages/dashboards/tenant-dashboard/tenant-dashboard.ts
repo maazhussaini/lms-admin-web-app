@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Paginator } from '../../../../components/widgets/paginator/paginator';
 import { OffCanvasWrapper } from '../../../../components/widgets/off-canvas-wrapper/off-canvas-wrapper';
 import { BasicTenantForm, BasicTenantFormData } from '../../../../components/forms/basic-tenant-form/basic-tenant-form';
+import { HttpRequests } from '../../../../services/http-requests.service';
 
 export interface Tenant {
   id: number;
@@ -71,6 +72,8 @@ export class TenantDashboard implements OnInit, OnDestroy {
   // UI state
   showAddTenantOffcanvas: boolean = false;
   activeMenuId: number | null = null;
+  isLoadingTenants: boolean = false;
+  tenantLoadError: string | null = null;
 
   // New tenant form
   newTenantData: BasicTenantFormData = {
@@ -96,9 +99,9 @@ export class TenantDashboard implements OnInit, OnDestroy {
     }
   };
 
-  constructor() {}
+  constructor(private httpRequests: HttpRequests) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     // Will be injected later when services are properly available
     this.currentUser = { 
       full_name: 'Tenant Admin', 
@@ -108,7 +111,7 @@ export class TenantDashboard implements OnInit, OnDestroy {
     };
     this.permissions = ['/tenants:view', '/teachers:manage'];
     
-    this.loadTenants();
+    await this.loadTenants();
     
     // Add click outside listeners
     document.addEventListener('click', this.documentClickListener);
@@ -119,146 +122,114 @@ export class TenantDashboard implements OnInit, OnDestroy {
     document.removeEventListener('click', this.documentClickListener);
   }
 
-  loadTenants(): void {
-    // Mock data - replace with actual service call
-    this.allTenants = [
-      {
-        id: 1,
-        name: 'tenant.1',
-        email: 'holly@gmail.com',
-        phone: '+92 333 123-1079',
-        clientsCount: 12,
-        status: 'Active',
-        createdAt: new Date('2020-06-20'),
-        updatedAt: new Date('2020-06-20'),
-        logoInitial: 'A',
-        logoClass: 'green'
-      },
-      {
-        id: 2,
-        name: 'tenant.2',
-        email: 'holly@gmail.com',
-        phone: '+92 333 123-1079',
-        clientsCount: 16,
-        status: 'Pending',
-        createdAt: new Date('2020-06-20'),
-        updatedAt: new Date('2020-06-20'),
-        logoInitial: 'B',
-        logoClass: 'blue'
-      },
-      {
-        id: 3,
-        name: 'tenant.3',
-        email: 'holly@gmail.com',
-        phone: '+92 333 123-1079',
-        clientsCount: 19,
-        status: 'In Progress',
-        createdAt: new Date('2020-06-20'),
-        updatedAt: new Date('2020-06-20'),
-        logoInitial: 'C',
-        logoClass: 'orange'
-      },
-      {
-        id: 4,
-        name: 'tenant.4',
-        email: 'holly@gmail.com',
-        phone: '+92 333 123-1079',
-        clientsCount: 10,
-        status: 'Active',
-        createdAt: new Date('2020-06-20'),
-        updatedAt: new Date('2020-06-20'),
-        logoInitial: 'D',
-        logoClass: 'purple'
-      },
-      // Add more sample data to test pagination
-      {
-        id: 5,
-        name: 'tenant.5',
-        email: 'holly@gmail.com',
-        phone: '+92 333 123-1079',
-        clientsCount: 8,
-        status: 'Active',
-        createdAt: new Date('2020-06-20'),
-        updatedAt: new Date('2020-06-20'),
-        logoInitial: 'E',
-        logoClass: 'green'
-      },
-      {
-        id: 6,
-        name: 'tenant.6',
-        email: 'holly@gmail.com',
-        phone: '+92 333 123-1079',
-        clientsCount: 22,
-        status: 'Pending',
-        createdAt: new Date('2020-06-20'),
-        updatedAt: new Date('2020-06-20'),
-        logoInitial: 'F',
-        logoClass: 'blue'
-      },
-      {
-        id: 7,
-        name: 'tenant.7',
-        email: 'holly@gmail.com',
-        phone: '+92 333 123-1079',
-        clientsCount: 15,
-        status: 'In Progress',
-        createdAt: new Date('2020-06-20'),
-        updatedAt: new Date('2020-06-20'),
-        logoInitial: 'G',
-        logoClass: 'orange'
-      },
-      {
-        id: 8,
-        name: 'tenant.8',
-        email: 'holly@gmail.com',
-        phone: '+92 333 123-1079',
-        clientsCount: 11,
-        status: 'Active',
-        createdAt: new Date('2020-06-20'),
-        updatedAt: new Date('2020-06-20'),
-        logoInitial: 'H',
-        logoClass: 'purple'
-      },
-      {
-        id: 9,
-        name: 'tenant.9',
-        email: 'holly@gmail.com',
-        phone: '+92 333 123-1079',
-        clientsCount: 18,
-        status: 'Active',
-        createdAt: new Date('2020-06-20'),
-        updatedAt: new Date('2020-06-20'),
-        logoInitial: 'I',
-        logoClass: 'green'
-      },
-      {
-        id: 10,
-        name: 'tenant.10',
-        email: 'holly@gmail.com',
-        phone: '+92 333 123-1079',
-        clientsCount: 25,
-        status: 'Pending',
-        createdAt: new Date('2020-06-20'),
-        updatedAt: new Date('2020-06-20'),
-        logoInitial: 'J',
-        logoClass: 'blue'
-      },
-      // Add more entries to reach 100+ for better pagination testing
-      ...Array.from({ length: 90 }, (_, index) => ({
-        id: 11 + index,
-        name: `tenant.${11 + index}`,
-        email: 'holly@gmail.com',
-        phone: '+92 333 123-1079',
-        clientsCount: Math.floor(Math.random() * 30) + 5,
-        status: ['Active', 'Pending', 'In Progress'][Math.floor(Math.random() * 3)],
-        createdAt: new Date('2020-06-20'),
-        updatedAt: new Date('2020-06-20'),
-        logoInitial: String.fromCharCode(75 + (index % 26)), // K, L, M, etc.
-        logoClass: ['green', 'blue', 'orange', 'purple'][index % 4]
-      }))
-    ];
-    
-    this.applyFilters();
+  private async loadTenants(): Promise<void> {
+    this.isLoadingTenants = true;
+    this.tenantLoadError = null;
+
+    try {
+      const response = await this.httpRequests.getAllTenants();
+      if (this.isResponseSuccessful(response)) {
+        const rawTenants = this.extractTenantItems(response);
+        this.allTenants = rawTenants.map((tenant, index) => this.transformTenant(tenant, index));
+      } else {
+        console.warn('Tenant list response was not successful', response?.message);
+        this.allTenants = [];
+        this.tenantLoadError = response?.message || 'Failed to load tenant list.';
+      }
+    } catch (error) {
+      console.error('Failed to load tenants', error);
+      this.allTenants = [];
+      this.tenantLoadError = error instanceof Error ? error.message : 'Failed to load tenant list.';
+    } finally {
+      this.isLoadingTenants = false;
+      this.applyFilters();
+    }
+  }
+
+  private isResponseSuccessful(response: any): boolean {
+    if (!response) {
+      return false;
+    }
+
+    if (typeof response.is_success === 'boolean') {
+      return response.is_success;
+    }
+
+    if (typeof response.success === 'boolean') {
+      return response.success;
+    }
+
+    return false;
+  }
+
+  private extractTenantItems(response: any): any[] {
+    if (!response) {
+      return [];
+    }
+
+    const data = response.data;
+
+    if (Array.isArray(data)) {
+      return data;
+    }
+
+    if (data && Array.isArray(data.items)) {
+      return data.items;
+    }
+
+    if (Array.isArray((response as any).items)) {
+      return (response as any).items;
+    }
+
+    return [];
+  }
+
+  private transformTenant(rawTenant: any, index: number): Tenant {
+    const tenantId = rawTenant?.tenant_id ?? rawTenant?.id ?? index + 1;
+    const tenantName = rawTenant?.tenant_name ?? rawTenant?.name ?? `Tenant ${tenantId}`;
+    const createdAt = rawTenant?.created_at ? new Date(rawTenant.created_at) : new Date();
+    const updatedAt = rawTenant?.updated_at ? new Date(rawTenant.updated_at) : createdAt;
+    const status = this.formatStatus(rawTenant?.tenant_status ?? rawTenant?.status);
+
+    return {
+      id: tenantId,
+      name: tenantName,
+      email: rawTenant?.primary_email ?? rawTenant?.email_address ?? rawTenant?.email ?? '—',
+      phone: rawTenant?.primary_phone ?? rawTenant?.phone_number ?? rawTenant?.phone ?? '—',
+      clientsCount: rawTenant?.clients_count ?? rawTenant?.client_count ?? rawTenant?.clientsCount ?? 0,
+      status,
+      createdAt,
+      updatedAt,
+      logoInitial: this.getLogoInitial(tenantName),
+      logoClass: this.getLogoClass(index)
+    };
+  }
+
+  private getLogoInitial(name: string): string {
+    if (!name) {
+      return '?';
+    }
+
+    const trimmed = name.trim();
+    if (!trimmed) {
+      return '?';
+    }
+
+    return trimmed.charAt(0).toUpperCase();
+  }
+
+  private getLogoClass(index: number): string {
+    const classes = ['green', 'blue', 'orange', 'purple'];
+    return classes[index % classes.length];
+  }
+
+  private formatStatus(status?: string): string {
+    if (!status) {
+      return 'Unknown';
+    }
+
+    const normalized = status.replace(/_/g, ' ').toLowerCase();
+    return normalized.replace(/(^|\s)\w/g, (match) => match.toUpperCase());
   }
 
   // Search functionality

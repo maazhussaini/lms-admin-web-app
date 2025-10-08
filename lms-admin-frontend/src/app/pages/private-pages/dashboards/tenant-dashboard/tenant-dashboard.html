@@ -86,7 +86,7 @@
   </div>
 
   <!-- Bulk Actions Bar -->
-  <div class="bulk-actions-bar" [class.hidden]="selectedTenants.length === 0">
+  <div class="bulk-actions-bar mt-3" [class.hidden]="selectedTenants.length === 0">
     <div class="bulk-info">
       <span class="selection-count">{{selectedTenants.length}} items selected</span>
       <a href="javascript:;" class="select-all-link" (click)="selectAll()">
@@ -106,11 +106,20 @@
   </div>
 
   <!-- Main Content -->
-  <div class="screen-content">
+  <div class="screen-content mt-5">
     <div class="data-container">
       <div class="data-table-wrapper">
         <div class="table-content">
-          <table class="tenant-table">
+          <div *ngIf="isLoadingTenants" class="table-state loading-state">
+            Loading tenants...
+          </div>
+          <div *ngIf="!isLoadingTenants && tenantLoadError" class="table-state error-state">
+            {{ tenantLoadError }}
+          </div>
+          <div *ngIf="!isLoadingTenants && !tenantLoadError && paginatedTenants.length === 0" class="table-state empty-state">
+            No tenants found.
+          </div>
+          <table *ngIf="!isLoadingTenants && !tenantLoadError && paginatedTenants.length > 0" class="tenant-table">
             <thead>
               <tr>
                 <th class="checkbox-col">
@@ -126,9 +135,9 @@
                 <th class="name-col">
                   Tenant Name <i class="ic-13"></i>
                 </th>
-                <th class="clients-col">
+                <!-- <th class="clients-col">
                   Clients <i class="ic-13"></i>
-                </th>
+                </th> -->
                 <th class="phone-col">
                   Phone <i class="ic-13"></i>
                 </th>
@@ -166,7 +175,7 @@
                 <td class="name-col">
                   <div class="tenant-name">{{ tenant.name }}</div>
                 </td>
-                <td class="clients-col">{{ tenant.clientsCount || 0 }}</td>
+                <!-- <td class="clients-col">{{ tenant.clientsCount || 0 }}</td> -->
                 <td class="phone-col">{{ tenant.phone }}</td>
                 <td class="email-col">
                   <div class="tenant-email">{{ tenant.email }}</div>

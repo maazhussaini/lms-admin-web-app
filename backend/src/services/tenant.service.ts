@@ -80,7 +80,7 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
    * Get table name for queries
    */
   protected getTableName(): string {
-    return 'tenants';
+    return 'tenant';
   }
 
   /**

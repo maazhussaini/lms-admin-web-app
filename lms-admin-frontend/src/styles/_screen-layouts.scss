@@ -4,6 +4,7 @@
 .dashboard-screen {
   display: flex;
   flex-direction: column;
+  padding:24px;
   height: 100%;
   background: var(--background, #F9FAFB);
   
@@ -48,9 +49,10 @@
   /* ===== BULK ACTIONS BAR ===== */
   .bulk-actions-bar {
     background: var(--warning-bg, #FEF3C7);
-    border-bottom: 1px solid var(--warning, #F59E0B);
+    border: 1px solid var(--warning, #F59E0B);
     padding: 12px 24px;
     display: flex;
+    border-radius: 9px;
     align-items: center;
     justify-content: space-between;
     flex-shrink: 0;
@@ -99,7 +101,7 @@
     
     .data-container {
       flex: 1;
-      padding: 24px;
+      // padding: 24px;
       // overflow: hidden;
       
       .data-table-wrapper {
@@ -194,7 +196,7 @@
   
   /* Table Body */
   tbody td {
-    padding: 16px;
+    padding: 12px;
     border-bottom: 1px solid var(--gray-100, #F3F4F6);
     font-size: 14px;
     color: var(--text-primary, #374151);

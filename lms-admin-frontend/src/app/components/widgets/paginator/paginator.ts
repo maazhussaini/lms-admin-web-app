@@ -21,7 +21,7 @@ export class Paginator implements OnInit, OnChanges {
   @Input() currentPage: number = 1;
   @Input() totalItems: number = 0;
   @Input() itemsPerPage: number = 10;
-  @Input() maxVisiblePages: number = 10;
+  @Input() maxVisiblePages: number = 3;
 
   @Output() pageChange = new EventEmitter<number>();
 
@@ -46,11 +46,14 @@ export class Paginator implements OnInit, OnChanges {
 
   calculatePagination() {
     const totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-    const startItem = this.totalItems > 0 ? ((this.currentPage - 1) * this.itemsPerPage) + 1 : 0;
-    const endItem = Math.min(this.currentPage * this.itemsPerPage, this.totalItems);
+    const safeCurrentPage = totalPages > 0
+      ? Math.min(Math.max(1, this.currentPage), totalPages)
+      : 1;
+    const startItem = this.totalItems > 0 ? ((safeCurrentPage - 1) * this.itemsPerPage) + 1 : 0;
+    const endItem = Math.min(safeCurrentPage * this.itemsPerPage, this.totalItems);
 
     this.paginationInfo = {
-      currentPage: this.currentPage,
+      currentPage: safeCurrentPage,
       totalPages: totalPages,
       totalItems: this.totalItems,
       itemsPerPage: this.itemsPerPage,
@@ -58,34 +61,48 @@ export class Paginator implements OnInit, OnChanges {
       endItem: endItem
     };
 
+    this.currentPage = safeCurrentPage;
     this.calculateVisiblePages();
   }
 
   calculateVisiblePages() {
     const totalPages = this.paginationInfo.totalPages;
-    const current = this.paginationInfo.currentPage;
-    const maxVisible = this.maxVisiblePages;
 
-    if (totalPages <= maxVisible) {
-      // Show all pages if total pages is less than max visible
-      this.visiblePages = Array.from({ length: totalPages }, (_, i) => i + 1);
-    } else {
-      // Calculate visible pages with ellipsis logic
-      const halfVisible = Math.floor(maxVisible / 2);
-      let start = Math.max(1, current - halfVisible);
-      let end = Math.min(totalPages, start + maxVisible - 1);
-
-      if (end - start + 1 < maxVisible) {
-        start = Math.max(1, end - maxVisible + 1);
-      }
-
-      this.visiblePages = Array.from({ length: end - start + 1 }, (_, i) => start + i);
+    if (totalPages === 0) {
+      this.visiblePages = [];
+      return;
     }
+
+    const windowSize = Math.max(1, Math.min(3, this.maxVisiblePages, totalPages));
+    const current = this.paginationInfo.currentPage;
+    const half = Math.floor(windowSize / 2);
+
+    let start = current - half;
+
+    if (windowSize % 2 === 0) {
+      start = current - (windowSize / 2 - 1);
+    }
+
+    start = Math.max(1, start);
+    let end = start + windowSize - 1;
+
+    if (end > totalPages) {
+      end = totalPages;
+      start = end - windowSize + 1;
+    }
+
+    this.visiblePages = Array.from({ length: windowSize }, (_, i) => start + i);
   }
 
   onPageClick(page: number) {
     if (page !== this.currentPage && page >= 1 && page <= this.paginationInfo.totalPages) {
       this.pageChange.emit(page);
+    }
+  }
+
+  onFirstClick() {
+    if (this.currentPage > 1) {
+      this.onPageClick(1);
     }
   }
 
@@ -101,11 +118,9 @@ export class Paginator implements OnInit, OnChanges {
     }
   }
 
-  showLeftEllipsis(): boolean {
-    return this.visiblePages.length > 0 && this.visiblePages[0] > 1;
-  }
-
-  showRightEllipsis(): boolean {
-    return this.visiblePages.length > 0 && this.visiblePages[this.visiblePages.length - 1] < this.paginationInfo.totalPages;
+  onLastClick() {
+    if (this.currentPage < this.paginationInfo.totalPages) {
+      this.onPageClick(this.paginationInfo.totalPages);
+    }
   }
 }

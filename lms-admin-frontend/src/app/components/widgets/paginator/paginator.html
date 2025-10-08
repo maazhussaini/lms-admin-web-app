@@ -1,3 +1,4 @@
+<div class="d-flex justify-center">
 <div class="pagination-container">
   <!-- Showing entries text -->
   <div class="showing-text" *ngIf="totalItems > 0">
@@ -5,56 +6,53 @@
   </div>
   
   <!-- Pagination controls -->
-  <div class="pagination-controls" *ngIf="paginationInfo.totalPages > 1">
+  <div class="pagination-controls" *ngIf="paginationInfo.totalPages > 0">
+    <!-- First button -->
+    <button
+      class="pagination-btn nav-btn"
+      [class.disabled]="currentPage === 1"
+      (click)="onFirstClick()"
+      [disabled]="currentPage === 1">
+      <<
+    </button>
+
     <!-- Previous button -->
-    <button 
+    <button
       class="pagination-btn nav-btn"
       [class.disabled]="currentPage === 1"
       (click)="onPreviousClick()"
       [disabled]="currentPage === 1">
-      ‹
+      <
     </button>
 
-    <!-- First page -->
-    <button 
-      *ngIf="showLeftEllipsis()"
-      class="pagination-btn page-btn"
-      [class.active]="currentPage === 1"
-      (click)="onPageClick(1)">
-      1
-    </button>
-
-    <!-- Left ellipsis -->
-    <span *ngIf="showLeftEllipsis() && visiblePages[0] > 2" class="ellipsis">••••</span>
-
-    <!-- Visible page numbers -->
-    <button 
-      *ngFor="let page of visiblePages"
-      class="pagination-btn page-btn"
-      [class.active]="currentPage === page"
-      (click)="onPageClick(page)">
-      {{ page }}
-    </button>
-
-    <!-- Right ellipsis -->
-    <span *ngIf="showRightEllipsis() && visiblePages[visiblePages.length - 1] < paginationInfo.totalPages - 1" class="ellipsis">••••</span>
-
-    <!-- Last page -->
-    <button 
-      *ngIf="showRightEllipsis()"
-      class="pagination-btn page-btn"
-      [class.active]="currentPage === paginationInfo.totalPages"
-      (click)="onPageClick(paginationInfo.totalPages)">
-      {{ paginationInfo.totalPages }}
-    </button>
+    <!-- Visible page numbers with separators -->
+    <ng-container *ngFor="let page of visiblePages; let i = index">
+      <!-- <span class="separator" *ngIf="i > 0">|</span> -->
+      <button
+        class="pagination-btn page-btn"
+        [class.active]="currentPage === page"
+        (click)="onPageClick(page)">
+        {{ page }}
+      </button>
+    </ng-container>
 
     <!-- Next button -->
-    <button 
+    <button
       class="pagination-btn nav-btn"
       [class.disabled]="currentPage === paginationInfo.totalPages"
       (click)="onNextClick()"
       [disabled]="currentPage === paginationInfo.totalPages">
-      ›
+      >
+    </button>
+
+    <!-- Last button -->
+    <button
+      class="pagination-btn nav-btn"
+      [class.disabled]="currentPage === paginationInfo.totalPages"
+      (click)="onLastClick()"
+      [disabled]="currentPage === paginationInfo.totalPages">
+      >>
     </button>
   </div>
+</div>
 </div>
