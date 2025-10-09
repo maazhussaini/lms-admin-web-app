@@ -89,7 +89,7 @@ export function useCourseDiscovery(filterState: CourseFilterState) {
     };
 
     if (filterState.searchQuery.trim()) {
-      params.search = filterState.searchQuery;
+      params.search_query = filterState.searchQuery;
     }
 
     if (filterState.selectedProgram) {

@@ -15,7 +15,7 @@ import {
 import { ApiError } from '@/utils/api-error.utils';
 import { PrismaClient } from '@prisma/client';
 import logger from '@/config/logger';
-import { UserType } from '@/types/enums.types';
+import { UserType, EnrollmentStatus } from '@/types/enums.types';
 
 // Get student service singleton instance
 const studentService = StudentService.getInstance();
@@ -267,7 +267,7 @@ export class StudentController {
         throw new ApiError('Only students can access this endpoint', 403, 'FORBIDDEN');
       }
 
-      // Find the student record using the user's email (since student login uses email)
+      // Find the student record using the user's email
       const student = await prisma.student.findFirst({
         where: {
           is_active: true,
@@ -289,44 +289,30 @@ export class StudentController {
         throw new ApiError('Student profile not found', 404, 'STUDENT_NOT_FOUND');
       }
 
-      // Get query parameters for additional filtering
-      const enrollmentStatus = req.query['enrollment_status'] as string;
-      const includeProgress = req.query['include_progress'] === 'true';
-      const isEnrolled = req.query['is_enrolled'] !== 'false'; // Default to true unless explicitly set to 'false'
+      // Parse enrollment status from query
+      const enrollmentStatusParam = req.query['enrollment_status'] as string;
+      let enrollmentStatuses: EnrollmentStatus[] | undefined;
       
-      // Handle backward compatibility: if enrollment_status is provided, convert to isEnrolled boolean
-      let finalIsEnrolled = isEnrolled;
-      if (enrollmentStatus) {
-        const statusesArray = enrollmentStatus.split(',').map(s => s.trim().toUpperCase());
-        // If the provided statuses include ACTIVE or COMPLETED, set isEnrolled to true
-        // If they only include other statuses (PENDING, DROPPED, etc.), set to false
-        const hasActiveOrCompleted = statusesArray.some(status => 
-          ['ACTIVE', 'COMPLETED'].includes(status)
-        );
-        const hasOtherStatuses = statusesArray.some(status => 
-          !['ACTIVE', 'COMPLETED'].includes(status)
-        );
+      if (enrollmentStatusParam) {
+        enrollmentStatuses = enrollmentStatusParam
+          .split(',')
+          .map(s => s.trim().toUpperCase())
+          .map(s => {
+            // Map frontend values to backend enum
+            if (s === 'INACTIVE' || s === 'CANCELLED') return EnrollmentStatus.DROPPED;
+            return Object.values(EnrollmentStatus).includes(s as EnrollmentStatus) ? (s as EnrollmentStatus) : null;
+          })
+          .filter((s): s is EnrollmentStatus => s !== null);
         
-        // If both types are requested, default to true (enrolled)
-        // If only non-active statuses are requested, set to false
-        finalIsEnrolled = hasActiveOrCompleted || !hasOtherStatuses;
+        if (enrollmentStatuses.length === 0) enrollmentStatuses = undefined;
       }
       
-      logger.debug('Getting enrolled courses for current student profile', {
-        studentId: student.student_id,
-        paginationParams: params,
-        enrollmentStatus,
-        isEnrolled: finalIsEnrolled,
-        includeProgress,
-        requestingUserId: requestingUser.id,
-        userType: requestingUser.user_type
-      });
-      
+      // Call service
       const result = await studentService.getEnrolledCoursesByStudentId(
         student.student_id,
         requestingUser,
         params,
-        finalIsEnrolled
+        enrollmentStatuses
       );
 
       return {

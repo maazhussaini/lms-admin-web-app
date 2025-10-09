@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-  FaPlayCircle, 
   FaFileAlt, 
   FaClipboardList,
   FaQuestionCircle,
-  FaVideo
+  FaVideo,
+  FaLock,
+  FaUnlock,
+  FaChevronRight
 } from 'react-icons/fa';
 import { CourseBasicDetails } from '@/services/courseService';
 import { formatDurationFromSeconds } from '@shared/utils';
@@ -16,6 +18,62 @@ import TopicContentSelector from './TopicContentSelector';
 import TopicSelector from './TopicSelector';
 import Breadcrumb, { BreadcrumbItem } from '@/components/common/Breadcrumb';
 import type { TopicContentType } from '@/types/courseDetails.ui.types';
+
+/**
+ * Video status badge component with custom colors
+ */
+const VideoStatusBadge: React.FC<{
+  status: 'Completed' | 'In Progress' | 'Pending';
+}> = ({ status }) => {
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case 'Completed':
+        return 'bg-[#F1FFEE] text-[#0E6100]';
+      case 'In Progress':
+        return 'bg-[#FFE8ED] text-[#FB3E70]';
+      case 'Pending':
+        return 'bg-[#FFF4E6] text-[#FA991C]';
+      default:
+        return 'bg-gray-50 text-gray-700';
+    }
+  };
+
+  return (
+    <span className={`inline-flex items-center px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-[10px] text-xs sm:text-sm font-medium ${getStatusStyle(status)}`}>
+      {status}
+    </span>
+  );
+};
+
+/**
+ * Helper function to get video status display information based on Figma design
+ * Uses exact hex colors: Completed (#0E6100), Pending (#FA991C), In Progress (#FB3E70)
+ */
+const getVideoStatusInfo = (video: {
+  is_completed: boolean | null;
+  completion_percentage: number | null;
+  is_video_locked: boolean;
+}) => {
+  if (video.is_completed) {
+    return {
+      status: 'Completed' as const,
+      iconColor: 'text-blue-500',
+      isLocked: false
+    };
+  } else if (video.completion_percentage && video.completion_percentage > 0) {
+    return {
+      status: 'In Progress' as const,
+      iconColor: video.is_video_locked ? 'text-red-500' : 'text-blue-500',
+      isLocked: video.is_video_locked
+    };
+  } else {
+    return {
+      status: 'Pending' as const,
+      iconColor: video.is_video_locked ? 'text-red-500' : 'text-blue-500',
+      isLocked: video.is_video_locked
+    };
+  }
+};
 
 /**
  * Props for the TopicComponent
@@ -243,33 +301,50 @@ export const TopicComponent: React.FC<TopicComponentProps> = ({
             <p className="text-neutral-600 text-sm sm:text-base">No video lectures available for this topic</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {videos.map((video, videoIndex) => (
-              <motion.div
-                key={video.course_video_id}
-                className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-neutral-200 hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => handleVideoClick(video.course_video_id)}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-              >
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="relative flex-shrink-0">
-                    <FaPlayCircle className="text-primary-800 w-4 h-4 sm:w-5 sm:h-5" />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-base sm:text-lg font-medium mb-1 line-clamp-2 text-neutral-900">
-                      Lecture {videoIndex + 1}: {video.video_name}
-                    </h4>
-                    {video.duration_seconds && (
+          <div className="space-y-4">
+            {videos.map((video, videoIndex) => {
+              const statusInfo = getVideoStatusInfo(video);
+              
+              return (
+                <motion.div
+                  key={video.course_video_id}
+                  className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-neutral-200 hover:shadow-md transition-all duration-200 cursor-pointer"
+                  onClick={() => handleVideoClick(video.course_video_id)}
+                  whileHover={{ scale: 1.005 }}
+                  whileTap={{ scale: 0.995 }}
+                >
+                  <div className="flex items-center justify-between">
+                    {/* Left section: Video Info */}
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <h4 className="text-base sm:text-lg font-medium text-neutral-900 mb-1 truncate">
+                        Lecture {videoIndex + 1}: {video.video_name}
+                      </h4>
                       <p className="text-xs sm:text-sm text-neutral-500">
-                        Duration: {formatDurationFromSeconds(video.duration_seconds, 'compact')}
+                        {video.duration_seconds ? formatDurationFromSeconds(video.duration_seconds, 'compact') : '10 Mins'}
                       </p>
-                    )}
+                    </div>
+                    
+                    {/* Right section: Status Pill + Lock/Unlock Icon + Navigation Arrow */}
+                    <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+                      <VideoStatusBadge status={statusInfo.status} />
+                      
+                      {/* Lock/Unlock Icon */}
+                      <div className="flex-shrink-0">
+                        {statusInfo.isLocked ? (
+                          <FaLock className={`w-4 h-4 sm:w-5 sm:h-5 ${statusInfo.iconColor}`} />
+                        ) : (
+                          <FaUnlock className={`w-4 h-4 sm:w-5 sm:h-5 ${statusInfo.iconColor}`} />
+                        )}
+                      </div>
+                      
+                      <div className="p-1.5 sm:p-2 rounded-[10px] bg-primary-800 text-white">
+                        <FaChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </motion.div>

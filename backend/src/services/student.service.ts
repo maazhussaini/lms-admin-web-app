@@ -711,21 +711,21 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
    * @param studentId Student identifier
    * @param requestingUser User requesting the data
    * @param params Pagination and filtering parameters
-   * @param isEnrolled Boolean flag to filter by enrollment status (true = ACTIVE/COMPLETED, false = others)
+   * @param enrollmentStatuses Array of enrollment statuses to filter by. If undefined, defaults to ACTIVE and COMPLETED
    * @returns List of enrolled courses with pagination metadata
    */
   async getEnrolledCoursesByStudentId(
     studentId: number,
     requestingUser: TokenPayload,
     params: ExtendedPaginationWithFilters,
-    isEnrolled: boolean = true
+    enrollmentStatuses?: EnrollmentStatus[]
   ): Promise<{ items: any[]; pagination: any }> {
     return tryCatch(async () => {
       logger.debug('Getting enrolled courses by student ID', {
         studentId,
         paginationParams: params,
         requestingUserId: requestingUser.id,
-        isEnrolled
+        enrollmentStatuses
       });
 
       // First, get the student's tenant ID and validate access
@@ -753,7 +753,8 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       }
 
       // Build search filter from pagination params
-      const searchQuery = params.filters?.['search'] || '';
+      // Note: The API parameter is 'search_query', but it's stored as 'search_query' in filters
+      const searchQuery = params.filters?.['search_query'] || params.filters?.['search'] || '';
       const searchFilter = searchQuery 
         ? {
             course_name: {
@@ -768,11 +769,23 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       const limit = params.limit || 10;
       const skip = params.skip ?? (page - 1) * limit;
 
-      // Build enrollment status filter based on isEnrolled parameter
-      // This matches the SQL function's logic exactly
-      const enrollmentStatusFilter = isEnrolled 
-        ? { in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED] }
-        : { notIn: [EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED] };
+      // Build enrollment status filter
+      // If enrollmentStatuses array is provided, use it; otherwise default to ACTIVE and COMPLETED
+      let statusesToFilter: EnrollmentStatus[];
+      
+      if (enrollmentStatuses && enrollmentStatuses.length > 0) {
+        statusesToFilter = enrollmentStatuses;
+      } else {
+        // Default to ACTIVE and COMPLETED if no statuses provided
+        statusesToFilter = [EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED];
+        
+        logger.debug('Using default enrollment statuses', {
+          defaultStatuses: statusesToFilter,
+          reason: enrollmentStatuses ? 'Empty array provided' : 'No statuses provided'
+        });
+      }
+      
+      const enrollmentStatusFilter = { in: statusesToFilter };
 
       // Build where clause for enrolled courses - matching SQL function exactly
       const whereClause = {
@@ -795,7 +808,7 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
 
       logger.debug('Built where clause for enrollment query', {
         studentId,
-        isEnrolled,
+        enrollmentStatuses: statusesToFilter,
         enrollmentStatusFilter,
         searchQuery,
         tenantId: student.tenant_id
@@ -912,8 +925,8 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
           specialization_name: specializationProgram?.specialization?.specialization_name || null,
           program_name: specializationProgram?.program?.program_name || null,
           teacher_name: teacher?.full_name || null,
-          course_total_hours: course.course_total_hours ? course.course_total_hours.toNumber() : null,
-          overall_progress_percentage: progressPercentage ? progressPercentage.toNumber() : null
+          course_total_hours: course.course_total_hours ? Number(course.course_total_hours) : null,
+          overall_progress_percentage: progressPercentage ?? null
         };
       });
 
