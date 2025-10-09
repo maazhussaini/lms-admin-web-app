@@ -37,7 +37,7 @@ const Header: React.FC<HeaderProps> = ({
   // Show loading state during initial profile fetch
   if (profileLoading && !studentProfile) {
     return (
-      <header className="bg-white px-4 sm:px-8 lg:px-14 py-3 sm:py-4 shadow-none border-none">
+      <header className="bg-white px-4 sm:px-8 lg:px-14 laptop:px-12 py-3 sm:py-4 shadow-none border-none">
         <div className="flex items-center justify-between">
           {/* Left: Mobile Menu + Heading */}
           <div className="flex items-center gap-3 sm:gap-4">
@@ -53,21 +53,21 @@ const Header: React.FC<HeaderProps> = ({
             )}
             
             {/* Heading */}
-            <h1 className="text-lg sm:text-xl lg:text-[2rem] font-semibold text-primary-800 font-heading leading-none truncate">
+            <h1 className="text-lg sm:text-xl lg:text-[2rem] laptop:text-[1.5rem] font-semibold text-primary-800 font-heading leading-none truncate">
               {heading}
             </h1>
           </div>
 
           {/* Right: Loading state */}
-          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6">
+          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 laptop:gap-4">
             <div className="flex gap-1 sm:gap-2">
-              <button className="rounded-2xl bg-primary-50 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center transition hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-primary-500 relative">
-                <FiBell className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-neutral-500" />
+              <button className="rounded-2xl bg-primary-50 w-10 h-10 sm:w-12 sm:h-12 laptop:w-11 laptop:h-11 flex items-center justify-center transition hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-primary-500 relative">
+                <FiBell className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 laptop:w-5 laptop:h-5 text-neutral-500" />
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
               </button>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full bg-gray-200 animate-pulse"></div>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 laptop:w-11 laptop:h-11 rounded-full bg-gray-200 animate-pulse"></div>
               <div className="hidden sm:flex flex-col gap-1">
                 <div className="w-20 h-3 bg-gray-200 rounded animate-pulse"></div>
                 <div className="w-16 h-2 bg-gray-200 rounded animate-pulse"></div>
@@ -82,7 +82,7 @@ const Header: React.FC<HeaderProps> = ({
   // Show error fallback if profile fails to load
   if (profileError && !studentProfile) {
     return (
-      <header className="bg-white px-4 sm:px-8 lg:px-14 py-3 sm:py-4 shadow-none border-none">
+      <header className="bg-white px-4 sm:px-8 lg:px-14 laptop:px-12 py-3 sm:py-4 shadow-none border-none">
         <div className="flex items-center justify-between">
           {/* Left: Mobile Menu + Heading */}
           <div className="flex items-center gap-3 sm:gap-4">
@@ -98,16 +98,16 @@ const Header: React.FC<HeaderProps> = ({
             )}
             
             {/* Heading */}
-            <h1 className="text-lg sm:text-xl lg:text-[2rem] font-semibold text-primary-800 font-heading leading-none truncate">
+            <h1 className="text-lg sm:text-xl lg:text-[2rem] laptop:text-[1.5rem] font-semibold text-primary-800 font-heading leading-none truncate">
               {heading}
             </h1>
           </div>
 
           {/* Right: Error state */}
-          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6">
+          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 laptop:gap-4">
             <div className="flex gap-1 sm:gap-2">
-              <button className="rounded-2xl bg-primary-50 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center transition hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-primary-500 relative">
-                <FiBell className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-neutral-500" />
+              <button className="rounded-2xl bg-primary-50 w-10 h-10 sm:w-12 sm:h-12 laptop:w-11 laptop:h-11 flex items-center justify-center transition hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-primary-500 relative">
+                <FiBell className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 laptop:w-5 laptop:h-5 text-neutral-500" />
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
               </button>
             </div>
@@ -115,13 +115,13 @@ const Header: React.FC<HeaderProps> = ({
               <img
                 src="/default_profile_picture.webp"
                 alt="Profile"
-                className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full object-cover border-2 border-white shadow"
+                className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 laptop:w-11 laptop:h-11 rounded-full object-cover border-2 border-white shadow"
               />
               <div className="hidden sm:flex flex-col">
-                <span className="text-sm lg:text-lg font-semibold text-neutral-600 leading-tight font-heading truncate max-w-[120px] lg:max-w-none">
+                <span className="text-sm lg:text-lg laptop:text-base font-semibold text-neutral-600 leading-tight font-heading truncate max-w-[120px] lg:max-w-none laptop:max-w-[140px]">
                   Profile Error
                 </span>
-                <span className="text-xs lg:text-sm text-neutral-400 leading-tight truncate max-w-[120px] lg:max-w-none">
+                <span className="text-xs lg:text-sm laptop:text-xs text-neutral-400 leading-tight truncate max-w-[120px] lg:max-w-none laptop:max-w-[140px]">
                   Unable to load
                 </span>
               </div>
@@ -132,7 +132,7 @@ const Header: React.FC<HeaderProps> = ({
     );
   }
   return (
-    <header className="bg-white px-4 sm:px-8 lg:px-14 py-3 sm:py-4 shadow-none border-none">
+    <header className="bg-white px-4 sm:px-8 lg:px-14 laptop:px-12 py-3 sm:py-4 shadow-none border-none">
       <div className="flex items-center justify-between">
         {/* Left: Mobile Menu + Heading */}
         <div className="flex items-center gap-3 sm:gap-4">
@@ -148,17 +148,17 @@ const Header: React.FC<HeaderProps> = ({
           )}
           
           {/* Heading */}
-          <h1 className="text-lg sm:text-xl lg:text-[2rem] font-semibold text-primary-800 font-heading leading-none truncate">
+          <h1 className="text-lg sm:text-xl lg:text-[2rem] laptop:text-[1.5rem] font-semibold text-primary-800 font-heading leading-none truncate">
             {heading}
           </h1>
         </div>
 
         {/* Right: Icons and User */}
-        <div className="flex items-center gap-2 sm:gap-4 lg:gap-6">
+        <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 laptop:gap-4">
           {/* Action Icons */}
           <div className="flex gap-1 sm:gap-2">
-            <button className="rounded-2xl bg-primary-50 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center transition hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-primary-500 relative">
-              <FiBell className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-neutral-500" />
+            <button className="rounded-2xl bg-primary-50 w-10 h-10 sm:w-12 sm:h-12 laptop:w-11 laptop:h-11 flex items-center justify-center transition hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-primary-500 relative">
+              <FiBell className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 laptop:w-5 laptop:h-5 text-neutral-500" />
               {/* Notification indicator */}
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
             </button>
@@ -169,14 +169,14 @@ const Header: React.FC<HeaderProps> = ({
             <img
               src={userAvatarUrl}
               alt={displayName}
-              className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full object-cover border-2 border-white shadow"
+              className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 laptop:w-11 laptop:h-11 rounded-full object-cover border-2 border-white shadow"
             />
             {/* User Info - Hidden on mobile */}
             <div className="hidden sm:flex flex-col">
-              <span className="text-sm lg:text-lg font-semibold text-neutral-600 leading-tight font-heading truncate max-w-[120px] lg:max-w-none">
+              <span className="text-sm lg:text-lg laptop:text-base font-semibold text-neutral-600 leading-tight font-heading truncate max-w-[120px] lg:max-w-none laptop:max-w-[140px]">
                 {displayName}
               </span>
-              <span className="text-xs lg:text-sm text-neutral-400 leading-tight truncate max-w-[120px] lg:max-w-none">
+              <span className="text-xs lg:text-sm laptop:text-xs text-neutral-400 leading-tight truncate max-w-[120px] lg:max-w-none laptop:max-w-[140px]">
                 {displayEmail}
               </span>
             </div>

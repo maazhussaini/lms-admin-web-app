@@ -131,13 +131,13 @@ const FilterBar: React.FC<FilterBarProps> = ({
   }, [selectedProgram?.program_id]);
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={`space-y-4 laptop:space-y-3 ${className}`}>
       {/* Filter Header */}
       <div className="flex items-center justify-between">
         {(selectedProgram || selectedSpecialization) && (
           <button
             onClick={onClearAllFilters}
-            className="text-sm text-blue-600 hover:text-blue-800 underline"
+            className="text-sm laptop:text-xs text-blue-600 hover:text-blue-800 underline"
           >
             Clear all filters
           </button>
@@ -145,11 +145,11 @@ const FilterBar: React.FC<FilterBarProps> = ({
       </div>
 
       {/* Program Filter Section */}
-      <div className="space-y-4">
+      <div className="space-y-4 laptop:space-y-3">
         <div className="flex items-center gap-2">
-          <span className="text-2xl font-medium text-primary-800">Programs</span>
+          <span className="text-2xl laptop:text-lg font-medium text-primary-800">Programs</span>
           {selectedProgram && (
-            <div className="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+            <div className="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 laptop:px-2 py-1 laptop:py-0.5 rounded-full text-sm laptop:text-xs">
               {selectedProgram.program_name}
               <button
                 onClick={onClearProgram}
@@ -174,11 +174,11 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
       {/* Specialization Filter Section */}
       {selectedProgram && (
-        <div className="space-y-4">
+        <div className="space-y-4 laptop:space-y-3">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700">Specialization:</span>
+            <span className="text-sm laptop:text-xs font-medium text-gray-700">Specialization:</span>
             {selectedSpecialization && (
-              <div className="flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+              <div className="flex items-center gap-1 bg-green-100 text-green-800 px-3 laptop:px-2 py-1 laptop:py-0.5 rounded-full text-sm laptop:text-xs">
                 {selectedSpecialization.specialization_name}
                 <button
                   onClick={onClearSpecialization}

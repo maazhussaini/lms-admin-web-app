@@ -231,10 +231,10 @@ const LoginPage: React.FC<LoginPageProps> = ({
 
         {/* Right section with login form */}
         <div className={rightSectionClasses}>
-          <div className="max-w-2xl w-full px-6 sm:px-8 md:px-4 lg:px-6">
+          <div className="max-w-2xl w-full px-6 sm:px-8 md:px-4 lg:px-6 laptop:px-5">
             {/* Logo Section */}
             <motion.div 
-              className="flex justify-center md:justify-start mb-8 sm:mb-6"
+              className="flex justify-center md:justify-start mb-8 sm:mb-6 laptop:mb-6"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -244,15 +244,15 @@ const LoginPage: React.FC<LoginPageProps> = ({
             
             {/* Welcome Message */}
             <motion.div 
-              className="mb-10 sm:mb-8 text-center md:text-left"
+              className="mb-10 sm:mb-8 laptop:mb-8 text-center md:text-left"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <h1 className="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4 sm:mb-3">
+              <h1 className="text-3xl sm:text-4xl laptop:text-3xl font-bold text-neutral-900 mb-4 sm:mb-3 laptop:mb-3">
                 Welcome Back!
               </h1>
-              <p className="text-base sm:text-lg text-neutral-600">
+              <p className="text-base sm:text-lg laptop:text-base text-neutral-600">
                 Continue learning, join live classes, and stay ahead with your courses.
                 <br />Your progress is just a click away.
               </p>

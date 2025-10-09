@@ -108,7 +108,7 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
     'border border-neutral-200',
     'transition-all duration-200 ease-in-out',
     'shadow-sm hover:shadow-md',
-    'h-14 sm:h-16', // Increased height
+    'h-14 sm:h-16 laptop:h-14 xl:h-[4.5rem]', // Larger for desktop
     {
       'ring-2 ring-primary-500 ring-opacity-20 border-primary-300': isFocused && !disabled,
       'opacity-60 cursor-not-allowed': disabled,
@@ -118,9 +118,9 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
 
   // Input classes
   const inputClasses = clsx(
-    'w-full pl-14 sm:pl-16 pr-6 py-4 sm:py-5', // Increased padding
+    'w-full pl-14 sm:pl-16 laptop:pl-14 xl:pl-20 pr-6 py-4 sm:py-5 laptop:py-3.5 xl:py-6', // Larger padding for desktop
     'text-neutral-700 placeholder-neutral-400',
-    'font-medium text-base sm:text-lg', // Increased font size
+    'font-medium text-base sm:text-lg laptop:text-base xl:text-xl', // Larger font for desktop
     'bg-transparent border-none outline-none',
     'rounded-[15px]',
     {
@@ -130,8 +130,8 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
 
   // Search icon classes
   const iconClasses = clsx(
-    'absolute left-5 sm:left-6 top-1/2 transform -translate-y-1/2', // Adjusted positioning
-    'w-6 h-6 sm:w-7 sm:h-7', // Increased icon size
+    'absolute left-5 sm:left-6 laptop:left-5 xl:left-7 top-1/2 transform -translate-y-1/2', // Adjusted positioning for desktop
+    'w-6 h-6 sm:w-7 sm:h-7 laptop:w-6 laptop:h-6 xl:w-8 xl:h-8', // Larger icon for desktop
     'transition-colors duration-200',
     {
       'text-neutral-400': !isFocused && !loading,
@@ -230,9 +230,9 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                className="absolute right-5 sm:right-6 top-1/2 transform -translate-y-1/2" // Adjusted positioning
+                className="absolute right-5 sm:right-6 laptop:right-5 top-1/2 transform -translate-y-1/2" // Adjusted positioning
               >
-                <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-primary-200 border-t-primary-500 rounded-[15px] animate-spin" /> {/* Increased size */}
+                <div className="w-5 h-5 sm:w-6 sm:h-6 laptop:w-5 laptop:h-5 border-2 border-primary-200 border-t-primary-500 rounded-[15px] animate-spin" /> {/* Reduced size for laptop */}
               </motion.div>
             )}
           </div>
@@ -246,7 +246,7 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
             disabled={disabled}
             className={clsx(
               'flex items-center justify-center',
-              'w-14 h-14 sm:w-16 sm:h-16 rounded-[15px]', // Increased size to match search bar
+              'w-14 h-14 sm:w-16 sm:h-16 laptop:w-14 laptop:h-14 rounded-[15px]', // Scaled back for laptop
               'bg-white border border-neutral-200',
               'transition-all duration-200 ease-in-out',
               'shadow-sm hover:shadow-md',
@@ -267,7 +267,7 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
               iconClass="ic-19"
               size="lg"
               className={clsx(
-                'w-6 h-6 sm:w-7 sm:h-7 transition-transform duration-200', // Increased icon size
+                'w-6 h-6 sm:w-7 sm:h-7 laptop:w-6 laptop:h-6 transition-transform duration-200', // Reduced icon size for laptop
                 {
                   'scale-110': hasActiveFilters || isFilterDropdownOpen
                 }
@@ -279,7 +279,7 @@ const MyCoursesSearchBar: React.FC<MyCoursesSearchBarProps> = ({
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 w-4 h-4 bg-primary-500 rounded-full border-2 border-white" // Slightly larger indicator
+                className="absolute -top-1 -right-1 w-4 h-4 laptop:w-3.5 laptop:h-3.5 bg-primary-500 rounded-full border-2 border-white" // Slightly smaller indicator for laptop
               />
             )}
           </button>

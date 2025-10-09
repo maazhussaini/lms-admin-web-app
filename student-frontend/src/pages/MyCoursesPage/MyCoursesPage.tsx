@@ -136,21 +136,18 @@ const MyCoursesPage: React.FC = () => {
       className="w-full h-full"
     >
       {/* Main Content Container */}
-      <div className="space-y-4 sm:space-y-6">
+      <div className="space-y-4 sm:space-y-6 laptop:space-y-4 xl:space-y-8">
         {/* Course Selector and Search Bar - Mobile First Responsive */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-          {/* Course Selector - Full width on mobile */}
-          <div className="w-full sm:w-full flex justify-center sm:justify-start">
-            <CourseSelector
-              activeTab={activeTab}
-              onTabChange={handleTabChange}
-              counts={courseCounts}
-              className="w-full sm:w-full"
-            />
-          </div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 laptop:gap-4 xl:gap-8">
+          {/* Course Selector - Intrinsic width based on content */}
+          <CourseSelector
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            counts={courseCounts}
+          />
           
-          {/* Search Bar - Full width on mobile, expanded on desktop */}
-          <div className="w-full sm:w-full">
+          {/* Search Bar - Flex to fill remaining space */}
+          <div className="w-full sm:flex-1">
             <MyCoursesSearchBar
               value={filterState.searchQuery}
               onSearch={updateSearchQuery}
@@ -167,7 +164,7 @@ const MyCoursesPage: React.FC = () => {
         </div>
 
         {/* Filter Bar with loading state awareness */}
-        <div className="mb-8">
+        <div className="mb-8 laptop:mb-6 xl:mb-10">
           <FilterBar
             selectedProgram={filterState.selectedProgram}
             selectedSpecialization={filterState.selectedSpecialization}

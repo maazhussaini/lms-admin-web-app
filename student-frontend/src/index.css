@@ -11,9 +11,11 @@
 /* Define theme customizations using CSS custom properties */
 @theme {
   /* Breakpoints (Default Tailwind values shown, add/modify as needed) */
+  --breakpoint-xs: 475px;
   --breakpoint-sm: 640px;
   --breakpoint-md: 768px;
   --breakpoint-lg: 1024px;
+  --breakpoint-laptop: 1100px;  /* Custom breakpoint for high-DPI 1366x768 laptop screens */
   --breakpoint-xl: 1280px;
   --breakpoint-2xl: 1536px;
   /* You can add more custom breakpoints like --breakpoint-3xl: 1920px; */
@@ -219,3 +221,77 @@
 /* text-wrap: balance; */
 /* } */
 /* } */
+
+/* Custom CSS with two-tier reset system */
+/* Moderate reset at 1280px for medium desktops */
+@media (min-width: 1280px) {
+  .laptop\:w-16 { width: 4.5rem !important; }
+  .laptop\:w-11 { width: 3.5rem !important; }
+  .laptop\:h-11 { height: 3.5rem !important; }
+  .laptop\:w-10 { width: 3.25rem !important; }
+  .laptop\:h-10 { height: 3.25rem !important; }
+  .laptop\:w-14 { width: 3.75rem !important; }
+  .laptop\:h-14 { height: 3.75rem !important; }
+  .laptop\:min-w-\[420px\] { min-width: 450px !important; } /* CourseSelector min-width */
+  .laptop\:text-lg { font-size: 1.35rem !important; }
+  .laptop\:text-\[1\.5rem\] { font-size: 1.75rem !important; }
+  .laptop\:text-base { font-size: 1rem !important; }
+  .laptop\:text-sm { font-size: 0.9375rem !important; }
+  .laptop\:text-xs { font-size: 0.8125rem !important; }
+  .laptop\:text-\[11px\] { font-size: 0.75rem !important; }
+  .laptop\:gap-7 { gap: 2.75rem !important; }
+  .laptop\:gap-4 { gap: 1.25rem !important; }
+  .laptop\:gap-2 { gap: 0.625rem !important; }
+  .laptop\:mb-5 { margin-bottom: 2rem !important; }
+  .laptop\:mb-6 { margin-bottom: 1.5rem !important; }
+  .laptop\:rounded-2xl { border-radius: 1.25rem !important; }
+  .laptop\:rounded-\[25px\] { border-radius: 1.5rem !important; }
+  .laptop\:p-1\.5 { padding: 0.625rem !important; }
+  .laptop\:px-6 { padding-left: 1.75rem !important; padding-right: 1.75rem !important; }
+  .laptop\:px-2 { padding-left: 0.625rem !important; padding-right: 0.625rem !important; }
+  .laptop\:py-3 { padding-top: 0.875rem !important; padding-bottom: 0.875rem !important; }
+  .laptop\:py-0\.5 { padding-top: 0.375rem !important; padding-bottom: 0.375rem !important; }
+  .laptop\:h-14 { height: 3.75rem !important; }
+  .laptop\:h-2\.5 { height: 0.625rem !important; }
+  .laptop\:space-y-1\.5 > * + * { margin-top: 0.5rem !important; }
+  .laptop\:space-y-4 > * + * { margin-top: 1.25rem !important; }
+  .laptop\:text-xl { font-size: 1.25rem !important; }
+  .laptop\:py-10 { padding-top: 2.75rem !important; padding-bottom: 2.75rem !important; }
+}
+
+/* Full reset at 1440px for large desktops - ONLY reset laptop classes, don't add new sizes */
+@media (min-width: 1440px) {
+  /* Reset laptop classes back to original lg/xl sizes */
+  .laptop\:w-16 { width: 5rem !important; }
+  .laptop\:w-11 { width: 4rem !important; }
+  .laptop\:h-11 { height: 4rem !important; }
+  .laptop\:w-10 { width: 3.5rem !important; }
+  .laptop\:h-10 { height: 3.5rem !important; }
+  .laptop\:w-14 { width: 4rem !important; }
+  .laptop\:h-14 { height: 4rem !important; }
+  .laptop\:min-w-\[420px\] { min-width: 480px !important; }
+  .laptop\:text-lg { font-size: 1.5rem !important; }
+  .laptop\:text-\[1\.5rem\] { font-size: 2rem !important; }
+  .laptop\:text-base { font-size: 1rem !important; }
+  .laptop\:text-sm { font-size: 1rem !important; }
+  .laptop\:text-xs { font-size: 0.875rem !important; }
+  .laptop\:text-\[11px\] { font-size: 0.875rem !important; }
+  .laptop\:gap-7 { gap: 3.5rem !important; }
+  .laptop\:gap-4 { gap: 1.5rem !important; }
+  .laptop\:gap-2 { gap: 0.75rem !important; }
+  .laptop\:mb-5 { margin-bottom: 2.5rem !important; }
+  .laptop\:mb-6 { margin-bottom: 2rem !important; }
+  .laptop\:rounded-2xl { border-radius: 1.5rem !important; }
+  .laptop\:rounded-\[25px\] { border-radius: 1.875rem !important; }
+  .laptop\:p-1\.5 { padding: 0.75rem !important; }
+  .laptop\:px-6 { padding-left: 2rem !important; padding-right: 2rem !important; }
+  .laptop\:px-2 { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+  .laptop\:py-3 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+  .laptop\:py-0\.5 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+  .laptop\:h-14 { height: 4rem !important; }
+  .laptop\:h-2\.5 { height: 0.625rem !important; }
+  .laptop\:space-y-1\.5 > * + * { margin-top: 0.625rem !important; }
+  .laptop\:space-y-4 > * + * { margin-top: 1.5rem !important; }
+  .laptop\:text-xl { font-size: 1.5rem !important; }
+  .laptop\:py-10 { padding-top: 3rem !important; padding-bottom: 3rem !important; }
+}

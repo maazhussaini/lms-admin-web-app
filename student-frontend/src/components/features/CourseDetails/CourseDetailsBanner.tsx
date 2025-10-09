@@ -86,7 +86,7 @@ export const CourseDetailsBanner: React.FC<CourseDetailsBannerProps> = ({
 
   return (
     <motion.div
-      className="relative w-full min-h-[150px] sm:min-h-[200px] md:min-h-[220px] lg:min-h-[240px] overflow-hidden rounded-t-3xl"
+      className="relative w-full min-h-[150px] sm:min-h-[200px] md:min-h-[220px] lg:min-h-[240px] laptop:min-h-[220px] overflow-hidden rounded-t-3xl"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
@@ -135,7 +135,7 @@ export const CourseDetailsBanner: React.FC<CourseDetailsBannerProps> = ({
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.6 }}
             >
-              <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 xl:w-28 xl:h-28 rounded-full bg-white/10 backdrop-blur-sm border-2 border-white/20 overflow-hidden">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 laptop:w-20 laptop:h-20 xl:w-28 xl:h-28 rounded-full bg-white/10 backdrop-blur-sm border-2 border-white/20 overflow-hidden">
                 {courseDetails.profile_picture_url ? (
                   <img
                     src={courseDetails.profile_picture_url}
@@ -143,7 +143,7 @@ export const CourseDetailsBanner: React.FC<CourseDetailsBannerProps> = ({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl font-regular">
+                  <div className="w-full h-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs sm:text-sm md:text-base lg:text-lg laptop:text-base xl:text-xl font-regular">
                     {instructorName.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
                   </div>
                 )}
@@ -159,24 +159,24 @@ export const CourseDetailsBanner: React.FC<CourseDetailsBannerProps> = ({
             >
 
             {/* Course Title */}
-            <h1 className="text-base sm:text-lg md:text-2xl lg:text-3xl xl:text-4xl font-regular leading-tight mb-1 sm:mb-2">
+            <h1 className="text-base sm:text-lg md:text-2xl lg:text-3xl laptop:text-2xl xl:text-4xl font-regular leading-tight mb-1 sm:mb-2">
               {courseDetails.course_name}
             </h1>
 
             {/* Course Subtitle/Category */}
-            <p className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl text-primary-100 font-regular mb-1 sm:mb-2">
+            <p className="text-xs sm:text-sm md:text-base lg:text-lg laptop:text-base xl:text-xl text-primary-100 font-regular mb-1 sm:mb-2">
               Machine Learning, Data Science
             </p>
 
             {/* Course Duration and Instructor */}
-            <div className="flex flex-col text-primary-200 mb-2 sm:mb-3 text-[10px] sm:text-xs md:text-sm lg:text-base xl:text-lg font-regular">
+            <div className="flex flex-col text-primary-200 mb-2 sm:mb-3 text-[10px] sm:text-xs md:text-sm lg:text-base laptop:text-sm xl:text-lg font-regular">
               <span>{courseDuration}</span>
               <span>{instructorName}</span>
             </div>
 
               {/* Progress Bar */}
               <div className="max-w-6xl w-full">
-                <div className="w-full h-1 sm:h-1.5 md:h-2 progress-bg rounded-full overflow-hidden">
+                <div className="w-full h-1 sm:h-1.5 md:h-2 laptop:h-1.5 progress-bg rounded-full overflow-hidden">
                   <motion.div
                     className={`h-full rounded-full ${getProgressBarClass(progressPercentage)}`}
                     initial={{ width: 0 }}
@@ -185,7 +185,7 @@ export const CourseDetailsBanner: React.FC<CourseDetailsBannerProps> = ({
                   />
                 </div>
                 {/* Progress Labels */}
-                <div className="flex justify-between mt-0.5 text-[9px] sm:text-xs md:text-sm text-primary-100">
+                <div className="flex justify-between mt-0.5 text-[9px] sm:text-xs md:text-sm laptop:text-xs text-primary-100">
                   <span>0%</span>
                   <span className="text-white font-medium">{progressPercentage}%</span>
                   <span>100%</span>

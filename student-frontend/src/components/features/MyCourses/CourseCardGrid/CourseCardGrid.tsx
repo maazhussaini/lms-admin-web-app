@@ -71,9 +71,9 @@ const CourseCardGrid: React.FC<CourseCardGridProps> = ({
 
   if (!courses || courses.length === 0) {
     return (
-      <div className={`text-center py-12 ${className}`}>
-        <h3 className="text-xl font-medium text-gray-900 mb-4">No courses found</h3>
-        <p className="text-gray-600">
+      <div className={`text-center py-12 laptop:py-10 xl:py-16 ${className}`}>
+        <h3 className="text-xl laptop:text-lg xl:text-2xl font-medium text-gray-900 mb-4 laptop:mb-3 xl:mb-5">No courses found</h3>
+        <p className="text-gray-600 laptop:text-sm xl:text-base">
           {activeTab === 'enrolled' && 'You are not enrolled in any courses yet.'}
           {activeTab === 'unenrolled' && 'No available courses to enroll in.'}
           {activeTab === 'all' && 'No courses available at the moment.'}
@@ -83,15 +83,15 @@ const CourseCardGrid: React.FC<CourseCardGridProps> = ({
   }
 
   return (
-    <section className={`space-y-6 ${className}`}>
+    <section className={`space-y-6 laptop:space-y-4 xl:space-y-7 ${className}`}>
       {/* Section Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-medium text-primary-800">
+        <h2 className="text-2xl laptop:text-xl xl:text-3xl font-medium text-primary-800">
           {activeTab === 'enrolled' && 'Enrolled Courses'}
           {activeTab === 'unenrolled' && 'Available Courses'}
           {activeTab === 'all' && 'All Courses'}
         </h2>
-        <span className="text-sm text-gray-500">
+        <span className="text-sm laptop:text-xs xl:text-base text-gray-500">
           {courses.length} course{courses.length !== 1 ? 's' : ''}
         </span>
       </div>
