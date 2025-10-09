@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import CustomIcon from '@/components/common/CustomIcon';
 import { FiLogOut } from 'react-icons/fi';
 import orbedLogoPurple from '@/assets/images/orbed_logo_purple_bg.png';
+import { useNavigate } from 'react-router-dom';
 
 type NavIcon = {
   icon: React.ReactNode;
@@ -47,10 +48,12 @@ interface SideNavBarProps {
 
 const SideNavBar: React.FC<SideNavBarProps> = ({ isOpen = false, onClose }) => {
   const { logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleNavClick = (nav: NavIcon) => {
-    // TODO: Implement navigation logic
-    console.log('Navigate to:', nav.href);
+    if (nav.href) {
+      navigate(nav.href);
+    }
     // Close mobile menu after navigation
     if (onClose) {
       onClose();
