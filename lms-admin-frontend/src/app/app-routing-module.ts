@@ -12,8 +12,13 @@ const routes: Routes = [
     loadChildren: () => import('./pages/public-pages/public-pages-module').then(m => m.PublicPagesModule)
   },
   {
-    path: 'dashboard',
+    path: 'private',
     loadChildren: () => import('./pages/private-pages/private-pages-module').then(m => m.PrivatePagesModule)
+  },
+  {
+    path: 'dashboard',
+    redirectTo: '/private',
+    pathMatch: 'full'
   },
   {
     path: '**',

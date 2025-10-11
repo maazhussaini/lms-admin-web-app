@@ -95,19 +95,8 @@ export class SignIn implements OnInit {
     const userRole = this.authService.getCurrentUserRole();
     console.log('User logged in with role:', userRole);
     
-    switch (userRole) {
-      case 'SUPER_ADMIN':
-        this.router.navigate(['/dashboard/admin']);
-        break;
-      case 'TENANT_ADMIN':
-        this.router.navigate(['/dashboard/tenant']);
-        break;
-      case 'TEACHER':
-        this.router.navigate(['/dashboard/teacher']);
-        break;
-      default:
-        this.router.navigate(['/dashboard']);
-    }
+    // All roles now redirect to /private/home, where HomeRedirectGuard will handle role-based routing
+    this.router.navigate(['/private/home']);
   }
 
   private showMessage(message: string, type: 'success' | 'error'): void {

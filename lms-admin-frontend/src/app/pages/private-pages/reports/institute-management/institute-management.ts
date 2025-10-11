@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-institute-management',
-  standalone: false,
+  standalone: true,
   templateUrl: './institute-management.html',
   styleUrl: './institute-management.scss'
 })

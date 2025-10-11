@@ -30,15 +30,29 @@ export class PrivatePageLayout implements OnInit {
   }
 
   private updatePageTitle() {
-    // Extract page title from route
+    // Extract page title from route data or URL
     let route = this.activatedRoute;
     while (route.firstChild) {
       route = route.firstChild;
     }
     
-    // Get the page title from route data or URL
+    // Get title from route data if available
+    if (route.snapshot.data['title']) {
+      this.pageTitle = route.snapshot.data['title'];
+      return;
+    }
+    
+    // Get the page title from URL
     const url = this.router.url;
-    if (url.includes('tenant')) {
+    if (url.includes('reports/tenants')) {
+      this.pageTitle = 'Tenant Management';
+    } else if (url.includes('reports/institutes')) {
+      this.pageTitle = 'Institute Management';
+    } else if (url.includes('reports/programs')) {
+      this.pageTitle = 'Program Management';
+    } else if (url.includes('reports/students')) {
+      this.pageTitle = 'Student Management';
+    } else if (url.includes('tenant')) {
       this.pageTitle = 'Tenant';
     } else if (url.includes('student')) {
       this.pageTitle = 'Student';
@@ -47,7 +61,7 @@ export class PrivatePageLayout implements OnInit {
     } else if (url.includes('course')) {
       this.pageTitle = 'Course';
     } else {
-      this.pageTitle = 'Dashboard';
+      this.pageTitle = 'Reports';
     }
   }
 

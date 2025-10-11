@@ -1,10 +1,10 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { PrivatePageLayout } from './private-page-layout/private-page-layout';
-import { AdminDashboard } from './dashboards/admin-dashboard/admin-dashboard';
-import { TenantDashboard } from './dashboards/tenant-dashboard/tenant-dashboard';
-import { TeacherDashboard } from './dashboards/teacher-dashboard/teacher-dashboard';
+import { TenantManagement } from './reports/tenant-management/tenant-management';
+import { InstituteManagement } from './reports/institute-management/institute-management';
 import { AuthGuard } from '../../services/auth.guard';
+import { HomeRedirectGuard } from '../../services/home-redirect.guard';
 
 const routes: Routes = [
   {
@@ -20,19 +20,19 @@ const routes: Routes = [
       },
       {
         path: 'home',
-        component: TenantDashboard // Default dashboard
+        canActivate: [HomeRedirectGuard],
+        component: PrivatePageLayout // Dummy component, guard will redirect
+      },
+      // Reports routes
+      {
+        path: 'reports/tenants',
+        component: TenantManagement,
+        data: { title: 'Tenant Management' }
       },
       {
-        path: 'admin',
-        component: AdminDashboard
-      },
-      {
-        path: 'tenant',
-        component: TenantDashboard
-      },
-      {
-        path: 'teacher',
-        component: TeacherDashboard
+        path: 'reports/institutes',
+        component: InstituteManagement,
+        data: { title: 'Institute Management' }
       }
     ]
   }

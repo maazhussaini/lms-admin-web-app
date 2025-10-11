@@ -35,7 +35,8 @@ export interface Filters {
 
 @Component({
   selector: 'app-tenant-management',
-  standalone: false,
+  standalone: true,
+  imports: [CommonModule, FormsModule, Paginator, OffCanvasWrapper, BasicTenantForm],
   templateUrl: './tenant-management.html',
   styleUrls: ['./tenant-management.scss']
 })
