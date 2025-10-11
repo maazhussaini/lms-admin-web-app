@@ -190,12 +190,14 @@ export class TenantDashboard implements OnInit, OnDestroy {
     const createdAt = rawTenant?.created_at ? new Date(rawTenant.created_at) : new Date();
     const updatedAt = rawTenant?.updated_at ? new Date(rawTenant.updated_at) : createdAt;
     const status = this.formatStatus(rawTenant?.tenant_status ?? rawTenant?.status);
+    const email = this.getPrimaryEmail(rawTenant) ?? '—';
+    const phone = this.getPrimaryPhone(rawTenant) ?? '—';
 
     return {
       id: tenantId,
       name: tenantName,
-      email: rawTenant?.primary_email ?? rawTenant?.email_address ?? rawTenant?.email ?? '—',
-      phone: rawTenant?.primary_phone ?? rawTenant?.phone_number ?? rawTenant?.phone ?? '—',
+      email,
+      phone,
       clientsCount: rawTenant?.clients_count ?? rawTenant?.client_count ?? rawTenant?.clientsCount ?? 0,
       status,
       createdAt,
@@ -203,6 +205,65 @@ export class TenantDashboard implements OnInit, OnDestroy {
       logoInitial: this.getLogoInitial(tenantName),
       logoClass: this.getLogoClass(index)
     };
+  }
+
+  private getPrimaryEmail(rawTenant: any): string | null {
+    const responseEmail = rawTenant?.primary_email_address;
+    const primaryEmail = responseEmail ?? this.findPrimaryContact(rawTenant?.tenant_email_addresses);
+
+    if (primaryEmail?.email_address) {
+      return primaryEmail.email_address;
+    }
+
+    if (typeof rawTenant?.primary_email === 'string') {
+      return rawTenant.primary_email;
+    }
+
+    if (typeof rawTenant?.email_address === 'string') {
+      return rawTenant.email_address;
+    }
+
+    if (typeof rawTenant?.email === 'string') {
+      return rawTenant.email;
+    }
+
+    return null;
+  }
+
+  private getPrimaryPhone(rawTenant: any): string | null {
+    const responsePhone = rawTenant?.primary_phone_number;
+    const primaryPhone = responsePhone ?? this.findPrimaryContact(rawTenant?.tenant_phone_numbers);
+
+    const dialCode = primaryPhone?.dial_code ?? rawTenant?.dial_code ?? null;
+    const phoneNumber =
+      primaryPhone?.phone_number ??
+      rawTenant?.primary_phone ??
+      rawTenant?.phone_number ??
+      rawTenant?.phone ?? null;
+
+    if (!phoneNumber) {
+      return null;
+    }
+
+    return this.formatPhoneNumber(phoneNumber, dialCode);
+  }
+
+  private findPrimaryContact(collection: any): any | null {
+    if (!Array.isArray(collection) || collection.length === 0) {
+      return null;
+    }
+
+    const primary = collection.find((item) => item?.is_primary);
+    return primary ?? collection[0];
+  }
+
+  private formatPhoneNumber(phoneNumber: string, dialCode: string | null): string {
+    if (!dialCode) {
+      return phoneNumber;
+    }
+
+    const normalizedDialCode = dialCode.startsWith('+') ? dialCode : `+${dialCode}`;
+    return `${normalizedDialCode} ${phoneNumber}`;
   }
 
   private getLogoInitial(name: string): string {
@@ -268,7 +329,8 @@ export class TenantDashboard implements OnInit, OnDestroy {
     if (this.searchTerm) {
       filtered = filtered.filter(tenant => 
         tenant.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        tenant.email.toLowerCase().includes(this.searchTerm.toLowerCase())
+        tenant.email.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        tenant.phone.toLowerCase().includes(this.searchTerm.toLowerCase())
       );
     }
 

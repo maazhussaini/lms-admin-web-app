@@ -84,6 +84,54 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
   }
 
   /**
+   * Include primary contact information for tenants
+   */
+  protected override getIncludeOptions(): Record<string, any> {
+    return {
+      include: {
+        tenant_phone_numbers: {
+          where: {
+            is_active: true,
+            is_deleted: false
+          },
+          orderBy: [
+            { is_primary: 'desc' },
+            { created_at: 'asc' }
+          ],
+          take: 1
+        },
+        tenant_email_addresses: {
+          where: {
+            is_active: true,
+            is_deleted: false
+          },
+          orderBy: [
+            { is_primary: 'desc' },
+            { created_at: 'asc' }
+          ],
+          take: 1
+        }
+      }
+    };
+  }
+
+  /**
+   * Flatten primary contact info for easier consumption
+   */
+  protected override formatEntities(entities: any[]): any[] {
+    return entities.map((tenant: any) => {
+      const [primaryPhone] = tenant.tenant_phone_numbers ?? [];
+      const [primaryEmail] = tenant.tenant_email_addresses ?? [];
+
+      return {
+        ...tenant,
+        primary_phone_number: primaryPhone ?? null,
+        primary_email_address: primaryEmail ?? null
+      };
+    });
+  }
+
+  /**
    * Build entity-specific filters
    */
   protected buildEntitySpecificFilters(_filters: TenantFilterDto): any {
