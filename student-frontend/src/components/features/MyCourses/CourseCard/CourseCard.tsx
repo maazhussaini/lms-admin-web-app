@@ -5,6 +5,7 @@ import type { StudentCourseProgress } from '@shared/types';
 import type { ExtendedCourse } from '@/types/course.ui.types';
 import { 
   formatCourseDuration, 
+  formatCourseDateRange,
   getInstructorAvatarUrl, 
   getProgressBarClass
 } from '@/utils/courseUIUtils';
@@ -218,10 +219,10 @@ const CourseCard: React.FC<CourseCardProps> = ({
               </p>
             )}
 
-            {/* Course Date Range */}
-            {startDate && endDate && (
+            {/* Course Date Range - Format dates from API response */}
+            {(startDate || endDate) && (
               <p className="text-sm laptop:text-xs xl:text-base text-[#737373] font-regular">
-                {startDate} - {endDate}
+                {formatCourseDateRange(startDate, endDate)}
               </p>
             )}
 

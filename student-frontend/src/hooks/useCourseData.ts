@@ -34,18 +34,35 @@ import {
 import { COURSE_API } from '@/constants/course.constants';
 
 /**
- * Hook for fetching all enrollments using comma-separated status values
- * Much simpler than the previous multiple API calls approach
+ * Hook for fetching enrolled courses (ACTIVE + COMPLETED statuses)
+ * Makes a separate API call to get only currently enrolled courses
+ * 
+ * @param searchQuery - Optional search query to filter courses
+ * @returns API result with enrolled courses and pagination data
+ * 
+ * Note: Backend doesn't return enrollment_status in response items,
+ * so we rely on API-level filtering via query parameters.
  */
-function useAllEnrollments() {
-  // Single API call with comma-separated statuses
-  const result = useApiList<EnrollmentItem>(
-    COURSE_API.ENDPOINTS.ENROLLMENTS,
-    {
+function useEnrolledCourses(searchQuery: string = '') {
+  // Build API parameters
+  const apiParams = useMemo(() => {
+    const params: Record<string, string | number> = {
       page: COURSE_API.DEFAULT_PARAMS.PAGE,
       limit: COURSE_API.DEFAULT_PARAMS.LIMIT,
-      enrollment_status: 'ACTIVE,COMPLETED,INACTIVE,CANCELLED', // All statuses in one call
-    },
+      enrollment_status: 'ACTIVE,COMPLETED', // Only currently enrolled courses
+    };
+
+    // Add search query if provided
+    if (searchQuery.trim()) {
+      params.search_query = searchQuery;
+    }
+
+    return params;
+  }, [searchQuery]);
+
+  const result = useApiList<EnrollmentItem>(
+    COURSE_API.ENDPOINTS.ENROLLMENTS,
+    apiParams,
     {
       immediate: true,
       retryOnError: true,
@@ -53,26 +70,77 @@ function useAllEnrollments() {
     }
   );
 
-  // Enhanced debugging for the single API call
+  // Debug logging
   useEffect(() => {
-    console.debug('🔍 useAllEnrollments API call result:', {
+    console.debug('� useEnrolledCourses API call result:', {
       loading: result.loading,
       error: result.error,
       dataLength: result.data?.length || 0,
-      apiUrl: COURSE_API.ENDPOINTS.ENROLLMENTS,
-      requestParams: {
-        page: COURSE_API.DEFAULT_PARAMS.PAGE,
-        limit: COURSE_API.DEFAULT_PARAMS.LIMIT,
-        enrollment_status: 'ACTIVE,COMPLETED,INACTIVE,CANCELLED'
-      },
+      paginationTotal: result.pagination?.total || 0,
+      searchQuery: searchQuery || 'none',
       enrollments: result.data?.map(e => ({
         enrollment_id: e.enrollment_id,
         course_id: e.course_id,
         course_name: e.course_name,
-        enrollment_status: e.enrollment_status
       })) || []
     });
-  }, [result.loading, result.error, result.data]);
+  }, [result.loading, result.error, result.data, result.pagination, searchQuery]);
+
+  return result;
+}
+
+/**
+ * Hook for fetching unenrolled/dropped courses (INACTIVE + CANCELLED statuses)
+ * Makes a separate API call to get courses the student has left/cancelled
+ * 
+ * @param searchQuery - Optional search query to filter courses
+ * @returns API result with unenrolled courses and pagination data
+ * 
+ * Note: Frontend uses INACTIVE/CANCELLED but backend controller maps these to DROPPED enum.
+ * Backend doesn't return enrollment_status in response items, so we rely on API-level filtering.
+ */
+function useUnenrolledCourses(searchQuery: string = '') {
+  // Build API parameters
+  const apiParams = useMemo(() => {
+    const params: Record<string, string | number> = {
+      page: COURSE_API.DEFAULT_PARAMS.PAGE,
+      limit: COURSE_API.DEFAULT_PARAMS.LIMIT,
+      enrollment_status: 'INACTIVE,CANCELLED', // Backend maps to DROPPED
+    };
+
+    // Add search query if provided
+    if (searchQuery.trim()) {
+      params.search_query = searchQuery;
+    }
+
+    return params;
+  }, [searchQuery]);
+
+  const result = useApiList<EnrollmentItem>(
+    COURSE_API.ENDPOINTS.ENROLLMENTS,
+    apiParams,
+    {
+      immediate: true,
+      retryOnError: true,
+      maxRetries: 3,
+    }
+  );
+
+  // Debug logging
+  useEffect(() => {
+    console.debug('📕 useUnenrolledCourses API call result:', {
+      loading: result.loading,
+      error: result.error,
+      dataLength: result.data?.length || 0,
+      paginationTotal: result.pagination?.total || 0,
+      searchQuery: searchQuery || 'none',
+      enrollments: result.data?.map(e => ({
+        enrollment_id: e.enrollment_id,
+        course_id: e.course_id,
+        course_name: e.course_name,
+      })) || []
+    });
+  }, [result.loading, result.error, result.data, result.pagination, searchQuery]);
 
   return result;
 }
@@ -112,87 +180,6 @@ export function useCourseDiscovery(filterState: CourseFilterState) {
       maxRetries: 3,
     }
   );
-}
-
-/**
- * Hook for managing active enrollment data
- * Uses shared enrollment data to avoid duplicate API calls
- */
-export function useActiveEnrollments(allEnrollmentsResult: any) {
-  return useMemo(() => {
-    console.debug('🔍 useActiveEnrollments filtering:', {
-      allEnrollments: allEnrollmentsResult.data?.map((e: any) => ({
-        course_id: e.course_id,
-        status: e.enrollment_status
-      })) || [],
-      totalCount: allEnrollmentsResult.data?.length || 0
-    });
-    
-    const enrolledData = (allEnrollmentsResult.data || []).filter(
-      (enrollment: any) => {
-        const status = enrollment.enrollment_status?.toUpperCase();
-        return status === 'ACTIVE' || status === 'COMPLETED';
-      }
-    );
-
-    console.debug('🔍 useActiveEnrollments result:', {
-      filteredEnrollments: enrolledData.map((e: any) => ({
-        course_id: e.course_id,
-        status: e.enrollment_status
-      })),
-      filteredCount: enrolledData.length
-    });
-
-    return {
-      ...allEnrollmentsResult,
-      data: enrolledData,
-      pagination: {
-        page: 1,
-        limit: enrolledData.length,
-        total: enrolledData.length,
-        totalPages: 1,
-        hasNext: false,
-        hasPrev: false,
-      }
-    };
-  }, [allEnrollmentsResult]);
-}
-
-/**
- * Hook for managing inactive enrollment data
- * Uses shared enrollment data to avoid duplicate API calls
- */
-export function useInactiveEnrollments(allEnrollmentsResult: any) {
-  return useMemo(() => {
-    const unenrolledData = (allEnrollmentsResult.data || []).filter(
-      (enrollment: any) => {
-        const status = enrollment.enrollment_status?.toUpperCase();
-        return status === 'INACTIVE' || status === 'CANCELLED';
-      }
-    );
-
-    return {
-      ...allEnrollmentsResult,
-      data: unenrolledData,
-      pagination: {
-        page: 1,
-        limit: unenrolledData.length,
-        total: unenrolledData.length,
-        totalPages: 1,
-        hasNext: false,
-        hasPrev: false,
-      }
-    };
-  }, [allEnrollmentsResult]);
-}
-
-/**
- * Hook for managing enrollment data (deprecated - use separate hooks above)
- */
-export function useEnrollments() {
-  // For backward compatibility, we need to make a single API call
-  const allEnrollments = useAllEnrollments();
-  return useActiveEnrollments(allEnrollments);
 }
 
 /**
@@ -267,39 +254,35 @@ export function useCourseData() {
   const filterHook = useCourseFilters();
   const { filterState } = filterHook;
 
-  // Single API call for all enrollments - this prevents duplicate calls
-  const allEnrollmentsHook = useAllEnrollments();
-  
-  // Filter the enrollment data for different purposes
-  const activeEnrollmentsHook = useActiveEnrollments(allEnrollmentsHook);
-  const inactiveEnrollmentsHook = useInactiveEnrollments(allEnrollmentsHook);
+  // Two separate API calls for enrolled and unenrolled courses
+  // Pass search query to both APIs for server-side filtering
+  const enrolledCoursesHook = useEnrolledCourses(filterState.searchQuery);
+  const unenrolledCoursesHook = useUnenrolledCourses(filterState.searchQuery);
 
   // API call for course discovery
   const courseDiscoveryHook = useCourseDiscovery(filterState);
 
   // Combine enrollment hooks for backward compatibility
   const enrollmentsHook = {
-    ...activeEnrollmentsHook,
-    data: activeEnrollmentsHook.data || [],
+    ...enrolledCoursesHook,
+    data: enrolledCoursesHook.data || [],
   };
   
-  // Derived data
+  // Derived data - transformation context uses enrolled courses only
   const transformationContext = useMemo((): CourseTransformationContext => {
-    // Only consider ACTIVE and COMPLETED enrollments for enrolled course IDs
-    // This allows INACTIVE/CANCELLED courses to appear in discovery results
-    const currentlyEnrolledCourses = (activeEnrollmentsHook.data || []);
-    return createTransformationContext(currentlyEnrolledCourses);
-  }, [activeEnrollmentsHook.data]);
+    // Only consider currently enrolled courses (ACTIVE and COMPLETED)
+    return createTransformationContext(enrolledCoursesHook.data || []);
+  }, [enrolledCoursesHook.data]);
 
-  // Transformed courses
+  // Transformed courses - using new separate enrollment hooks
   const transformedCourses = useMemo((): ExtendedCourse[] => {
-    // Process active (enrolled) courses
-    let enrolledCourses = transformEnrollmentBatch(activeEnrollmentsHook.data || []);
+    // Process enrolled courses (ACTIVE + COMPLETED) - API already filters by search query
+    let enrolledCourses = transformEnrollmentBatch(enrolledCoursesHook.data || []);
     
-    // Process inactive (unenrolled) courses
-    let unenrolledCourses = transformEnrollmentBatch(inactiveEnrollmentsHook.data || []);
+    // Process unenrolled courses (INACTIVE + CANCELLED → DROPPED) - API already filters by search query
+    let unenrolledCourses = transformEnrollmentBatch(unenrolledCoursesHook.data || []);
     
-    // Apply API-level filters to enrolled courses when filters are active
+    // Apply client-side filters for program and specialization (not supported by enrollments API)
     if (filterState.selectedProgram) {
       enrolledCourses = enrolledCourses.filter(course => 
         course.program_name?.toLowerCase() === filterState.selectedProgram?.program_name.toLowerCase()
@@ -318,17 +301,7 @@ export function useCourseData() {
       );
     }
     
-    if (filterState.searchQuery.trim()) {
-      const query = filterState.searchQuery.toLowerCase();
-      const searchFilter = (course: ExtendedCourse) => 
-        course.course_name.toLowerCase().includes(query) ||
-        course.program_name?.toLowerCase().includes(query) ||
-        course.teacher_name?.toLowerCase().includes(query);
-      
-      enrolledCourses = enrolledCourses.filter(searchFilter);
-      unenrolledCourses = unenrolledCourses.filter(searchFilter);
-    }
-    
+    // Return appropriate courses based on active tab
     if (activeTab === 'enrolled') {
       return enrolledCourses;
     }
@@ -346,8 +319,8 @@ export function useCourseData() {
   }, [
     activeTab,
     courseDiscoveryHook.data,
-    activeEnrollmentsHook.data,
-    inactiveEnrollmentsHook.data,
+    enrolledCoursesHook.data,
+    unenrolledCoursesHook.data,
     transformationContext.enrolledCourseIds,
     filterState
   ]);
@@ -369,43 +342,45 @@ export function useCourseData() {
     return createProgressBatch(enrollmentsHook.data || []);
   }, [enrollmentsHook.data]);
 
-  // Course counts for tabs
+  // Course counts for tabs - using API pagination totals
   const courseCounts = useMemo((): CourseCounts => {
-    // Count courses based on the current filter state (same as transformedCourses logic)
-    let enrolledCourses = transformEnrollmentBatch(activeEnrollmentsHook.data || []);
-    let unenrolledCourses = transformEnrollmentBatch(inactiveEnrollmentsHook.data || []);
+    // Get base counts from API pagination (already includes search query filtering)
+    const enrolledCount = enrolledCoursesHook.pagination?.total || 0;
+    const unenrolledCount = unenrolledCoursesHook.pagination?.total || 0;
     
-    // Apply the same filtering logic as transformedCourses
-    if (filterState.selectedProgram) {
-      enrolledCourses = enrolledCourses.filter(course => 
-        course.program_name?.toLowerCase() === filterState.selectedProgram?.program_name.toLowerCase()
-      );
-      unenrolledCourses = unenrolledCourses.filter(course => 
-        course.program_name?.toLowerCase() === filterState.selectedProgram?.program_name.toLowerCase()
-      );
-    }
+    // Apply client-side filters to get accurate filtered counts
+    let filteredEnrolledCount = enrolledCount;
+    let filteredUnenrolledCount = unenrolledCount;
     
-    if (filterState.selectedSpecialization) {
-      enrolledCourses = enrolledCourses.filter(course => 
-        course.specialization_id === filterState.selectedSpecialization?.specialization_id
-      );
-      unenrolledCourses = unenrolledCourses.filter(course => 
-        course.specialization_id === filterState.selectedSpecialization?.specialization_id
-      );
-    }
-    
-    if (filterState.searchQuery.trim()) {
-      const query = filterState.searchQuery.toLowerCase();
-      const searchFilter = (course: ExtendedCourse) => 
-        course.course_name.toLowerCase().includes(query) ||
-        course.program_name?.toLowerCase().includes(query) ||
-        course.teacher_name?.toLowerCase().includes(query);
+    // If we have program or specialization filters, we need to count filtered courses
+    if (filterState.selectedProgram || filterState.selectedSpecialization) {
+      // Transform and filter enrolled courses
+      let enrolledCourses = transformEnrollmentBatch(enrolledCoursesHook.data || []);
+      let unenrolledCourses = transformEnrollmentBatch(unenrolledCoursesHook.data || []);
       
-      enrolledCourses = enrolledCourses.filter(searchFilter);
-      unenrolledCourses = unenrolledCourses.filter(searchFilter);
+      if (filterState.selectedProgram) {
+        enrolledCourses = enrolledCourses.filter(course => 
+          course.program_name?.toLowerCase() === filterState.selectedProgram?.program_name.toLowerCase()
+        );
+        unenrolledCourses = unenrolledCourses.filter(course => 
+          course.program_name?.toLowerCase() === filterState.selectedProgram?.program_name.toLowerCase()
+        );
+      }
+      
+      if (filterState.selectedSpecialization) {
+        enrolledCourses = enrolledCourses.filter(course => 
+          course.specialization_id === filterState.selectedSpecialization?.specialization_id
+        );
+        unenrolledCourses = unenrolledCourses.filter(course => 
+          course.specialization_id === filterState.selectedSpecialization?.specialization_id
+        );
+      }
+      
+      filteredEnrolledCount = enrolledCourses.length;
+      filteredUnenrolledCount = unenrolledCourses.length;
     }
     
-    // Count filtered discovery courses (only courses not currently enrolled)
+    // Count discovery courses (exclude currently enrolled courses)
     let discoveredCourses = (courseDiscoveryHook.data || [])
       .filter(course => !transformationContext.enrolledCourseIds.has(course.course_id));
     
@@ -421,17 +396,17 @@ export function useCourseData() {
       });
     }
     
-    const enrolledCount = enrolledCourses.length;
-    const unenrolledCount = unenrolledCourses.length;
     const discoveryCount = discoveredCourses.length;
-    const totalCount = enrolledCount + unenrolledCount + discoveryCount;
+    const totalCount = filteredEnrolledCount + filteredUnenrolledCount + discoveryCount;
 
     console.debug('📊 Calculating course counts', {
-      enrolled: enrolledCount,
-      unenrolled: unenrolledCount,
+      enrolled: filteredEnrolledCount,
+      enrolledFromAPI: enrolledCount,
+      unenrolled: filteredUnenrolledCount,
+      unenrolledFromAPI: unenrolledCount,
       discovery: discoveryCount,
       total: totalCount,
-      enrolledCourseIds: Array.from(transformationContext.enrolledCourseIds),
+      hasFilters: !!(filterState.selectedProgram || filterState.selectedSpecialization),
       filterState: {
         program: filterState.selectedProgram?.program_name || 'none',
         specialization: filterState.selectedSpecialization?.specialization_name || 'none',
@@ -442,26 +417,29 @@ export function useCourseData() {
 
     return {
       all: totalCount,
-      enrolled: enrolledCount,
-      unenrolled: unenrolledCount,
+      enrolled: filteredEnrolledCount,
+      unenrolled: filteredUnenrolledCount,
     };
   }, [
-    activeEnrollmentsHook.data,
-    inactiveEnrollmentsHook.data,
+    enrolledCoursesHook.data,
+    enrolledCoursesHook.pagination,
+    unenrolledCoursesHook.data,
+    unenrolledCoursesHook.pagination,
     courseDiscoveryHook.data,
     transformationContext.enrolledCourseIds,
     filterState
   ]);
 
-  // Loading and error states
-  const isLoading = courseDiscoveryHook.loading || allEnrollmentsHook.loading;
-  const error = courseDiscoveryHook.error || allEnrollmentsHook.error;
+  // Loading and error states - combine both enrollment hooks and discovery
+  const isLoading = courseDiscoveryHook.loading || enrolledCoursesHook.loading || unenrolledCoursesHook.loading;
+  const error = courseDiscoveryHook.error || enrolledCoursesHook.error || unenrolledCoursesHook.error;
 
-  // Retry function
+  // Retry function - refetch all APIs
   const retry = useCallback(() => {
     courseDiscoveryHook.refetch();
-    allEnrollmentsHook.refetch();
-  }, [courseDiscoveryHook, allEnrollmentsHook]);
+    enrolledCoursesHook.refetch();
+    unenrolledCoursesHook.refetch();
+  }, [courseDiscoveryHook, enrolledCoursesHook, unenrolledCoursesHook]);
 
   // Debug logging (development only)
   useEffect(() => {
@@ -475,25 +453,22 @@ export function useCourseData() {
           selectedSpecialization: filterState.selectedSpecialization?.specialization_name || 'null',
           selectedCourseType: `"${filterState.selectedCourseType}"`
         },
-        // API data with enrollment statuses
+        // API data from new separate hooks
         discoveryData: courseDiscoveryHook.data,
         discoveryDataCount: courseDiscoveryHook.data?.length || 0,
-        allEnrollmentsData: allEnrollmentsHook.data?.map(e => ({
+        enrolledCoursesData: enrolledCoursesHook.data?.map(e => ({
           course_id: e.course_id,
-          enrollment_status: e.enrollment_status
+          course_name: e.course_name,
         })),
-        allEnrollmentsCount: allEnrollmentsHook.data?.length || 0,
-        activeEnrollmentsData: activeEnrollmentsHook.data?.map((e: any) => ({
+        enrolledCoursesCount: enrolledCoursesHook.data?.length || 0,
+        enrolledPaginationTotal: enrolledCoursesHook.pagination?.total || 0,
+        unenrolledCoursesData: unenrolledCoursesHook.data?.map(e => ({
           course_id: e.course_id,
-          enrollment_status: e.enrollment_status
+          course_name: e.course_name,
         })),
-        activeEnrollmentsCount: activeEnrollmentsHook.data?.length || 0,
-        inactiveEnrollmentsData: inactiveEnrollmentsHook.data?.map((e: any) => ({
-          course_id: e.course_id,
-          enrollment_status: e.enrollment_status
-        })),
-        inactiveEnrollmentsCount: inactiveEnrollmentsHook.data?.length || 0,
-        // Transformation context (only includes ACTIVE/COMPLETED courses)
+        unenrolledCoursesCount: unenrolledCoursesHook.data?.length || 0,
+        unenrolledPaginationTotal: unenrolledCoursesHook.pagination?.total || 0,
+        // Transformation context (only includes enrolled courses)
         enrolledCourseIds: Array.from(transformationContext.enrolledCourseIds),
         // Transformed data
         totalCourses: transformedCourses.length,
@@ -512,7 +487,7 @@ export function useCourseData() {
         hasError: !!error,
       });
     }
-  }, [activeTab, filterState, courseDiscoveryHook.data, allEnrollmentsHook.data, activeEnrollmentsHook.data, inactiveEnrollmentsHook.data, transformationContext, transformedCourses, filteredCourses, courseCounts, isLoading, error]);
+  }, [activeTab, filterState, courseDiscoveryHook.data, enrolledCoursesHook.data, enrolledCoursesHook.pagination, unenrolledCoursesHook.data, unenrolledCoursesHook.pagination, transformationContext, transformedCourses, filteredCourses, courseCounts, isLoading, error]);
 
   return {
     // Data
