@@ -1,0 +1,271 @@
+<div class="tenant-dashboard">
+  <!-- Standard Screen Toolbar -->
+  <div class="screen-toolbar">
+    <div class="toolbar-left">
+      <div class="tenant-search">
+        <i class="search-icon ic-search"></i>
+        <input 
+          type="text" 
+          class="search-input" 
+          placeholder="Search tenants..." 
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange($event)">
+      </div>
+    </div>
+    
+    <div class="toolbar-center">
+      <span>Showing</span>
+      <select 
+        class="showing-select" 
+        [(ngModel)]="itemsPerPage" 
+        (ngModelChange)="onItemsPerPageChanged($event)">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+      </select>
+      <span>entries</span>
+    </div>
+    
+    <div class="toolbar-right">
+      <div class="filter-container">
+        <button class="filter-btn" (click)="toggleFilterPopup()">
+          <i class="ic-filter"></i>
+          Filter
+        </button>
+        <!-- Filter Popup - Moved inside container for better positioning -->
+        <div class="filter-popup" [class.active]="showFilterPopup">
+          <div class="filter-popup-header">
+            <h3>Filters</h3>
+          </div>
+          <div class="filter-popup-body">
+            <div class="filter-group">
+              <label class="filter-label">Status</label>
+              <div class="filter-options">
+                <button class="filter-option-btn" (click)="resetStatusFilter()">Reset</button>
+              </div>
+              <select class="filter-select" [(ngModel)]="filters.status">
+                <option value="">Select Status</option>
+                <option value="Active">Active</option>
+                <option value="Pending">Pending</option>
+                <option value="Inactive">Inactive</option>
+                <option value="In Progress">In Progress</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">Start Date</label>
+              <div class="filter-options">
+                <button class="filter-option-btn" (click)="resetStartDateFilter()">Reset</button>
+              </div>
+              <div class="date-input-container">
+                <input type="date" class="filter-date-input" [(ngModel)]="filters.startDate" placeholder="Select start date">
+                <i class="icon-calendar date-icon"></i>
+              </div>
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">End Date</label>
+              <div class="filter-options">
+                <button class="filter-option-btn" (click)="resetEndDateFilter()">Reset</button>
+              </div>
+              <div class="date-input-container">
+                <input type="date" class="filter-date-input" [(ngModel)]="filters.endDate" placeholder="Select end date">
+                <i class="icon-calendar date-icon"></i>
+              </div>
+            </div>
+          </div>
+          <div class="filter-popup-footer">
+            <button class="btn-secondary" (click)="resetAllFilters()">Reset All</button>
+            <button class="btn-primary" (click)="applyFilters()">Apply</button>
+          </div>
+        </div>
+      </div>
+      <button class="add-btn" (click)="openAddTenantOffcanvas()">
+        <i class="ic-plus"></i>
+        Add Tenant
+      </button>
+    </div>
+  </div>
+
+  <!-- Bulk Actions Bar -->
+  @if (selectedTenants.length > 0) {
+    <div class="bulk-actions-bar mt-3">
+      <div class="bulk-info">
+        <span class="selection-count">{{selectedTenants.length}} items selected</span>
+        <a href="javascript:;" class="select-all-link" (click)="selectAll()">
+          Select all {{totalTenants}}
+        </a>
+      </div>
+      <div class="bulk-actions">
+        <button class="btn-success btn-sm" (click)="bulkActivate()">
+          <i class="ic-1"></i>
+          Activate
+        </button>
+        <button class="btn-danger btn-sm" (click)="bulkDeactivate()">
+          <i class="ic-2"></i>
+          Deactivate
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Main Content -->
+  <div class="screen-content mt-5">
+    <div class="data-container">
+      <div class="data-table-wrapper">
+        <div class="table-content">
+          @if (isLoadingTenants) {
+            <div class="table-state loading-state">
+              Loading tenants...
+            </div>
+          } @else if (tenantLoadError) {
+            <div class="table-state error-state">
+              {{ tenantLoadError }}
+            </div>
+          } @else if (paginatedTenants.length === 0) {
+            <div class="table-state empty-state">
+              No tenants found.
+            </div>
+          } @else {
+            <table class="tenant-table">
+              <thead>
+                <tr>
+                  <th class="checkbox-col">
+                    <input 
+                      type="checkbox" 
+                      class="table-checkbox"
+                      [checked]="isAllSelected()"
+                      (change)="toggleAllSelection()">
+                  </th>
+                  <th class="logo-col">
+                    Logo <i class="ic-13"></i>
+                  </th>
+                  <th class="name-col">
+                    Tenant Name <i class="ic-13"></i>
+                  </th>
+                  <!-- <th class="clients-col">
+                    Clients <i class="ic-13"></i>
+                  </th> -->
+                  <th class="phone-col">
+                    Phone <i class="ic-13"></i>
+                  </th>
+                  <th class="email-col">
+                    Email <i class="ic-13"></i>
+                  </th>
+                  <th class="created-col">
+                    Created <i class="ic-13"></i>
+                  </th>
+                  <th class="updated-col">
+                    Updated <i class="ic-13"></i>
+                  </th>
+                  <th class="status-col">
+                    Status
+                  </th>
+                  <th class="actions-col">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (tenant of paginatedTenants; track trackByTenantId($index, tenant)) {
+                  <tr>
+                    <td class="checkbox-col">
+                      <input 
+                        type="checkbox" 
+                        class="table-checkbox"
+                        [checked]="isSelected(tenant.id)"
+                        (change)="toggleSelection(tenant.id)">
+                    </td>
+                    <td class="logo-col">
+                      <div class="tenant-logo" [ngClass]="tenant.logoClass">
+                        {{ tenant.logoInitial }}
+                      </div>
+                    </td>
+                    <td class="name-col">
+                      <div class="tenant-name">{{ tenant.name }}</div>
+                    </td>
+                    <!-- <td class="clients-col">{{ tenant.clientsCount || 0 }}</td> -->
+                    <td class="phone-col">{{ tenant.phone }}</td>
+                    <td class="email-col">
+                      <div class="tenant-email">{{ tenant.email }}</div>
+                    </td>
+                    <td class="created-col">{{ tenant.createdAt | date:'dd-MM-yyyy' }}</td>
+                    <td class="updated-col">{{ tenant.updatedAt | date:'dd-MM-yyyy' }}</td>
+                    <td class="status-col">
+                      <span class="tenant-status" [ngClass]="tenant.status.toLowerCase()">
+                        {{ tenant.status }}
+                      </span>
+                    </td>
+                    <td class="actions-col">
+                      <div class="crud-menu-container">
+                        <button 
+                          class="crud-menu-trigger" 
+                          [class.active]="activeMenuId === tenant.id"
+                          (click)="toggleMenu(tenant.id, $event)">
+                          ⋮
+                        </button>
+                        
+                        <!-- Menu dropdown with simplified structure -->
+                        <ul 
+                          class="crud-menu-dropdown" 
+                          [class.show]="activeMenuId === tenant.id"
+                          [attr.data-menu-id]="tenant.id">
+                          <li (click)="onViewTenant(tenant.id)">
+                            <i class="ic-6"></i>
+                            <span>View</span>
+                          </li>
+                          <li (click)="onEditTenant(tenant.id)">
+                            <i class="ic-7"></i>
+                            <span>Edit</span>
+                          </li>
+                          <li class="danger" (click)="onDeleteTenant(tenant.id)">
+                            <i class="ic-8"></i>
+                            <span>Delete</span>
+                          </li>
+                          <li (click)="onDuplicateTenant(tenant.id)">
+                            <i class="ic-9"></i>
+                            <span>Duplicate</span>
+                          </li>
+                          <li (click)="onArchiveTenant(tenant.id)">
+                            <i class="ic-10"></i>
+                            <span>Archive</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination Footer -->
+  
+    <app-paginator
+      [currentPage]="currentPage"
+      [totalItems]="totalTenants"
+      [itemsPerPage]="itemsPerPage"
+      [maxVisiblePages]="10"
+      (pageChange)="onPageChange($event)">
+    </app-paginator>
+  
+</div>
+
+<!-- Add Tenant Off-Canvas -->
+<app-off-canvas-wrapper
+  [isOpen]="showAddTenantOffcanvas"
+  [title]="'Add Tenant'"
+  [saveButtonText]="'Save'"
+  [showSaveButton]="true"
+  [canSave]="canSaveTenant"
+  [isLoading]="false"
+  (onClose)="closeAddTenantOffcanvas()"
+  (onSubmit)="saveTenant()">
+  <app-basic-tenant-form 
+    [formData]="newTenantData"
+    (formDataChange)="onTenantFormDataChange($event)"
+    (validityChange)="onTenantFormValidityChange($event)">
+  </app-basic-tenant-form>
+</app-off-canvas-wrapper>
