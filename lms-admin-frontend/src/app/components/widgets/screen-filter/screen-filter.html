@@ -2,7 +2,7 @@
 <div class="toolbar">
     <div class="toolbar-left">
         <div class="search-container">
-            <i class="ic-10 search-icon"></i>
+            <i class="fas fa-search search-icon"></i>
             <input 
                 type="text" 
                 class="search-input" 
@@ -21,8 +21,8 @@
                 <option value="50">50</option>
             </select>
         </div>
-        <button class="filter-btn" (click)="toggleFilterPopup()">
-            <i class="ic-19"></i>
+        <button class="filter-btn" (click)="toggleFilterPopup()" title="Filters">
+            <i class="fas fa-filter"></i>
         </button>
         <button *ngIf="showAddButton" class="add-btn" (click)="onAddClick()">{{ addButtonText }}</button>
         
@@ -31,8 +31,8 @@
             <div class="filter-popup-content">
                 <div class="filter-popup-header">
                     <h3>Filters</h3>
-                    <button class="filter-close-btn" (click)="toggleFilterPopup()">
-                        <i class="ic-13"></i>
+                    <button class="filter-close-btn" (click)="toggleFilterPopup()" title="Close">
+                        <i class="fas fa-times"></i>
                     </button>
                 </div>
                 <div class="filter-popup-body">
@@ -60,7 +60,7 @@
                                 class="filter-date-input" 
                                 [(ngModel)]="filters['startDate']"
                                 (ngModelChange)="onFilterChange()">
-                            <i class="ic-10 date-icon"></i>
+                            <i class="fas fa-calendar-alt date-icon"></i>
                         </div>
                     </div>
                     <div class="filter-group" *ngIf="filters.hasOwnProperty('endDate')">
@@ -71,7 +71,7 @@
                                 class="filter-date-input" 
                                 [(ngModel)]="filters['endDate']"
                                 (ngModelChange)="onFilterChange()">
-                            <i class="ic-10 date-icon"></i>
+                            <i class="fas fa-calendar-alt date-icon"></i>
                         </div>
                     </div>
                 </div>

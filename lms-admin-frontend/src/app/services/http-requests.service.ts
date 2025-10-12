@@ -158,11 +158,12 @@ export class HttpRequests {
 
   // ============= TEACHER APIs =============
   
-  async getAllTeachers(): Promise<ApiResponse<any>> {
-    return this.apiMethods.get(`${this.baseUrl}/teachers`);
+  async getAllTeachers(params?: any): Promise<ApiResponse<any>> {
+    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+    return this.apiMethods.get(`${this.baseUrl}/teachers${queryString}`);
   }
 
-  async getTeacherById(id: string): Promise<ApiResponse<any>> {
+  async getTeacherById(id: string | number): Promise<ApiResponse<any>> {
     return this.apiMethods.get(`${this.baseUrl}/teachers/${id}`);
   }
 
@@ -170,12 +171,16 @@ export class HttpRequests {
     return this.apiMethods.post(`${this.baseUrl}/teachers`, teacherData);
   }
 
-  async updateTeacher(id: string, teacherData: any): Promise<ApiResponse<any>> {
-    return this.apiMethods.put(`${this.baseUrl}/teachers/${id}`, teacherData);
+  async updateTeacher(id: string | number, teacherData: any): Promise<ApiResponse<any>> {
+    return this.apiMethods.patch(`${this.baseUrl}/teachers/${id}`, teacherData);
   }
 
-  async deleteTeacher(id: string): Promise<ApiResponse<any>> {
+  async deleteTeacher(id: string | number): Promise<ApiResponse<any>> {
     return this.apiMethods.delete(`${this.baseUrl}/teachers/${id}`);
+  }
+
+  async bulkDeleteTeachers(teacherIds: number[]): Promise<ApiResponse<any>> {
+    return this.apiMethods.post(`${this.baseUrl}/teachers/bulk-delete`, { teacherIds });
   }
 
   // ============= STUDENT APIs =============
@@ -199,6 +204,29 @@ export class HttpRequests {
 
   async deleteStudent(id: string | number): Promise<ApiResponse<any>> {
     return this.apiMethods.delete(`${this.baseUrl}/students/${id}`);
+  }
+
+  // ============= INSTITUTE APIs =============
+  
+  async getAllInstitutes(params?: any): Promise<ApiResponse<any>> {
+    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+    return this.apiMethods.get(`${this.baseUrl}/institutes${queryString}`);
+  }
+
+  async getInstituteById(id: string | number): Promise<ApiResponse<any>> {
+    return this.apiMethods.get(`${this.baseUrl}/institutes/${id}`);
+  }
+
+  async createInstitute(instituteData: any): Promise<ApiResponse<any>> {
+    return this.apiMethods.post(`${this.baseUrl}/institutes`, instituteData);
+  }
+
+  async updateInstitute(id: string | number, instituteData: any): Promise<ApiResponse<any>> {
+    return this.apiMethods.patch(`${this.baseUrl}/institutes/${id}`, instituteData);
+  }
+
+  async deleteInstitute(id: string | number): Promise<ApiResponse<any>> {
+    return this.apiMethods.delete(`${this.baseUrl}/institutes/${id}`);
   }
 
   // ============= GEOGRAPHY APIs =============

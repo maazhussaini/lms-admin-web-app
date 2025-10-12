@@ -5,15 +5,15 @@
     </div>
     <div class="header-right">
         <div class="header-actions">
-            <button class="notification-btn" (click)="toggleNotifications()">
-                <i class="ic-2"></i>
+            <button class="notification-btn" (click)="toggleNotifications()" title="Notifications">
+                <i class="fas fa-bell"></i>
             </button>
             <div class="user-profile" (click)="toggleUserMenu()">
                 <div class="user-avatar-placeholder">
                     {{ getUserInitials() }}
                 </div>
                 <span class="user-name">{{ currentUser?.full_name || 'User' }}</span>
-                <i class="ic-20"></i>
+                <i class="fas fa-chevron-down"></i>
             </div>
         </div>
     </div>

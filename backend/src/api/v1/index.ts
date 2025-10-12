@@ -18,7 +18,9 @@ import tenantRoutes from './routes/tenant.routes';
 import clientRoutes from './routes/client.routes';
 import studentRoutes from './routes/student.routes';
 import studentProfileRoutes from './routes/student-profile.routes';
+import teacherRoutes from './routes/teacher.routes';
 import videoRoutes from './routes/video.routes';
+import instituteRoutes from './routes/institute.routes';
 
 // Create router
 const router = Router();
@@ -48,6 +50,8 @@ router.get('/', (_req, res) => {
         '/api/v1/video',
         '/api/v1/students',
         '/api/v1/student',
+        '/api/v1/teachers',
+        '/api/v1/institutes',
       ]
     },
     timestamp: new Date().toISOString(),
@@ -68,5 +72,7 @@ router.use('/', moduleTopicRoutes);
 router.use('/video', videoRoutes);
 router.use('/students', studentRoutes);
 router.use('/student', studentProfileRoutes);
+router.use('/teachers', teacherRoutes);
+router.use('/institutes', instituteRoutes);
 
 export default router;

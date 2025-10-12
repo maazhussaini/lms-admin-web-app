@@ -1,0 +1,256 @@
+<div class="screen-page teacher-management-page">
+  <div class="page-container">
+    
+    <!-- Screen Toolbar -->
+    <div class="screen-toolbar">
+      <div class="left-section">
+        <div class="search-box-container">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input 
+            type="text" 
+            class="search-input" 
+            placeholder="Teachers ko search karen..."
+            [(ngModel)]="searchTerm"
+            (input)="onSearch()"
+          />
+        </div>
+
+        <div class="entries-selector">
+          <span>Dikhaye</span>
+          <select 
+            class="entries-dropdown"
+            [(ngModel)]="itemsPerPage"
+            (ngModelChange)="onItemsPerPageChanged($event)"
+          >
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+          <span>entries</span>
+        </div>
+      </div>
+
+      <div class="right-section">
+        <button 
+          class="filter-btn"
+          (click)="toggleFilterPopup()"
+          [class.active]="showFilterPopup"
+        >
+          <i class="fa-solid fa-filter"></i>
+          Filters
+        </button>
+
+        <button 
+          class="add-btn"
+          (click)="openAddTeacherOffcanvas()"
+        >
+          <i class="fa-solid fa-plus"></i>
+          Add Teacher
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter Popup -->
+    <div class="filter-popup" *ngIf="showFilterPopup">
+      <div class="filter-content">
+        <div class="filter-header">
+          <h3>Filters</h3>
+          <button class="close-btn" (click)="toggleFilterPopup()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="filter-body">
+          <!-- Gender Filter -->
+          <div class="filter-group">
+            <label>Gender</label>
+            <select [(ngModel)]="filters.gender" class="filter-select">
+              <option value="">All</option>
+              <option value="MALE">Male</option>
+              <option value="FEMALE">Female</option>
+              <option value="OTHER">Other</option>
+            </select>
+            <button 
+              class="reset-filter-btn" 
+              *ngIf="filters.gender"
+              (click)="resetGenderFilter()"
+            >
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <!-- Country Filter -->
+          <div class="filter-group">
+            <label>Country</label>
+            <select [(ngModel)]="filters.countryId" class="filter-select">
+              <option [value]="null">All Countries</option>
+              <option 
+                *ngFor="let country of countries" 
+                [value]="country.country_id"
+              >
+                {{ country.country_name }}
+              </option>
+            </select>
+            <button 
+              class="reset-filter-btn" 
+              *ngIf="filters.countryId"
+              (click)="resetCountryFilter()"
+            >
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-footer">
+          <button class="reset-all-btn" (click)="resetAllFilters()">
+            Reset All
+          </button>
+          <button class="apply-btn" (click)="applyFilters()">
+            Apply Filters
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk Actions Bar -->
+    <div class="bulk-actions-bar" *ngIf="selectedTeachers.length > 0">
+      <div class="selection-info">
+        <span>{{ selectedTeachers.length }} teacher(s) selected</span>
+      </div>
+      <div class="bulk-actions">
+        <button class="bulk-action-btn" (click)="selectAll()">
+          <i class="fa-solid fa-check-double"></i>
+          Select All
+        </button>
+        <button class="bulk-action-btn delete" (click)="bulkDelete()">
+          <i class="fa-solid fa-trash"></i>
+          Delete Selected
+        </button>
+      </div>
+    </div>
+
+    <!-- Teachers Table -->
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="checkbox-col">
+              <input 
+                type="checkbox"
+                [checked]="selectedTeachers.length === allTeachers.length && allTeachers.length > 0"
+                (change)="selectedTeachers.length === allTeachers.length ? selectedTeachers = [] : selectAll()"
+              />
+            </th>
+            <th>ID</th>
+            <th>Full Name</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Qualification</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="isLoadingTeachers">
+            <td colspan="9" class="text-center">
+              <i class="fa-solid fa-spinner fa-spin"></i>
+              Loading teachers...
+            </td>
+          </tr>
+          <tr *ngIf="!isLoadingTeachers && teacherLoadError">
+            <td colspan="9" class="text-center error-message">
+              {{ teacherLoadError }}
+            </td>
+          </tr>
+          <tr *ngIf="!isLoadingTeachers && !teacherLoadError && allTeachers.length === 0">
+            <td colspan="9" class="text-center">
+              Koi teachers nahi milein
+            </td>
+          </tr>
+          <tr *ngFor="let teacher of paginatedTeachers">
+            <td class="checkbox-col">
+              <input 
+                type="checkbox"
+                [checked]="selectedTeachers.includes(teacher.teacher_id)"
+                (change)="toggleTeacherSelection(teacher.teacher_id)"
+              />
+            </td>
+            <td>{{ teacher.teacher_id }}</td>
+            <td>{{ teacher.full_name }}</td>
+            <td>{{ teacher.username }}</td>
+            <td>{{ teacher.primary_email || 'N/A' }}</td>
+            <td>{{ teacher.primary_phone || 'N/A' }}</td>
+            <td>{{ teacher.teacher_qualification || 'N/A' }}</td>
+            <td>
+              <span class="status-badge" [class]="getStatusClass(teacher)">
+                {{ getStatusLabel(teacher) }}
+              </span>
+            </td>
+            <td class="actions-col">
+              <div class="actions-menu-container">
+                <button 
+                  class="action-menu-btn"
+                  (click)="toggleMenu(teacher.teacher_id, $event)"
+                >
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div 
+                  class="action-menu-dropdown"
+                  *ngIf="activeMenuId === teacher.teacher_id"
+                >
+                  <button (click)="onViewTeacher(teacher)">
+                    <i class="fa-solid fa-eye"></i>
+                    View
+                  </button>
+                  <button (click)="onEditTeacher(teacher)">
+                    <i class="fa-solid fa-pen"></i>
+                    Edit
+                  </button>
+                  <button (click)="onDeleteTeacher(teacher)" class="delete">
+                    <i class="fa-solid fa-trash"></i>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <app-paginator
+      [currentPage]="currentPage"
+      [totalItems]="totalTeachers"
+      [itemsPerPage]="itemsPerPage"
+      (pageChange)="onPageChange($event)"
+    ></app-paginator>
+
+  </div>
+</div>
+
+<!-- Off-Canvas Form -->
+<app-off-canvas-wrapper
+  [isOpen]="showAddTeacherOffcanvas"
+  [title]="isEditMode ? 'Edit Teacher' : (isViewMode ? 'Teacher Details' : 'Add Teacher')"
+  (close)="closeAddTeacherOffcanvas()"
+>
+  <app-teacher-form
+    [isEditMode]="isEditMode"
+    [isViewMode]="isViewMode"
+    [teacherData]="selectedTeacher"
+    [countries]="countries"
+    [states]="states"
+    [cities]="cities"
+    [isLoadingCountries]="isLoadingCountries"
+    [isLoadingStates]="isLoadingStates"
+    [isLoadingCities]="isLoadingCities"
+    (save)="onTeacherFormSave($event)"
+    (cancel)="onTeacherFormCancel()"
+    (validityChange)="onTeacherFormValidityChange($event)"
+    (countryChange)="loadStatesByCountry($event)"
+    (stateChange)="loadCitiesByState($event)"
+  ></app-teacher-form>
+</app-off-canvas-wrapper>

@@ -6,62 +6,97 @@
         </div>
     </div>
     <ul class="sidebar-menu">
+        <!-- Dashboard -->
         <li class="menu-item" 
             [class.active]="activeMenuItem === 'dashboard'"
             (click)="setActiveMenuItem('dashboard')">
-            <a href="#" class="menu-link">
-                <i class="ic-6"></i>
+            <a routerLink="/private/dashboard" class="menu-link" title="Dashboard">
+                <i class="fas fa-tachometer-alt"></i>
             </a>
         </li>
-        <li class="menu-item"
-            [class.active]="activeMenuItem === 'users'"
-            (click)="setActiveMenuItem('users')">
-            <a href="#" class="menu-link">
-                <i class="ic-16"></i>
-            </a>
-        </li>
+
+        <!-- Tenants (SUPER_ADMIN & ADMIN only) -->
         <li class="menu-item"
             *ngIf="canViewTenants()"
             [class.active]="activeMenuItem === 'tenants'"
             (click)="setActiveMenuItem('tenants')">
-            <a routerLink="/private/reports/tenants" class="menu-link">
-                <i class="ic-17"></i>
+            <a routerLink="/private/reports/tenants" class="menu-link" title="Tenants">
+                <i class="fas fa-building"></i>
             </a>
         </li>
+
+        <!-- Institutes -->
         <li class="menu-item"
-            [class.active]="activeMenuItem === 'courses'"
-            (click)="setActiveMenuItem('courses')">
-            <a href="#" class="menu-link">
-                <i class="ic-7"></i>
+            *ngIf="canViewInstitutes()"
+            [class.active]="activeMenuItem === 'institutes'"
+            (click)="setActiveMenuItem('institutes')">
+            <a routerLink="/private/reports/institutes" class="menu-link" title="Institutes">
+                <i class="fas fa-university"></i>
             </a>
         </li>
+
+        <!-- Students (SUPER_ADMIN only) -->
         <li class="menu-item"
             *ngIf="canViewStudents()"
             [class.active]="activeMenuItem === 'students'"
             (click)="setActiveMenuItem('students')">
-            <a routerLink="/private/reports/students" class="menu-link">
-                <i class="ic-3"></i>
+            <a routerLink="/private/reports/students" class="menu-link" title="Students">
+                <i class="fas fa-user-graduate"></i>
             </a>
         </li>
+
+        <!-- Teachers (SUPER_ADMIN & TENANT_ADMIN) -->
         <li class="menu-item"
-            [class.active]="activeMenuItem === 'analytics'"
-            (click)="setActiveMenuItem('analytics')">
-            <a href="#" class="menu-link">
-                <i class="ic-9"></i>
+            *ngIf="canViewTeachers()"
+            [class.active]="activeMenuItem === 'teachers'"
+            (click)="setActiveMenuItem('teachers')">
+            <a routerLink="/private/reports/teachers" class="menu-link" title="Teachers">
+                <i class="fas fa-chalkboard-teacher"></i>
             </a>
         </li>
+
+        <!-- Courses -->
+        <li class="menu-item"
+            [class.active]="activeMenuItem === 'courses'"
+            (click)="setActiveMenuItem('courses')">
+            <a routerLink="/private/courses" class="menu-link" title="Courses">
+                <i class="fas fa-book"></i>
+            </a>
+        </li>
+
+        <!-- Assignments -->
         <li class="menu-item"
             [class.active]="activeMenuItem === 'assignments'"
             (click)="setActiveMenuItem('assignments')">
-            <a href="#" class="menu-link">
-                <i class="ic-12"></i>
+            <a routerLink="/private/assignments" class="menu-link" title="Assignments">
+                <i class="fas fa-tasks"></i>
             </a>
         </li>
+
+        <!-- Analytics -->
+        <li class="menu-item"
+            [class.active]="activeMenuItem === 'analytics'"
+            (click)="setActiveMenuItem('analytics')">
+            <a routerLink="/private/analytics" class="menu-link" title="Analytics">
+                <i class="fas fa-chart-line"></i>
+            </a>
+        </li>
+
+        <!-- Users -->
+        <li class="menu-item"
+            [class.active]="activeMenuItem === 'users'"
+            (click)="setActiveMenuItem('users')">
+            <a routerLink="/private/users" class="menu-link" title="Users">
+                <i class="fas fa-users"></i>
+            </a>
+        </li>
+
+        <!-- Settings -->
         <li class="menu-item"
             [class.active]="activeMenuItem === 'settings'"
             (click)="setActiveMenuItem('settings')">
-            <a href="#" class="menu-link">
-                <i class="ic-8"></i>
+            <a routerLink="/private/settings" class="menu-link" title="Settings">
+                <i class="fas fa-cog"></i>
             </a>
         </li>
     </ul>

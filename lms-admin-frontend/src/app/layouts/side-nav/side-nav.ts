@@ -35,4 +35,8 @@ export class SideNav implements OnInit {
   canViewStudents(): boolean {
     return this.currentUserRole === 'SUPER_ADMIN';
   }
+
+  canViewTeachers(): boolean {
+    return this.currentUserRole === 'SUPER_ADMIN' || this.currentUserRole === 'TENANT_ADMIN';
+  }
 }

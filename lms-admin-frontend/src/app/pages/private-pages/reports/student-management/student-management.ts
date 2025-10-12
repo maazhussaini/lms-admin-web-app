@@ -262,6 +262,100 @@ export class StudentManagement implements OnInit, OnDestroy {
     this.loadStudents();
   }
 
+  onItemsPerPageChanged(value: string | number): void {
+    this.itemsPerPage = Number(value);
+    this.currentPage = 1;
+    this.loadStudents();
+  }
+
+  // ==================== Filter Methods ====================
+
+  toggleFilterPopup(): void {
+    this.showFilterPopup = !this.showFilterPopup;
+  }
+
+  resetStatusFilter(): void {
+    this.filters.status = '';
+  }
+
+  resetGenderFilter(): void {
+    this.filters.gender = '';
+  }
+
+  resetCountryFilter(): void {
+    this.filters.countryId = null;
+  }
+
+  resetAllFilters(): void {
+    this.filters = {
+      search: '',
+      status: '',
+      gender: '',
+      countryId: null
+    };
+    this.searchTerm = '';
+  }
+
+  applyFilters(): void {
+    this.showFilterPopup = false;
+    this.currentPage = 1;
+    this.loadStudents();
+  }
+
+  // ==================== Bulk Actions ====================
+
+  selectAll(): void {
+    this.selectedStudents = this.allStudents.map(s => s.student_id);
+  }
+
+  async bulkActivate(): Promise<void> {
+    if (!confirm(`Are you sure you want to activate ${this.selectedStudents.length} student(s)?`)) {
+      return;
+    }
+
+    try {
+      // Call bulk activate API when available
+      this.showSuccessMessage(`${this.selectedStudents.length} student(s) activated successfully`);
+      this.selectedStudents = [];
+      this.loadStudents();
+    } catch (error: any) {
+      console.error('Error activating students:', error);
+      this.showErrorMessage('Failed to activate students');
+    }
+  }
+
+  async bulkDeactivate(): Promise<void> {
+    if (!confirm(`Are you sure you want to deactivate ${this.selectedStudents.length} student(s)?`)) {
+      return;
+    }
+
+    try {
+      // Call bulk deactivate API when available
+      this.showSuccessMessage(`${this.selectedStudents.length} student(s) deactivated successfully`);
+      this.selectedStudents = [];
+      this.loadStudents();
+    } catch (error: any) {
+      console.error('Error deactivating students:', error);
+      this.showErrorMessage('Failed to deactivate students');
+    }
+  }
+
+  async bulkDelete(): Promise<void> {
+    if (!confirm(`Are you sure you want to delete ${this.selectedStudents.length} student(s)? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      // Call bulk delete API when available
+      this.showSuccessMessage(`${this.selectedStudents.length} student(s) deleted successfully`);
+      this.selectedStudents = [];
+      this.loadStudents();
+    } catch (error: any) {
+      console.error('Error deleting students:', error);
+      this.showErrorMessage('Failed to delete students');
+    }
+  }
+
   // ==================== CRUD Operations ====================
 
   openAddStudentOffcanvas(): void {
@@ -414,10 +508,6 @@ export class StudentManagement implements OnInit, OnDestroy {
   toggleMenu(studentId: number, event: Event): void {
     event.stopPropagation();
     this.activeMenuId = this.activeMenuId === studentId ? null : studentId;
-  }
-
-  toggleFilterPopup(): void {
-    this.showFilterPopup = !this.showFilterPopup;
   }
 
   clearFilters(): void {

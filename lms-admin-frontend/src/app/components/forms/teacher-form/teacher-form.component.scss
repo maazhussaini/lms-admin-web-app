@@ -1,0 +1,123 @@
+/* ===== TEACHER FORM - USING TENANT DESIGN SYSTEM ===== */
+
+.teacher-form-container {
+  padding: 20px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+
+  .teacher-form {
+    .form-section {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #F9FAFB;
+      border-radius: 12px;
+
+      .section-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #8B5CF6;
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+
+        .form-label {
+          display: block;
+          font-size: 13px;
+          font-weight: 500;
+          color: #374151;
+          margin-bottom: 8px;
+        }
+
+        .form-input {
+          width: 100%;
+          padding: 10px 12px;
+          border: 1px solid #E5E7EB;
+          border-radius: 8px;
+          background: white;
+          font-size: 14px;
+          color: #374151;
+          transition: all 0.2s ease;
+
+          &:focus {
+            outline: none;
+            border-color: #8B5CF6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+          }
+
+          &:disabled {
+            background: #F3F4F6;
+            color: #9CA3AF;
+            cursor: not-allowed;
+          }
+
+          &::placeholder {
+            color: #9CA3AF;
+          }
+        }
+
+        select.form-input {
+          cursor: pointer;
+        }
+
+        textarea.form-input {
+          resize: vertical;
+          min-height: 80px;
+        }
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      padding-top: 20px;
+      border-top: 1px solid #E5E7EB;
+      margin-top: 20px;
+
+      .btn {
+        padding: 10px 24px;
+        border-radius: 8px;
+        border: none;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &.btn-cancel, &.btn-close {
+          background: white;
+          border: 1px solid #E5E7EB;
+          color: #374151;
+
+          &:hover {
+            background: #F9FAFB;
+          }
+        }
+
+        &.btn-save {
+          background: #8B5CF6;
+          color: white;
+
+          &:hover {
+            background: #7C3AED;
+          }
+
+          &:disabled {
+            background: #D1D5DB;
+            cursor: not-allowed;
+          }
+        }
+      }
+    }
+  }
+}

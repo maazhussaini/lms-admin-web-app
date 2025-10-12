@@ -95,12 +95,12 @@
         </a>
       </div>
       <div class="bulk-actions">
-        <button class="btn-success btn-sm" (click)="bulkActivate()">
-          <i class="ic-1"></i>
+        <button class="btn-success btn-sm" (click)="bulkActivate()" title="Activate Selected">
+          <i class="fas fa-check-circle"></i>
           Activate
         </button>
-        <button class="btn-danger btn-sm" (click)="bulkDeactivate()">
-          <i class="ic-2"></i>
+        <button class="btn-danger btn-sm" (click)="bulkDeactivate()" title="Deactivate Selected">
+          <i class="fas fa-times-circle"></i>
           Deactivate
         </button>
       </div>
@@ -136,25 +136,25 @@
                       (change)="toggleAllSelection()">
                   </th>
                   <th class="logo-col">
-                    Logo <i class="ic-13"></i>
+                    Logo <i class="fas fa-sort"></i>
                   </th>
                   <th class="name-col">
-                    Tenant Name <i class="ic-13"></i>
+                    Tenant Name <i class="fas fa-sort"></i>
                   </th>
                   <!-- <th class="clients-col">
-                    Clients <i class="ic-13"></i>
+                    Clients <i class="fas fa-sort"></i>
                   </th> -->
                   <th class="phone-col">
-                    Phone <i class="ic-13"></i>
+                    Phone <i class="fas fa-sort"></i>
                   </th>
                   <th class="email-col">
-                    Email <i class="ic-13"></i>
+                    Email <i class="fas fa-sort"></i>
                   </th>
                   <th class="created-col">
-                    Created <i class="ic-13"></i>
+                    Created <i class="fas fa-sort"></i>
                   </th>
                   <th class="updated-col">
-                    Updated <i class="ic-13"></i>
+                    Updated <i class="fas fa-sort"></i>
                   </th>
                   <th class="status-col">
                     Status
@@ -209,15 +209,15 @@
                           [class.show]="activeMenuId === tenant.id"
                           [attr.data-menu-id]="tenant.id">
                           <li (click)="onViewTenant(tenant.id)">
-                            <i class="ic-6"></i>
+                            <i class="fas fa-eye"></i>
                             <span>View</span>
                           </li>
                           <li (click)="onEditTenant(tenant.id)">
-                            <i class="ic-7"></i>
+                            <i class="fas fa-edit"></i>
                             <span>Edit</span>
                           </li>
                           <li class="danger" (click)="onDeleteTenant(tenant.id)">
-                            <i class="ic-8"></i>
+                            <i class="fas fa-trash-alt"></i>
                             <span>Delete</span>
                           </li>
                         </ul>

@@ -1,42 +1,119 @@
 <div class="student-management-container">
-  <!-- Header -->
-  <div class="page-header">
-    <div class="header-left">
-      <h1 class="page-title">Student Management</h1>
-      <p class="page-subtitle">Manage and track all students in the system</p>
+  <!-- Standard Screen Toolbar -->
+  <div class="screen-toolbar">
+    <div class="toolbar-left">
+      <div class="student-search">
+        <i class="search-icon ic-search"></i>
+        <input 
+          type="text" 
+          class="search-input" 
+          placeholder="Search students..." 
+          [(ngModel)]="searchTerm"
+          (input)="onSearch()">
+      </div>
     </div>
-    <button class="btn btn-primary" (click)="openAddStudentOffcanvas()">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M10 5V15M5 10H15" stroke="white" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      Add Student
-    </button>
-  </div>
-
-  <!-- Search and Filters -->
-  <div class="controls-bar">
-    <div class="search-container">
-      <svg class="search-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16zM18 18l-4-4" stroke="currentColor" stroke-width="2"/>
-      </svg>
-      <input
-        type="text"
-        class="search-input"
-        placeholder="Search here"
-        [(ngModel)]="searchTerm"
-        (input)="onSearch()"
-      />
+    
+    <div class="toolbar-center">
+      <span>Showing</span>
+      <select 
+        class="showing-select" 
+        [(ngModel)]="itemsPerPage" 
+        (ngModelChange)="onItemsPerPageChanged($event)">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+      </select>
+      <span>entries</span>
     </div>
-
-    <div class="action-buttons">
-      <span class="showing-text">Showing {{ totalStudents }}</span>
-      <button class="btn-icon" title="Filter">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M3 4h14M6 8h8M8 12h4"/>
-        </svg>
+    
+    <div class="toolbar-right">
+      <div class="filter-container">
+        <button class="filter-btn" (click)="toggleFilterPopup()">
+          <i class="ic-filter"></i>
+          Filter
+        </button>
+        <!-- Filter Popup -->
+        <div class="filter-popup" [class.active]="showFilterPopup">
+          <div class="filter-popup-header">
+            <h3>Filters</h3>
+          </div>
+          <div class="filter-popup-body">
+            <div class="filter-group">
+              <label class="filter-label">Status</label>
+              <div class="filter-options">
+                <button class="filter-option-btn" (click)="resetStatusFilter()">Reset</button>
+              </div>
+              <select class="filter-select" [(ngModel)]="filters.status">
+                <option value="">All Status</option>
+                <option value="ACTIVE">Active</option>
+                <option value="INACTIVE">Inactive</option>
+                <option value="GRADUATED">Graduated</option>
+                <option value="SUSPENDED">Suspended</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">Gender</label>
+              <div class="filter-options">
+                <button class="filter-option-btn" (click)="resetGenderFilter()">Reset</button>
+              </div>
+              <select class="filter-select" [(ngModel)]="filters.gender">
+                <option value="">All Genders</option>
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">Country</label>
+              <div class="filter-options">
+                <button class="filter-option-btn" (click)="resetCountryFilter()">Reset</button>
+              </div>
+              <select class="filter-select" [(ngModel)]="filters.countryId">
+                <option value="">All Countries</option>
+                @for (country of countries; track country.country_id) {
+                  <option [value]="country.country_id">{{ country.country_name }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="filter-popup-footer">
+            <button class="btn-secondary" (click)="resetAllFilters()">Reset All</button>
+            <button class="btn-primary" (click)="applyFilters()">Apply</button>
+          </div>
+        </div>
+      </div>
+      <button class="add-btn" (click)="openAddStudentOffcanvas()">
+        <i class="ic-plus"></i>
+        Add Student
       </button>
     </div>
   </div>
+
+  <!-- Bulk Actions Bar -->
+  @if (selectedStudents.length > 0) {
+    <div class="bulk-actions-bar">
+      <div class="bulk-info">
+        <span class="selection-count">{{selectedStudents.length}} items selected</span>
+        <a href="javascript:;" class="select-all-link" (click)="selectAll()">
+          Select all {{totalStudents}}
+        </a>
+      </div>
+      <div class="bulk-actions">
+        <button class="btn-success btn-sm" (click)="bulkActivate()" title="Activate Selected">
+          <i class="fas fa-check-circle"></i>
+          Activate
+        </button>
+        <button class="btn-danger btn-sm" (click)="bulkDeactivate()" title="Deactivate Selected">
+          <i class="fas fa-times-circle"></i>
+          Deactivate
+        </button>
+        <button class="btn-danger btn-sm" (click)="bulkDelete()" title="Delete Selected">
+          <i class="fas fa-trash-alt"></i>
+          Delete
+        </button>
+      </div>
+    </div>
+  }
 
   <!-- Students Table -->
   @if (isLoadingStudents) {

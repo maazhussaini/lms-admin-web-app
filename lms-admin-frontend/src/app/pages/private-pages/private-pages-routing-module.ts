@@ -4,6 +4,7 @@ import { PrivatePageLayout } from './private-page-layout/private-page-layout';
 import { TenantManagement } from './reports/tenant-management/tenant-management';
 import { InstituteManagement } from './reports/institute-management/institute-management';
 import { StudentManagement } from './reports/student-management/student-management';
+import { TeacherManagement } from './reports/teacher-management/teacher-management';
 import { AuthGuard, RoleGuard } from '../../services/auth.guard';
 import { HomeRedirectGuard } from '../../services/home-redirect.guard';
 
@@ -50,6 +51,15 @@ const routes: Routes = [
         data: { 
           title: 'Student Management',
           roles: ['SUPER_ADMIN']
+        }
+      },
+      {
+        path: 'reports/teachers',
+        component: TeacherManagement,
+        canActivate: [RoleGuard],
+        data: { 
+          title: 'Teacher Management',
+          roles: ['SUPER_ADMIN', 'TENANT_ADMIN']
         }
       }
     ]
