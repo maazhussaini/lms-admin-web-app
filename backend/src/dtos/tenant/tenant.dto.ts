@@ -32,6 +32,8 @@ export interface UpdateTenantDto {
   favicon_url?: string | null;
   theme?: Record<string, any> | null;
   tenant_status?: TenantStatus;
+  phoneNumbers?: CreateTenantPhoneNumberDto[];
+  emailAddresses?: CreateTenantEmailAddressDto[];
 }
 
 /**
@@ -151,7 +153,61 @@ export const updateTenantValidation: ValidationChain[] = [
   body('tenant_status')
     .optional()
     .isString().withMessage('Tenant status must be a string')
-    .isIn(Object.values(TenantStatus)).withMessage('Tenant status must be a valid status')
+    .isIn(Object.values(TenantStatus)).withMessage('Tenant status must be a valid status'),
+
+  // Phone numbers array validation
+  body('phoneNumbers')
+    .optional()
+    .isArray().withMessage('Phone numbers must be an array'),
+
+  body('phoneNumbers.*.dial_code')
+    .optional()
+    .isString().withMessage('Dial code must be a string')
+    .notEmpty().withMessage('Dial code cannot be empty')
+    .trim()
+    .isLength({ min: 1, max: 20 }).withMessage('Dial code must be between 1 and 20 characters'),
+
+  body('phoneNumbers.*.phone_number')
+    .optional()
+    .isString().withMessage('Phone number must be a string')
+    .notEmpty().withMessage('Phone number cannot be empty')
+    .trim()
+    .isLength({ min: 1, max: 20 }).withMessage('Phone number must be between 1 and 20 characters'),
+
+  body('phoneNumbers.*.iso_country_code')
+    .optional()
+    .isString().withMessage('ISO country code must be a string')
+    .trim()
+    .isLength({ min: 2, max: 3 }).withMessage('ISO country code must be 2 or 3 characters'),
+
+  body('phoneNumbers.*.is_primary')
+    .optional()
+    .isBoolean().withMessage('is_primary must be a boolean'),
+
+  body('phoneNumbers.*.contact_type')
+    .optional()
+    .isString().withMessage('Contact type must be a string')
+    .isIn(Object.values(ContactType)).withMessage('Contact type must be a valid type'),
+
+  // Email addresses array validation
+  body('emailAddresses')
+    .optional()
+    .isArray().withMessage('Email addresses must be an array'),
+
+  body('emailAddresses.*.email_address')
+    .optional()
+    .isEmail().withMessage('Valid email address is required')
+    .trim()
+    .isLength({ max: 255 }).withMessage('Email address cannot exceed 255 characters'),
+
+  body('emailAddresses.*.is_primary')
+    .optional()
+    .isBoolean().withMessage('is_primary must be a boolean'),
+
+  body('emailAddresses.*.contact_type')
+    .optional()
+    .isString().withMessage('Contact type must be a string')
+    .isIn(Object.values(ContactType)).withMessage('Contact type must be a valid type')
 ];
 
 /**

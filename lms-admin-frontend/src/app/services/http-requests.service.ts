@@ -104,7 +104,7 @@ export class HttpRequests {
     return this.apiMethods.get(`${this.baseUrl}/tenants`);
   }
 
-  async getTenantById(id: string): Promise<ApiResponse<any>> {
+  async getTenantById(id: string | number): Promise<ApiResponse<any>> {
     return this.apiMethods.get(`${this.baseUrl}/tenants/${id}`);
   }
 
@@ -112,12 +112,48 @@ export class HttpRequests {
     return this.apiMethods.post(`${this.baseUrl}/tenants`, tenantData);
   }
 
-  async updateTenant(id: string, tenantData: any): Promise<ApiResponse<any>> {
-    return this.apiMethods.put(`${this.baseUrl}/tenants/${id}`, tenantData);
+  async updateTenant(id: string | number, tenantData: any): Promise<ApiResponse<any>> {
+    return this.apiMethods.patch(`${this.baseUrl}/tenants/${id}`, tenantData);
   }
 
-  async deleteTenant(id: string): Promise<ApiResponse<any>> {
+  async deleteTenant(id: string | number): Promise<ApiResponse<any>> {
     return this.apiMethods.delete(`${this.baseUrl}/tenants/${id}`);
+  }
+
+  // ============= TENANT PHONE NUMBER APIs =============
+
+  async getTenantPhoneNumbers(tenantId: string | number): Promise<ApiResponse<any>> {
+    return this.apiMethods.get(`${this.baseUrl}/tenants/${tenantId}/phone-numbers`);
+  }
+
+  async createTenantPhoneNumber(tenantId: string | number, phoneData: any): Promise<ApiResponse<any>> {
+    return this.apiMethods.post(`${this.baseUrl}/tenants/${tenantId}/phone-numbers`, phoneData);
+  }
+
+  async updateTenantPhoneNumber(tenantId: string | number, phoneId: string | number, phoneData: any): Promise<ApiResponse<any>> {
+    return this.apiMethods.patch(`${this.baseUrl}/tenants/${tenantId}/phone-numbers/${phoneId}`, phoneData);
+  }
+
+  async deleteTenantPhoneNumber(tenantId: string | number, phoneId: string | number): Promise<ApiResponse<any>> {
+    return this.apiMethods.delete(`${this.baseUrl}/tenants/${tenantId}/phone-numbers/${phoneId}`);
+  }
+
+  // ============= TENANT EMAIL ADDRESS APIs =============
+
+  async getTenantEmailAddresses(tenantId: string | number): Promise<ApiResponse<any>> {
+    return this.apiMethods.get(`${this.baseUrl}/tenants/${tenantId}/email-addresses`);
+  }
+
+  async createTenantEmailAddress(tenantId: string | number, emailData: any): Promise<ApiResponse<any>> {
+    return this.apiMethods.post(`${this.baseUrl}/tenants/${tenantId}/email-addresses`, emailData);
+  }
+
+  async updateTenantEmailAddress(tenantId: string | number, emailId: string | number, emailData: any): Promise<ApiResponse<any>> {
+    return this.apiMethods.patch(`${this.baseUrl}/tenants/${tenantId}/email-addresses/${emailId}`, emailData);
+  }
+
+  async deleteTenantEmailAddress(tenantId: string | number, emailId: string | number): Promise<ApiResponse<any>> {
+    return this.apiMethods.delete(`${this.baseUrl}/tenants/${tenantId}/email-addresses/${emailId}`);
   }
 
   // ============= TEACHER APIs =============
@@ -140,5 +176,42 @@ export class HttpRequests {
 
   async deleteTeacher(id: string): Promise<ApiResponse<any>> {
     return this.apiMethods.delete(`${this.baseUrl}/teachers/${id}`);
+  }
+
+  // ============= STUDENT APIs =============
+  
+  async getAllStudents(params?: any): Promise<ApiResponse<any>> {
+    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+    return this.apiMethods.get(`${this.baseUrl}/students${queryString}`);
+  }
+
+  async getStudentById(id: string | number): Promise<ApiResponse<any>> {
+    return this.apiMethods.get(`${this.baseUrl}/students/${id}`);
+  }
+
+  async createStudent(studentData: any): Promise<ApiResponse<any>> {
+    return this.apiMethods.post(`${this.baseUrl}/students`, studentData);
+  }
+
+  async updateStudent(id: string | number, studentData: any): Promise<ApiResponse<any>> {
+    return this.apiMethods.patch(`${this.baseUrl}/students/${id}`, studentData);
+  }
+
+  async deleteStudent(id: string | number): Promise<ApiResponse<any>> {
+    return this.apiMethods.delete(`${this.baseUrl}/students/${id}`);
+  }
+
+  // ============= GEOGRAPHY APIs =============
+  
+  async getAllCountries(): Promise<ApiResponse<any>> {
+    return this.apiMethods.get(`${this.baseUrl}/countries`);
+  }
+
+  async getStatesByCountry(countryId: number): Promise<ApiResponse<any>> {
+    return this.apiMethods.get(`${this.baseUrl}/countries/${countryId}/states`);
+  }
+
+  async getCitiesByState(stateId: number): Promise<ApiResponse<any>> {
+    return this.apiMethods.get(`${this.baseUrl}/states/${stateId}/cities`);
   }
 }

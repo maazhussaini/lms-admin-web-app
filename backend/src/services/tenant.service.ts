@@ -135,10 +135,13 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
    * Build entity-specific filters
    */
   protected buildEntitySpecificFilters(_filters: TenantFilterDto): any {
-    const whereClause: any = {};
+    const whereClause: any = {
+      // Only show non-deleted tenants by default
+      is_deleted: false
+    };
 
     // Add tenant-specific filters here if needed
-    // For now, return empty object as base filters handle common cases
+    // For now, return base filter with is_deleted check
     
     return whereClause;
   }
@@ -380,29 +383,96 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
         user_type: UserType.SUPER_ADMIN
       } as TokenPayload);
 
-      // Update tenant
-      const updateData: any = {
-        updated_by: userId,
-        updated_at: new Date(),
-        updated_ip: ip || null
-      };
+      // Use transaction for atomic operation
+      const result = await prisma.$transaction(async (tx) => {
+        // Update tenant basic information
+        const updateData: any = {
+          updated_by: userId,
+          updated_at: new Date(),
+          updated_ip: ip || null
+        };
 
-      // Only include fields that are provided in the update data
-      if (data.tenant_name !== undefined) updateData.tenant_name = data.tenant_name;
-      if (data.logo_url_light !== undefined) updateData.logo_url_light = data.logo_url_light;
-      if (data.logo_url_dark !== undefined) updateData.logo_url_dark = data.logo_url_dark;
-      if (data.favicon_url !== undefined) updateData.favicon_url = data.favicon_url;
-      if (data.theme !== undefined) updateData.theme = data.theme;
-      if (data.tenant_status !== undefined) updateData.tenant_status = data.tenant_status;
+        // Only include fields that are provided in the update data
+        if (data.tenant_name !== undefined) updateData.tenant_name = data.tenant_name;
+        if (data.logo_url_light !== undefined) updateData.logo_url_light = data.logo_url_light;
+        if (data.logo_url_dark !== undefined) updateData.logo_url_dark = data.logo_url_dark;
+        if (data.favicon_url !== undefined) updateData.favicon_url = data.favicon_url;
+        if (data.theme !== undefined) updateData.theme = data.theme;
+        if (data.tenant_status !== undefined) updateData.tenant_status = data.tenant_status;
 
-      const updatedTenant = await prisma.tenant.update({
-        where: {
-          tenant_id: tenantId
-        },
-        data: updateData
+        const updatedTenant = await tx.tenant.update({
+          where: {
+            tenant_id: tenantId
+          },
+          data: updateData
+        });
+
+        // Handle phone numbers with soft delete strategy
+        if (data.phoneNumbers !== undefined) {
+          // Soft delete all existing phone numbers
+          await tx.tenantPhoneNumber.updateMany({
+            where: {
+              tenant_id: tenantId,
+              deleted_at: null
+            },
+            data: {
+              deleted_at: new Date(),
+              deleted_by: userId
+            }
+          });
+
+          // Insert new phone numbers
+          if (data.phoneNumbers.length > 0) {
+            await tx.tenantPhoneNumber.createMany({
+              data: data.phoneNumbers.map(phone => ({
+                tenant_id: tenantId,
+                dial_code: phone.dial_code,
+                phone_number: phone.phone_number,
+                iso_country_code: phone.iso_country_code || null,
+                is_primary: phone.is_primary,
+                contact_type: phone.contact_type,
+                created_by: userId,
+                created_at: new Date(),
+                created_ip: ip || null
+              }))
+            });
+          }
+        }
+
+        // Handle email addresses with soft delete strategy
+        if (data.emailAddresses !== undefined) {
+          // Soft delete all existing email addresses
+          await tx.tenantEmailAddress.updateMany({
+            where: {
+              tenant_id: tenantId,
+              deleted_at: null
+            },
+            data: {
+              deleted_at: new Date(),
+              deleted_by: userId
+            }
+          });
+
+          // Insert new email addresses
+          if (data.emailAddresses.length > 0) {
+            await tx.tenantEmailAddress.createMany({
+              data: data.emailAddresses.map(email => ({
+                tenant_id: tenantId,
+                email_address: email.email_address,
+                is_primary: email.is_primary,
+                contact_type: email.contact_type,
+                created_by: userId,
+                created_at: new Date(),
+                created_ip: ip || null
+              }))
+            });
+          }
+        }
+
+        return updatedTenant;
       });
       
-      return updatedTenant;
+      return result;
     }, {
       context: {
         tenantId,
@@ -426,17 +496,28 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
         userId
       });
 
-      // Verify tenant exists
-      await this.getTenantById(tenantId, {
-        id: userId, 
-        email: 'system@admin.com', 
-        role: 'SUPER_ADMIN', 
-        tenantId,
-        user_type: UserType.SUPER_ADMIN
-      } as TokenPayload);
+      // Check if tenant exists (including soft-deleted ones)
+      const existingTenant = await prisma.tenant.findUnique({
+        where: {
+          tenant_id: tenantId
+        }
+      });
+
+      if (!existingTenant) {
+        throw new NotFoundError('Tenant', tenantId.toString());
+      }
+
+      // If already deleted, return success (idempotent operation)
+      if (existingTenant.is_deleted) {
+        logger.info('Tenant is already deleted', { tenantId });
+        return {
+          message: 'Tenant is already deleted',
+          tenantId
+        };
+      }
 
       // Soft delete by updating is_deleted flag
-      await prisma.tenant.update({
+      const deletedTenant = await prisma.tenant.update({
         where: {
           tenant_id: tenantId
         },
@@ -449,6 +530,10 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
           updated_ip: ip || null
         }
       });
+      
+      logger.info('Tenant deleted successfully', { tenantId });
+      
+      return deletedTenant;
       
     }, {
       context: {
@@ -1206,8 +1291,8 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
       specificFilters['is_primary'] = rawFilters.isPrimary;
     }
 
-    // Merge all filters
-    return mergeFilters([baseFilters, specificFilters]);
+    // Merge all filters (spread the arguments, not pass as array)
+    return mergeFilters(baseFilters, specificFilters);
   }
 
   /**
@@ -1233,8 +1318,154 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
       specificFilters['is_primary'] = rawFilters.isPrimary;
     }
 
-    // Merge all filters
-    return mergeFilters([baseFilters, specificFilters]);
+    // Merge all filters (spread the arguments, not pass as array)
+    return mergeFilters(baseFilters, specificFilters);
+  }
+
+  // ==================== FILE UPLOAD METHODS ====================
+
+  /**
+   * Upload tenant light logo
+   */
+  async uploadLightLogo(
+    tenantId: number,
+    file: Express.Multer.File,
+    requestingUser: TokenPayload
+  ): Promise<string> {
+    // Check tenant existence
+    const tenant = await prisma.tenant.findUnique({
+      where: { tenant_id: tenantId, is_deleted: false }
+    });
+
+    if (!tenant) {
+      throw new NotFoundError('Tenant not found');
+    }
+
+    // Authorization check
+    if (requestingUser.role !== UserType.SUPER_ADMIN && 
+        requestingUser.tenantId !== tenantId) {
+      throw new ForbiddenError('Insufficient permissions to upload logo for this tenant');
+    }
+
+    // Import dynamically to avoid circular dependency
+    const { uploadTenantLogo } = await import('@/utils/file-upload.utils');
+    
+    // Upload file to network share
+    const logoPath = await uploadTenantLogo(file, tenantId, 'light');
+
+    if (!logoPath) {
+      throw new Error('Failed to upload logo');
+    }
+
+    // Update tenant record
+    await prisma.tenant.update({
+      where: { tenant_id: tenantId },
+      data: { logo_url_light: logoPath }
+    });
+
+    logger.info('Tenant light logo uploaded', {
+      tenantId,
+      logoPath,
+      uploadedBy: requestingUser.id
+    });
+
+    return logoPath;
+  }
+
+  /**
+   * Upload tenant dark logo
+   */
+  async uploadDarkLogo(
+    tenantId: number,
+    file: Express.Multer.File,
+    requestingUser: TokenPayload
+  ): Promise<string> {
+    // Check tenant existence
+    const tenant = await prisma.tenant.findUnique({
+      where: { tenant_id: tenantId, is_deleted: false }
+    });
+
+    if (!tenant) {
+      throw new NotFoundError('Tenant not found');
+    }
+
+    // Authorization check
+    if (requestingUser.role !== UserType.SUPER_ADMIN && 
+        requestingUser.tenantId !== tenantId) {
+      throw new ForbiddenError('Insufficient permissions to upload logo for this tenant');
+    }
+
+    // Import dynamically to avoid circular dependency
+    const { uploadTenantLogo } = await import('@/utils/file-upload.utils');
+    
+    // Upload file to network share
+    const logoPath = await uploadTenantLogo(file, tenantId, 'dark');
+
+    if (!logoPath) {
+      throw new Error('Failed to upload logo');
+    }
+
+    // Update tenant record
+    await prisma.tenant.update({
+      where: { tenant_id: tenantId },
+      data: { logo_url_dark: logoPath }
+    });
+
+    logger.info('Tenant dark logo uploaded', {
+      tenantId,
+      logoPath,
+      uploadedBy: requestingUser.id
+    });
+
+    return logoPath;
+  }
+
+  /**
+   * Upload tenant favicon
+   */
+  async uploadFavicon(
+    tenantId: number,
+    file: Express.Multer.File,
+    requestingUser: TokenPayload
+  ): Promise<string> {
+    // Check tenant existence
+    const tenant = await prisma.tenant.findUnique({
+      where: { tenant_id: tenantId, is_deleted: false }
+    });
+
+    if (!tenant) {
+      throw new NotFoundError('Tenant not found');
+    }
+
+    // Authorization check
+    if (requestingUser.role !== UserType.SUPER_ADMIN && 
+        requestingUser.tenantId !== tenantId) {
+      throw new ForbiddenError('Insufficient permissions to upload favicon for this tenant');
+    }
+
+    // Import dynamically to avoid circular dependency
+    const { uploadTenantFavicon } = await import('@/utils/file-upload.utils');
+    
+    // Upload file to network share
+    const faviconPath = await uploadTenantFavicon(file, tenantId);
+
+    if (!faviconPath) {
+      throw new Error('Failed to upload favicon');
+    }
+
+    // Update tenant record
+    await prisma.tenant.update({
+      where: { tenant_id: tenantId },
+      data: { favicon_url: faviconPath }
+    });
+
+    logger.info('Tenant favicon uploaded', {
+      tenantId,
+      faviconPath,
+      uploadedBy: requestingUser.id
+    });
+
+    return faviconPath;
   }
 }
 

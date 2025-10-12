@@ -609,5 +609,163 @@ export class TenantController {
       message: 'Tenant email address deleted successfully'
     }
   );
+
+  // ==================== FILE UPLOAD HANDLERS ====================
+
+  /**
+   * Upload tenant light logo
+   * 
+   * @route POST /api/v1/tenants/:tenantId/upload-logo-light
+   * @access Private (SUPER_ADMIN, TENANT_ADMIN for own tenant)
+   */
+  static uploadLightLogoHandler = createRouteHandler(
+    async (req: AuthenticatedRequest) => {
+      const tenantIdParam = req.params['tenantId'];
+      
+      if (!tenantIdParam) {
+        throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
+      }
+      
+      const tenantId = parseInt(tenantIdParam, 10);
+      
+      if (isNaN(tenantId)) {
+        throw new ApiError('Invalid tenant ID', 400, 'INVALID_TENANT_ID');
+      }
+
+      if (!req.file) {
+        throw new ApiError('Logo file is required', 400, 'MISSING_FILE');
+      }
+
+      if (!req.user) {
+        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
+      }
+
+      const requestingUser = req.user;
+      
+      logger.debug('Uploading tenant light logo', {
+        tenantId,
+        userId: requestingUser.id,
+        fileName: req.file.originalname
+      });
+
+      const logoPath = await tenantService.uploadLightLogo(
+        tenantId,
+        req.file,
+        requestingUser
+      );
+
+      return {
+        logoPath,
+        message: 'Light logo uploaded successfully'
+      };
+    },
+    {
+      message: 'Light logo uploaded successfully'
+    }
+  );
+
+  /**
+   * Upload tenant dark logo
+   * 
+   * @route POST /api/v1/tenants/:tenantId/upload-logo-dark
+   * @access Private (SUPER_ADMIN, TENANT_ADMIN for own tenant)
+   */
+  static uploadDarkLogoHandler = createRouteHandler(
+    async (req: AuthenticatedRequest) => {
+      const tenantIdParam = req.params['tenantId'];
+      
+      if (!tenantIdParam) {
+        throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
+      }
+      
+      const tenantId = parseInt(tenantIdParam, 10);
+      
+      if (isNaN(tenantId)) {
+        throw new ApiError('Invalid tenant ID', 400, 'INVALID_TENANT_ID');
+      }
+
+      if (!req.file) {
+        throw new ApiError('Logo file is required', 400, 'MISSING_FILE');
+      }
+
+      if (!req.user) {
+        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
+      }
+
+      const requestingUser = req.user;
+      
+      logger.debug('Uploading tenant dark logo', {
+        tenantId,
+        userId: requestingUser.id,
+        fileName: req.file.originalname
+      });
+
+      const logoPath = await tenantService.uploadDarkLogo(
+        tenantId,
+        req.file,
+        requestingUser
+      );
+
+      return {
+        logoPath,
+        message: 'Dark logo uploaded successfully'
+      };
+    },
+    {
+      message: 'Dark logo uploaded successfully'
+    }
+  );
+
+  /**
+   * Upload tenant favicon
+   * 
+   * @route POST /api/v1/tenants/:tenantId/upload-favicon
+   * @access Private (SUPER_ADMIN, TENANT_ADMIN for own tenant)
+   */
+  static uploadFaviconHandler = createRouteHandler(
+    async (req: AuthenticatedRequest) => {
+      const tenantIdParam = req.params['tenantId'];
+      
+      if (!tenantIdParam) {
+        throw new ApiError('Tenant ID is required', 400, 'MISSING_TENANT_ID');
+      }
+      
+      const tenantId = parseInt(tenantIdParam, 10);
+      
+      if (isNaN(tenantId)) {
+        throw new ApiError('Invalid tenant ID', 400, 'INVALID_TENANT_ID');
+      }
+
+      if (!req.file) {
+        throw new ApiError('Favicon file is required', 400, 'MISSING_FILE');
+      }
+
+      if (!req.user) {
+        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
+      }
+
+      const requestingUser = req.user;
+      
+      logger.debug('Uploading tenant favicon', {
+        tenantId,
+        userId: requestingUser.id,
+        fileName: req.file.originalname
+      });
+
+      const faviconPath = await tenantService.uploadFavicon(
+        tenantId,
+        req.file,
+        requestingUser
+      );
+
+      return {
+        faviconPath,
+        message: 'Favicon uploaded successfully'
+      };
+    },
+    {
+      message: 'Favicon uploaded successfully'
+    }
+  );
 }
 

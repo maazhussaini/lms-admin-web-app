@@ -101,7 +101,10 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
    * Build entity-specific filters
    */
   protected buildEntitySpecificFilters(filters: StudentFilterDto): any {
-    const whereClause: any = {};
+    const whereClause: any = {
+      // Always exclude soft-deleted students
+      is_deleted: false
+    };
 
     // Age range filtering
     if (filters.ageMin !== undefined || filters.ageMax !== undefined) {
@@ -258,19 +261,56 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
           }
         });
 
-        // Create the primary email address
-        await tx.studentEmailAddress.create({
-          data: {
-            student_id: newStudent.student_id,
-            tenant_id: tenantId,
-            email_address: data.email_address,
-            is_primary: true,
-            created_ip: clientIp || null,
-            updated_ip: clientIp || null,
-            created_by: requestingUser.id || 0,
-            updated_by: requestingUser.id || 0
-          }
-        });
+        // Handle email addresses
+        if (data.emailAddresses && data.emailAddresses.length > 0) {
+          // Create multiple email addresses
+          await tx.studentEmailAddress.createMany({
+            data: data.emailAddresses.map((email, index) => ({
+              student_id: newStudent.student_id,
+              tenant_id: tenantId,
+              email_address: email.email_address,
+              is_primary: email.is_primary,
+              priority: email.priority || (index + 1),
+              created_ip: clientIp || null,
+              updated_ip: clientIp || null,
+              created_by: requestingUser.id,
+              updated_by: requestingUser.id
+            }))
+          });
+        } else if (data.email_address) {
+          // Backward compatibility: create single primary email from email_address field
+          await tx.studentEmailAddress.create({
+            data: {
+              student_id: newStudent.student_id,
+              tenant_id: tenantId,
+              email_address: data.email_address,
+              is_primary: true,
+              priority: 1,
+              created_ip: clientIp || null,
+              updated_ip: clientIp || null,
+              created_by: requestingUser.id,
+              updated_by: requestingUser.id
+            }
+          });
+        }
+
+        // Handle phone numbers
+        if (data.phoneNumbers && data.phoneNumbers.length > 0) {
+          await tx.studentPhoneNumber.createMany({
+            data: data.phoneNumbers.map(phone => ({
+              student_id: newStudent.student_id,
+              tenant_id: tenantId,
+              dial_code: phone.dial_code,
+              phone_number: phone.phone_number,
+              iso_country_code: phone.iso_country_code || null,
+              is_primary: phone.is_primary,
+              created_ip: clientIp || null,
+              updated_ip: clientIp || null,
+              created_by: requestingUser.id,
+              updated_by: requestingUser.id
+            }))
+          });
+        }
 
         return newStudent;
       });
@@ -320,16 +360,47 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
         whereClause.tenant_id = requestingUser.tenantId;
       }
 
-      // Get student with primary email address
+      // Get student with all email addresses and phone numbers
       const student = await prisma.student.findFirst({
         where: whereClause,
         include: {
           emails: {
             where: {
-              is_primary: true,
               is_deleted: false
             },
-            take: 1
+            orderBy: [
+              { is_primary: 'desc' },
+              { priority: 'asc' }
+            ]
+          },
+          phones: {
+            where: {
+              is_deleted: false
+            },
+            orderBy: {
+              is_primary: 'desc'
+            }
+          },
+          country: {
+            select: {
+              country_id: true,
+              name: true,
+              iso_code_2: true,
+              dial_code: true
+            }
+          },
+          state: {
+            select: {
+              state_id: true,
+              name: true,
+              state_code: true
+            }
+          },
+          city: {
+            select: {
+              city_id: true,
+              name: true
+            }
           }
         }
       });
@@ -466,12 +537,80 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       if (data.student_status !== undefined) updateData.student_status = data.student_status;
       if (data.referral_type !== undefined) updateData.referral_type = data.referral_type;
 
-      // Update the student
-      const updatedStudent = await prisma.student.update({
-        where: {
-          student_id: studentId
-        },
-        data: updateData
+      // Update student within transaction to handle contacts
+      const updatedStudent = await prisma.$transaction(async (tx) => {
+        // Update the student main record
+        const student = await tx.student.update({
+          where: {
+            student_id: studentId
+          },
+          data: updateData
+        });
+
+        // Handle phone numbers with soft delete strategy
+        if (data.phoneNumbers !== undefined) {
+          // Soft delete all existing phone numbers
+          await tx.studentPhoneNumber.updateMany({
+            where: {
+              student_id: studentId,
+              deleted_at: null
+            },
+            data: {
+              deleted_at: new Date(),
+              deleted_by: requestingUser.id
+            }
+          });
+
+          // Insert new phone numbers
+          if (data.phoneNumbers.length > 0) {
+            await tx.studentPhoneNumber.createMany({
+              data: data.phoneNumbers.map(phone => ({
+                student_id: studentId,
+                tenant_id: existingStudent.tenant_id,
+                dial_code: phone.dial_code,
+                phone_number: phone.phone_number,
+                iso_country_code: phone.iso_country_code || null,
+                is_primary: phone.is_primary,
+                created_by: requestingUser.id,
+                created_at: new Date(),
+                created_ip: clientIp || null
+              }))
+            });
+          }
+        }
+
+        // Handle email addresses with soft delete strategy
+        if (data.emailAddresses !== undefined) {
+          // Soft delete all existing email addresses
+          await tx.studentEmailAddress.updateMany({
+            where: {
+              student_id: studentId,
+              deleted_at: null
+            },
+            data: {
+              deleted_at: new Date(),
+              deleted_by: requestingUser.id
+            }
+          });
+
+          // Insert new email addresses
+          if (data.emailAddresses.length > 0) {
+            await tx.studentEmailAddress.createMany({
+              data: data.emailAddresses.map((email, index) => ({
+                student_id: studentId,
+                tenant_id: existingStudent.tenant_id,
+                email_address: email.email_address,
+                is_primary: email.is_primary,
+                priority: email.priority || (index + 1),
+                created_by: requestingUser.id,
+                created_at: new Date(),
+                created_ip: clientIp || null
+              }))
+            });
+          }
+        }
+
+        return student;
       });
 
       // Return the updated student (without password_hash)

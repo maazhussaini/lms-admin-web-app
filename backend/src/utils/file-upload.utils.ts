@@ -653,3 +653,161 @@ export const cleanupTempFiles = async (
   await cleanDir(directory);
   return cleanedCount;
 };
+
+/**
+ * ========================================
+ * TENANT LOGO & FAVICON UPLOAD UTILITIES
+ * ========================================
+ */
+
+/**
+ * Network share upload path configuration
+ */
+export const NETWORK_UPLOAD_PATH = '\\\\DESKTOP-ERNLAOT\\uploads';
+
+/**
+ * Tenant logo/favicon file naming conventions
+ */
+export const TENANT_FILE_NAMES = {
+  LOGO_LIGHT: 'logo_lg',
+  LOGO_DARK: 'logo_dk',
+  FAVICON: 'favicon.ico',
+} as const;
+
+/**
+ * Ensures network share directory exists and is accessible
+ * @param networkPath Network share path
+ * @returns boolean indicating if path is accessible
+ */
+export const ensureNetworkPath = (networkPath: string = NETWORK_UPLOAD_PATH): boolean => {
+  try {
+    if (!fs.existsSync(networkPath)) {
+      fs.mkdirSync(networkPath, { recursive: true });
+    }
+    // Test write access
+    const testFile = path.join(networkPath, '.access_test');
+    fs.writeFileSync(testFile, 'test');
+    fs.unlinkSync(testFile);
+    return true;
+  } catch (error) {
+    console.error(`Network path ${networkPath} is not accessible:`, error);
+    return false;
+  }
+};
+
+/**
+ * Uploads tenant logo to network share with standardized naming
+ * @param file Express Multer file
+ * @param tenantId Tenant ID
+ * @param logoType Type of logo (light/dark)
+ * @returns Path to uploaded file or null if failed
+ */
+export const uploadTenantLogo = async (
+  file: Express.Multer.File,
+  tenantId: number,
+  logoType: 'light' | 'dark'
+): Promise<string | null> => {
+  try {
+    // Validate network path
+    if (!ensureNetworkPath()) {
+      throw new InternalServerError(
+        'Network upload path is not accessible',
+        'NETWORK_PATH_ERROR'
+      );
+    }
+
+    // Create tenant directory
+    const tenantDir = path.join(NETWORK_UPLOAD_PATH, tenantId.toString());
+    createUploadDir(tenantDir);
+
+    // Determine file extension
+    const ext = path.extname(file.originalname);
+    const fileName = logoType === 'light' 
+      ? `${TENANT_FILE_NAMES.LOGO_LIGHT}${ext}`
+      : `${TENANT_FILE_NAMES.LOGO_DARK}${ext}`;
+
+    const targetPath = path.join(tenantDir, fileName);
+
+    // Copy file to network share (delete old one if exists)
+    if (fs.existsSync(targetPath)) {
+      fs.unlinkSync(targetPath);
+    }
+    
+    fs.copyFileSync(file.path, targetPath);
+    
+    // Delete temporary file
+    fs.unlinkSync(file.path);
+
+    // Return network path (relative or full based on your needs)
+    return `\\\\DESKTOP-ERNLAOT\\uploads\\${tenantId}\\${fileName}`;
+  } catch (error) {
+    console.error(`Error uploading tenant logo:`, error);
+    throw new InternalServerError(
+      'Failed to upload tenant logo',
+      'LOGO_UPLOAD_ERROR'
+    );
+  }
+};
+
+/**
+ * Uploads tenant favicon to network share
+ * @param file Express Multer file
+ * @param tenantId Tenant ID
+ * @returns Path to uploaded favicon or null if failed
+ */
+export const uploadTenantFavicon = async (
+  file: Express.Multer.File,
+  tenantId: number
+): Promise<string | null> => {
+  try {
+    // Validate network path
+    if (!ensureNetworkPath()) {
+      throw new InternalServerError(
+        'Network upload path is not accessible',
+        'NETWORK_PATH_ERROR'
+      );
+    }
+
+    // Create tenant directory
+    const tenantDir = path.join(NETWORK_UPLOAD_PATH, tenantId.toString());
+    createUploadDir(tenantDir);
+
+    const targetPath = path.join(tenantDir, TENANT_FILE_NAMES.FAVICON);
+
+    // Copy file to network share (delete old one if exists)
+    if (fs.existsSync(targetPath)) {
+      fs.unlinkSync(targetPath);
+    }
+    
+    fs.copyFileSync(file.path, targetPath);
+    
+    // Delete temporary file
+    fs.unlinkSync(file.path);
+
+    // Return network path
+    return `\\\\DESKTOP-ERNLAOT\\uploads\\${tenantId}\\${TENANT_FILE_NAMES.FAVICON}`;
+  } catch (error) {
+    console.error(`Error uploading tenant favicon:`, error);
+    throw new InternalServerError(
+      'Failed to upload tenant favicon',
+      'FAVICON_UPLOAD_ERROR'
+    );
+  }
+};
+
+/**
+ * Deletes tenant logo/favicon from network share
+ * @param filePath Full file path to delete
+ */
+export const deleteTenantFile = async (filePath: string): Promise<boolean> => {
+  try {
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error(`Error deleting tenant file ${filePath}:`, error);
+    return false;
+  }
+};

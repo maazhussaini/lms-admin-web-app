@@ -1,70 +1,221 @@
-<form class="basic-tenant-form">
-  <!-- Tenant Name -->
-  <div class="form-group">
-    <label class="form-label">Tenant Name</label>
-    <input 
-      type="text" 
-      class="form-input" 
-      placeholder="Enter Tenant Name"
-      [(ngModel)]="formData.name"
-      name="name"
-      (ngModelChange)="onFormChange()"
-      required>
-  </div>
-
-  <!-- Email Address -->
-  <div class="form-group">
-    <label class="form-label">Email Address</label>
-    <input 
-      type="email" 
-      class="form-input" 
-      placeholder="Enter Primary Email Address"
-      [(ngModel)]="formData.email"
-      name="email"
-      (ngModelChange)="onFormChange()"
-      required>
-  </div>
-
-  <!-- Phone Number -->
-  <div class="form-group">
-    <label class="form-label">Phone Number</label>
-    <div class="phone-input-group">
-      <div class="country-code">
-        <div class="flag-icon">🇵🇰</div>
-        <span>+92</span>
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-          <path d="M3 4.5L6 7.5L9 4.5" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
+<form class="enhanced-tenant-form">
+  <!-- Basic Information Section -->
+  <div class="form-section">
+    <h3 class="section-title">Basic Information</h3>
+    
+    <!-- Tenant Name -->
+    <div class="form-group">
+      <label class="form-label">Tenant Name <span class="required">*</span></label>
       <input 
-        type="tel" 
-        class="form-input phone-input" 
-        placeholder="(305) 760-1379"
-        [(ngModel)]="formData.phone"
-        name="phone"
+        type="text" 
+        class="form-input" 
+        placeholder="Enter Tenant Name"
+        [(ngModel)]="formData.name"
+        name="name"
+        [disabled]="isViewMode"
         (ngModelChange)="onFormChange()"
         required>
+    </div>
+
+    <!-- Tenant Domain -->
+    <div class="form-group">
+      <label class="form-label">Tenant Domain</label>
+      <input 
+        type="text" 
+        class="form-input" 
+        placeholder="example.yourdomain.com"
+        [(ngModel)]="formData.domain"
+        name="domain"
+        [disabled]="isViewMode"
+        (ngModelChange)="onFormChange()">
+    </div>
+
+    <!-- Status -->
+    <div class="form-group">
+      <label class="form-label">Status <span class="required">*</span></label>
+      <div class="select-wrapper">
+        <select 
+          class="form-select"
+          [(ngModel)]="formData.status"
+          name="status"
+          [disabled]="isViewMode"
+          (ngModelChange)="onFormChange()"
+          required>
+          @for (option of statusOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+        <i class="ic-13 select-arrow"></i>
+      </div>
     </div>
   </div>
 
-  <!-- Status -->
-  <div class="form-group">
-    <label class="form-label">Status</label>
-    <div class="select-wrapper">
-      <select 
-        class="form-select"
-        [(ngModel)]="formData.status"
-        name="status"
-        (ngModelChange)="onFormChange()"
-        required>
-        <option value="" disabled>Select Status</option>
-        @for (option of statusOptions; track option.value) {
-          <option [value]="option.value">{{ option.label }}</option>
-        }
-      </select>
-      <svg class="select-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
-        <path d="M3 4.5L6 7.5L9 4.5" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+  <!-- Phone Numbers Section -->
+  <div class="form-section">
+    <div class="section-header">
+      <h3 class="section-title">Phone Numbers</h3>
+      @if (!isViewMode) {
+        <button type="button" class="btn-add-contact" (click)="addPhoneNumber()">
+          <i class="ic-plus"></i>
+          Add Phone
+        </button>
+      }
     </div>
+
+    @if (formData.phoneNumbers && formData.phoneNumbers.length > 0) {
+      <div class="contacts-list">
+        @for (phone of formData.phoneNumbers; track trackByIndex($index)) {
+          <div class="contact-row">
+            <div class="contact-inputs">
+              <div class="form-group form-group-sm">
+                <label class="form-label-sm">Dial Code</label>
+                <input 
+                  type="text" 
+                  class="form-input-sm" 
+                  [(ngModel)]="phone.dialCode"
+                  [name]="'phoneDialCode' + $index"
+                  [disabled]="isViewMode"
+                  (ngModelChange)="onFormChange()"
+                  placeholder="+92">
+              </div>
+              <div class="form-group form-group-sm flex-2">
+                <label class="form-label-sm">Phone Number</label>
+                <input 
+                  type="text" 
+                  class="form-input-sm" 
+                  [(ngModel)]="phone.phoneNumber"
+                  [name]="'phoneNumber' + $index"
+                  [disabled]="isViewMode"
+                  (ngModelChange)="onFormChange()"
+                  placeholder="3001234567">
+              </div>
+              <div class="form-group form-group-sm">
+                <label class="form-label-sm">Country</label>
+                <input 
+                  type="text" 
+                  class="form-input-sm" 
+                  [(ngModel)]="phone.isoCountryCode"
+                  [name]="'phoneCountry' + $index"
+                  [disabled]="isViewMode"
+                  (ngModelChange)="onFormChange()"
+                  placeholder="PK"
+                  maxlength="2">
+              </div>
+              <div class="form-group form-group-sm">
+                <label class="form-label-sm">Type</label>
+                <select 
+                  class="form-select-sm" 
+                  [(ngModel)]="phone.contactType"
+                  [name]="'phoneType' + $index"
+                  [disabled]="isViewMode"
+                  (ngModelChange)="onFormChange()">
+                  @for (type of contactTypeOptions; track type.value) {
+                    <option [value]="type.value">{{ type.label }}</option>
+                  }
+                </select>
+              </div>
+              <div class="form-group form-group-checkbox">
+                <label class="checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    [(ngModel)]="phone.isPrimary"
+                    [name]="'phonePrimary' + $index"
+                    [disabled]="isViewMode"
+                    (ngModelChange)="togglePhonePrimary($index)">
+                  <span>Primary</span>
+                </label>
+              </div>
+            </div>
+            @if (!isViewMode) {
+              <button type="button" class="btn-remove-contact" (click)="removePhoneNumber($index)" title="Delete phone number">
+                <i class="ic-delete"></i>
+                <span class="sr-only">Delete</span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="empty-state-sm">
+        @if (isViewMode) {
+          <p>No phone numbers added</p>
+        } @else {
+          <p>Click "Add Phone" to add phone numbers</p>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Email Addresses Section -->
+  <div class="form-section">
+    <div class="section-header">
+      <h3 class="section-title">Email Addresses</h3>
+      @if (!isViewMode) {
+        <button type="button" class="btn-add-contact" (click)="addEmailAddress()">
+          <i class="ic-plus"></i>
+          Add Email
+        </button>
+      }
+    </div>
+
+    @if (formData.emailAddresses && formData.emailAddresses.length > 0) {
+      <div class="contacts-list">
+        @for (email of formData.emailAddresses; track trackByIndex($index)) {
+          <div class="contact-row">
+            <div class="contact-inputs">
+              <div class="form-group form-group-sm flex-3">
+                <label class="form-label-sm">Email Address</label>
+                <input 
+                  type="email" 
+                  class="form-input-sm" 
+                  [(ngModel)]="email.emailAddress"
+                  [name]="'emailAddress' + $index"
+                  [disabled]="isViewMode"
+                  (ngModelChange)="onFormChange()"
+                  placeholder="email@example.com">
+              </div>
+              <div class="form-group form-group-sm">
+                <label class="form-label-sm">Type</label>
+                <select 
+                  class="form-select-sm" 
+                  [(ngModel)]="email.contactType"
+                  [name]="'emailType' + $index"
+                  [disabled]="isViewMode"
+                  (ngModelChange)="onFormChange()">
+                  @for (type of contactTypeOptions; track type.value) {
+                    <option [value]="type.value">{{ type.label }}</option>
+                  }
+                </select>
+              </div>
+              <div class="form-group form-group-checkbox">
+                <label class="checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    [(ngModel)]="email.isPrimary"
+                    [name]="'emailPrimary' + $index"
+                    [disabled]="isViewMode"
+                    (ngModelChange)="toggleEmailPrimary($index)">
+                  <span>Primary</span>
+                </label>
+              </div>
+            </div>
+            @if (!isViewMode) {
+              <button type="button" class="btn-remove-contact" (click)="removeEmailAddress($index)" title="Delete email address">
+                <i class="ic-delete"></i>
+                <span class="sr-only">Delete</span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="empty-state-sm">
+        @if (isViewMode) {
+          <p>No email addresses added</p>
+        } @else {
+          <p>Click "Add Email" to add email addresses</p>
+        }
+      </div>
+    }
   </div>
 </form>

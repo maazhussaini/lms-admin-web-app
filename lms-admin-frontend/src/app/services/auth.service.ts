@@ -137,7 +137,7 @@ export class AuthService {
       const response = await this.httpRequests.forgotPassword({ email });
       
       return {
-        success: response.is_success || false,
+        success: response.success || false,
         message: response.message || 'Password reset email sent'
       };
     } catch (error: any) {
@@ -156,7 +156,7 @@ export class AuthService {
       const response = await this.httpRequests.resetPassword({ token, new_password: newPassword });
       
       return {
-        success: response.is_success || false,
+        success: response.success || false,
         message: response.message || 'Password reset successful'
       };
     } catch (error: any) {
@@ -240,10 +240,6 @@ export class AuthService {
   private isApiResponseSuccessful(response: any): boolean {
     if (!response) {
       return false;
-    }
-
-    if (typeof response.is_success === 'boolean') {
-      return response.is_success;
     }
 
     if (typeof response.success === 'boolean') {

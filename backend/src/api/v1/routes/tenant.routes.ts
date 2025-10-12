@@ -8,16 +8,15 @@ import { Router } from 'express';
 import { TenantController } from '@/controllers/tenant.controller';
 import { authenticate, authorize } from '@/middleware/auth.middleware';
 import { validate } from '@/middleware/validation.middleware';
+import { imageUpload } from '@/utils/file-upload.utils';
 import { 
   createTenantValidation, 
   updateTenantValidation,
   listTenantsValidation,
   createTenantPhoneNumberValidation,
   updateTenantPhoneNumberValidation,
-  listTenantPhoneNumbersValidation,
   createTenantEmailAddressValidation,
   updateTenantEmailAddressValidation,
-  listTenantEmailAddressesValidation,
   listTenantClientsValidation
 } from '@/dtos/tenant/tenant.dto';
 import { param } from 'express-validator';
@@ -135,8 +134,7 @@ router.get(
     param('tenantId')
       .isInt({ min: 1 })
       .withMessage('Tenant ID must be a positive integer')
-      .toInt(),
-    ...listTenantPhoneNumbersValidation
+      .toInt()
   ]),
   TenantController.getAllTenantPhoneNumbersHandler
 );
@@ -215,8 +213,7 @@ router.get(
     param('tenantId')
       .isInt({ min: 1 })
       .withMessage('Tenant ID must be a positive integer')
-      .toInt(),
-    ...listTenantEmailAddressesValidation
+      .toInt()
   ]),
   TenantController.getAllTenantEmailAddressesHandler
 );
@@ -282,6 +279,62 @@ router.get(
     ...listTenantClientsValidation
   ]),
   TenantController.getTenantClientsHandler
+);
+
+// ==================== FILE UPLOAD ROUTES ====================
+
+/**
+ * @route POST /api/v1/tenants/:tenantId/upload-logo-light
+ * @description Upload tenant light logo
+ * @access Private (SUPER_ADMIN or TENANT_ADMIN for own tenant)
+ */
+router.post(
+  '/:tenantId/upload-logo-light',
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
+  validate([
+    param('tenantId')
+      .isInt({ min: 1 })
+      .withMessage('Tenant ID must be a positive integer')
+      .toInt()
+  ]),
+  imageUpload.single('logo'),
+  TenantController.uploadLightLogoHandler
+);
+
+/**
+ * @route POST /api/v1/tenants/:tenantId/upload-logo-dark
+ * @description Upload tenant dark logo
+ * @access Private (SUPER_ADMIN or TENANT_ADMIN for own tenant)
+ */
+router.post(
+  '/:tenantId/upload-logo-dark',
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
+  validate([
+    param('tenantId')
+      .isInt({ min: 1 })
+      .withMessage('Tenant ID must be a positive integer')
+      .toInt()
+  ]),
+  imageUpload.single('logo'),
+  TenantController.uploadDarkLogoHandler
+);
+
+/**
+ * @route POST /api/v1/tenants/:tenantId/upload-favicon
+ * @description Upload tenant favicon
+ * @access Private (SUPER_ADMIN or TENANT_ADMIN for own tenant)
+ */
+router.post(
+  '/:tenantId/upload-favicon',
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
+  validate([
+    param('tenantId')
+      .isInt({ min: 1 })
+      .withMessage('Tenant ID must be a positive integer')
+      .toInt()
+  ]),
+  imageUpload.single('favicon'),
+  TenantController.uploadFaviconHandler
 );
 
 export default router;

@@ -11,7 +11,7 @@ export interface CreateStudentDto {
   first_name: string;
   middle_name?: string;
   last_name: string;
-  email_address: string;
+  email_address: string; // Primary email (deprecated - use emailAddresses array)
   username: string;
   password: string;
   country_id: number;
@@ -25,6 +25,9 @@ export interface CreateStudentDto {
   gender?: Gender;
   student_status?: StudentStatus;
   referral_type?: string;
+  // Multiple contact arrays
+  phoneNumbers?: CreateStudentPhoneNumberDto[];
+  emailAddresses?: CreateStudentEmailAddressDto[];
 }
 
 /**
@@ -46,6 +49,9 @@ export interface UpdateStudentDto {
   gender?: Gender | null;
   student_status?: StudentStatus;
   referral_type?: string | null;
+  // Multiple contact arrays (soft delete + insert strategy)
+  phoneNumbers?: CreateStudentPhoneNumberDto[];
+  emailAddresses?: CreateStudentEmailAddressDto[];
 }
 
 /**
@@ -432,4 +438,98 @@ export const studentFilterValidation: ValidationChain[] = [
   query('sortOrder')
     .optional()
     .isIn(['asc', 'desc']).withMessage('Sort order must be "asc" or "desc"')
+];
+
+// ==================== STUDENT CONTACT INFORMATION DTOs ====================
+
+/**
+ * DTO interface for creating a new student phone number
+ */
+export interface CreateStudentPhoneNumberDto {
+  dial_code: string;
+  phone_number: string;
+  iso_country_code?: string;
+  is_primary: boolean;
+}
+
+/**
+ * DTO interface for updating an existing student phone number
+ */
+export interface UpdateStudentPhoneNumberDto {
+  dial_code?: string;
+  phone_number?: string;
+  iso_country_code?: string | null;
+  is_primary?: boolean;
+}
+
+/**
+ * DTO interface for creating a new student email address
+ */
+export interface CreateStudentEmailAddressDto {
+  email_address: string;
+  is_primary: boolean;
+  priority?: number;
+}
+
+/**
+ * DTO interface for updating an existing student email address
+ */
+export interface UpdateStudentEmailAddressDto {
+  email_address?: string;
+  is_primary?: boolean;
+  priority?: number | null;
+}
+
+/**
+ * Validation chains for phone numbers in create/update
+ */
+export const studentPhoneNumberValidation: ValidationChain[] = [
+  body('phoneNumbers.*.dial_code')
+    .optional()
+    .isString().withMessage('Dial code must be a string')
+    .notEmpty().withMessage('Dial code cannot be empty')
+    .trim()
+    .isLength({ min: 1, max: 20 }).withMessage('Dial code must be between 1 and 20 characters')
+    .matches(/^[+0-9]*$/).withMessage('Dial code can only contain digits and + symbol'),
+
+  body('phoneNumbers.*.phone_number')
+    .optional()
+    .isString().withMessage('Phone number must be a string')
+    .notEmpty().withMessage('Phone number cannot be empty')
+    .trim()
+    .isLength({ min: 3, max: 20 }).withMessage('Phone number must be between 3 and 20 characters')
+    .matches(/^[0-9\s\-()]*$/).withMessage('Phone number can only contain digits, spaces, -, and parentheses'),
+
+  body('phoneNumbers.*.iso_country_code')
+    .optional()
+    .isString().withMessage('Country code must be a string')
+    .trim()
+    .isLength({ min: 2, max: 2 }).withMessage('Country code must be exactly 2 characters')
+    .isAlpha().withMessage('Country code must contain only alphabetic characters')
+    .isUppercase().withMessage('Country code must be uppercase'),
+
+  body('phoneNumbers.*.is_primary')
+    .optional()
+    .isBoolean().withMessage('is_primary must be a boolean')
+];
+
+/**
+ * Validation chains for email addresses in create/update
+ */
+export const studentEmailAddressValidation: ValidationChain[] = [
+  body('emailAddresses.*.email_address')
+    .optional()
+    .isEmail().withMessage('Email address must be valid')
+    .normalizeEmail()
+    .trim()
+    .isLength({ max: 255 }).withMessage('Email address cannot exceed 255 characters'),
+
+  body('emailAddresses.*.is_primary')
+    .optional()
+    .isBoolean().withMessage('is_primary must be a boolean'),
+
+  body('emailAddresses.*.priority')
+    .optional()
+    .isInt({ min: 1 }).withMessage('Priority must be a positive integer')
+    .toInt()
 ];

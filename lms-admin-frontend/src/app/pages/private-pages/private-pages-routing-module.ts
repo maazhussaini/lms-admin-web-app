@@ -3,7 +3,8 @@ import { RouterModule, Routes } from '@angular/router';
 import { PrivatePageLayout } from './private-page-layout/private-page-layout';
 import { TenantManagement } from './reports/tenant-management/tenant-management';
 import { InstituteManagement } from './reports/institute-management/institute-management';
-import { AuthGuard } from '../../services/auth.guard';
+import { StudentManagement } from './reports/student-management/student-management';
+import { AuthGuard, RoleGuard } from '../../services/auth.guard';
 import { HomeRedirectGuard } from '../../services/home-redirect.guard';
 
 const routes: Routes = [
@@ -27,12 +28,29 @@ const routes: Routes = [
       {
         path: 'reports/tenants',
         component: TenantManagement,
-        data: { title: 'Tenant Management' }
+        canActivate: [RoleGuard],
+        data: { 
+          title: 'Tenant Management',
+          roles: ['SUPER_ADMIN', 'ADMIN']
+        }
       },
       {
         path: 'reports/institutes',
         component: InstituteManagement,
-        data: { title: 'Institute Management' }
+        canActivate: [RoleGuard],
+        data: { 
+          title: 'Institute Management',
+          roles: ['SUPER_ADMIN', 'TENANT_ADMIN']
+        }
+      },
+      {
+        path: 'reports/students',
+        component: StudentManagement,
+        canActivate: [RoleGuard],
+        data: { 
+          title: 'Student Management',
+          roles: ['SUPER_ADMIN']
+        }
       }
     ]
   }

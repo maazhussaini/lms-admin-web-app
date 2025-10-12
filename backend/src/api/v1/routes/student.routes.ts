@@ -2,7 +2,12 @@ import { Router } from 'express';
 import { StudentController } from '@/controllers/student.controller';
 import { authenticate, authorize } from '@/middleware/auth.middleware';
 import { validate } from '@/middleware/validation.middleware';
-import { createStudentValidation, updateStudentValidation } from '@/dtos/student/student.dto';
+import { 
+  createStudentValidation, 
+  updateStudentValidation,
+  studentPhoneNumberValidation,
+  studentEmailAddressValidation
+} from '@/dtos/student/student.dto';
 import { param, body } from 'express-validator';
 import { UserType } from '@/types/enums.types';
 
@@ -30,7 +35,13 @@ const validateTenantIdForSuperAdmin = [
  */
 
 router.post(
-  '/',validate([...validateTenantIdForSuperAdmin, ...createStudentValidation]),
+  '/',
+  validate([
+    ...validateTenantIdForSuperAdmin, 
+    ...createStudentValidation,
+    ...studentPhoneNumberValidation,
+    ...studentEmailAddressValidation
+  ]),
   StudentController.createStudentHandler
 );
 
@@ -81,7 +92,9 @@ router.patch(
       .isInt({ min: 1 })
       .withMessage('Student ID must be a positive integer')
       .toInt(),
-    ...updateStudentValidation
+    ...updateStudentValidation,
+    ...studentPhoneNumberValidation,
+    ...studentEmailAddressValidation
   ]),
   StudentController.updateStudentHandler
 );

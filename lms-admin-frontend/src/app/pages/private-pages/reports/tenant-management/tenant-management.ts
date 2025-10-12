@@ -17,6 +17,34 @@ export interface Tenant {
   updatedAt: Date;
   logoInitial: string;
   logoClass: string;
+  // Additional fields for complete data
+  logoUrlLight?: string;
+  logoUrlDark?: string;
+  faviconUrl?: string;
+  theme?: any;
+  tenantDomain?: string;
+}
+
+export interface TenantPhoneNumber {
+  id: number;
+  tenantId: number;
+  dialCode: string;
+  phoneNumber: string;
+  isoCountryCode?: string;
+  isPrimary: boolean;
+  contactType: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface TenantEmailAddress {
+  id: number;
+  tenantId: number;
+  emailAddress: string;
+  isPrimary: boolean;
+  contactType: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface NewTenant {
@@ -70,17 +98,46 @@ export class TenantManagement implements OnInit, OnDestroy {
   totalPages: number = 0;
 
   // UI state
-  showAddTenantOffcanvas: boolean = false;
+    showAddTenantOffcanvas = false;
+  isEditMode = false;
+  isViewMode = false;
+  editingTenantId: number | null = null;
+  showViewTenantModal: boolean = false;
+  showEditTenantOffcanvas: boolean = false;
   activeMenuId: number | null = null;
   isLoadingTenants: boolean = false;
   tenantLoadError: string | null = null;
 
+  // View tenant state
+  selectedTenant: Tenant | null = null;
+  tenantPhoneNumbers: TenantPhoneNumber[] = [];
+  tenantEmailAddresses: TenantEmailAddress[] = [];
+  isLoadingTenantDetails: boolean = false;
+  isLoadingContacts: boolean = false;
+
+  // Contact management
+  showAddPhoneForm: boolean = false;
+  showAddEmailForm: boolean = false;
+  newPhoneNumber: any = {
+    dialCode: '+92',
+    phoneNumber: '',
+    isoCountryCode: 'PK',
+    isPrimary: false,
+    contactType: 'PRIMARY'
+  };
+  newEmailAddress: any = {
+    emailAddress: '',
+    isPrimary: false,
+    contactType: 'PRIMARY'
+  };
+
   // New tenant form
   newTenantData: BasicTenantFormData = {
     name: '',
-    email: '',
-    phone: '',
-    status: ''
+    domain: '',
+    status: 'ACTIVE',
+    phoneNumbers: [],
+    emailAddresses: []
   };
 
   canSaveTenant: boolean = false;
@@ -149,10 +206,6 @@ export class TenantManagement implements OnInit, OnDestroy {
   private isResponseSuccessful(response: any): boolean {
     if (!response) {
       return false;
-    }
-
-    if (typeof response.is_success === 'boolean') {
-      return response.is_success;
     }
 
     if (typeof response.success === 'boolean') {
@@ -477,12 +530,58 @@ export class TenantManagement implements OnInit, OnDestroy {
   }
 
   // Bulk actions
-  bulkActivate(): void {
-    // TODO: implement bulk activate logic
+  async bulkActivate(): Promise<void> {
+    if (this.selectedTenants.length === 0) {
+      alert('Please select tenants to activate.');
+      return;
+    }
+    
+    const confirmed = confirm(`Are you sure you want to activate ${this.selectedTenants.length} tenant(s)?`);
+    
+    if (confirmed) {
+      try {
+        // Update each selected tenant's status to ACTIVE
+        const updatePromises = this.selectedTenants.map((tenantId: number) => 
+          this.httpRequests.updateTenant(tenantId, { tenant_status: 'ACTIVE' })
+        );
+        
+        await Promise.all(updatePromises);
+        
+        console.log('Tenants activated successfully');
+        this.selectedTenants = [];
+        await this.loadTenants(); // Reload the list
+      } catch (error) {
+        console.error('Error activating tenants:', error);
+        alert('An error occurred while activating tenants.');
+      }
+    }
   }
 
-  bulkDeactivate(): void {
-    // TODO: implement bulk deactivate logic
+  async bulkDeactivate(): Promise<void> {
+    if (this.selectedTenants.length === 0) {
+      alert('Please select tenants to deactivate.');
+      return;
+    }
+    
+    const confirmed = confirm(`Are you sure you want to deactivate ${this.selectedTenants.length} tenant(s)?`);
+    
+    if (confirmed) {
+      try {
+        // Update each selected tenant's status to INACTIVE
+        const updatePromises = this.selectedTenants.map((tenantId: number) => 
+          this.httpRequests.updateTenant(tenantId, { tenant_status: 'INACTIVE' })
+        );
+        
+        await Promise.all(updatePromises);
+        
+        console.log('Tenants deactivated successfully');
+        this.selectedTenants = [];
+        await this.loadTenants(); // Reload the list
+      } catch (error) {
+        console.error('Error deactivating tenants:', error);
+        alert('An error occurred while deactivating tenants.');
+      }
+    }
   }
 
   // Pagination methods
@@ -512,19 +611,394 @@ export class TenantManagement implements OnInit, OnDestroy {
 
   onViewTenant(tenantId: number): void {
     this.closeMenu();
-    // TODO: implement view tenant logic
+    this.viewTenantInOffcanvas(tenantId);
   }
 
-  onEditTenant(tenantId: number): void {
-    this.closeMenu();
-    // TODO: implement edit tenant logic
+  async viewTenantInOffcanvas(tenantId: number): Promise<void> {
+    try {
+      // Get tenant details
+      const tenantResponse = await this.httpRequests.getTenantById(tenantId);
+      if (this.isResponseSuccessful(tenantResponse)) {
+        const rawTenant = tenantResponse.data;
+        
+        // Load phone numbers and email addresses
+        await this.loadTenantContacts(tenantId);
+        
+        // Set form data for viewing
+        this.newTenantData = {
+          name: rawTenant.tenant_name || '',
+          domain: rawTenant.tenant_domain || '',
+          status: rawTenant.tenant_status || 'ACTIVE',
+          phoneNumbers: this.tenantPhoneNumbers.map(phone => ({
+            dialCode: phone.dialCode,
+            phoneNumber: phone.phoneNumber,
+            isoCountryCode: phone.isoCountryCode || '',
+            isPrimary: phone.isPrimary,
+            contactType: phone.contactType || 'PRIMARY'
+          })),
+          emailAddresses: this.tenantEmailAddresses.map(email => ({
+            emailAddress: email.emailAddress,
+            isPrimary: email.isPrimary,
+            contactType: email.contactType || 'PRIMARY'
+          }))
+        };
+        
+        // Open in view mode
+        this.isViewMode = true;
+        this.isEditMode = false;
+        this.editingTenantId = tenantId;
+        this.showAddTenantOffcanvas = true;
+      } else {
+        console.error('Failed to load tenant details:', tenantResponse?.message);
+        alert('Failed to load tenant details. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error loading tenant details:', error);
+      alert('Error loading tenant details. Please try again.');
+    }
   }
 
-  onDeleteTenant(tenantId: number): void {
+  async viewTenantDetails(tenantId: number): Promise<void> {
+    this.isLoadingTenantDetails = true;
+    this.showViewTenantModal = true;
+    
+    try {
+      // Get tenant details
+      const tenantResponse = await this.httpRequests.getTenantById(tenantId);
+      if (this.isResponseSuccessful(tenantResponse)) {
+        const rawTenant = tenantResponse.data;
+        this.selectedTenant = this.transformTenant(rawTenant, 0);
+        
+        // Load phone numbers and email addresses
+        await this.loadTenantContacts(tenantId);
+      } else {
+        console.error('Failed to load tenant details:', tenantResponse?.message);
+        alert('Failed to load tenant details. Please try again.');
+        this.showViewTenantModal = false;
+      }
+    } catch (error) {
+      console.error('Error loading tenant details:', error);
+      alert('Error loading tenant details. Please try again.');
+      this.showViewTenantModal = false;
+    } finally {
+      this.isLoadingTenantDetails = false;
+    }
+  }
+
+  async loadTenantContacts(tenantId: number): Promise<void> {
+    this.isLoadingContacts = true;
+    
+    try {
+      // Load phone numbers
+      try {
+        const phoneResponse = await this.httpRequests.getTenantPhoneNumbers(tenantId);
+        if (this.isResponseSuccessful(phoneResponse)) {
+          this.tenantPhoneNumbers = this.extractContactItems(phoneResponse, 'phone');
+        } else {
+          console.warn('No phone numbers found or error loading phone numbers');
+          this.tenantPhoneNumbers = [];
+        }
+      } catch (phoneError) {
+        console.error('Error loading phone numbers:', phoneError);
+        this.tenantPhoneNumbers = [];
+      }
+      
+      // Load email addresses
+      try {
+        const emailResponse = await this.httpRequests.getTenantEmailAddresses(tenantId);
+        if (this.isResponseSuccessful(emailResponse)) {
+          this.tenantEmailAddresses = this.extractContactItems(emailResponse, 'email');
+        } else {
+          console.warn('No email addresses found or error loading email addresses');
+          this.tenantEmailAddresses = [];
+        }
+      } catch (emailError) {
+        console.error('Error loading email addresses:', emailError);
+        this.tenantEmailAddresses = [];
+      }
+    } catch (error) {
+      console.error('Error loading tenant contacts:', error);
+      this.tenantPhoneNumbers = [];
+      this.tenantEmailAddresses = [];
+    } finally {
+      this.isLoadingContacts = false;
+    }
+  }
+
+  private extractContactItems(response: any, type: 'phone' | 'email'): any[] {
+    if (!response) return [];
+    
+    const data = response.data;
+    let items: any[] = [];
+    
+    if (Array.isArray(data)) {
+      items = data;
+    } else if (data && Array.isArray(data.items)) {
+      items = data.items;
+    } else if (Array.isArray(response.items)) {
+      items = response.items;
+    }
+    
+    // Transform items
+    return items.map(item => {
+      if (type === 'phone') {
+        return {
+          id: item.tenant_phone_number_id || item.id,
+          tenantId: item.tenant_id,
+          dialCode: item.dial_code,
+          phoneNumber: item.phone_number,
+          isoCountryCode: item.iso_country_code,
+          isPrimary: item.is_primary,
+          contactType: item.contact_type,
+          createdAt: new Date(item.created_at),
+          updatedAt: new Date(item.updated_at)
+        };
+      } else {
+        return {
+          id: item.tenant_email_address_id || item.id,
+          tenantId: item.tenant_id,
+          emailAddress: item.email_address,
+          isPrimary: item.is_primary,
+          contactType: item.contact_type,
+          createdAt: new Date(item.created_at),
+          updatedAt: new Date(item.updated_at)
+        };
+      }
+    });
+  }
+
+  closeViewTenantModal(): void {
+    this.showViewTenantModal = false;
+    this.selectedTenant = null;
+    this.tenantPhoneNumbers = [];
+    this.tenantEmailAddresses = [];
+    this.showAddPhoneForm = false;
+    this.showAddEmailForm = false;
+  }
+
+  // Contact Management Methods
+  toggleAddPhoneForm(): void {
+    this.showAddPhoneForm = !this.showAddPhoneForm;
+    if (this.showAddPhoneForm) {
+      this.showAddEmailForm = false;
+      this.resetPhoneForm();
+    }
+  }
+
+  toggleAddEmailForm(): void {
+    this.showAddEmailForm = !this.showAddEmailForm;
+    if (this.showAddEmailForm) {
+      this.showAddPhoneForm = false;
+      this.resetEmailForm();
+    }
+  }
+
+  async savePhoneNumber(): Promise<void> {
+    if (!this.selectedTenant) return;
+    
+    try {
+      const phoneData = {
+        dial_code: this.newPhoneNumber.dialCode,
+        phone_number: this.newPhoneNumber.phoneNumber,
+        iso_country_code: this.newPhoneNumber.isoCountryCode || null,
+        is_primary: this.newPhoneNumber.isPrimary,
+        contact_type: this.newPhoneNumber.contactType
+      };
+      
+      const response = await this.httpRequests.createTenantPhoneNumber(this.selectedTenant.id, phoneData);
+      
+      if (this.isResponseSuccessful(response)) {
+        await this.loadTenantContacts(this.selectedTenant.id);
+        this.showAddPhoneForm = false;
+        this.resetPhoneForm();
+      } else {
+        alert('Failed to add phone number: ' + (response?.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error adding phone number:', error);
+      alert('Error adding phone number. Please try again.');
+    }
+  }
+
+  async saveEmailAddress(): Promise<void> {
+    if (!this.selectedTenant) return;
+    
+    try {
+      const emailData = {
+        email_address: this.newEmailAddress.emailAddress,
+        is_primary: this.newEmailAddress.isPrimary,
+        contact_type: this.newEmailAddress.contactType
+      };
+      
+      const response = await this.httpRequests.createTenantEmailAddress(this.selectedTenant.id, emailData);
+      
+      if (this.isResponseSuccessful(response)) {
+        await this.loadTenantContacts(this.selectedTenant.id);
+        this.showAddEmailForm = false;
+        this.resetEmailForm();
+      } else {
+        alert('Failed to add email address: ' + (response?.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error adding email address:', error);
+      alert('Error adding email address. Please try again.');
+    }
+  }
+
+  async deletePhoneNumber(phoneId: number): Promise<void> {
+    if (!this.selectedTenant) return;
+    
+    if (confirm('Are you sure you want to delete this phone number?')) {
+      try {
+        const response = await this.httpRequests.deleteTenantPhoneNumber(this.selectedTenant.id, phoneId);
+        
+        if (this.isResponseSuccessful(response)) {
+          await this.loadTenantContacts(this.selectedTenant.id);
+        } else {
+          alert('Failed to delete phone number: ' + (response?.message || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error deleting phone number:', error);
+        alert('Error deleting phone number. Please try again.');
+      }
+    }
+  }
+
+  async deleteEmailAddress(emailId: number): Promise<void> {
+    if (!this.selectedTenant) return;
+    
+    if (confirm('Are you sure you want to delete this email address?')) {
+      try {
+        const response = await this.httpRequests.deleteTenantEmailAddress(this.selectedTenant.id, emailId);
+        
+        if (this.isResponseSuccessful(response)) {
+          await this.loadTenantContacts(this.selectedTenant.id);
+        } else {
+          alert('Failed to delete email address: ' + (response?.message || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error deleting email address:', error);
+        alert('Error deleting email address. Please try again.');
+      }
+    }
+  }
+
+  async togglePrimaryPhone(phoneId: number): Promise<void> {
+    if (!this.selectedTenant) return;
+    
+    try {
+      const response = await this.httpRequests.updateTenantPhoneNumber(
+        this.selectedTenant.id, 
+        phoneId, 
+        { is_primary: true }
+      );
+      
+      if (this.isResponseSuccessful(response)) {
+        await this.loadTenantContacts(this.selectedTenant.id);
+      }
+    } catch (error) {
+      console.error('Error updating primary phone:', error);
+    }
+  }
+
+  async togglePrimaryEmail(emailId: number): Promise<void> {
+    if (!this.selectedTenant) return;
+    
+    try {
+      const response = await this.httpRequests.updateTenantEmailAddress(
+        this.selectedTenant.id, 
+        emailId, 
+        { is_primary: true }
+      );
+      
+      if (this.isResponseSuccessful(response)) {
+        await this.loadTenantContacts(this.selectedTenant.id);
+      }
+    } catch (error) {
+      console.error('Error updating primary email:', error);
+    }
+  }
+
+  private resetPhoneForm(): void {
+    this.newPhoneNumber = {
+      dialCode: '+92',
+      phoneNumber: '',
+      isoCountryCode: 'PK',
+      isPrimary: false,
+      contactType: 'PRIMARY'
+    };
+  }
+
+  private resetEmailForm(): void {
+    this.newEmailAddress = {
+      emailAddress: '',
+      isPrimary: false,
+      contactType: 'PRIMARY'
+    };
+  }
+
+  async onEditTenant(tenantId: number): Promise<void> {
     this.closeMenu();
-    if (confirm('Are you sure you want to delete this tenant?')) {
-      this.allTenants = this.allTenants.filter(t => t.id !== tenantId);
-      this.applyFilters();
+    const tenant = this.allTenants.find(t => t.id === tenantId);
+    if (tenant) {
+      this.isEditMode = true;
+      this.isViewMode = false;
+      this.editingTenantId = tenantId;
+      
+      // Pre-fill the form with tenant data
+      this.newTenantData = {
+        name: tenant.name,
+        domain: tenant.tenantDomain || '',
+        status: tenant.status,
+        phoneNumbers: [],
+        emailAddresses: []
+      };
+      
+      // Load contacts and populate form
+      await this.loadTenantContacts(tenantId);
+      
+      // Transform phone numbers to form format
+      this.newTenantData.phoneNumbers = this.tenantPhoneNumbers.map(phone => ({
+        dialCode: phone.dialCode || '+1',
+        phoneNumber: phone.phoneNumber,
+        isoCountryCode: phone.isoCountryCode || 'US',
+        contactType: phone.contactType || 'PRIMARY',
+        isPrimary: phone.isPrimary
+      }));
+      
+      // Transform email addresses to form format
+      this.newTenantData.emailAddresses = this.tenantEmailAddresses.map(email => ({
+        emailAddress: email.emailAddress,
+        contactType: email.contactType || 'PRIMARY',
+        isPrimary: email.isPrimary
+      }));
+      
+      this.showAddTenantOffcanvas = true;
+    }
+  }
+
+  async onDeleteTenant(tenantId: number): Promise<void> {
+    this.closeMenu();
+    
+    const tenant = this.allTenants.find(t => t.id === tenantId);
+    const tenantName = tenant ? tenant.name : 'this tenant';
+    
+    const confirmed = confirm(`Are you sure you want to delete "${tenantName}"? This action cannot be undone.`);
+    
+    if (confirmed) {
+      try {
+        const response = await this.httpRequests.deleteTenant(tenantId);
+        
+        if (this.isResponseSuccessful(response)) {
+          console.log('Tenant deleted successfully');
+          await this.loadTenants(); // Reload the list
+        } else {
+          alert('Failed to delete tenant. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error deleting tenant:', error);
+        alert('An error occurred while deleting the tenant.');
+      }
     }
   }
 
@@ -540,18 +1014,68 @@ export class TenantManagement implements OnInit, OnDestroy {
 
   // Add tenant functionality
   openAddTenantOffcanvas(): void {
+    this.isEditMode = false;
+    this.isViewMode = false;
+    this.editingTenantId = null;
     this.showAddTenantOffcanvas = true;
   }
 
   closeAddTenantOffcanvas(): void {
     this.showAddTenantOffcanvas = false;
+    this.isEditMode = false;
+    this.isViewMode = false;
+    this.editingTenantId = null;
     this.resetNewTenantForm();
   }
 
-  saveTenant(): void {
-    if (this.canSaveTenant) {
-      // TODO: implement save tenant logic
+  async saveTenant(): Promise<void> {
+    if (!this.canSaveTenant) {
+      return;
+    }
+
+    try {
+      if (this.isEditMode && this.editingTenantId) {
+        // Update existing tenant with phone numbers and email addresses
+        const response = await this.httpRequests.updateTenant(
+          this.editingTenantId,
+          {
+            tenant_name: this.newTenantData.name,
+            tenant_status: this.newTenantData.status,
+            phoneNumbers: (this.newTenantData.phoneNumbers || []).map(phone => ({
+              dial_code: phone.dialCode,
+              phone_number: phone.phoneNumber,
+              iso_country_code: phone.isoCountryCode || undefined,
+              is_primary: phone.isPrimary,
+              contact_type: phone.contactType
+            })),
+            emailAddresses: (this.newTenantData.emailAddresses || []).map(email => ({
+              email_address: email.emailAddress,
+              is_primary: email.isPrimary,
+              contact_type: email.contactType
+            }))
+          }
+        );
+        
+        if (this.isResponseSuccessful(response)) {
+          console.log('Tenant updated successfully');
+          await this.loadTenants(); // Reload the list
+        }
+      } else {
+        // Create new tenant
+        const response = await this.httpRequests.createTenant({
+          tenant_name: this.newTenantData.name,
+          tenant_status: this.newTenantData.status || 'ACTIVE'
+        });
+        
+        if (this.isResponseSuccessful(response)) {
+          console.log('Tenant created successfully');
+          await this.loadTenants(); // Reload the list
+        }
+      }
+      
       this.closeAddTenantOffcanvas();
+    } catch (error) {
+      console.error('Error saving tenant:', error);
     }
   }
 
@@ -566,11 +1090,14 @@ export class TenantManagement implements OnInit, OnDestroy {
   resetNewTenantForm(): void {
     this.newTenantData = {
       name: '',
-      email: '',
-      phone: '',
-      status: ''
+      domain: '',
+      status: 'ACTIVE',
+      phoneNumbers: [],
+      emailAddresses: []
     };
     this.canSaveTenant = false;
+    this.isEditMode = false;
+    this.editingTenantId = null;
   }
 
   // Track by function for ngFor

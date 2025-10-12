@@ -21,9 +21,10 @@
             </a>
         </li>
         <li class="menu-item"
+            *ngIf="canViewTenants()"
             [class.active]="activeMenuItem === 'tenants'"
             (click)="setActiveMenuItem('tenants')">
-            <a href="#" class="menu-link">
+            <a routerLink="/private/reports/tenants" class="menu-link">
                 <i class="ic-17"></i>
             </a>
         </li>
@@ -35,9 +36,10 @@
             </a>
         </li>
         <li class="menu-item"
+            *ngIf="canViewStudents()"
             [class.active]="activeMenuItem === 'students'"
             (click)="setActiveMenuItem('students')">
-            <a href="#" class="menu-link">
+            <a routerLink="/private/reports/students" class="menu-link">
                 <i class="ic-3"></i>
             </a>
         </li>
