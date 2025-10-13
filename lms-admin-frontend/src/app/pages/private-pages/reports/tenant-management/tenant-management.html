@@ -190,7 +190,7 @@
                     <td class="created-col">{{ tenant.createdAt | date:'dd-MM-yyyy' }}</td>
                     <td class="updated-col">{{ tenant.updatedAt | date:'dd-MM-yyyy' }}</td>
                     <td class="status-col">
-                      <span class="tenant-status" [ngClass]="tenant.status.toLowerCase()">
+                      <span class="enum-badge" [ngClass]="'badge-' + tenant.status.toLowerCase()">
                         {{ tenant.status }}
                       </span>
                     </td>
@@ -294,7 +294,7 @@
               <div class="detail-item">
                 <label class="detail-label">Status</label>
                 <div class="detail-value">
-                  <span class="tenant-status {{selectedTenant.status.toLowerCase()}}">
+                  <span class="enum-badge" [ngClass]="'badge-' + selectedTenant.status.toLowerCase()">
                     {{ selectedTenant.status }}
                   </span>
                 </div>
@@ -380,7 +380,7 @@
                       <div class="contact-value">
                         {{ phone.dialCode }} {{ phone.phoneNumber }}
                         @if (phone.isPrimary) {
-                          <span class="badge-primary">Primary</span>
+                          <span class="enum-badge badge-primary">Primary</span>
                         }
                       </div>
                       <div class="contact-meta">
@@ -457,7 +457,7 @@
                       <div class="contact-value">
                         {{ email.emailAddress }}
                         @if (email.isPrimary) {
-                          <span class="badge-primary">Primary</span>
+                          <span class="enum-badge badge-primary">Primary</span>
                         }
                       </div>
                       <div class="contact-meta">

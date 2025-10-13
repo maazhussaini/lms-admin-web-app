@@ -198,7 +198,7 @@
                     </td>
                     <td class="enrollments-col">{{ student.enrollments || 0 }} Courses</td>
                     <td class="status-col">
-                      <span class="student-status" [ngClass]="getStatusClass(student.student_status)">
+                      <span class="enum-badge" [ngClass]="'badge-' + (student.student_status | lowercase)">
                         {{ student.student_status }}
                       </span>
                     </td>
@@ -216,15 +216,15 @@
                           class="crud-menu-dropdown" 
                           [class.show]="activeMenuId === student.student_id"
                           [attr.data-menu-id]="student.student_id">
-                          <li (click)="onViewStudent(student)">
+                          <li (click)="onViewStudent(student); $event.stopPropagation()">
                             <i class="fas fa-eye"></i>
                             <span>View</span>
                           </li>
-                          <li (click)="onEditStudent(student)">
+                          <li (click)="onEditStudent(student); $event.stopPropagation()">
                             <i class="fas fa-edit"></i>
                             <span>Edit</span>
                           </li>
-                          <li class="danger" (click)="onDeleteStudent(student)">
+                          <li class="danger" (click)="onDeleteStudent(student); $event.stopPropagation()">
                             <i class="fas fa-trash-alt"></i>
                             <span>Delete</span>
                           </li>

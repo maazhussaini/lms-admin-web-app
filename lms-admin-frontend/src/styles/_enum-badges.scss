@@ -1,0 +1,688 @@
+/**
+ * @file _enum-badges.scss
+ * @description Centralized styling for all database enum badges
+ * Usage: <span class="enum-badge" [ngClass]="'badge-' + enumValue.toLowerCase().replace('_', '-')">{{ enumValue }}</span>
+ */
+
+/* ===== BASE BADGE STYLE ===== */
+.enum-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* ===== ASSIGNMENT STATUS ===== */
+.badge-draft {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6B7280;
+}
+
+.badge-published {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+.badge-grading-in-progress {
+  background: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+}
+
+.badge-graded {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.badge-archived {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6B7280;
+}
+
+/* ===== ASSIGNMENT TYPE ===== */
+.badge-file-upload {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+}
+
+/* ===== ASSIGNMENT REFERENCE TABLE ===== */
+.badge-course,
+.badge-course-module,
+.badge-course-topic {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+/* ===== BUNNY CDN REGION ===== */
+.badge-global,
+.badge-us-east,
+.badge-us-west,
+.badge-europe,
+.badge-asia,
+.badge-oceania {
+  background: rgba(14, 165, 233, 0.1);
+  color: #0EA5E9;
+}
+
+/* ===== BUNNY DRM PROVIDER ===== */
+.badge-widevine,
+.badge-playready,
+.badge-fairplay {
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366F1;
+}
+
+/* ===== BUNNY ENCODING PRESET ===== */
+.badge-fast {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+}
+
+.badge-balanced {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.badge-quality {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+}
+
+.badge-custom {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6B7280;
+}
+
+/* ===== BUNNY VIDEO QUALITY ===== */
+.badge-auto {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6B7280;
+}
+
+.badge-p240,
+.badge-p360 {
+  background: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+}
+
+.badge-p480,
+.badge-p720 {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.badge-p1080,
+.badge-p1440,
+.badge-p2160 {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+}
+
+/* ===== BUNNY VIDEO STATUS ===== */
+.badge-uploading,
+.badge-processing {
+  background: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+}
+
+.badge-finished {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+.badge-failed {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
+
+.badge-cancelled {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6B7280;
+}
+
+/* ===== BUNNY WEBHOOK EVENT ===== */
+.badge-video-uploaded,
+.badge-video-encoded,
+.badge-purge-completed {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+.badge-video-failed {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
+
+.badge-video-deleted {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6B7280;
+}
+
+/* ===== CLIENT STATUS ===== */
+.badge-active {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+.badge-inactive {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6B7280;
+}
+
+.badge-suspended {
+  background: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+}
+
+.badge-terminated {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
+
+/* ===== CONTACT TYPE ===== */
+.badge-primary {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+}
+
+.badge-secondary {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.badge-emergency {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
+
+.badge-billing {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+}
+
+/* ===== COURSE ENROLLMENT TYPE ===== */
+.badge-paid-course {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+}
+
+.badge-free-course {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.badge-course-session {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+}
+
+/* ===== COURSE SESSION STATUS ===== */
+.badge-public {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+.badge-private {
+  background: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+}
+
+.badge-expired {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
+
+/* ===== COURSE STATUS ===== */
+/* Uses same as Course Session Status */
+
+/* ===== COURSE TYPE ===== */
+.badge-free {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.badge-paid {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+}
+
+.badge-purchased {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+}
+
+/* ===== DELIVERY CHANNEL ===== */
+.badge-in-app {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+}
+
+.badge-email {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.badge-push {
+  background: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+}
+
+.badge-sms {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+}
+
+/* ===== DELIVERY STATUS ===== */
+.badge-pending {
+  background: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+}
+
+.badge-delivered {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+.badge-read {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.badge-dismissed {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6B7280;
+}
+
+/* ===== DEVICE TYPE ===== */
+.badge-ios {
+  background: rgba(0, 0, 0, 0.1);
+  color: #000000;
+}
+
+.badge-android {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+}
+
+.badge-web {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.badge-desktop {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6B7280;
+}
+
+/* ===== EMAIL SEND STATUS ===== */
+.badge-sent {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+.badge-bounced {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
+
+/* ===== ENROLLMENT STATUS ===== */
+.badge-completed {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+.badge-dropped {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
+
+.badge-expelled {
+  background: rgba(220, 38, 38, 0.1);
+  color: #DC2626;
+}
+
+.badge-transferred {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.badge-deferred {
+  background: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+}
+
+/* ===== EXPORT FORMAT ===== */
+.badge-pdf {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
+
+.badge-excel {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+}
+
+.badge-csv {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.badge-json {
+  background: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+}
+
+/* ===== GENDER ===== */
+.badge-male {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.badge-female {
+  background: rgba(236, 72, 153, 0.1);
+  color: #EC4899;
+}
+
+/* ===== METRIC TYPE ===== */
+.badge-count,
+.badge-percentage,
+.badge-average,
+.badge-sum,
+.badge-ratio,
+.badge-trend {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+}
+
+/* ===== NOTIFICATION PRIORITY ===== */
+.badge-low {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6B7280;
+}
+
+.badge-normal {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.badge-high {
+  background: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+}
+
+.badge-urgent {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
+
+/* ===== NOTIFICATION TYPE ===== */
+.badge-announcement {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+}
+
+.badge-assignment-due,
+.badge-deadline-reminder {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
+
+.badge-quiz-available {
+  background: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+}
+
+.badge-grade-posted {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+.badge-course-update {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.badge-system-alert {
+  background: rgba(220, 38, 38, 0.1);
+  color: #DC2626;
+}
+
+.badge-enrollment-confirmation {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+}
+
+/* ===== QUIZ ATTEMPT STATUS ===== */
+.badge-not-started {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6B7280;
+}
+
+.badge-in-progress {
+  background: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+}
+
+.badge-submitted {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+/* ===== QUIZ QUESTION TYPE ===== */
+.badge-multiple-choice-single-answer,
+.badge-multiple-choice-multiple-answers {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.badge-true-false {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+}
+
+.badge-short-answer-essay {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+}
+
+/* ===== QUIZ REFERENCE TABLE ===== */
+/* Uses same as Assignment Reference Table */
+
+/* ===== QUIZ STATUS ===== */
+/* Uses same as Assignment Status */
+
+/* ===== RECIPIENT TYPE ===== */
+.badge-student {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.badge-teacher {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+}
+
+.badge-system-user {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6B7280;
+}
+
+.badge-all-students {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.badge-all-teachers {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+}
+
+.badge-course-enrollments {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+}
+
+/* ===== REPORT STATUS ===== */
+.badge-scheduled {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.badge-generating {
+  background: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+}
+
+/* ===== REPORT TYPE ===== */
+.badge-course-performance,
+.badge-user-engagement,
+.badge-system-usage,
+.badge-assessment-summary,
+.badge-video-analytics {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+}
+
+/* ===== SESSION ENROLLMENT STATUS ===== */
+.badge-enrolled {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+/* ===== STUDENT STATUS ===== */
+.badge-alumni {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.badge-dropout {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
+
+.badge-account-freezed {
+  background: rgba(14, 165, 233, 0.1);
+  color: #0EA5E9;
+}
+
+.badge-blacklisted {
+  background: rgba(220, 38, 38, 0.1);
+  color: #DC2626;
+}
+
+.badge-deactivated {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6B7280;
+}
+
+/* ===== SUBMISSION STATUS ===== */
+.badge-not-submitted {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
+
+.badge-late-submission {
+  background: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+}
+
+.badge-resubmitted {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+/* ===== SYSTEM USER ROLE ===== */
+.badge-super-admin {
+  background: rgba(220, 38, 38, 0.1);
+  color: #DC2626;
+}
+
+.badge-tenant-admin {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+}
+
+/* ===== SYSTEM USER STATUS ===== */
+.badge-locked {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
+
+/* ===== TEMPLATE TYPE ===== */
+.badge-email-html,
+.badge-email-text {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+/* ===== TENANT STATUS ===== */
+.badge-trial {
+  background: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+}
+
+/* ===== TIME GRANULARITY ===== */
+.badge-hourly,
+.badge-daily,
+.badge-weekly,
+.badge-monthly,
+.badge-quarterly,
+.badge-yearly {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+/* ===== UPLOAD STATUS ===== */
+/* Uses same as Bunny Video Status */
+
+/* ===== USER TYPE ===== */
+/* Uses same as Recipient Type + System User Role */
+
+/* ===== VIDEO UPLOAD STATUS ===== */
+/* Uses same as Bunny Video Status */
+
+/* ===== WIDGET TYPE ===== */
+.badge-chart,
+.badge-table,
+.badge-metric-card,
+.badge-progress-bar,
+.badge-map,
+.badge-timeline {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+}
+
+/* ===== UTILITY CLASSES ===== */
+.enum-badge-sm {
+  padding: 2px 8px;
+  font-size: 10px;
+}
+
+.enum-badge-lg {
+  padding: 6px 16px;
+  font-size: 14px;
+}
+
+.enum-badge-outlined {
+  background: transparent !important;
+  border: 2px solid currentColor;
+}
+
+.enum-badge-rounded {
+  border-radius: 24px;
+}
+
+.enum-badge-square {
+  border-radius: 4px;
+}

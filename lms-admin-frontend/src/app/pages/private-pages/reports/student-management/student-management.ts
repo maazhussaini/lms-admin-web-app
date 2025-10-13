@@ -375,6 +375,9 @@ export class StudentManagement implements OnInit, OnDestroy {
   }
 
   async onEditStudent(student: Student): Promise<void> {
+    // Close the menu first
+    this.activeMenuId = null;
+    
     this.editingStudentId = student.student_id;
     this.isEditMode = true;
     this.isViewMode = false;
@@ -392,6 +395,9 @@ export class StudentManagement implements OnInit, OnDestroy {
   }
 
   async onViewStudent(student: Student): Promise<void> {
+    // Close the menu first
+    this.activeMenuId = null;
+    
     this.editingStudentId = student.student_id;
     this.isEditMode = false;
     this.isViewMode = true;
@@ -443,6 +449,9 @@ export class StudentManagement implements OnInit, OnDestroy {
   }
 
   async onDeleteStudent(student: Student): Promise<void> {
+    // Close the menu first
+    this.activeMenuId = null;
+    
     if (!confirm(`Are you sure you want to delete student "${student.full_name}"?`)) {
       return;
     }

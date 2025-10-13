@@ -1,12 +1,12 @@
 <!-- Action Buttons for Header -->
 <div slot="header-actions" class="form-header-actions">
-  @if (currentStep > 1 && !isViewMode) {
+  @if (currentStep > 1) {
     <button type="button" class="btn-previous" (click)="goToPreviousStep()">
       Previous
     </button>
   }
   
-  @if (currentStep < totalSteps && !isViewMode) {
+  @if (currentStep < totalSteps) {
     <button type="button" class="btn-next" (click)="goToNextStep()">
       Next
     </button>
@@ -27,7 +27,7 @@
       <div class="step" 
            [class.active]="currentStep === STEP_PERSONAL"
            [class.completed]="isStepCompleted(STEP_PERSONAL)"
-           (click)="!isViewMode && goToStep(STEP_PERSONAL)">
+           (click)="goToStep(STEP_PERSONAL)">
         <div class="step-icon">
           <i class="fa-solid fa-user"></i>
         </div>
@@ -39,7 +39,7 @@
       <div class="step"
            [class.active]="currentStep === STEP_ACCOUNT"
            [class.completed]="isStepCompleted(STEP_ACCOUNT)"
-           (click)="!isViewMode && goToStep(STEP_ACCOUNT)">
+           (click)="goToStep(STEP_ACCOUNT)">
         <div class="step-icon">
           <i class="fa-solid fa-id-card"></i>
         </div>
@@ -51,7 +51,7 @@
       <div class="step"
            [class.active]="currentStep === STEP_LOCATION"
            [class.completed]="isStepCompleted(STEP_LOCATION)"
-           (click)="!isViewMode && goToStep(STEP_LOCATION)">
+           (click)="goToStep(STEP_LOCATION)">
         <div class="step-icon">
           <i class="fa-solid fa-location-dot"></i>
         </div>
