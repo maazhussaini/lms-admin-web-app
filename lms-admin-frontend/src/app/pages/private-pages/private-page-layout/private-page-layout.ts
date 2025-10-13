@@ -52,6 +52,8 @@ export class PrivatePageLayout implements OnInit {
       this.pageTitle = 'Program Management';
     } else if (url.includes('reports/students')) {
       this.pageTitle = 'Student Management';
+    } else if (url.includes('reports/teachers')) {
+      this.pageTitle = 'Teacher Management';
     } else if (url.includes('tenant')) {
       this.pageTitle = 'Tenant';
     } else if (url.includes('student')) {
@@ -60,6 +62,8 @@ export class PrivatePageLayout implements OnInit {
       this.pageTitle = 'Teacher';
     } else if (url.includes('course')) {
       this.pageTitle = 'Course';
+    } else if (url.includes('dashboard')) {
+      this.pageTitle = 'Dashboard';
     } else {
       this.pageTitle = 'Reports';
     }

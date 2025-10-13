@@ -1,8 +1,8 @@
-/* ===== STUDENT DASHBOARD - USING CENTRALIZED DESIGN SYSTEM ===== */
+/* ===== TENANT DASHBOARD - USING CENTRALIZED DESIGN SYSTEM ===== */
 
 @import '../../../../../styles/shared-imports';
 
-.student-dashboard {
+.tenant-dashboard {
   @extend .dashboard-screen;
 
   .screen-toolbar {
@@ -19,7 +19,7 @@
     .toolbar-left {
       flex: 1;
 
-      .student-search {
+      .tenant-search {
         position: relative;
         // max-width: 300px;
         min-width: 100%;
@@ -326,7 +326,7 @@
     }
   }
 
-  .student-table {
+  .tenant-table {
     @extend .standard-table;
 
     tbody tr {
@@ -334,12 +334,13 @@
     }
 
     .checkbox-col { @extend .col-checkbox; }
-    .image-col { @extend .col-avatar; }
+    .logo-col { @extend .col-avatar; }
     .name-col { @extend .col-name; }
-    .username-col { @extend .col-name; }
+    .clients-col { @extend .col-clients; }
     .phone-col { @extend .col-phone; }
     .email-col { @extend .col-email; }
-    .enrollments-col { @extend .col-date; }
+    .created-col { @extend .col-date; }
+    .updated-col { @extend .col-date; }
     .status-col { @extend .col-status; }
     .actions-col {
       @extend .col-actions;
@@ -349,69 +350,33 @@
     }
   }
 
-  .student-logo {
+  .tenant-logo {
     @extend .avatar;
     @extend .size-md;
 
-    &.bg-green { @extend .color-success; }
-    &.bg-blue { @extend .color-info; }
-    &.bg-orange { @extend .color-warning; }
-    &.bg-purple { @extend .color-primary; }
-    &.bg-pink { background: #EC4899; color: white; }
-    &.bg-teal { background: #14B8A6; color: white; }
-    &.bg-indigo { background: #6366F1; color: white; }
-    &.bg-cyan { background: #06B6D4; color: white; }
-
-    .student-avatar-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: inherit;
-    }
+    &.green { @extend .color-success; }
+    &.blue { @extend .color-info; }
+    &.orange { @extend .color-warning; }
+    &.purple { @extend .color-primary; }
   }
 
-  .student-name {
+  .tenant-name {
     font-weight: 600;
     color: var(--text-primary, #374151);
     font-size: 14px;
   }
 
-  .student-email {
+  .tenant-email {
     color: var(--text-secondary, #6B7280);
     font-size: 13px;
   }
 
-  .student-status {
+  .tenant-status {
     @extend .status-badge;
-    
-    &.active {
-      background: rgba(5, 150, 105, 0.1);
-      color: #059669;
-    }
-
-    &.inactive {
-      background: rgba(107, 114, 128, 0.1);
-      color: #6B7280;
-    }
-
-    &.suspended {
-      background: rgba(245, 158, 11, 0.1);
-      color: #F59E0B;
-    }
-
-    &.graduated {
-      background: rgba(59, 130, 246, 0.1);
-      color: #3B82F6;
-    }
-
-    &.trial {
-      background: rgba(139, 92, 246, 0.1);
-      color: #8B5CF6;
-    }
   }
 
-  .student-toolbar {
-    .student-search { @extend .screen-search; }
+  .tenant-toolbar {
+    .tenant-search { @extend .screen-search; }
     .showing-select { @extend .screen-select; }
 
     .filter-btn {
@@ -508,10 +473,10 @@
 }
 
 @media (max-width: 768px) {
-  .student-dashboard {
-    .student-table {
-      .username-col,
-      .enrollments-col {
+  .tenant-dashboard {
+    .tenant-table {
+      .clients-col,
+      .created-col {
         display: none;
       }
     }
@@ -519,18 +484,18 @@
 }
 
 @media (max-width: 480px) {
-  .student-dashboard {
-    .student-table {
-      .email-col,
-      .status-col {
+  .tenant-dashboard {
+    .tenant-table {
+      .updated-col,
+      .phone-col {
         display: none;
       }
     }
   }
 }
 
-// Student Details Modal - Outside student-dashboard scope
-.student-dashboard {
+// Tenant Details Modal - Outside tenant-dashboard scope
+.tenant-dashboard {
   .modal-overlay {
     position: fixed;
     top: 0;
@@ -1136,10 +1101,3 @@
   }
 }
 
-
-::ng-deep {
-
-.off-canvas-container{
-  width: 531px !important;
-}
-}

@@ -16,16 +16,16 @@ export class OffCanvasWrapper implements AfterContentInit, OnChanges {
   @Input() canSave: boolean = true;
   @Input() isLoading: boolean = false;
 
-  @Output() onSubmit = new EventEmitter<void>();
-  @Output() onClose = new EventEmitter<void>();
-  @Output() onOpened = new EventEmitter<void>();
-  @Output() onClosed = new EventEmitter<void>();
+  @Output() close = new EventEmitter<void>();
+  @Output() submit = new EventEmitter<void>();
+  @Output() opened = new EventEmitter<void>();
+  @Output() closed = new EventEmitter<void>();
 
   @ContentChild('formContent', { static: false }) formContent!: TemplateRef<any>;
 
   ngAfterContentInit() {
     if (this.isOpen) {
-      this.onOpened.emit();
+      this.opened.emit();
     }
   }
 
@@ -33,21 +33,21 @@ export class OffCanvasWrapper implements AfterContentInit, OnChanges {
     if (changes['isOpen']) {
       if (this.isOpen) {
         document.body.classList.add('off-canvas-open');
-        this.onOpened.emit();
+        this.opened.emit();
       } else {
         document.body.classList.remove('off-canvas-open');
-        this.onClosed.emit();
+        this.closed.emit();
       }
     }
   }
 
   closeCanvas() {
-    this.onClose.emit();
+    this.close.emit();
   }
 
   saveForm() {
     if (this.canSave && !this.isLoading) {
-      this.onSubmit.emit();
+      this.submit.emit();
     }
   }
 

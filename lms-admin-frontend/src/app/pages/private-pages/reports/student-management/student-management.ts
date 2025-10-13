@@ -510,6 +510,27 @@ export class StudentManagement implements OnInit, OnDestroy {
     this.activeMenuId = this.activeMenuId === studentId ? null : studentId;
   }
 
+  onSearchChange(value: string): void {
+    this.searchTerm = value;
+    this.currentPage = 1;
+    this.loadStudents();
+  }
+
+  trackByStudentId(index: number, student: Student): number {
+    return student.student_id;
+  }
+
+  getStatusClass(status: string): string {
+    const statusMap: { [key: string]: string } = {
+      'ACTIVE': 'active',
+      'INACTIVE': 'inactive',
+      'SUSPENDED': 'suspended',
+      'GRADUATED': 'graduated',
+      'TRIAL': 'trial'
+    };
+    return statusMap[status?.toUpperCase()] || 'inactive';
+  }
+
   clearFilters(): void {
     this.filters = {
       search: '',
@@ -541,7 +562,7 @@ export class StudentManagement implements OnInit, OnDestroy {
   }
 
   getAvatarClass(index: number): string {
-    const colors = ['bg-purple', 'bg-blue', 'bg-green', 'bg-orange', 'bg-pink'];
+    const colors = ['bg-purple', 'bg-blue', 'bg-green', 'bg-orange', 'bg-pink', 'bg-teal', 'bg-indigo', 'bg-cyan'];
     return colors[index % colors.length];
   }
 

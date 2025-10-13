@@ -253,8 +253,8 @@
   [showSaveButton]="!isViewMode"
   [canSave]="canSaveTenant"
   [isLoading]="false"
-  (onClose)="closeAddTenantOffcanvas()"
-  (onSubmit)="saveTenant()">
+  (close)="closeAddTenantOffcanvas()"
+  (submit)="saveTenant()">
   <app-basic-tenant-form 
     [formData]="newTenantData"
     [isViewMode]="isViewMode"

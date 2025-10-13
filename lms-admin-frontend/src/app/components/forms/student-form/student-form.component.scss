@@ -1,3 +1,66 @@
+// ==================== Header Action Buttons ====================
+.form-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .btn-previous,
+  .btn-next,
+  .btn-save {
+    padding: 10px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 100px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+
+  .btn-previous {
+    background: #fff;
+    color: #374151;
+    border: 1px solid #D1D5DB;
+
+    &:hover {
+      background: #F9FAFB;
+      border-color: #9CA3AF;
+    }
+  }
+
+  .btn-next {
+    background: #5B21B6;
+    color: #fff;
+
+    &:hover {
+      background: #4C1D95;
+    }
+  }
+
+  .btn-save {
+    background: #5B21B6;
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background: #4C1D95;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// ==================== Form Container ====================
 .student-form-container {
   padding: 1.5rem;
   max-width: 600px;
