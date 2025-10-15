@@ -3,7 +3,7 @@
   <div class="screen-toolbar">
     <div class="toolbar-left">
       <div class="tenant-search">
-        <i class="search-icon ic-search"></i>
+        <i class="search-icon fas fa-search"></i>
         <input 
           type="text" 
           class="search-input" 
@@ -29,7 +29,7 @@
     <div class="toolbar-right">
       <div class="filter-container">
         <button class="filter-btn" (click)="toggleFilterPopup()">
-          <i class="ic-filter"></i>
+          <i class="fas fa-filter"></i>
           Filter
         </button>
         <!-- Filter Popup - Moved inside container for better positioning -->
@@ -79,7 +79,7 @@
         </div>
       </div>
       <button class="add-btn" (click)="openAddTenantOffcanvas()">
-        <i class="ic-plus"></i>
+        <i class="fas fa-plus"></i>
         Add Tenant
       </button>
     </div>
@@ -275,7 +275,7 @@
           {{ selectedTenant.name }}
         </h2>
         <button class="modal-close-btn" (click)="closeViewTenantModal()">
-          <i class="ic-close"></i>
+          <i class="fas fa-times"></i>
         </button>
       </div>
 
@@ -323,7 +323,7 @@
             <div class="section-header">
               <h3 class="section-title">Phone Numbers</h3>
               <button class="btn-sm btn-primary" (click)="toggleAddPhoneForm()">
-                <i class="ic-plus"></i>
+                <i class="fas fa-plus"></i>
                 Add Phone
               </button>
             </div>
@@ -393,11 +393,11 @@
                     <div class="contact-actions">
                       @if (!phone.isPrimary) {
                         <button class="btn-icon" (click)="togglePrimaryPhone(phone.id)" title="Set as primary">
-                          <i class="ic-star"></i>
+                          <i class="fas fa-star"></i>
                         </button>
                       }
                       <button class="btn-icon btn-danger" (click)="deletePhoneNumber(phone.id)" title="Delete">
-                        <i class="ic-delete"></i>
+                        <i class="fas fa-trash-alt"></i>
                       </button>
                     </div>
                   </div>
@@ -411,7 +411,7 @@
             <div class="section-header">
               <h3 class="section-title">Email Addresses</h3>
               <button class="btn-sm btn-primary" (click)="toggleAddEmailForm()">
-                <i class="ic-plus"></i>
+                <i class="fas fa-plus"></i>
                 Add Email
               </button>
             </div>
@@ -467,11 +467,11 @@
                     <div class="contact-actions">
                       @if (!email.isPrimary) {
                         <button class="btn-icon" (click)="togglePrimaryEmail(email.id)" title="Set as primary">
-                          <i class="ic-star"></i>
+                          <i class="fas fa-star"></i>
                         </button>
                       }
                       <button class="btn-icon btn-danger" (click)="deleteEmailAddress(email.id)" title="Delete">
-                        <i class="ic-delete"></i>
+                        <i class="fas fa-trash-alt"></i>
                       </button>
                     </div>
                   </div>

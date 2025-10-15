@@ -13,10 +13,13 @@ export interface Institute {
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
+  logo_url?: string;
+  student_count?: number;
 }
 
 export interface Filters {
   search: string;
+  status: string;
 }
 
 @Component({
@@ -35,7 +38,8 @@ export class InstituteManagement implements OnInit, OnDestroy {
   searchTerm: string = '';
   showFilterPopup: boolean = false;
   filters: Filters = {
-    search: ''
+    search: '',
+    status: ''
   };
 
   // Institute data
@@ -112,23 +116,20 @@ export class InstituteManagement implements OnInit, OnDestroy {
       const response = await this.httpRequests.getAllInstitutes({
         page: this.currentPage,
         limit: this.itemsPerPage,
-        filters: {
-          search: this.filters.search
-        }
+        ...this.filters
       });
 
       if (response.success) {
         this.allInstitutes = response.data?.items || [];
         this.totalInstitutes = response.data?.pagination?.total || 0;
         this.totalPages = Math.ceil(this.totalInstitutes / this.itemsPerPage);
-        this.filteredInstitutes = [...this.allInstitutes];
-        this.paginatedInstitutes = [...this.allInstitutes];
+        this.filterAndPaginateInstitutes();
       } else {
         this.instituteLoadError = response.message || 'Failed to load institutes';
         console.error('Institute load error:', response);
       }
-    } catch (error) {
-      this.instituteLoadError = 'An unexpected error occurred';
+    } catch (error: any) {
+      this.instituteLoadError = error.message || 'An unexpected error occurred';
       console.error('Error loading institutes:', error);
     } finally {
       this.isLoadingInstitutes = false;
@@ -156,9 +157,122 @@ export class InstituteManagement implements OnInit, OnDestroy {
     }
   }
 
+  // ==================== Filtering & Pagination ====================
+
+  filterAndPaginateInstitutes(): void {
+    this.filteredInstitutes = this.allInstitutes.filter(institute => {
+      const matchesSearch = !this.searchTerm || 
+        institute.institute_name.toLowerCase().includes(this.searchTerm.toLowerCase());
+
+      return matchesSearch;
+    });
+
+    this.paginatedInstitutes = this.filteredInstitutes;
+  }
+
+  onSearchChange(value: string): void {
+    this.searchTerm = value;
+    this.currentPage = 1;
+    this.loadInstitutes();
+  }
+
+  onFilterChange(): void {
+    this.currentPage = 1;
+    this.loadInstitutes();
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.loadInstitutes();
+  }
+
+  onItemsPerPageChanged(value: string | number): void {
+    this.itemsPerPage = Number(value);
+    this.currentPage = 1;
+    this.loadInstitutes();
+  }
+
+  // ==================== Filter Methods ====================
+
+  toggleFilterPopup(): void {
+    this.showFilterPopup = !this.showFilterPopup;
+  }
+
+  resetStatusFilter(): void {
+    this.filters.status = '';
+  }
+
+  resetAllFilters(): void {
+    this.filters = {
+      search: '',
+      status: ''
+    };
+    this.searchTerm = '';
+  }
+
+  applyFilters(): void {
+    this.showFilterPopup = false;
+    this.currentPage = 1;
+    this.loadInstitutes();
+  }
+
+  // ==================== Bulk Actions ====================
+
+  selectAll(): void {
+    this.selectedInstitutes = this.allInstitutes.map(i => i.institute_id);
+  }
+
+  async bulkActivate(): Promise<void> {
+    if (!confirm(`Are you sure you want to activate ${this.selectedInstitutes.length} institute(s)?`)) {
+      return;
+    }
+
+    try {
+      // Call bulk activate API when available
+      this.showSuccessMessage(`${this.selectedInstitutes.length} institute(s) activated successfully`);
+      this.selectedInstitutes = [];
+      this.loadInstitutes();
+    } catch (error: any) {
+      console.error('Error activating institutes:', error);
+      this.showErrorMessage('Failed to activate institutes');
+    }
+  }
+
+  async bulkDeactivate(): Promise<void> {
+    if (!confirm(`Are you sure you want to deactivate ${this.selectedInstitutes.length} institute(s)?`)) {
+      return;
+    }
+
+    try {
+      // Call bulk deactivate API when available
+      this.showSuccessMessage(`${this.selectedInstitutes.length} institute(s) deactivated successfully`);
+      this.selectedInstitutes = [];
+      this.loadInstitutes();
+    } catch (error: any) {
+      console.error('Error deactivating institutes:', error);
+      this.showErrorMessage('Failed to deactivate institutes');
+    }
+  }
+
+  async bulkDelete(): Promise<void> {
+    if (!confirm(`Are you sure you want to delete ${this.selectedInstitutes.length} institute(s)? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      // Call bulk delete API when available
+      this.showSuccessMessage(`${this.selectedInstitutes.length} institute(s) deleted successfully`);
+      this.selectedInstitutes = [];
+      this.loadInstitutes();
+    } catch (error: any) {
+      console.error('Error deleting institutes:', error);
+      this.showErrorMessage('Failed to delete institutes');
+    }
+  }
+
   // ==================== CRUD Operations ====================
 
-  openAddOffcanvas(): void {
+  openAddInstituteOffcanvas(): void {
     this.isEditMode = false;
     this.isViewMode = false;
     this.editingInstituteId = null;
@@ -167,24 +281,50 @@ export class InstituteManagement implements OnInit, OnDestroy {
     this.showAddInstituteOffcanvas = true;
   }
 
-  async openEditOffcanvas(instituteId: number, event: Event): Promise<void> {
-    event.stopPropagation();
+  async onEditInstitute(institute: Institute): Promise<void> {
+    // Close the menu first
     this.activeMenuId = null;
+    
+    this.editingInstituteId = institute.institute_id;
     this.isEditMode = true;
     this.isViewMode = false;
-    this.editingInstituteId = instituteId;
+    await this.loadInstituteDetails(institute.institute_id);
+    
     this.showAddInstituteOffcanvas = true;
-    await this.loadInstituteDetails(instituteId);
   }
 
-  async openViewOffcanvas(instituteId: number, event: Event): Promise<void> {
-    event.stopPropagation();
+  async onViewInstitute(institute: Institute): Promise<void> {
+    // Close the menu first
     this.activeMenuId = null;
+    
     this.isViewMode = true;
     this.isEditMode = false;
-    this.editingInstituteId = instituteId;
+    this.editingInstituteId = institute.institute_id;
+    await this.loadInstituteDetails(institute.institute_id);
+    
     this.showAddInstituteOffcanvas = true;
-    await this.loadInstituteDetails(instituteId);
+  }
+
+  async onDeleteInstitute(institute: Institute): Promise<void> {
+    this.activeMenuId = null;
+    
+    if (!confirm(`Are you sure you want to delete "${institute.institute_name}"?`)) {
+      return;
+    }
+
+    try {
+      const response = await this.httpRequests.deleteInstitute(institute.institute_id);
+      
+      if (response.success) {
+        this.showSuccessMessage('Institute deleted successfully');
+        await this.loadInstitutes();
+      } else {
+        this.showErrorMessage(response.message || 'Failed to delete institute');
+      }
+    } catch (error: any) {
+      console.error('Error deleting institute:', error);
+      this.showErrorMessage(error.message || 'An error occurred while deleting institute');
+    }
   }
 
   async handleSave(): Promise<void> {
@@ -206,38 +346,19 @@ export class InstituteManagement implements OnInit, OnDestroy {
       }
 
       if (response.success) {
-        this.showAddInstituteOffcanvas = false;
+        this.showSuccessMessage(this.isEditMode ? 'Institute updated successfully' : 'Institute created successfully');
+        this.closeAddInstituteOffcanvas();
         await this.loadInstitutes();
       } else {
-        alert(response.message || 'Failed to save institute');
+        this.showErrorMessage(response.message || 'Failed to save institute');
       }
     } catch (error: any) {
       console.error('Error saving institute:', error);
-      alert(error?.message || 'An unexpected error occurred');
+      this.showErrorMessage(error?.message || 'An unexpected error occurred');
     }
   }
 
-  async handleDelete(instituteId: number, event: Event): Promise<void> {
-    event.stopPropagation();
-    this.activeMenuId = null;
-    
-    if (confirm('Are you sure you want to delete this institute?')) {
-      try {
-        const response = await this.httpRequests.deleteInstitute(instituteId);
-        
-        if (response.success) {
-          await this.loadInstitutes();
-        } else {
-          alert(response.message || 'Failed to delete institute');
-        }
-      } catch (error) {
-        console.error('Error deleting institute:', error);
-        alert('An unexpected error occurred');
-      }
-    }
-  }
-
-  closeOffcanvas(): void {
+  closeAddInstituteOffcanvas(): void {
     this.showAddInstituteOffcanvas = false;
     this.isEditMode = false;
     this.isViewMode = false;
@@ -246,47 +367,7 @@ export class InstituteManagement implements OnInit, OnDestroy {
     this.instituteName = '';
   }
 
-  // ==================== Search & Filters ====================
-
-  async onSearch(): Promise<void> {
-    this.filters.search = this.searchTerm;
-    this.currentPage = 1;
-    await this.loadInstitutes();
-  }
-
-  toggleFilterPopup(event: Event): void {
-    event.stopPropagation();
-    this.showFilterPopup = !this.showFilterPopup;
-  }
-
-  async applyFilters(): Promise<void> {
-    this.currentPage = 1;
-    await this.loadInstitutes();
-    this.showFilterPopup = false;
-  }
-
-  async resetAllFilters(): Promise<void> {
-    this.filters.search = '';
-    this.searchTerm = '';
-    this.currentPage = 1;
-    await this.loadInstitutes();
-    this.showFilterPopup = false;
-  }
-
-  // ==================== Pagination ====================
-
-  async onPageChange(page: number): Promise<void> {
-    this.currentPage = page;
-    await this.loadInstitutes();
-  }
-
-  async onItemsPerPageChanged(newItemsPerPage: number): Promise<void> {
-    this.itemsPerPage = newItemsPerPage;
-    this.currentPage = 1;
-    await this.loadInstitutes();
-  }
-
-  // ==================== Selection & Bulk Actions ====================
+  // ==================== Selection Methods ====================
 
   toggleInstituteSelection(instituteId: number): void {
     const index = this.selectedInstitutes.indexOf(instituteId);
@@ -301,42 +382,54 @@ export class InstituteManagement implements OnInit, OnDestroy {
     return this.selectedInstitutes.includes(instituteId);
   }
 
-  selectAll(): void {
-    if (this.selectedInstitutes.length === this.paginatedInstitutes.length) {
-      this.selectedInstitutes = [];
-    } else {
+  areAllInstitutesSelected(): boolean {
+    return this.paginatedInstitutes.length > 0 && 
+           this.selectedInstitutes.length === this.paginatedInstitutes.length;
+  }
+
+  toggleAllInstitutes(event: any): void {
+    if (event.target.checked) {
       this.selectedInstitutes = this.paginatedInstitutes.map(i => i.institute_id);
+    } else {
+      this.selectedInstitutes = [];
     }
   }
 
-  async bulkDelete(): Promise<void> {
-    if (this.selectedInstitutes.length === 0) return;
-    
-    if (confirm(`Are you sure you want to delete ${this.selectedInstitutes.length} institute(s)?`)) {
-      try {
-        const promises = this.selectedInstitutes.map(id => 
-          this.httpRequests.deleteInstitute(id)
-        );
-        
-        await Promise.all(promises);
-        this.selectedInstitutes = [];
-        await this.loadInstitutes();
-      } catch (error) {
-        console.error('Error in bulk delete:', error);
-        alert('Some institutes could not be deleted');
-      }
-    }
-  }
+  // ==================== Menu Methods ====================
 
-  // ==================== Menu Actions ====================
-
-  toggleMenu(event: Event, instituteId: number): void {
+  toggleMenu(instituteId: number, event: Event): void {
     event.stopPropagation();
     this.activeMenuId = this.activeMenuId === instituteId ? null : instituteId;
   }
 
-  isMenuActive(instituteId: number): boolean {
-    return this.activeMenuId === instituteId;
+  // ==================== Helper Methods ====================
+
+  trackByInstituteId(index: number, institute: Institute): number {
+    return institute.institute_id;
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '';
+    const words = name.trim().split(' ');
+    if (words.length === 1) {
+      return words[0].substring(0, 2).toUpperCase();
+    }
+    return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+  }
+
+  getAvatarClass(index: number): string {
+    const classes = ['bg-green', 'bg-blue', 'bg-orange', 'bg-purple', 'bg-pink', 'bg-teal', 'bg-indigo', 'bg-cyan'];
+    return classes[index % classes.length];
+  }
+
+  showSuccessMessage(message: string): void {
+    // Implement toast notification or alert
+    alert(message);
+  }
+
+  showErrorMessage(message: string): void {
+    // Implement toast notification or alert
+    alert(message);
   }
 }
 

@@ -1,15 +1,15 @@
-<div class="institute-management-container">
+<div class="institute-dashboard">
   <!-- Standard Screen Toolbar -->
   <div class="screen-toolbar">
     <div class="toolbar-left">
       <div class="institute-search">
-        <i class="search-icon ic-search"></i>
+        <i class="search-icon fas fa-search"></i>
         <input 
           type="text" 
           class="search-input" 
-          placeholder="Search institutes..." 
+          placeholder="Search here..." 
           [(ngModel)]="searchTerm"
-          (input)="onSearch()">
+          (ngModelChange)="onSearchChange($event)">
       </div>
     </div>
     
@@ -28,17 +28,27 @@
     
     <div class="toolbar-right">
       <div class="filter-container">
-        <button class="filter-btn" (click)="toggleFilterPopup($event)">
-          <i class="ic-filter"></i>
+        <button class="filter-btn" (click)="toggleFilterPopup()">
+          <i class="fas fa-filter"></i>
           Filter
         </button>
-        <!-- Filter Popup -->
+        <!-- Filter Popup - Moved inside container for better positioning -->
         <div class="filter-popup" [class.active]="showFilterPopup">
           <div class="filter-popup-header">
             <h3>Filters</h3>
           </div>
           <div class="filter-popup-body">
-            <p class="no-filters-text">No additional filters available</p>
+            <div class="filter-group">
+              <label class="filter-label">Status</label>
+              <div class="filter-options">
+                <button class="filter-option-btn" (click)="resetStatusFilter()">Reset</button>
+              </div>
+              <select class="filter-select" [(ngModel)]="filters.status">
+                <option value="">Select Status</option>
+                <option value="ACTIVE">Active</option>
+                <option value="INACTIVE">Inactive</option>
+              </select>
+            </div>
           </div>
           <div class="filter-popup-footer">
             <button class="btn-secondary" (click)="resetAllFilters()">Reset All</button>
@@ -46,8 +56,8 @@
           </div>
         </div>
       </div>
-      <button class="add-btn" (click)="openAddOffcanvas()">
-        <i class="ic-plus"></i>
+      <button class="add-btn" (click)="openAddInstituteOffcanvas()">
+        <i class="fas fa-plus"></i>
         Add Institute
       </button>
     </div>
@@ -55,7 +65,7 @@
 
   <!-- Bulk Actions Bar -->
   @if (selectedInstitutes.length > 0) {
-    <div class="bulk-actions-bar">
+    <div class="bulk-actions-bar mt-3">
       <div class="bulk-info">
         <span class="selection-count">{{selectedInstitutes.length}} items selected</span>
         <a href="javascript:;" class="select-all-link" (click)="selectAll()">
@@ -63,190 +73,219 @@
         </a>
       </div>
       <div class="bulk-actions">
-        <button class="bulk-action-btn delete-btn" (click)="bulkDelete()">
-          <i class="ic-trash"></i>
+        <button class="btn-success btn-sm" (click)="bulkActivate()" title="Activate Selected">
+          <i class="fas fa-check-circle"></i>
+          Activate
+        </button>
+        <button class="btn-danger btn-sm" (click)="bulkDeactivate()" title="Deactivate Selected">
+          <i class="fas fa-times-circle"></i>
+          Deactivate
+        </button>
+        <button class="btn-danger btn-sm" (click)="bulkDelete()" title="Delete Selected">
+          <i class="fas fa-trash-alt"></i>
           Delete
         </button>
       </div>
     </div>
   }
 
-  <!-- Loading State -->
-  @if (isLoadingInstitutes) {
-    <div class="loading-container">
-      <div class="loading-spinner"></div>
-      <p>Loading institutes...</p>
-    </div>
-  }
-
-  <!-- Error State -->
-  @if (instituteLoadError && !isLoadingInstitutes) {
-    <div class="error-container">
-      <p class="error-message">{{ instituteLoadError }}</p>
-      <button class="retry-btn" (click)="loadInstitutes()">Retry</button>
-    </div>
-  }
-
-  <!-- Institutes Table -->
-  @if (!isLoadingInstitutes && !instituteLoadError) {
-    <div class="institutes-table-container">
-      <table class="institutes-table">
-        <thead>
-          <tr>
-            <th class="checkbox-col">
-              <input 
-                type="checkbox" 
-                [checked]="selectedInstitutes.length === paginatedInstitutes.length && paginatedInstitutes.length > 0"
-                (change)="selectAll()">
-            </th>
-            <th>ID</th>
-            <th>Institute Name</th>
-            <th>Tenant</th>
-            <th>Status</th>
-            <th>Created At</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          @if (paginatedInstitutes.length === 0) {
-            <tr>
-              <td colspan="7" class="no-data">
-                No institutes found
-              </td>
-            </tr>
+  <!-- Main Content -->
+  <div class="screen-content mt-5">
+    <div class="data-container">
+      <div class="data-table-wrapper">
+        <div class="table-content">
+          @if (isLoadingInstitutes) {
+            <div class="table-state loading-state">
+              Loading institutes...
+            </div>
+          } @else if (instituteLoadError) {
+            <div class="table-state error-state">
+              {{ instituteLoadError }}
+            </div>
+          } @else if (paginatedInstitutes.length === 0) {
+            <div class="table-state empty-state">
+              No institutes found.
+            </div>
+          } @else {
+            <table class="institute-table">
+              <thead>
+                <tr>
+                  <th class="checkbox-col">
+                    <input 
+                      type="checkbox" 
+                      class="table-checkbox"
+                      [checked]="areAllInstitutesSelected()"
+                      (change)="toggleAllInstitutes($event)">
+                  </th>
+                  <th class="image-col">
+                    Image <i class="fas fa-sort"></i>
+                  </th>
+                  <th class="name-col">
+                    Institute Name <i class="fas fa-sort"></i>
+                  </th>
+                  <th class="count-col">
+                    Student Count <i class="fas fa-sort"></i>
+                  </th>
+                  <th class="created-col">
+                    Created At <i class="fas fa-sort"></i>
+                  </th>
+                  <th class="updated-col">
+                    Updated At <i class="fas fa-sort"></i>
+                  </th>
+                  <th class="status-col">
+                    Status
+                  </th>
+                  <th class="actions-col">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (institute of paginatedInstitutes; track trackByInstituteId($index, institute)) {
+                  <tr>
+                    <td class="checkbox-col">
+                      <input 
+                        type="checkbox" 
+                        class="table-checkbox"
+                        [checked]="isInstituteSelected(institute.institute_id)"
+                        (change)="toggleInstituteSelection(institute.institute_id)">
+                    </td>
+                    <td class="image-col">
+                      <div class="institute-logo" [ngClass]="getAvatarClass($index)">
+                        @if (institute.logo_url) {
+                          <img [src]="institute.logo_url" [alt]="institute.institute_name" class="institute-avatar-img"/>
+                        } @else {
+                          {{ getInitials(institute.institute_name) }}
+                        }
+                      </div>
+                    </td>
+                    <td class="name-col">
+                      <div class="institute-name">{{ institute.institute_name }}</div>
+                    </td>
+                    <td class="count-col">{{ institute.student_count || '04' }}</td>
+                    <td class="created-col">{{ institute.created_at | date:'dd-MM-yyyy' }}</td>
+                    <td class="updated-col">{{ institute.updated_at | date:'dd-MM-yyyy' }}</td>
+                    <td class="status-col">
+                      <span class="enum-badge" [ngClass]="'badge-' + (institute.is_active ? 'active' : 'inactive')">
+                        {{ institute.is_active ? 'Active' : 'In Active' }}
+                      </span>
+                    </td>
+                    <td class="actions-col">
+                      <div class="crud-menu-container">
+                        <button 
+                          class="crud-menu-trigger" 
+                          [class.active]="activeMenuId === institute.institute_id"
+                          (click)="toggleMenu(institute.institute_id, $event)">
+                          ⋮
+                        </button>
+                        
+                        <!-- Menu dropdown with simplified structure -->
+                        <ul 
+                          class="crud-menu-dropdown" 
+                          [class.show]="activeMenuId === institute.institute_id"
+                          [attr.data-menu-id]="institute.institute_id">
+                          <li (click)="onViewInstitute(institute); $event.stopPropagation()">
+                            <i class="fas fa-eye"></i>
+                            <span>View</span>
+                          </li>
+                          <li (click)="onEditInstitute(institute); $event.stopPropagation()">
+                            <i class="fas fa-edit"></i>
+                            <span>Edit</span>
+                          </li>
+                          <li class="danger" (click)="onDeleteInstitute(institute); $event.stopPropagation()">
+                            <i class="fas fa-trash-alt"></i>
+                            <span>Delete</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           }
-          @for (institute of paginatedInstitutes; track institute.institute_id) {
-            <tr>
-              <td class="checkbox-col">
-                <input 
-                  type="checkbox" 
-                  [checked]="isInstituteSelected(institute.institute_id)"
-                  (change)="toggleInstituteSelection(institute.institute_id)">
-              </td>
-              <td>{{ institute.institute_id }}</td>
-              <td>
-                <div class="institute-name">{{ institute.institute_name }}</div>
-              </td>
-              <td>{{ institute.tenant_name || 'N/A' }}</td>
-              <td>
-                <span class="status-badge" [class.active]="institute.is_active" [class.inactive]="!institute.is_active">
-                  {{ institute.is_active ? 'Active' : 'Inactive' }}
-                </span>
-              </td>
-              <td>{{ institute.created_at | date:'short' }}</td>
-              <td class="actions-col">
-                <div class="crud-menu-container">
-                  <button class="crud-menu-btn" (click)="toggleMenu($event, institute.institute_id)">
-                    <i class="ic-more-vertical"></i>
-                  </button>
-                  @if (isMenuActive(institute.institute_id)) {
-                    <div class="crud-menu-dropdown">
-                      <button class="crud-menu-item" (click)="openViewOffcanvas(institute.institute_id, $event)">
-                        <i class="ic-eye"></i>
-                        View
-                      </button>
-                      <button class="crud-menu-item" (click)="openEditOffcanvas(institute.institute_id, $event)">
-                        <i class="ic-edit"></i>
-                        Edit
-                      </button>
-                      <button class="crud-menu-item delete" (click)="handleDelete(institute.institute_id, $event)">
-                        <i class="ic-trash"></i>
-                        Delete
-                      </button>
-                    </div>
-                  }
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Pagination -->
+  <!-- Pagination Footer -->
+  
     <app-paginator
       [currentPage]="currentPage"
       [totalItems]="totalInstitutes"
       [itemsPerPage]="itemsPerPage"
+      [maxVisiblePages]="10"
       (pageChange)="onPageChange($event)">
     </app-paginator>
-  }
+  
 </div>
 
-<!-- Off-Canvas Wrapper for Add/Edit/View Institute -->
-<app-off-canvas-wrapper 
-  [isOpen]="showAddInstituteOffcanvas" 
-  [title]="isViewMode ? 'View Institute' : (isEditMode ? 'Edit Institute' : 'Add Institute')"
-  (closed)="closeOffcanvas()">
+<!-- Add/Edit/View Institute Off-Canvas -->
+<app-off-canvas-wrapper
+  [isOpen]="showAddInstituteOffcanvas"
+  [title]="isViewMode ? 'View Institute' : isEditMode ? 'Edit Institute' : 'Add Institute'"
+  (close)="closeAddInstituteOffcanvas()">
   
-  @if (isLoadingInstituteDetails) {
-    <div class="loading-container">
-      <div class="loading-spinner"></div>
-      <p>Loading institute details...</p>
+  <div class="institute-form">
+    <!-- Institute Name Field -->
+    <div class="form-group">
+      <label for="instituteName" class="form-label">Institute Name</label>
+      <input 
+        type="text" 
+        id="instituteName" 
+        class="form-control" 
+        placeholder="Enter institute name"
+        [(ngModel)]="instituteName"
+        [disabled]="isViewMode">
     </div>
-  }
 
-  @if (!isLoadingInstituteDetails) {
-    <div class="institute-form">
-      <!-- Institute Name Field -->
+    @if (isViewMode && selectedInstitute) {
       <div class="form-group">
-        <label for="instituteName" class="form-label">Institute Name</label>
+        <label class="form-label">Tenant</label>
         <input 
           type="text" 
-          id="instituteName" 
           class="form-control" 
-          placeholder="Enter institute name"
-          [(ngModel)]="instituteName"
-          [disabled]="isViewMode">
+          [value]="selectedInstitute.tenant_name || 'N/A'"
+          disabled>
       </div>
 
-      @if (isViewMode && selectedInstitute) {
-        <div class="form-group">
-          <label class="form-label">Tenant</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            [value]="selectedInstitute.tenant_name || 'N/A'"
-            disabled>
-        </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <input 
+          type="text" 
+          class="form-control" 
+          [value]="selectedInstitute.is_active ? 'Active' : 'Inactive'"
+          disabled>
+      </div>
 
-        <div class="form-group">
-          <label class="form-label">Status</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            [value]="selectedInstitute.is_active ? 'Active' : 'Inactive'"
-            disabled>
-        </div>
+      <div class="form-group">
+        <label class="form-label">Created At</label>
+        <input 
+          type="text" 
+          class="form-control" 
+          [value]="selectedInstitute.created_at | date:'medium'"
+          disabled>
+      </div>
 
-        <div class="form-group">
-          <label class="form-label">Created At</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            [value]="selectedInstitute.created_at | date:'medium'"
-            disabled>
-        </div>
+      <div class="form-group">
+        <label class="form-label">Updated At</label>
+        <input 
+          type="text" 
+          class="form-control" 
+          [value]="selectedInstitute.updated_at | date:'medium'"
+          disabled>
+      </div>
+    }
 
-        <div class="form-group">
-          <label class="form-label">Updated At</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            [value]="selectedInstitute.updated_at | date:'medium'"
-            disabled>
-        </div>
-      }
-
-      <!-- Form Actions -->
-      @if (!isViewMode) {
-        <div class="form-actions">
-          <button class="btn-secondary" (click)="closeOffcanvas()">Cancel</button>
-          <button class="btn-primary" (click)="handleSave()">
-            {{ isEditMode ? 'Update' : 'Create' }}
-          </button>
-        </div>
-      }
-    </div>
-  }
+    <!-- Form Actions -->
+    @if (!isViewMode) {
+      <div class="form-actions">
+        <button class="btn-secondary" (click)="closeAddInstituteOffcanvas()">Cancel</button>
+        <button class="btn-primary" (click)="handleSave()">
+          {{ isEditMode ? 'Update' : 'Create' }}
+        </button>
+      </div>
+    }
+  </div>
 </app-off-canvas-wrapper>

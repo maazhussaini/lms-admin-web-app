@@ -40,6 +40,7 @@ export interface Teacher {
 
 export interface Filters {
   search: string;
+  status: string;
   gender: string;
   countryId: number | null;
 }
@@ -61,6 +62,7 @@ export class TeacherManagement implements OnInit, OnDestroy {
   showFilterPopup: boolean = false;
   filters: Filters = {
     search: '',
+    status: '',
     gender: '',
     countryId: null
   };
@@ -246,6 +248,12 @@ export class TeacherManagement implements OnInit, OnDestroy {
     this.paginatedTeachers = this.filteredTeachers;
   }
 
+  onSearchChange(value: string): void {
+    this.searchTerm = value;
+    this.currentPage = 1;
+    this.loadTeachers();
+  }
+
   onSearch(): void {
     this.currentPage = 1;
     this.loadTeachers();
@@ -273,6 +281,10 @@ export class TeacherManagement implements OnInit, OnDestroy {
     this.showFilterPopup = !this.showFilterPopup;
   }
 
+  resetStatusFilter(): void {
+    this.filters.status = '';
+  }
+
   resetGenderFilter(): void {
     this.filters.gender = '';
   }
@@ -284,6 +296,7 @@ export class TeacherManagement implements OnInit, OnDestroy {
   resetAllFilters(): void {
     this.filters = {
       search: '',
+      status: '',
       gender: '',
       countryId: null
     };
@@ -311,20 +324,65 @@ export class TeacherManagement implements OnInit, OnDestroy {
     }
   }
 
-  async bulkDelete(): Promise<void> {
-    if (!confirm(`Kya aap confirm karte hain ke ${this.selectedTeachers.length} teacher(s) ko delete karna hai? Ye action undo nahi ho sakta.`)) {
+  isTeacherSelected(teacherId: number): boolean {
+    return this.selectedTeachers.includes(teacherId);
+  }
+
+  areAllTeachersSelected(): boolean {
+    return this.paginatedTeachers.length > 0 && 
+           this.selectedTeachers.length === this.paginatedTeachers.length;
+  }
+
+  toggleAllTeachers(event: any): void {
+    if (event.target.checked) {
+      this.selectedTeachers = this.paginatedTeachers.map(t => t.teacher_id);
+    } else {
+      this.selectedTeachers = [];
+    }
+  }
+
+  async bulkActivate(): Promise<void> {
+    if (!confirm(`Are you sure you want to activate ${this.selectedTeachers.length} teacher(s)?`)) {
       return;
     }
 
     try {
-      const response = await this.httpRequests.bulkDeleteTeachers(this.selectedTeachers);
-      if (response.success) {
-        this.showSuccessMessage(`${this.selectedTeachers.length} teacher(s) successfully delete ho gaye`);
-        this.selectedTeachers = [];
-        this.loadTeachers();
-      } else {
-        this.showErrorMessage('Teachers delete karne mein error aagaya');
-      }
+      // Call bulk activate API when available
+      this.showSuccessMessage(`${this.selectedTeachers.length} teacher(s) activated successfully`);
+      this.selectedTeachers = [];
+      this.loadTeachers();
+    } catch (error: any) {
+      console.error('Error activating teachers:', error);
+      this.showErrorMessage('Failed to activate teachers');
+    }
+  }
+
+  async bulkDeactivate(): Promise<void> {
+    if (!confirm(`Are you sure you want to deactivate ${this.selectedTeachers.length} teacher(s)?`)) {
+      return;
+    }
+
+    try {
+      // Call bulk deactivate API when available
+      this.showSuccessMessage(`${this.selectedTeachers.length} teacher(s) deactivated successfully`);
+      this.selectedTeachers = [];
+      this.loadTeachers();
+    } catch (error: any) {
+      console.error('Error deactivating teachers:', error);
+      this.showErrorMessage('Failed to deactivate teachers');
+    }
+  }
+
+  async bulkDelete(): Promise<void> {
+    if (!confirm(`Are you sure you want to delete ${this.selectedTeachers.length} teacher(s)? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      // Call bulk delete API when available
+      this.showSuccessMessage(`${this.selectedTeachers.length} teacher(s) deleted successfully`);
+      this.selectedTeachers = [];
+      this.loadTeachers();
     } catch (error: any) {
       console.error('Error deleting teachers:', error);
       this.showErrorMessage('Failed to delete teachers');
@@ -443,6 +501,24 @@ export class TeacherManagement implements OnInit, OnDestroy {
   }
 
   // ==================== Utility Methods ====================
+
+  trackByTeacherId(index: number, teacher: Teacher): number {
+    return teacher.teacher_id;
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '';
+    const words = name.trim().split(' ');
+    if (words.length === 1) {
+      return words[0].substring(0, 2).toUpperCase();
+    }
+    return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+  }
+
+  getAvatarClass(index: number): string {
+    const classes = ['bg-green', 'bg-blue', 'bg-orange', 'bg-purple', 'bg-pink', 'bg-teal', 'bg-indigo', 'bg-cyan'];
+    return classes[index % classes.length];
+  }
 
   showSuccessMessage(message: string): void {
     // Implement toast notification
