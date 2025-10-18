@@ -54,9 +54,10 @@ export class BasicTenantForm implements OnInit {
 
   statusOptions = [
     { label: 'Active', value: 'ACTIVE' },
-    { label: 'Inactive', value: 'INACTIVE' },
     { label: 'Suspended', value: 'SUSPENDED' },
-    { label: 'Trial', value: 'TRIAL' }
+    { label: 'Trial', value: 'TRIAL' },
+    { label: 'Expired', value: 'EXPIRED' },
+    { label: 'Cancelled', value: 'CANCELLED' }
   ];
 
   contactTypeOptions = [
@@ -130,6 +131,24 @@ export class BasicTenantForm implements OnInit {
       };
       reader.readAsDataURL(input.files[0]);
     }
+  }
+
+  removeLogoLight() {
+    this.formData.logoLightFile = null;
+    this.formData.logoLightPreview = undefined;
+    this.onFormChange();
+  }
+
+  removeLogoDark() {
+    this.formData.logoDarkFile = null;
+    this.formData.logoDarkPreview = undefined;
+    this.onFormChange();
+  }
+
+  removeFavicon() {
+    this.formData.faviconFile = null;
+    this.formData.faviconPreview = undefined;
+    this.onFormChange();
   }
 
   // Phone number management

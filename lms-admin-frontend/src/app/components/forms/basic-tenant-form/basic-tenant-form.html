@@ -50,6 +50,80 @@
     </div>
   </div>
 
+  <!-- File Upload Section -->
+  <div class="form-section">
+    <h3 class="section-title">Branding Assets</h3>
+    
+    <!-- Logo Light -->
+    <div class="form-group">
+      <label class="form-label">Logo (Light Theme)</label>
+      @if (!isViewMode) {
+        <input 
+          type="file" 
+          class="form-input-file" 
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          (change)="onLogoLightChange($event)"
+          #logoLightInput>
+      }
+      @if (formData.logoLightPreview) {
+        <div class="file-preview">
+          <img [src]="formData.logoLightPreview" alt="Logo Light Preview" class="preview-image">
+          @if (!isViewMode) {
+            <button type="button" class="btn-remove-file" (click)="removeLogoLight()">
+              <i class="fas fa-times"></i>
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Logo Dark -->
+    <div class="form-group">
+      <label class="form-label">Logo (Dark Theme)</label>
+      @if (!isViewMode) {
+        <input 
+          type="file" 
+          class="form-input-file" 
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          (change)="onLogoDarkChange($event)"
+          #logoDarkInput>
+      }
+      @if (formData.logoDarkPreview) {
+        <div class="file-preview">
+          <img [src]="formData.logoDarkPreview" alt="Logo Dark Preview" class="preview-image">
+          @if (!isViewMode) {
+            <button type="button" class="btn-remove-file" (click)="removeLogoDark()">
+              <i class="fas fa-times"></i>
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Favicon -->
+    <div class="form-group">
+      <label class="form-label">Favicon</label>
+      @if (!isViewMode) {
+        <input 
+          type="file" 
+          class="form-input-file" 
+          accept="image/x-icon,image/vnd.microsoft.icon"
+          (change)="onFaviconChange($event)"
+          #faviconInput>
+      }
+      @if (formData.faviconPreview) {
+        <div class="file-preview">
+          <img [src]="formData.faviconPreview" alt="Favicon Preview" class="preview-image preview-small">
+          @if (!isViewMode) {
+            <button type="button" class="btn-remove-file" (click)="removeFavicon()">
+              <i class="fas fa-times"></i>
+            </button>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
   <!-- Phone Numbers Section -->
   <div class="form-section">
     <div class="section-header">

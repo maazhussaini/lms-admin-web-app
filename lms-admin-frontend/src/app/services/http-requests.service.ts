@@ -109,15 +109,116 @@ export class HttpRequests {
   }
 
   async createTenant(tenantData: any): Promise<ApiResponse<any>> {
+    // If tenantData has files, convert to FormData
+    if (tenantData.logoLightFile || tenantData.logoDarkFile || tenantData.faviconFile) {
+      const formData = new FormData();
+      
+      // Add basic fields
+      if (tenantData.name) formData.append('tenant_name', tenantData.name);
+      if (tenantData.domain) formData.append('tenant_domain', tenantData.domain);
+      if (tenantData.status) formData.append('tenant_status', tenantData.status);
+      
+      // Add files
+      if (tenantData.logoLightFile) {
+        formData.append('logo_light', tenantData.logoLightFile);
+      }
+      if (tenantData.logoDarkFile) {
+        formData.append('logo_dark', tenantData.logoDarkFile);
+      }
+      if (tenantData.faviconFile) {
+        formData.append('favicon', tenantData.faviconFile);
+      }
+      
+      // Add phone numbers
+      if (tenantData.phoneNumbers && tenantData.phoneNumbers.length > 0) {
+        formData.append('phone_numbers', JSON.stringify(tenantData.phoneNumbers));
+      }
+      
+      // Add email addresses
+      if (tenantData.emailAddresses && tenantData.emailAddresses.length > 0) {
+        formData.append('email_addresses', JSON.stringify(tenantData.emailAddresses));
+      }
+      
+      return this.apiMethods.post(`${this.baseUrl}/tenants`, formData);
+    }
+    
+    // No files, send as JSON
     return this.apiMethods.post(`${this.baseUrl}/tenants`, tenantData);
   }
 
   async updateTenant(id: string | number, tenantData: any): Promise<ApiResponse<any>> {
+    // If tenantData has files, convert to FormData
+    if (tenantData.logoLightFile || tenantData.logoDarkFile || tenantData.faviconFile || 
+        tenantData.deleteLogoLight || tenantData.deleteLogoDark || tenantData.deleteFavicon) {
+      const formData = new FormData();
+      
+      // Add basic fields
+      if (tenantData.name) formData.append('tenant_name', tenantData.name);
+      if (tenantData.domain) formData.append('tenant_domain', tenantData.domain);
+      if (tenantData.status) formData.append('tenant_status', tenantData.status);
+      
+      // Add files
+      if (tenantData.logoLightFile) {
+        formData.append('logo_light', tenantData.logoLightFile);
+      }
+      if (tenantData.logoDarkFile) {
+        formData.append('logo_dark', tenantData.logoDarkFile);
+      }
+      if (tenantData.faviconFile) {
+        formData.append('favicon', tenantData.faviconFile);
+      }
+      
+      // Add delete flags
+      if (tenantData.deleteLogoLight) {
+        formData.append('delete_logo_light', 'true');
+      }
+      if (tenantData.deleteLogoDark) {
+        formData.append('delete_logo_dark', 'true');
+      }
+      if (tenantData.deleteFavicon) {
+        formData.append('delete_favicon', 'true');
+      }
+      
+      // Add phone numbers
+      if (tenantData.phoneNumbers) {
+        formData.append('phone_numbers', JSON.stringify(tenantData.phoneNumbers));
+      }
+      
+      // Add email addresses
+      if (tenantData.emailAddresses) {
+        formData.append('email_addresses', JSON.stringify(tenantData.emailAddresses));
+      }
+      
+      return this.apiMethods.patch(`${this.baseUrl}/tenants/${id}`, formData);
+    }
+    
+    // No files, send as JSON
     return this.apiMethods.patch(`${this.baseUrl}/tenants/${id}`, tenantData);
   }
 
   async deleteTenant(id: string | number): Promise<ApiResponse<any>> {
     return this.apiMethods.delete(`${this.baseUrl}/tenants/${id}`);
+  }
+
+  async bulkActivateTenants(tenantIds: number[]): Promise<ApiResponse<any>> {
+    return this.apiMethods.post(`${this.baseUrl}/tenants/bulk-activate`, {
+      tenant_ids: tenantIds,
+      operation: 'activate'
+    });
+  }
+
+  async bulkDeactivateTenants(tenantIds: number[]): Promise<ApiResponse<any>> {
+    return this.apiMethods.post(`${this.baseUrl}/tenants/bulk-deactivate`, {
+      tenant_ids: tenantIds,
+      operation: 'deactivate'
+    });
+  }
+
+  async bulkDeleteTenants(tenantIds: number[]): Promise<ApiResponse<any>> {
+    return this.apiMethods.post(`${this.baseUrl}/tenants/bulk-delete`, {
+      tenant_ids: tenantIds,
+      operation: 'delete'
+    });
   }
 
   // ============= TENANT PHONE NUMBER APIs =============

@@ -663,7 +663,7 @@ export const cleanupTempFiles = async (
 /**
  * Network share upload path configuration
  */
-export const NETWORK_UPLOAD_PATH = '\\\\DESKTOP-ERNLAOT\\uploads';
+export const NETWORK_UPLOAD_PATH = env.UPLOAD_BASE_PATH || '\\\\DESKTOP-ERNLAOT\\uploads';
 
 /**
  * Tenant logo/favicon file naming conventions
@@ -708,17 +708,38 @@ export const uploadTenantLogo = async (
   logoType: 'light' | 'dark'
 ): Promise<string | null> => {
   try {
+    console.log('=== uploadTenantLogo START ===', {
+      tenantId,
+      logoType,
+      hasFile: !!file,
+      hasBuffer: !!file?.buffer,
+      bufferLength: file?.buffer?.length,
+      originalname: file?.originalname
+    });
+
     // Validate network path
     if (!ensureNetworkPath()) {
+      console.error('Network path not accessible');
       throw new InternalServerError(
         'Network upload path is not accessible',
         'NETWORK_PATH_ERROR'
       );
     }
 
-    // Create tenant directory
-    const tenantDir = path.join(NETWORK_UPLOAD_PATH, tenantId.toString());
-    createUploadDir(tenantDir);
+    // Create tenant directory - preserve UNC path format (\\server\share)
+    // Use simple concatenation to avoid path normalization issues
+    const tenantDir = NETWORK_UPLOAD_PATH + '\\' + tenantId;
+    console.log('Creating tenant directory:', tenantDir);
+    console.log('Using raw UNC path format');
+    
+    // Ensure directory exists
+    if (!fs.existsSync(tenantDir)) {
+      console.log('Directory does not exist, creating...');
+      fs.mkdirSync(tenantDir, { recursive: true });
+      console.log('Tenant directory created');
+    } else {
+      console.log('Tenant directory already exists');
+    }
 
     // Determine file extension
     const ext = path.extname(file.originalname);
@@ -726,20 +747,67 @@ export const uploadTenantLogo = async (
       ? `${TENANT_FILE_NAMES.LOGO_LIGHT}${ext}`
       : `${TENANT_FILE_NAMES.LOGO_DARK}${ext}`;
 
-    const targetPath = path.join(tenantDir, fileName);
+    const targetPath = tenantDir + '\\' + fileName;
+    console.log('Target path:', targetPath);
 
-    // Copy file to network share (delete old one if exists)
-    if (fs.existsSync(targetPath)) {
-      fs.unlinkSync(targetPath);
+    // Write file from buffer (multer memoryStorage)
+    if (file.buffer) {
+      console.log('Writing file from buffer, size:', file.buffer.length);
+      
+      // Delete old file if exists
+      if (fs.existsSync(targetPath)) {
+        console.log('Deleting existing file:', targetPath);
+        fs.unlinkSync(targetPath);
+      }
+      
+      // Write buffer to file with proper error handling
+      try {
+        fs.writeFileSync(targetPath, file.buffer, { mode: 0o666 });
+        console.log('File written to disk');
+        
+        // Verify file was actually written
+        if (!fs.existsSync(targetPath)) {
+          throw new Error('File write verification failed - file does not exist after write');
+        }
+        
+        const stats = fs.statSync(targetPath);
+        console.log('File verification successful:', {
+          exists: true,
+          size: stats.size,
+          expectedSize: file.buffer.length,
+          path: targetPath
+        });
+        
+        if (stats.size !== file.buffer.length) {
+          throw new Error(`File size mismatch: written ${stats.size} bytes, expected ${file.buffer.length} bytes`);
+        }
+        
+        console.log('File written and verified successfully');
+      } catch (writeError) {
+        console.error('File write error:', writeError);
+        throw writeError;
+      }
+    } else if (file.path) {
+      console.log('Copying file from path:', file.path);
+      // Copy file from disk storage
+      if (fs.existsSync(targetPath)) {
+        fs.unlinkSync(targetPath);
+      }
+      
+      fs.copyFileSync(file.path, targetPath);
+      
+      // Delete temporary file
+      fs.unlinkSync(file.path);
+      console.log('File copied successfully');
+    } else {
+      console.error('File has no buffer or path!');
+      throw new Error('File has no buffer or path');
     }
-    
-    fs.copyFileSync(file.path, targetPath);
-    
-    // Delete temporary file
-    fs.unlinkSync(file.path);
 
-    // Return network path (relative or full based on your needs)
-    return `\\\\DESKTOP-ERNLAOT\\uploads\\${tenantId}\\${fileName}`;
+    // Return network path with proper UNC format
+    const finalPath = NETWORK_UPLOAD_PATH + '\\' + tenantId + '\\' + fileName;
+    console.log('=== uploadTenantLogo SUCCESS ===', finalPath);
+    return finalPath;
   } catch (error) {
     console.error(`Error uploading tenant logo:`, error);
     throw new InternalServerError(
@@ -760,32 +828,99 @@ export const uploadTenantFavicon = async (
   tenantId: number
 ): Promise<string | null> => {
   try {
+    console.log('=== uploadTenantFavicon START ===', {
+      tenantId,
+      hasFile: !!file,
+      hasBuffer: !!file?.buffer,
+      bufferLength: file?.buffer?.length,
+      originalname: file?.originalname
+    });
+
     // Validate network path
     if (!ensureNetworkPath()) {
+      console.error('Network path not accessible');
       throw new InternalServerError(
         'Network upload path is not accessible',
         'NETWORK_PATH_ERROR'
       );
     }
 
-    // Create tenant directory
-    const tenantDir = path.join(NETWORK_UPLOAD_PATH, tenantId.toString());
-    createUploadDir(tenantDir);
-
-    const targetPath = path.join(tenantDir, TENANT_FILE_NAMES.FAVICON);
-
-    // Copy file to network share (delete old one if exists)
-    if (fs.existsSync(targetPath)) {
-      fs.unlinkSync(targetPath);
+    // Create tenant directory - preserve UNC path format (\\server\share)
+    // Use simple concatenation to avoid path normalization issues
+    const tenantDir = NETWORK_UPLOAD_PATH + '\\' + tenantId;
+    console.log('Creating tenant directory:', tenantDir);
+    console.log('Using raw UNC path format');
+    
+    // Ensure directory exists
+    if (!fs.existsSync(tenantDir)) {
+      console.log('Directory does not exist, creating...');
+      fs.mkdirSync(tenantDir, { recursive: true });
+      console.log('Tenant directory created');
+    } else {
+      console.log('Tenant directory already exists');
     }
-    
-    fs.copyFileSync(file.path, targetPath);
-    
-    // Delete temporary file
-    fs.unlinkSync(file.path);
 
-    // Return network path
-    return `\\\\DESKTOP-ERNLAOT\\uploads\\${tenantId}\\${TENANT_FILE_NAMES.FAVICON}`;
+    const targetPath = tenantDir + '\\' + TENANT_FILE_NAMES.FAVICON;
+    console.log('Target path:', targetPath);
+
+    // Write file from buffer (multer memoryStorage)
+    if (file.buffer) {
+      console.log('Writing favicon from buffer, size:', file.buffer.length);
+      
+      // Delete old file if exists
+      if (fs.existsSync(targetPath)) {
+        console.log('Deleting existing favicon:', targetPath);
+        fs.unlinkSync(targetPath);
+      }
+      
+      // Write buffer to file with proper error handling
+      try {
+        fs.writeFileSync(targetPath, file.buffer, { mode: 0o666 });
+        console.log('Favicon written to disk');
+        
+        // Verify file was actually written
+        if (!fs.existsSync(targetPath)) {
+          throw new Error('File write verification failed - favicon does not exist after write');
+        }
+        
+        const stats = fs.statSync(targetPath);
+        console.log('Favicon verification successful:', {
+          exists: true,
+          size: stats.size,
+          expectedSize: file.buffer.length,
+          path: targetPath
+        });
+        
+        if (stats.size !== file.buffer.length) {
+          throw new Error(`Favicon size mismatch: written ${stats.size} bytes, expected ${file.buffer.length} bytes`);
+        }
+        
+        console.log('Favicon written and verified successfully');
+      } catch (writeError) {
+        console.error('Favicon write error:', writeError);
+        throw writeError;
+      }
+    } else if (file.path) {
+      console.log('Copying favicon from path:', file.path);
+      // Copy file from disk storage
+      if (fs.existsSync(targetPath)) {
+        fs.unlinkSync(targetPath);
+      }
+      
+      fs.copyFileSync(file.path, targetPath);
+      
+      // Delete temporary file
+      fs.unlinkSync(file.path);
+      console.log('Favicon copied successfully');
+    } else {
+      console.error('Favicon has no buffer or path!');
+      throw new Error('File has no buffer or path');
+    }
+
+    // Return network path with proper UNC format
+    const finalPath = NETWORK_UPLOAD_PATH + '\\' + tenantId + '\\' + TENANT_FILE_NAMES.FAVICON;
+    console.log('=== uploadTenantFavicon SUCCESS ===', finalPath);
+    return finalPath;
   } catch (error) {
     console.error(`Error uploading tenant favicon:`, error);
     throw new InternalServerError(

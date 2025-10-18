@@ -59,6 +59,8 @@ interface EnvironmentConfig {
   // File Uploads
   MAX_FILE_SIZE_MB: number;
   UPLOAD_TEMP_DIR: string;
+  UPLOAD_BASE_PATH: string;
+  UPLOAD_TENANT_PATH: string;
   
   // Socket.IO
   SOCKET_IO_PATH: string;
@@ -173,6 +175,8 @@ export const env: EnvironmentConfig = {
   // File Uploads
   MAX_FILE_SIZE_MB: parseIntSafe(getEnv('MAX_FILE_SIZE_MB'), 10, 'MAX_FILE_SIZE_MB'),
   UPLOAD_TEMP_DIR: getEnv('UPLOAD_TEMP_DIR') || path.join(__dirname, '../../uploads/temp'),
+  UPLOAD_BASE_PATH: getEnv('UPLOAD_BASE_PATH') || '\\\\DESKTOP-ERNLAOT\\uploads',
+  UPLOAD_TENANT_PATH: getEnv('UPLOAD_TENANT_PATH') || 'tenants',
   
   // Socket.IO
   SOCKET_IO_PATH: getEnv('SOCKET_IO_PATH') || '/socket.io',

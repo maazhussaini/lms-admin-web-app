@@ -13,6 +13,7 @@ export interface Tenant {
   phone: string;
   clientsCount: number;
   status: string;
+  rawStatus?: string; // Raw status value for API (e.g., 'SUSPENDED')
   createdAt: Date;
   updatedAt: Date;
   logoInitial: string;
@@ -242,7 +243,8 @@ export class TenantManagement implements OnInit, OnDestroy {
     const tenantName = rawTenant?.tenant_name ?? rawTenant?.name ?? `Tenant ${tenantId}`;
     const createdAt = rawTenant?.created_at ? new Date(rawTenant.created_at) : new Date();
     const updatedAt = rawTenant?.updated_at ? new Date(rawTenant.updated_at) : createdAt;
-    const status = this.formatStatus(rawTenant?.tenant_status ?? rawTenant?.status);
+    const rawStatus = rawTenant?.tenant_status ?? rawTenant?.status;
+    const status = this.formatStatus(rawStatus);
     const email = this.getPrimaryEmail(rawTenant) ?? '—';
     const phone = this.getPrimaryPhone(rawTenant) ?? '—';
 
@@ -253,6 +255,7 @@ export class TenantManagement implements OnInit, OnDestroy {
       phone,
       clientsCount: rawTenant?.clients_count ?? rawTenant?.client_count ?? rawTenant?.clientsCount ?? 0,
       status,
+      rawStatus, // Store raw status for API calls
       createdAt,
       updatedAt,
       logoInitial: this.getLogoInitial(tenantName),
@@ -532,54 +535,78 @@ export class TenantManagement implements OnInit, OnDestroy {
   // Bulk actions
   async bulkActivate(): Promise<void> {
     if (this.selectedTenants.length === 0) {
-      alert('Please select tenants to activate.');
+      alert('Kripya activate karne ke liye tenants select karein.');
       return;
     }
     
-    const confirmed = confirm(`Are you sure you want to activate ${this.selectedTenants.length} tenant(s)?`);
+    const confirmed = confirm(`Kya aap ${this.selectedTenants.length} tenant(s) ko activate karna chahte hain?`);
     
     if (confirmed) {
       try {
-        // Update each selected tenant's status to ACTIVE
-        const updatePromises = this.selectedTenants.map((tenantId: number) => 
-          this.httpRequests.updateTenant(tenantId, { tenant_status: 'ACTIVE' })
-        );
+        const response = await this.httpRequests.bulkActivateTenants(this.selectedTenants);
         
-        await Promise.all(updatePromises);
-        
-        console.log('Tenants activated successfully');
-        this.selectedTenants = [];
-        await this.loadTenants(); // Reload the list
+        if (this.isResponseSuccessful(response)) {
+          console.log('Tenants activated successfully');
+          this.selectedTenants = [];
+          await this.loadTenants(); // Reload the list
+        } else {
+          alert('Tenants activate karne mein error aayi.');
+        }
       } catch (error) {
         console.error('Error activating tenants:', error);
-        alert('An error occurred while activating tenants.');
+        alert('Tenants activate karne mein error aayi.');
       }
     }
   }
 
   async bulkDeactivate(): Promise<void> {
     if (this.selectedTenants.length === 0) {
-      alert('Please select tenants to deactivate.');
+      alert('Kripya deactivate karne ke liye tenants select karein.');
       return;
     }
     
-    const confirmed = confirm(`Are you sure you want to deactivate ${this.selectedTenants.length} tenant(s)?`);
+    const confirmed = confirm(`Kya aap ${this.selectedTenants.length} tenant(s) ko deactivate karna chahte hain?`);
     
     if (confirmed) {
       try {
-        // Update each selected tenant's status to INACTIVE
-        const updatePromises = this.selectedTenants.map((tenantId: number) => 
-          this.httpRequests.updateTenant(tenantId, { tenant_status: 'INACTIVE' })
-        );
+        const response = await this.httpRequests.bulkDeactivateTenants(this.selectedTenants);
         
-        await Promise.all(updatePromises);
-        
-        console.log('Tenants deactivated successfully');
-        this.selectedTenants = [];
-        await this.loadTenants(); // Reload the list
+        if (this.isResponseSuccessful(response)) {
+          console.log('Tenants deactivated successfully');
+          this.selectedTenants = [];
+          await this.loadTenants(); // Reload the list
+        } else {
+          alert('Tenants deactivate karne mein error aayi.');
+        }
       } catch (error) {
         console.error('Error deactivating tenants:', error);
-        alert('An error occurred while deactivating tenants.');
+        alert('Tenants deactivate karne mein error aayi.');
+      }
+    }
+  }
+
+  async bulkDelete(): Promise<void> {
+    if (this.selectedTenants.length === 0) {
+      alert('Kripya delete karne ke liye tenants select karein.');
+      return;
+    }
+    
+    const confirmed = confirm(`Kya aap ${this.selectedTenants.length} tenant(s) ko delete karna chahte hain? Ye action undo nahi ho sakta.`);
+    
+    if (confirmed) {
+      try {
+        const response = await this.httpRequests.bulkDeleteTenants(this.selectedTenants);
+        
+        if (this.isResponseSuccessful(response)) {
+          console.log('Tenants deleted successfully');
+          this.selectedTenants = [];
+          await this.loadTenants(); // Reload the list
+        } else {
+          alert('Tenants delete karne mein error aayi.');
+        }
+      } catch (error) {
+        console.error('Error deleting tenants:', error);
+        alert('Tenants delete karne mein error aayi.');
       }
     }
   }
@@ -949,7 +976,7 @@ export class TenantManagement implements OnInit, OnDestroy {
       this.newTenantData = {
         name: tenant.name,
         domain: tenant.tenantDomain || '',
-        status: tenant.status,
+        status: tenant.rawStatus || tenant.status, // Use raw status for API
         phoneNumbers: [],
         emailAddresses: []
       };
@@ -1014,6 +1041,7 @@ export class TenantManagement implements OnInit, OnDestroy {
 
   // Add tenant functionality
   openAddTenantOffcanvas(): void {
+    this.resetNewTenantForm(); // Reset form first
     this.isEditMode = false;
     this.isViewMode = false;
     this.editingTenantId = null;
@@ -1035,37 +1063,93 @@ export class TenantManagement implements OnInit, OnDestroy {
 
     try {
       if (this.isEditMode && this.editingTenantId) {
-        // Update existing tenant with phone numbers and email addresses
-        const response = await this.httpRequests.updateTenant(
-          this.editingTenantId,
-          {
-            tenant_name: this.newTenantData.name,
-            tenant_status: this.newTenantData.status,
-            phoneNumbers: (this.newTenantData.phoneNumbers || []).map(phone => ({
-              dial_code: phone.dialCode,
-              phone_number: phone.phoneNumber,
-              iso_country_code: phone.isoCountryCode || undefined,
-              is_primary: phone.isPrimary,
-              contact_type: phone.contactType
-            })),
-            emailAddresses: (this.newTenantData.emailAddresses || []).map(email => ({
-              email_address: email.emailAddress,
-              is_primary: email.isPrimary,
-              contact_type: email.contactType
-            }))
-          }
-        );
+        // Update existing tenant with phone numbers, email addresses, and files
+        const updateData: any = {
+          name: this.newTenantData.name,
+          domain: this.newTenantData.domain,
+          status: this.newTenantData.status
+        };
+
+        // Add files if present
+        if (this.newTenantData.logoLightFile) {
+          updateData.logoLightFile = this.newTenantData.logoLightFile;
+        }
+        if (this.newTenantData.logoDarkFile) {
+          updateData.logoDarkFile = this.newTenantData.logoDarkFile;
+        }
+        if (this.newTenantData.faviconFile) {
+          updateData.faviconFile = this.newTenantData.faviconFile;
+        }
+
+        // Add phone numbers and email addresses
+        if (this.newTenantData.phoneNumbers && this.newTenantData.phoneNumbers.length > 0) {
+          updateData.phoneNumbers = this.newTenantData.phoneNumbers.map(phone => ({
+            dial_code: phone.dialCode,
+            phone_number: phone.phoneNumber,
+            iso_country_code: phone.isoCountryCode || undefined,
+            is_primary: phone.isPrimary,
+            contact_type: phone.contactType
+          }));
+        }
+
+        if (this.newTenantData.emailAddresses && this.newTenantData.emailAddresses.length > 0) {
+          updateData.emailAddresses = this.newTenantData.emailAddresses.map(email => ({
+            email_address: email.emailAddress,
+            is_primary: email.isPrimary,
+            contact_type: email.contactType
+          }));
+        }
+
+        const response = await this.httpRequests.updateTenant(this.editingTenantId, updateData);
         
         if (this.isResponseSuccessful(response)) {
           console.log('Tenant updated successfully');
           await this.loadTenants(); // Reload the list
         }
       } else {
-        // Create new tenant
-        const response = await this.httpRequests.createTenant({
-          tenant_name: this.newTenantData.name,
-          tenant_status: this.newTenantData.status || 'ACTIVE'
-        });
+        // Create new tenant with files
+        const createData: any = {
+          name: this.newTenantData.name,
+          domain: this.newTenantData.domain,
+          status: this.newTenantData.status || 'ACTIVE'
+        };
+
+        // Add files if present
+        if (this.newTenantData.logoLightFile) {
+          console.log('Adding logoLightFile:', this.newTenantData.logoLightFile);
+          createData.logoLightFile = this.newTenantData.logoLightFile;
+        }
+        if (this.newTenantData.logoDarkFile) {
+          console.log('Adding logoDarkFile:', this.newTenantData.logoDarkFile);
+          createData.logoDarkFile = this.newTenantData.logoDarkFile;
+        }
+        if (this.newTenantData.faviconFile) {
+          console.log('Adding faviconFile:', this.newTenantData.faviconFile);
+          createData.faviconFile = this.newTenantData.faviconFile;
+        }
+
+        console.log('Create tenant data:', createData);
+
+        // Add phone numbers and email addresses
+        if (this.newTenantData.phoneNumbers && this.newTenantData.phoneNumbers.length > 0) {
+          createData.phoneNumbers = this.newTenantData.phoneNumbers.map(phone => ({
+            dial_code: phone.dialCode,
+            phone_number: phone.phoneNumber,
+            iso_country_code: phone.isoCountryCode || undefined,
+            is_primary: phone.isPrimary,
+            contact_type: phone.contactType
+          }));
+        }
+
+        if (this.newTenantData.emailAddresses && this.newTenantData.emailAddresses.length > 0) {
+          createData.emailAddresses = this.newTenantData.emailAddresses.map(email => ({
+            email_address: email.emailAddress,
+            is_primary: email.isPrimary,
+            contact_type: email.contactType
+          }));
+        }
+
+        const response = await this.httpRequests.createTenant(createData);
         
         if (this.isResponseSuccessful(response)) {
           console.log('Tenant created successfully');
@@ -1093,7 +1177,13 @@ export class TenantManagement implements OnInit, OnDestroy {
       domain: '',
       status: 'ACTIVE',
       phoneNumbers: [],
-      emailAddresses: []
+      emailAddresses: [],
+      logoLightFile: undefined,
+      logoDarkFile: undefined,
+      faviconFile: undefined,
+      logoLightPreview: undefined,
+      logoDarkPreview: undefined,
+      faviconPreview: undefined
     };
     this.canSaveTenant = false;
     this.isEditMode = false;

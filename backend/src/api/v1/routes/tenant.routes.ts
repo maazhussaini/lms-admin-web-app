@@ -9,6 +9,7 @@ import { TenantController } from '@/controllers/tenant.controller';
 import { authenticate, authorize } from '@/middleware/auth.middleware';
 import { validate } from '@/middleware/validation.middleware';
 import { imageUpload } from '@/utils/file-upload.utils';
+import multer from 'multer';
 import { 
   createTenantValidation, 
   updateTenantValidation,
@@ -17,7 +18,8 @@ import {
   updateTenantPhoneNumberValidation,
   createTenantEmailAddressValidation,
   updateTenantEmailAddressValidation,
-  listTenantClientsValidation
+  listTenantClientsValidation,
+  bulkTenantOperationValidation
 } from '@/dtos/tenant/tenant.dto';
 import { param } from 'express-validator';
 import { UserType } from '@/types/enums.types';
@@ -27,16 +29,38 @@ const router = Router();
 // Apply authentication to all routes
 router.use(authenticate);
 
+// Configure multer for tenant files (logo light, logo dark, favicon)
+const tenantFileUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+    files: 3 // Max 3 files (logo_light, logo_dark, favicon)
+  },
+  fileFilter: (_req, file, cb) => {
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/x-icon', 'image/vnd.microsoft.icon'];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`Invalid file type: ${file.mimetype}. Only images and icons are allowed.`));
+    }
+  }
+}).fields([
+  { name: 'logo_light', maxCount: 1 },
+  { name: 'logo_dark', maxCount: 1 },
+  { name: 'favicon', maxCount: 1 }
+]);
+
 // ==================== TENANT MANAGEMENT ROUTES ====================
 
 /**
  * @route POST /api/v1/tenants
- * @description Create a new tenant
+ * @description Create a new tenant with optional file uploads
  * @access Private (SUPER_ADMIN only)
  */
 router.post(
   '/',
   authorize([UserType.SUPER_ADMIN]),
+  tenantFileUpload,
   validate(createTenantValidation),
   TenantController.createTenantHandler
 );
@@ -70,12 +94,13 @@ router.get(
 
 /**
  * @route PATCH /api/v1/tenants/:tenantId
- * @description Update tenant by ID
+ * @description Update tenant by ID with optional file uploads
  * @access Private (SUPER_ADMIN or tenant admin)
  */
 router.patch(
   '/:tenantId',
   authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
+  tenantFileUpload,
   validate([
     param('tenantId')
       .isInt({ min: 1 })
@@ -335,6 +360,44 @@ router.post(
   ]),
   imageUpload.single('favicon'),
   TenantController.uploadFaviconHandler
+);
+
+// ==================== BULK OPERATIONS ROUTES ====================
+
+/**
+ * @route POST /api/v1/tenants/bulk-activate
+ * @description Bulk activate multiple tenants
+ * @access Private (SUPER_ADMIN only)
+ */
+router.post(
+  '/bulk-activate',
+  authorize([UserType.SUPER_ADMIN]),
+  validate(bulkTenantOperationValidation),
+  TenantController.bulkActivateTenantsHandler
+);
+
+/**
+ * @route POST /api/v1/tenants/bulk-deactivate
+ * @description Bulk deactivate multiple tenants
+ * @access Private (SUPER_ADMIN only)
+ */
+router.post(
+  '/bulk-deactivate',
+  authorize([UserType.SUPER_ADMIN]),
+  validate(bulkTenantOperationValidation),
+  TenantController.bulkDeactivateTenantsHandler
+);
+
+/**
+ * @route POST /api/v1/tenants/bulk-delete
+ * @description Bulk delete multiple tenants (soft delete)
+ * @access Private (SUPER_ADMIN only)
+ */
+router.post(
+  '/bulk-delete',
+  authorize([UserType.SUPER_ADMIN]),
+  validate(bulkTenantOperationValidation),
+  TenantController.bulkDeleteTenantsHandler
 );
 
 export default router;

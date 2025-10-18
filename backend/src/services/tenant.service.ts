@@ -23,6 +23,10 @@ import {
   ContactType,
   UserType
 } from '@/types/enums.types';
+import { uploadTenantLogo, uploadTenantFavicon, deleteTenantFile, ensureNetworkPath } from '@/utils/file-upload.utils';
+import path from 'path';
+import fs from 'fs';
+import env from '@/config/environment';
 import logger from '@/config/logger';
 import { BaseListService } from '@/utils/base-list.service';
 import { BaseServiceConfig } from '@/utils/service.types';
@@ -172,10 +176,25 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
         throw new ConflictError('Tenant with this name already exists', 'DUPLICATE_TENANT_NAME');
       }
 
-      // Create new tenant
+      // Check if tenant domain exists (if provided)
+      if (data.tenant_domain) {
+        const existingDomain = await prisma.tenant.findFirst({
+          where: {
+            tenant_domain: data.tenant_domain,
+            is_deleted: false
+          }
+        });
+
+        if (existingDomain) {
+          throw new ConflictError('Tenant with this domain already exists', 'DUPLICATE_TENANT_DOMAIN');
+        }
+      }
+
+      // Create new tenant first to get tenant_id
       const newTenant = await prisma.tenant.create({
         data: {
           tenant_name: data.tenant_name,
+          tenant_domain: data.tenant_domain || null,
           logo_url_light: data.logo_url_light || null,
           logo_url_dark: data.logo_url_dark || null,
           favicon_url: data.favicon_url || null,        
@@ -190,7 +209,228 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
         }
       });
 
-      return newTenant;
+      // Handle file uploads if files are provided
+      let logoLightPath = data.logo_url_light || null;
+      let logoDarkPath = data.logo_url_dark || null;
+      let faviconPath = data.favicon_url || null;
+
+      logger.debug('File upload check', {
+        hasLogoLight: !!data.logo_light_file,
+        hasLogoDark: !!data.logo_dark_file,
+        hasFavicon: !!data.favicon_file,
+        logoLightFileInfo: data.logo_light_file ? {
+          originalname: data.logo_light_file.originalname,
+          mimetype: data.logo_light_file.mimetype,
+          size: data.logo_light_file.size,
+          hasBuffer: !!data.logo_light_file.buffer,
+          bufferLength: data.logo_light_file.buffer?.length
+        } : null
+      });
+
+      try {
+        // Ensure network path is accessible
+        const networkPathAccessible = ensureNetworkPath(env.UPLOAD_BASE_PATH);
+        logger.debug('Network path check', {
+          path: env.UPLOAD_BASE_PATH,
+          accessible: networkPathAccessible
+        });
+        
+        console.log('=== TENANT FILE UPLOAD SECTION ===');
+        console.log('Network path:', env.UPLOAD_BASE_PATH);
+        console.log('Network accessible:', networkPathAccessible);
+        console.log('Has logo light file:', !!data.logo_light_file);
+        console.log('Has logo dark file:', !!data.logo_dark_file);
+        console.log('Has favicon file:', !!data.favicon_file);
+        
+        if (!networkPathAccessible) {
+          console.error('❌ Network upload path is NOT accessible - skipping file uploads');
+          logger.warn('Network upload path is not accessible, skipping file uploads');
+        } else {
+          console.log('✓ Network path is accessible, proceeding with uploads...');
+          
+          // Upload logo light if provided
+          if (data.logo_light_file) {
+            console.log('\n--- Uploading Logo Light ---');
+            logger.debug('Uploading logo light', { tenantId: newTenant.tenant_id });
+            
+            try {
+              const uploadedPath = await uploadTenantLogo(data.logo_light_file, newTenant.tenant_id, 'light');
+              console.log('Logo light upload result:', uploadedPath);
+              logger.debug('Logo light uploaded', { uploadedPath });
+              
+              if (uploadedPath) {
+                logoLightPath = uploadedPath;
+                console.log('✓ Logo light path set:', logoLightPath);
+              } else {
+                console.error('❌ Logo light upload returned null');
+              }
+            } catch (logoLightError) {
+              console.error('❌ Logo light upload exception:', logoLightError);
+              logger.error('Logo light upload failed', { error: logoLightError });
+            }
+          }
+
+          // Upload logo dark if provided
+          if (data.logo_dark_file) {
+            console.log('\n--- Uploading Logo Dark ---');
+            logger.debug('Uploading logo dark', { tenantId: newTenant.tenant_id });
+            
+            try {
+              const uploadedPath = await uploadTenantLogo(data.logo_dark_file, newTenant.tenant_id, 'dark');
+              console.log('Logo dark upload result:', uploadedPath);
+              logger.debug('Logo dark uploaded', { uploadedPath });
+              
+              if (uploadedPath) {
+                logoDarkPath = uploadedPath;
+                console.log('✓ Logo dark path set:', logoDarkPath);
+              } else {
+                console.error('❌ Logo dark upload returned null');
+              }
+            } catch (logoDarkError) {
+              console.error('❌ Logo dark upload exception:', logoDarkError);
+              logger.error('Logo dark upload failed', { error: logoDarkError });
+            }
+          }
+
+          // Upload favicon if provided
+          if (data.favicon_file) {
+            console.log('\n--- Uploading Favicon ---');
+            logger.debug('Uploading favicon', { tenantId: newTenant.tenant_id });
+            
+            try {
+              const uploadedPath = await uploadTenantFavicon(data.favicon_file, newTenant.tenant_id);
+              console.log('Favicon upload result:', uploadedPath);
+              logger.debug('Favicon uploaded', { uploadedPath });
+              
+              if (uploadedPath) {
+                faviconPath = uploadedPath;
+                console.log('✓ Favicon path set:', faviconPath);
+              } else {
+                console.error('❌ Favicon upload returned null');
+              }
+            } catch (faviconError) {
+              console.error('❌ Favicon upload exception:', faviconError);
+              logger.error('Favicon upload failed', { error: faviconError });
+            }
+          }
+
+          // Update tenant with file paths if any files were uploaded
+          if (logoLightPath !== (data.logo_url_light || null) || 
+              logoDarkPath !== (data.logo_url_dark || null) || 
+              faviconPath !== (data.favicon_url || null)) {
+            console.log('\n--- Updating Tenant with File Paths ---');
+            logger.debug('Updating tenant with file paths', {
+              tenantId: newTenant.tenant_id,
+              logoLightPath,
+              logoDarkPath,
+              faviconPath
+            });
+            
+            try {
+              await prisma.tenant.update({
+                where: { tenant_id: newTenant.tenant_id },
+                data: {
+                  logo_url_light: logoLightPath,
+                  logo_url_dark: logoDarkPath,
+                  favicon_url: faviconPath,
+                  updated_by: userId,
+                  updated_ip: ip || null
+                }
+              });
+              console.log('✓ Tenant updated with file paths successfully');
+            } catch (updateError) {
+              console.error('❌ Failed to update tenant with file paths:', updateError);
+              logger.error('Failed to update tenant with file paths', { error: updateError });
+            }
+          } else {
+            console.log('⚠ No file paths changed, skipping tenant update');
+          }
+        }
+        
+        console.log('=== FILE UPLOAD SECTION COMPLETE ===\n');
+      } catch (fileError: any) {
+        console.error('❌ CRITICAL ERROR in file upload section:', fileError);
+        console.error('Error stack:', fileError?.stack || 'No stack trace');
+        logger.error('Error uploading files for tenant', {
+          tenantId: newTenant.tenant_id,
+          error: fileError,
+          stack: fileError?.stack
+        });
+        // Don't fail tenant creation if file upload fails, just log the error
+      }
+
+      // Create phone numbers if provided
+      if (data.phoneNumbers && Array.isArray(data.phoneNumbers) && data.phoneNumbers.length > 0) {
+        try {
+          const phoneNumbersToCreate = data.phoneNumbers.map(phone => ({
+            tenant_id: newTenant.tenant_id,
+            dial_code: phone.dial_code,
+            phone_number: phone.phone_number,
+            iso_country_code: phone.iso_country_code || null,
+            is_primary: phone.is_primary || false,
+            contact_type: phone.contact_type,
+            is_active: true,
+            is_deleted: false,
+            created_by: userId,
+            updated_by: userId,
+            created_ip: ip || null,
+            updated_ip: ip || null
+          }));
+
+          await prisma.tenantPhoneNumber.createMany({
+            data: phoneNumbersToCreate
+          });
+
+          logger.debug('Created phone numbers for tenant', {
+            tenantId: newTenant.tenant_id,
+            count: phoneNumbersToCreate.length
+          });
+        } catch (phoneError) {
+          logger.error('Error creating phone numbers for tenant', {
+            tenantId: newTenant.tenant_id,
+            error: phoneError
+          });
+        }
+      }
+
+      // Create email addresses if provided
+      if (data.emailAddresses && Array.isArray(data.emailAddresses) && data.emailAddresses.length > 0) {
+        try {
+          const emailAddressesToCreate = data.emailAddresses.map(email => ({
+            tenant_id: newTenant.tenant_id,
+            email_address: email.email_address,
+            is_primary: email.is_primary || false,
+            contact_type: email.contact_type,
+            is_active: true,
+            is_deleted: false,
+            created_by: userId,
+            updated_by: userId,
+            created_ip: ip || null,
+            updated_ip: ip || null
+          }));
+
+          await prisma.tenantEmailAddress.createMany({
+            data: emailAddressesToCreate
+          });
+
+          logger.debug('Created email addresses for tenant', {
+            tenantId: newTenant.tenant_id,
+            count: emailAddressesToCreate.length
+          });
+        } catch (emailError) {
+          logger.error('Error creating email addresses for tenant', {
+            tenantId: newTenant.tenant_id,
+            error: emailError
+          });
+        }
+      }
+
+      return {
+        ...newTenant,
+        logo_url_light: logoLightPath,
+        logo_url_dark: logoDarkPath,
+        favicon_url: faviconPath
+      };
     }, {
       context: {
         tenantName: data.tenant_name,
@@ -375,13 +615,73 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
       });
 
       // Verify tenant exists
-      await this.getTenantById(tenantId, {
+      const existingTenant = await this.getTenantById(tenantId, {
         id: userId, 
         email: 'system@admin.com', 
         role: 'SUPER_ADMIN', 
         tenantId,
         user_type: UserType.SUPER_ADMIN
       } as TokenPayload);
+
+      // Handle file uploads before transaction
+      let logoLightPath = existingTenant.logo_url_light;
+      let logoDarkPath = existingTenant.logo_url_dark;
+      let faviconPath = existingTenant.favicon_url;
+
+      try {
+        if (ensureNetworkPath(env.UPLOAD_BASE_PATH)) {
+          // Handle logo light
+          if (data.delete_logo_light && logoLightPath) {
+            await deleteTenantFile(logoLightPath);
+            logoLightPath = null;
+          } else if (data.logo_light_file) {
+            // Delete old file if exists
+            if (logoLightPath) {
+              await deleteTenantFile(logoLightPath);
+            }
+            const uploadedPath = await uploadTenantLogo(data.logo_light_file, tenantId, 'light');
+            if (uploadedPath) {
+              logoLightPath = uploadedPath;
+            }
+          }
+
+          // Handle logo dark
+          if (data.delete_logo_dark && logoDarkPath) {
+            await deleteTenantFile(logoDarkPath);
+            logoDarkPath = null;
+          } else if (data.logo_dark_file) {
+            // Delete old file if exists
+            if (logoDarkPath) {
+              await deleteTenantFile(logoDarkPath);
+            }
+            const uploadedPath = await uploadTenantLogo(data.logo_dark_file, tenantId, 'dark');
+            if (uploadedPath) {
+              logoDarkPath = uploadedPath;
+            }
+          }
+
+          // Handle favicon
+          if (data.delete_favicon && faviconPath) {
+            await deleteTenantFile(faviconPath);
+            faviconPath = null;
+          } else if (data.favicon_file) {
+            // Delete old file if exists
+            if (faviconPath) {
+              await deleteTenantFile(faviconPath);
+            }
+            const uploadedPath = await uploadTenantFavicon(data.favicon_file, tenantId);
+            if (uploadedPath) {
+              faviconPath = uploadedPath;
+            }
+          }
+        }
+      } catch (fileError) {
+        logger.error('Error handling files for tenant update', {
+          tenantId,
+          error: fileError
+        });
+        // Continue with update even if file handling fails
+      }
 
       // Use transaction for atomic operation
       const result = await prisma.$transaction(async (tx) => {
@@ -394,9 +694,13 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
 
         // Only include fields that are provided in the update data
         if (data.tenant_name !== undefined) updateData.tenant_name = data.tenant_name;
-        if (data.logo_url_light !== undefined) updateData.logo_url_light = data.logo_url_light;
-        if (data.logo_url_dark !== undefined) updateData.logo_url_dark = data.logo_url_dark;
-        if (data.favicon_url !== undefined) updateData.favicon_url = data.favicon_url;
+        if (data.tenant_domain !== undefined) updateData.tenant_domain = data.tenant_domain;
+        
+        // Always update file paths (may have changed due to uploads/deletes)
+        updateData.logo_url_light = logoLightPath;
+        updateData.logo_url_dark = logoDarkPath;
+        updateData.favicon_url = faviconPath;
+        
         if (data.theme !== undefined) updateData.theme = data.theme;
         if (data.tenant_status !== undefined) updateData.tenant_status = data.tenant_status;
 
@@ -1466,6 +1770,176 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
     });
 
     return faviconPath;
+  }
+
+  /**
+   * Bulk activate tenants
+   * 
+   * @param tenantIds Array of tenant IDs to activate
+   * @param userId System user ID for audit trail
+   * @param ip IP address of the request
+   * @returns Updated count
+   */
+  async bulkActivateTenants(tenantIds: number[], userId: number, ip?: string) {
+    return tryCatch(async () => {
+      logger.debug('Bulk activating tenants', {
+        tenantIds,
+        userId
+      });
+
+      const result = await prisma.tenant.updateMany({
+        where: {
+          tenant_id: { in: tenantIds },
+          is_deleted: false
+        },
+        data: {
+          is_active: true,
+          tenant_status: TenantStatus.ACTIVE,
+          updated_by: userId,
+          updated_at: new Date(),
+          updated_ip: ip || null
+        }
+      });
+
+      logger.info('Bulk tenant activation completed', {
+        tenantIds,
+        updatedCount: result.count,
+        userId
+      });
+
+      return { count: result.count, tenantIds };
+    }, {
+      context: {
+        tenantIds,
+        userId
+      }
+    });
+  }
+
+  /**
+   * Bulk deactivate tenants
+   * 
+   * @param tenantIds Array of tenant IDs to deactivate
+   * @param userId System user ID for audit trail
+   * @param ip IP address of the request
+   * @returns Updated count
+   */
+  async bulkDeactivateTenants(tenantIds: number[], userId: number, ip?: string) {
+    return tryCatch(async () => {
+      logger.debug('Bulk deactivating tenants', {
+        tenantIds,
+        userId
+      });
+
+      const result = await prisma.tenant.updateMany({
+        where: {
+          tenant_id: { in: tenantIds },
+          is_deleted: false
+        },
+        data: {
+          is_active: false,
+          tenant_status: TenantStatus.SUSPENDED,
+          updated_by: userId,
+          updated_at: new Date(),
+          updated_ip: ip || null
+        }
+      });
+
+      logger.info('Bulk tenant deactivation completed', {
+        tenantIds,
+        updatedCount: result.count,
+        userId
+      });
+
+      return { count: result.count, tenantIds };
+    }, {
+      context: {
+        tenantIds,
+        userId
+      }
+    });
+  }
+
+  /**
+   * Bulk delete tenants (soft delete)
+   * 
+   * @param tenantIds Array of tenant IDs to delete
+   * @param userId System user ID for audit trail
+   * @param ip IP address of the request
+   * @returns Deleted count
+   */
+  async bulkDeleteTenants(tenantIds: number[], userId: number, ip?: string) {
+    return tryCatch(async () => {
+      logger.debug('Bulk deleting tenants', {
+        tenantIds,
+        userId
+      });
+
+      // Get tenants to optionally clean up their files
+      const tenants = await prisma.tenant.findMany({
+        where: {
+          tenant_id: { in: tenantIds },
+          is_deleted: false
+        },
+        select: {
+          tenant_id: true,
+          logo_url_light: true,
+          logo_url_dark: true,
+          favicon_url: true
+        }
+      });
+
+      // Soft delete tenants
+      const result = await prisma.tenant.updateMany({
+        where: {
+          tenant_id: { in: tenantIds },
+          is_deleted: false
+        },
+        data: {
+          is_deleted: true,
+          deleted_at: new Date(),
+          deleted_by: userId,
+          updated_by: userId,
+          updated_at: new Date(),
+          updated_ip: ip || null
+        }
+      });
+
+      // Optionally cleanup files in background (don't wait for this)
+      if (ensureNetworkPath(env.UPLOAD_BASE_PATH)) {
+        tenants.forEach(async (tenant) => {
+          try {
+            const tenantDir = path.join(env.UPLOAD_BASE_PATH, tenant.tenant_id.toString());
+            if (fs.existsSync(tenantDir)) {
+              // Delete entire tenant directory
+              fs.rmSync(tenantDir, { recursive: true, force: true });
+              logger.info('Deleted tenant directory', {
+                tenantId: tenant.tenant_id,
+                tenantDir
+              });
+            }
+          } catch (error) {
+            logger.error('Error deleting tenant directory', {
+              tenantId: tenant.tenant_id,
+              error
+            });
+          }
+        });
+      }
+
+      logger.info('Bulk tenant deletion completed', {
+        tenantIds,
+        deletedCount: result.count,
+        userId
+      });
+
+      return { count: result.count, tenantIds };
+    }, {
+      context: {
+        tenantIds,
+        userId
+      }
+    });
   }
 }
 

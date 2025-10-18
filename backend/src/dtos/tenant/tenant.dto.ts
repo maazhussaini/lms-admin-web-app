@@ -15,11 +15,18 @@ import { BaseFilterDto } from '@/utils/service.types';
  */
 export interface CreateTenantDto {
   tenant_name: string;
+  tenant_domain?: string;
   logo_url_light?: string;
   logo_url_dark?: string;
   favicon_url?: string;
   theme?: Record<string, any>;
   tenant_status?: TenantStatus;
+  phoneNumbers?: CreateTenantPhoneNumberDto[];
+  emailAddresses?: CreateTenantEmailAddressDto[];
+  // File upload fields - these will be populated from req.files
+  logo_light_file?: Express.Multer.File;
+  logo_dark_file?: Express.Multer.File;
+  favicon_file?: Express.Multer.File;
 }
 
 /**
@@ -27,6 +34,7 @@ export interface CreateTenantDto {
  */
 export interface UpdateTenantDto {
   tenant_name?: string;
+  tenant_domain?: string | null;
   logo_url_light?: string | null;
   logo_url_dark?: string | null;
   favicon_url?: string | null;
@@ -34,6 +42,14 @@ export interface UpdateTenantDto {
   tenant_status?: TenantStatus;
   phoneNumbers?: CreateTenantPhoneNumberDto[];
   emailAddresses?: CreateTenantEmailAddressDto[];
+  // File upload fields - these will be populated from req.files
+  logo_light_file?: Express.Multer.File;
+  logo_dark_file?: Express.Multer.File;
+  favicon_file?: Express.Multer.File;
+  // Flags to indicate if files should be deleted
+  delete_logo_light?: boolean;
+  delete_logo_dark?: boolean;
+  delete_favicon?: boolean;
 }
 
 /**
@@ -49,6 +65,7 @@ export interface TenantFilterDto extends BaseFilterDto {
 export interface TenantResponseDto {
   id: number;
   tenantName: string;
+  tenantDomain?: string;
   logoUrlLight?: string;
   logoUrlDark?: string;
   faviconUrl?: string;
@@ -56,6 +73,14 @@ export interface TenantResponseDto {
   status: TenantStatus;
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * DTO interface for bulk operations
+ */
+export interface BulkTenantOperationDto {
+  tenant_ids: number[];
+  operation: 'activate' | 'deactivate' | 'delete';
 }
 
 /**
@@ -69,19 +94,26 @@ export const createTenantValidation: ValidationChain[] = [
     .trim()
     .isLength({ min: 2, max: 100 }).withMessage('Tenant name must be between 2 and 100 characters'),
 
+  body('tenant_domain')
+    .optional()
+    .isString().withMessage('Tenant domain must be a string')
+    .trim()
+    .isLength({ min: 3, max: 255 }).withMessage('Tenant domain must be between 3 and 255 characters')
+    .matches(/^[a-zA-Z0-9][a-zA-Z0-9-_.]*[a-zA-Z0-9]$/).withMessage('Invalid domain format'),
+
   body('logo_url_light')
     .optional()
-    .isURL().withMessage('Light logo URL must be a valid URL')
+    .isString().withMessage('Light logo URL must be a string')
     .trim(),
 
   body('logo_url_dark')
     .optional()
-    .isURL().withMessage('Dark logo URL must be a valid URL')
+    .isString().withMessage('Dark logo URL must be a string')
     .trim(),
 
   body('favicon_url')
     .optional()
-    .isURL().withMessage('Favicon URL must be a valid URL')
+    .isString().withMessage('Favicon URL must be a string')
     .trim(),
 
   body('theme')
@@ -116,22 +148,30 @@ export const updateTenantValidation: ValidationChain[] = [
     .trim()
     .isLength({ min: 2, max: 100 }).withMessage('Tenant name must be between 2 and 100 characters'),
 
+  body('tenant_domain')
+    .optional()
+    .if(value => value !== null)
+    .isString().withMessage('Tenant domain must be a string')
+    .trim()
+    .isLength({ min: 3, max: 255 }).withMessage('Tenant domain must be between 3 and 255 characters')
+    .matches(/^[a-zA-Z0-9][a-zA-Z0-9-_.]*[a-zA-Z0-9]$/).withMessage('Invalid domain format'),
+
   body('logo_url_light')
     .optional()
     .if(value => value !== null)
-    .isURL().withMessage('Light logo URL must be a valid URL')
+    .isString().withMessage('Light logo URL must be a string')
     .trim(),
 
   body('logo_url_dark')
     .optional()
     .if(value => value !== null)
-    .isURL().withMessage('Dark logo URL must be a valid URL')
+    .isString().withMessage('Dark logo URL must be a string')
     .trim(),
 
   body('favicon_url')
     .optional()
     .if(value => value !== null)
-    .isURL().withMessage('Favicon URL must be a valid URL')
+    .isString().withMessage('Favicon URL must be a string')
     .trim(),
 
   body('theme')
@@ -154,6 +194,21 @@ export const updateTenantValidation: ValidationChain[] = [
     .optional()
     .isString().withMessage('Tenant status must be a string')
     .isIn(Object.values(TenantStatus)).withMessage('Tenant status must be a valid status'),
+
+  body('delete_logo_light')
+    .optional()
+    .isBoolean().withMessage('delete_logo_light must be a boolean')
+    .toBoolean(),
+
+  body('delete_logo_dark')
+    .optional()
+    .isBoolean().withMessage('delete_logo_dark must be a boolean')
+    .toBoolean(),
+
+  body('delete_favicon')
+    .optional()
+    .isBoolean().withMessage('delete_favicon must be a boolean')
+    .toBoolean(),
 
   // Phone numbers array validation
   body('phoneNumbers')
@@ -533,6 +588,26 @@ export const listTenantClientsValidation: ValidationChain[] = [
     .optional()
     .isString().withMessage('Status must be a string')
     .trim()
+];
+
+/**
+ * Validation chains for bulk tenant operations
+ */
+export const bulkTenantOperationValidation: ValidationChain[] = [
+  body('tenant_ids')
+    .exists().withMessage('Tenant IDs are required')
+    .isArray({ min: 1 }).withMessage('Tenant IDs must be a non-empty array')
+    .custom((value: any[]) => {
+      if (!value.every((id: any) => typeof id === 'number' && id > 0)) {
+        throw new Error('All tenant IDs must be positive integers');
+      }
+      return true;
+    }),
+
+  body('operation')
+    .exists().withMessage('Operation is required')
+    .isString().withMessage('Operation must be a string')
+    .isIn(['activate', 'deactivate', 'delete']).withMessage('Operation must be activate, deactivate, or delete')
 ];
 
 /**

@@ -44,10 +44,59 @@ export class TenantController {
       const tenantData = req.validatedData as CreateTenantDto;
       const requestingUser = req.user;
       
+      console.log('=== CREATE TENANT CONTROLLER ===');
+      console.log('req.files:', req.files);
+      console.log('req.body:', req.body);
+      
+      // Parse phone_numbers and email_addresses from FormData JSON strings
+      if (req.body.phone_numbers && typeof req.body.phone_numbers === 'string') {
+        try {
+          tenantData.phoneNumbers = JSON.parse(req.body.phone_numbers);
+          console.log('Parsed phone numbers:', tenantData.phoneNumbers);
+        } catch (error) {
+          logger.warn('Failed to parse phone_numbers', { error });
+        }
+      }
+      
+      if (req.body.email_addresses && typeof req.body.email_addresses === 'string') {
+        try {
+          tenantData.emailAddresses = JSON.parse(req.body.email_addresses);
+          console.log('Parsed email addresses:', tenantData.emailAddresses);
+        } catch (error) {
+          logger.warn('Failed to parse email_addresses', { error });
+        }
+      }
+      
+      // Add uploaded files to tenant data
+      if (req.files && typeof req.files === 'object' && !Array.isArray(req.files)) {
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+        console.log('Files object keys:', Object.keys(files));
+        
+        if (files['logo_light'] && files['logo_light'][0]) {
+          console.log('Logo light file found:', files['logo_light'][0].originalname);
+          tenantData.logo_light_file = files['logo_light'][0];
+        }
+        if (files['logo_dark'] && files['logo_dark'][0]) {
+          console.log('Logo dark file found:', files['logo_dark'][0].originalname);
+          tenantData.logo_dark_file = files['logo_dark'][0];
+        }
+        if (files['favicon'] && files['favicon'][0]) {
+          console.log('Favicon file found:', files['favicon'][0].originalname);
+          tenantData.favicon_file = files['favicon'][0];
+        }
+      } else {
+        console.log('No files in request');
+      }
+      
       logger.debug('Creating tenant', {
         tenantName: tenantData.tenant_name,
         userId: requestingUser.id,
-        role: requestingUser.role
+        role: requestingUser.role,
+        hasLogoLight: !!tenantData.logo_light_file,
+        hasLogoDark: !!tenantData.logo_dark_file,
+        hasFavicon: !!tenantData.favicon_file,
+        phoneNumbersCount: tenantData.phoneNumbers?.length || 0,
+        emailAddressesCount: tenantData.emailAddresses?.length || 0
       });
       
       return await tenantService.createTenant(
@@ -177,11 +226,64 @@ export class TenantController {
 
       const updateData = req.validatedData as UpdateTenantDto;
       
+      // Parse phone_numbers and email_addresses from FormData JSON strings
+      if (req.body.phone_numbers && typeof req.body.phone_numbers === 'string') {
+        try {
+          updateData.phoneNumbers = JSON.parse(req.body.phone_numbers);
+        } catch (error) {
+          logger.warn('Failed to parse phone_numbers', { error });
+        }
+      }
+      
+      if (req.body.email_addresses && typeof req.body.email_addresses === 'string') {
+        try {
+          updateData.emailAddresses = JSON.parse(req.body.email_addresses);
+        } catch (error) {
+          logger.warn('Failed to parse email_addresses', { error });
+        }
+      }
+      
+      // Add uploaded files to update data
+      if (req.files && typeof req.files === 'object' && !Array.isArray(req.files)) {
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+        if (files['logo_light'] && files['logo_light'][0]) {
+          updateData.logo_light_file = files['logo_light'][0];
+        }
+        if (files['logo_dark'] && files['logo_dark'][0]) {
+          updateData.logo_dark_file = files['logo_dark'][0];
+        }
+        if (files['favicon'] && files['favicon'][0]) {
+          updateData.favicon_file = files['favicon'][0];
+        }
+      }
+      
+      // Handle delete flags from request body
+      if (req.body.delete_logo_light === 'true' || req.body.delete_logo_light === true) {
+        updateData.delete_logo_light = true;
+      }
+      if (req.body.delete_logo_dark === 'true' || req.body.delete_logo_dark === true) {
+        updateData.delete_logo_dark = true;
+      }
+      if (req.body.delete_favicon === 'true' || req.body.delete_favicon === true) {
+        updateData.delete_favicon = true;
+      }
+      
       if (!req.user) {
         throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
       }
 
       const requestingUser = req.user;
+      
+      logger.debug('Updating tenant', {
+        tenantId,
+        userId: requestingUser.id,
+        hasLogoLight: !!updateData.logo_light_file,
+        hasLogoDark: !!updateData.logo_dark_file,
+        hasFavicon: !!updateData.favicon_file,
+        deleteLogoLight: !!updateData.delete_logo_light,
+        deleteLogoDark: !!updateData.delete_logo_dark,
+        deleteFavicon: !!updateData.delete_favicon
+      });
       
       return await tenantService.updateTenant(
         tenantId, 
@@ -765,6 +867,101 @@ export class TenantController {
     },
     {
       message: 'Favicon uploaded successfully'
+    }
+  );
+
+  // ==================== BULK OPERATIONS ====================
+
+  /**
+   * Bulk activate tenants
+   * 
+   * @route POST /api/v1/tenants/bulk-activate
+   * @access Private (SUPER_ADMIN only)
+   */
+  static bulkActivateTenantsHandler = createRouteHandler(
+    async (req: AuthenticatedRequest) => {
+      if (!req.user) {
+        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
+      }
+
+      const { tenant_ids } = req.validatedData as { tenant_ids: number[] };
+      const requestingUser = req.user;
+
+      logger.debug('Bulk activating tenants', {
+        tenantIds: tenant_ids,
+        userId: requestingUser.id
+      });
+
+      return await tenantService.bulkActivateTenants(
+        tenant_ids,
+        requestingUser.id,
+        req.ip || undefined
+      );
+    },
+    {
+      message: 'Tenants activated successfully'
+    }
+  );
+
+  /**
+   * Bulk deactivate tenants
+   * 
+   * @route POST /api/v1/tenants/bulk-deactivate
+   * @access Private (SUPER_ADMIN only)
+   */
+  static bulkDeactivateTenantsHandler = createRouteHandler(
+    async (req: AuthenticatedRequest) => {
+      if (!req.user) {
+        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
+      }
+
+      const { tenant_ids } = req.validatedData as { tenant_ids: number[] };
+      const requestingUser = req.user;
+
+      logger.debug('Bulk deactivating tenants', {
+        tenantIds: tenant_ids,
+        userId: requestingUser.id
+      });
+
+      return await tenantService.bulkDeactivateTenants(
+        tenant_ids,
+        requestingUser.id,
+        req.ip || undefined
+      );
+    },
+    {
+      message: 'Tenants deactivated successfully'
+    }
+  );
+
+  /**
+   * Bulk delete tenants
+   * 
+   * @route POST /api/v1/tenants/bulk-delete
+   * @access Private (SUPER_ADMIN only)
+   */
+  static bulkDeleteTenantsHandler = createRouteHandler(
+    async (req: AuthenticatedRequest) => {
+      if (!req.user) {
+        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
+      }
+
+      const { tenant_ids } = req.validatedData as { tenant_ids: number[] };
+      const requestingUser = req.user;
+
+      logger.debug('Bulk deleting tenants', {
+        tenantIds: tenant_ids,
+        userId: requestingUser.id
+      });
+
+      return await tenantService.bulkDeleteTenants(
+        tenant_ids,
+        requestingUser.id,
+        req.ip || undefined
+      );
+    },
+    {
+      message: 'Tenants deleted successfully'
     }
   );
 }

@@ -31,5 +31,30 @@
         <ng-content></ng-content>
       </div>
     </div>
+
+    <!-- Footer with Save Button -->
+    @if (showSaveButton) {
+      <div class="off-canvas-footer">
+        <button 
+          class="btn-cancel" 
+          (click)="closeCanvas()"
+          type="button">
+          Cancel
+        </button>
+        <button 
+          class="btn-primary" 
+          (click)="saveForm()"
+          [disabled]="!canSave || isLoading"
+          type="button">
+          @if (isLoading) {
+            <i class="fas fa-spinner fa-spin"></i>
+            Saving...
+          } @else {
+            <i class="fas fa-save"></i>
+            {{ saveButtonText }}
+          }
+        </button>
+      </div>
+    }
   </div>
 </div>
