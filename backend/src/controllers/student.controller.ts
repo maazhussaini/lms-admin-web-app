@@ -30,24 +30,48 @@ export class StudentController {
    */
   static createStudentHandler = createRouteHandler(
     async (req: AuthenticatedRequest) => {
-      // if (!req.user) {
-      //   throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
-      // }
-      const tenant = await studentService.getTenantFromDomain(req);
       const studentData = req.validatedData as CreateStudentDto;
-      let requestingUser:any = req.user || {};
+      let requestingUser: any = req.user || {};
 
-      if(requestingUser.user_type !== UserType.SUPER_ADMIN){
+      logger.info('🔍 ===== CONTROLLER: Creating student =====');
+      logger.info('🔍 Request User Object:', JSON.stringify(requestingUser, null, 2));
+      logger.info('🔍 User Type:', requestingUser.user_type);
+      logger.info('🔍 User Type TYPE:', typeof requestingUser.user_type);
+      logger.info('🔍 SUPER_ADMIN constant:', UserType.SUPER_ADMIN);
+      logger.info('🔍 Comparison Result:', requestingUser.user_type === UserType.SUPER_ADMIN);
+      logger.info('🔍 Student Data tenant_id:', studentData.tenant_id);
+
+      // Handle tenant_id based on user type
+      if (requestingUser.user_type === UserType.SUPER_ADMIN) {
+        // SUPER_ADMIN: tenant_id must come from request body
+        if (!studentData.tenant_id) {
+          throw new ApiError(
+            'Tenant ID is required for SUPER_ADMIN',
+            400,
+            'MISSING_TENANT_ID'
+          );
+        }
+        logger.info('✅ SUPER_ADMIN: Using tenant_id from request body:', studentData.tenant_id);
+        // tenant_id already in studentData.tenant_id from body
+      } else {
+        logger.info('👤 Non-SUPER_ADMIN detected: Getting tenant from domain/header');
+        logger.info('👤 Current user_type value:', requestingUser.user_type);
+        // Non-SUPER_ADMIN: Get tenant from domain/header
+        const tenant = await studentService.getTenantFromDomain(req);
         requestingUser.tenantId = tenant.tenant_id;
-      }
-      else{
+        // Ignore tenant_id from body for security
         studentData.tenant_id = tenant.tenant_id;
+        logger.info('✅ Non-SUPER_ADMIN: Override tenant_id to:', studentData.tenant_id);
       }
+
+      // Extract profile picture file from request
+      const profilePictureFile = req.file;
       
       return await studentService.createStudent(
         studentData, 
         requestingUser,
-        req.ip || undefined
+        req.ip || undefined,
+        profilePictureFile
       );
     },
     {
@@ -139,12 +163,16 @@ export class StudentController {
       }
 
       const requestingUser = req.user;
+
+      // Extract profile picture file from request
+      const profilePictureFile = req.file;
       
       return await studentService.updateStudent(
         studentId, 
         updateData, 
         requestingUser,
-        req.ip || undefined
+        req.ip || undefined,
+        profilePictureFile
       );
     },
     {

@@ -134,7 +134,7 @@ export class TeacherManagement implements OnInit, OnDestroy {
   // ==================== Data Loading ====================
 
   loadCurrentUser(): void {
-    const userStr = localStorage.getItem('currentUser');
+    const userStr = localStorage.getItem('lms_user_data'); // ✅ FIXED: Use correct key
     if (userStr) {
       this.currentUser = JSON.parse(userStr);
       this.permissions = this.currentUser?.permissions || [];
@@ -189,9 +189,11 @@ export class TeacherManagement implements OnInit, OnDestroy {
   async loadCountries(): Promise<void> {
     this.isLoadingCountries = true;
     try {
-      const response = await this.httpRequests.getAllCountries();
+      const response = await this.httpRequests.getAllCountries({
+        limit: 100 // ✅ FIXED: Backend max limit is 100
+      });
       if (response.success) {
-        this.countries = response.data || [];
+        this.countries = response.data.items || [];
       }
     } catch (error) {
       console.error('Error loading countries:', error);
@@ -206,9 +208,11 @@ export class TeacherManagement implements OnInit, OnDestroy {
     this.cities = [];
     
     try {
-      const response = await this.httpRequests.getStatesByCountry(countryId);
+      const response = await this.httpRequests.getStatesByCountry(countryId, {
+        limit: 100 // ✅ FIXED: Backend max limit is 100
+      });
       if (response.success) {
-        this.states = response.data || [];
+        this.states = response.data.items || [];
       }
     } catch (error) {
       console.error('Error loading states:', error);
@@ -222,9 +226,11 @@ export class TeacherManagement implements OnInit, OnDestroy {
     this.cities = [];
     
     try {
-      const response = await this.httpRequests.getCitiesByState(stateId);
+      const response = await this.httpRequests.getCitiesByState(stateId, {
+        limit: 100 // ✅ FIXED: Backend max limit is 100
+      });
       if (response.success) {
-        this.cities = response.data || [];
+        this.cities = response.data.items || [];
       }
     } catch (error) {
       console.error('Error loading cities:', error);

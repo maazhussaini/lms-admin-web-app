@@ -100,8 +100,13 @@ export class HttpRequests {
 
   // ============= TENANT APIs =============
   
-  async getAllTenants(): Promise<ApiResponse<any>> {
-    return this.apiMethods.get(`${this.baseUrl}/tenants`);
+  async getAllTenants(params?: { limit?: number; page?: number; search?: string }): Promise<ApiResponse<any>> {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.search) queryParams.append('search', params.search);
+    const queryString = queryParams.toString();
+    return this.apiMethods.get(`${this.baseUrl}/tenants${queryString ? '?' + queryString : ''}`);
   }
 
   async getTenantById(id: string | number): Promise<ApiResponse<any>> {
@@ -332,15 +337,27 @@ export class HttpRequests {
 
   // ============= GEOGRAPHY APIs =============
   
-  async getAllCountries(): Promise<ApiResponse<any>> {
-    return this.apiMethods.get(`${this.baseUrl}/countries`);
+  async getAllCountries(params?: { limit?: number; search?: string }): Promise<ApiResponse<any>> {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.search) queryParams.append('search', params.search);
+    const queryString = queryParams.toString();
+    return this.apiMethods.get(`${this.baseUrl}/countries${queryString ? '?' + queryString : ''}`);
   }
 
-  async getStatesByCountry(countryId: number): Promise<ApiResponse<any>> {
-    return this.apiMethods.get(`${this.baseUrl}/countries/${countryId}/states`);
+  async getStatesByCountry(countryId: number, params?: { limit?: number; search?: string }): Promise<ApiResponse<any>> {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.search) queryParams.append('search', params.search);
+    const queryString = queryParams.toString();
+    return this.apiMethods.get(`${this.baseUrl}/countries/${countryId}/states${queryString ? '?' + queryString : ''}`);
   }
 
-  async getCitiesByState(stateId: number): Promise<ApiResponse<any>> {
-    return this.apiMethods.get(`${this.baseUrl}/states/${stateId}/cities`);
+  async getCitiesByState(stateId: number, params?: { limit?: number; search?: string }): Promise<ApiResponse<any>> {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.search) queryParams.append('search', params.search);
+    const queryString = queryParams.toString();
+    return this.apiMethods.get(`${this.baseUrl}/states/${stateId}/cities${queryString ? '?' + queryString : ''}`);
   }
 }

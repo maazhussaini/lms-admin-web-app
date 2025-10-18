@@ -64,6 +64,31 @@
       <div class="form-step">
         <h3 class="step-title">Personal Information</h3>
 
+        <!-- Tenant Selection (SUPER_ADMIN only) -->
+        @if (showTenantDropdown) {
+          <div class="form-group">
+            <label for="tenant_id">Tenant <span class="required">*</span></label>
+            <select
+              id="tenant_id"
+              class="form-control"
+              formControlName="tenant_id"
+              [disabled]="isViewMode"
+              [class.invalid]="studentForm.get('tenant_id')?.invalid && studentForm.get('tenant_id')?.touched"
+            >
+              <option value="">{{ tenants && tenants.length > 0 ? 'Select Tenant' : 'Loading tenants...' }}</option>
+              @for (tenant of tenants; track tenant.tenant_id) {
+                <option [value]="tenant.tenant_id">{{ tenant.tenant_name }}</option>
+              }
+            </select>
+            @if (studentForm.get('tenant_id')?.invalid && studentForm.get('tenant_id')?.touched) {
+              <div class="error-message">{{ getErrorMessage('tenant_id') }}</div>
+            }
+            @if (tenants && tenants.length === 0) {
+              <small class="text-muted">No tenants available. Please contact administrator.</small>
+            }
+          </div>
+        }
+
         <div class="form-row">
           <div class="form-group">
             <label for="first_name">First Name <span class="required">*</span></label>
@@ -74,6 +99,7 @@
               formControlName="first_name"
               placeholder="Enter First Name"
               [disabled]="isViewMode"
+              [class.invalid]="studentForm.get('first_name')?.invalid && studentForm.get('first_name')?.touched"
             />
             @if (studentForm.get('first_name')?.invalid && studentForm.get('first_name')?.touched) {
               <div class="error-message">{{ getErrorMessage('first_name') }}</div>
@@ -89,6 +115,7 @@
               formControlName="last_name"
               placeholder="Enter Last Name"
               [disabled]="isViewMode"
+              [class.invalid]="studentForm.get('last_name')?.invalid && studentForm.get('last_name')?.touched"
             />
             @if (studentForm.get('last_name')?.invalid && studentForm.get('last_name')?.touched) {
               <div class="error-message">{{ getErrorMessage('last_name') }}</div>
@@ -151,6 +178,31 @@
       <div class="form-step">
         <h3 class="step-title">Account Setup</h3>
 
+        <!-- Tenant Selection (SUPER_ADMIN only) -->
+        @if (showTenantDropdown) {
+          <div class="form-group">
+            <label for="tenant_id_step2">Tenant <span class="required">*</span></label>
+            <select
+              id="tenant_id_step2"
+              class="form-control"
+              formControlName="tenant_id"
+              [disabled]="isViewMode"
+              [class.invalid]="studentForm.get('tenant_id')?.invalid && studentForm.get('tenant_id')?.touched"
+            >
+              <option value="">{{ tenants && tenants.length > 0 ? 'Select Tenant' : 'Loading tenants...' }}</option>
+              @for (tenant of tenants; track tenant.tenant_id) {
+                <option [value]="tenant.tenant_id">{{ tenant.tenant_name }}</option>
+              }
+            </select>
+            @if (studentForm.get('tenant_id')?.invalid && studentForm.get('tenant_id')?.touched) {
+              <div class="error-message">{{ getErrorMessage('tenant_id') }}</div>
+            }
+            @if (tenants && tenants.length === 0) {
+              <small class="text-muted">No tenants available. Please contact administrator.</small>
+            }
+          </div>
+        }
+
         <div class="form-group">
           <label for="username">Username <span class="required">*</span></label>
           <input
@@ -160,6 +212,7 @@
             formControlName="username"
             placeholder="Enter Username"
             [disabled]="isViewMode"
+            [class.invalid]="studentForm.get('username')?.invalid && studentForm.get('username')?.touched"
           />
           @if (studentForm.get('username')?.invalid && studentForm.get('username')?.touched) {
             <div class="error-message">{{ getErrorMessage('username') }}</div>
@@ -186,7 +239,11 @@
                   formControlName="email_address"
                   placeholder="Enter Email Address"
                   [disabled]="isViewMode"
+                  [class.invalid]="email.get('email_address')?.invalid && email.get('email_address')?.touched"
                 />
+                @if (email.get('email_address')?.invalid && email.get('email_address')?.touched) {
+                  <div class="error-message">{{ getEmailErrorMessage($index) }}</div>
+                }
                 <label class="checkbox-label">
                   <input
                     type="checkbox"
@@ -227,26 +284,37 @@
           <div formArrayName="phoneNumbers" class="contact-list">
             @for (phone of phoneNumbers.controls; track $index) {
               <div [formGroupName]="$index" class="contact-item phone-item">
-                <select 
-                  class="form-control dial-code" 
-                  formControlName="dial_code"
-                  [disabled]="isViewMode">
-                  <option value="+1">+1</option>
-                  <option value="+44">+44</option>
-                  <option value="+91">+91</option>
-                  <option value="+61">+61</option>
-                  <option value="+49">+49</option>
-                  <option value="+33">+33</option>
-                  <option value="+81">+81</option>
-                  <option value="+86">+86</option>
-                </select>
-                <input
-                  type="tel"
-                  class="form-control phone-number"
-                  formControlName="phone_number"
-                  placeholder="(305) 760-1379"
-                  [disabled]="isViewMode"
-                />
+                <div class="phone-input-group">
+                  <select 
+                    class="form-control dial-code" 
+                    formControlName="dial_code"
+                    [disabled]="isViewMode"
+                    [class.invalid]="phone.get('dial_code')?.invalid && phone.get('dial_code')?.touched">
+                    <option value="+1">+1</option>
+                    <option value="+44">+44</option>
+                    <option value="+91">+91</option>
+                    <option value="+61">+61</option>
+                    <option value="+49">+49</option>
+                    <option value="+33">+33</option>
+                    <option value="+81">+81</option>
+                    <option value="+86">+86</option>
+                    <option value="+92">+92</option>
+                  </select>
+                  <input
+                    type="tel"
+                    class="form-control phone-number"
+                    formControlName="phone_number"
+                    placeholder="(305) 760-1379"
+                    [disabled]="isViewMode"
+                    [class.invalid]="phone.get('phone_number')?.invalid && phone.get('phone_number')?.touched"
+                  />
+                </div>
+                @if (phone.get('dial_code')?.invalid && phone.get('dial_code')?.touched) {
+                  <div class="error-message">{{ getPhoneErrorMessage($index, 'dial_code') }}</div>
+                }
+                @if (phone.get('phone_number')?.invalid && phone.get('phone_number')?.touched) {
+                  <div class="error-message">{{ getPhoneErrorMessage($index, 'phone_number') }}</div>
+                }
                 <label class="checkbox-label">
                   <input
                     type="checkbox"
@@ -315,7 +383,7 @@
         </div>
 
         <div class="form-group">
-          <label for="state_id">State/Province <span class="required">*</span></label>
+          <label for="state_id">State/Province <span class="optional">(optional)</span></label>
           <select
             id="state_id"
             class="form-control"
@@ -323,7 +391,7 @@
             (change)="onStateChange($event)"
             [disabled]="isViewMode || !studentForm.get('country_id')?.value"
           >
-            <option value="">Enter Or Select City</option>
+            <option value="">Enter Or Select State</option>
             @for (state of states; track state.state_id) {
               <option [value]="state.state_id">{{ state.name }}</option>
             }
@@ -334,12 +402,12 @@
         </div>
 
         <div class="form-group">
-          <label for="city_id">City <span class="required">*</span></label>
+          <label for="city_id">City <span class="optional">(optional)</span></label>
           <select
             id="city_id"
             class="form-control"
             formControlName="city_id"
-            [disabled]="isViewMode || !studentForm.get('state_id')?.value"
+            [disabled]="isViewMode || !studentForm.get('country_id')?.value"
           >
             <option value="">Enter Or Select City</option>
             @for (city of cities; track city.city_id) {

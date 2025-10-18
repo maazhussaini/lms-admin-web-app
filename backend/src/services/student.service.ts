@@ -25,6 +25,7 @@ import { BaseListService, BaseListServiceConfig } from '@/utils/base-list.servic
 import { STUDENT_FIELD_MAPPINGS } from '@/utils/field-mapping.utils';
 import { hashPassword } from '@/utils/password.utils';
 import { env } from '@/config/environment';
+import { uploadStudentProfilePicture, deleteStudentProfilePicture } from '@/utils/file-upload.utils';
 
 // Initialize Prisma client
 const prisma = new PrismaClient();
@@ -158,14 +159,24 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
    * @param data Student data from validated DTO
    * @param requestingUser User requesting the student creation
    * @param clientIp IP address of the request
+   * @param profilePictureFile Optional profile picture file from multer
    * @returns Newly created student
    */
   async createStudent(
     data: CreateStudentDto,
     requestingUser: TokenPayload,
-    clientIp?: string
+    clientIp?: string,
+    profilePictureFile?: Express.Multer.File
   ) {
    
+    console.log('🔍 ===== CREATE STUDENT SERVICE =====');
+    console.log('🔍 Requesting User:', {
+      id: requestingUser.id,
+      email: requestingUser.email,
+      user_type: requestingUser.user_type,
+      tenantId: requestingUser.tenantId
+    });
+    console.log('🔍 Student Data tenant_id:', data.tenant_id);
    
     // Validate that we have a requesting user
     // if (!requestingUser || !requestingUser.user_type) {
@@ -178,16 +189,20 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
     if (requestingUser.user_type === UserType.SUPER_ADMIN) {
       // SUPER_ADMIN must provide tenant_id in request body
       if (!data.tenant_id) {
+        console.error('❌ SUPER_ADMIN: tenant_id missing in request body');
         throw new BadRequestError('Tenant ID is required when creating a student as SUPER_ADMIN', 'MISSING_TENANT_ID');
       }
       tenantId = data.tenant_id;
+      console.log('✅ SUPER_ADMIN: Using tenant_id from request body:', tenantId);
     } 
     else {
       // Regular admins use their own tenant
       if (!requestingUser.tenantId) {
+        console.error('❌ Non-SUPER_ADMIN: tenantId missing in user context');
         throw new BadRequestError('Tenant ID is required', 'MISSING_TENANT_ID');
       }
       tenantId = requestingUser.tenantId;
+      console.log('👤 Non-SUPER_ADMIN: Using tenant_id from user context:', tenantId);
       
       // Ignore tenant_id from body for non-SUPER_ADMIN users
       // if (data.tenant_id && data.tenant_id !== tenantId) {
@@ -202,7 +217,16 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
 
     return tryCatch(async () => {
 
-      // Check if username exists within tenant
+      // Ensure we have a valid user ID (fallback to 1 for system user if undefined)
+      const effectiveUserId = requestingUser.id ?? 1;
+      
+      console.log('🔍 Effective User ID for creation:', effectiveUserId);
+
+      // Hash the password BEFORE transaction (time-consuming operation)
+      const passwordHash = await hashPassword(data.password);
+      console.log('✅ Password hashed successfully');
+
+      // Check if username exists within tenant BEFORE transaction
       const existingUsername = await prisma.student.findFirst({
         where: {
           username: data.username,
@@ -214,28 +238,33 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       if (existingUsername) {
         throw new ConflictError('Username already exists in this tenant', 'DUPLICATE_USERNAME');
       }
+      console.log('✅ Username availability checked');
 
-      // Check if primary email address exists within tenant
-      const existingEmail = await prisma.studentEmailAddress.findFirst({
-        where: {
-          email_address: data.email_address,
-          tenant_id: tenantId,
-          is_deleted: false
+      // Check if primary email address exists within tenant BEFORE transaction
+      // Check both direct email and emailAddresses array
+      const emailToCheck = data.emailAddresses?.[0]?.email_address || data.email_address;
+      if (emailToCheck) {
+        const existingEmail = await prisma.studentEmailAddress.findFirst({
+          where: {
+            email_address: emailToCheck,
+            tenant_id: tenantId,
+            is_deleted: false
+          }
+        });
+
+        if (existingEmail) {
+          throw new ConflictError('Email address already exists in this tenant', 'DUPLICATE_EMAIL');
         }
-      });
-
-      if (existingEmail) {
-        throw new ConflictError('Email address already exists in this tenant', 'DUPLICATE_EMAIL');
+        console.log('✅ Email availability checked');
       }
 
-      // Hash the password
-      const passwordHash = await hashPassword(data.password);
-
       // Create student and associated email address within transaction
+      // Transaction timeout increased to 10 seconds
       const result = await prisma.$transaction(async (tx) => {
         // Create the student
         const newStudent = await tx.student.create({
           data: {
+            // Use explicit field instead of relation
             tenant_id: tenantId,
             full_name: data.full_name,
             first_name: data.first_name,
@@ -243,9 +272,10 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
             last_name: data.last_name,
             username: data.username,
             password_hash: passwordHash,
+            // Use explicit field instead of relation  
             country_id: data.country_id,
-            state_id: data.state_id,
-            city_id: data.city_id,
+            state_id: data.state_id ?? undefined,
+            city_id: data.city_id ?? undefined,
             address: data.address || null,
             date_of_birth: data.date_of_birth || null,
             profile_picture_url: data.profile_picture_url || null,
@@ -256,8 +286,8 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
             referral_type: data.referral_type || null,
             created_ip: clientIp || null,
             updated_ip: clientIp || null,
-            created_by: requestingUser.id,
-            updated_by: requestingUser.id
+            created_by: effectiveUserId,
+            updated_by: effectiveUserId
           }
         });
 
@@ -273,8 +303,8 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
               priority: email.priority || (index + 1),
               created_ip: clientIp || null,
               updated_ip: clientIp || null,
-              created_by: requestingUser.id,
-              updated_by: requestingUser.id
+              created_by: effectiveUserId,
+              updated_by: effectiveUserId
             }))
           });
         } else if (data.email_address) {
@@ -288,8 +318,8 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
               priority: 1,
               created_ip: clientIp || null,
               updated_ip: clientIp || null,
-              created_by: requestingUser.id,
-              updated_by: requestingUser.id
+              created_by: effectiveUserId,
+              updated_by: effectiveUserId
             }
           });
         }
@@ -306,29 +336,66 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
               is_primary: phone.is_primary,
               created_ip: clientIp || null,
               updated_ip: clientIp || null,
-              created_by: requestingUser.id,
-              updated_by: requestingUser.id
+              created_by: effectiveUserId,
+              updated_by: effectiveUserId
             }))
           });
         }
 
         return newStudent;
+      }, {
+        maxWait: 10000, // Wait up to 10 seconds to start transaction
+        timeout: 15000  // Transaction expires after 15 seconds
       });
+
+      // Upload profile picture if provided
+      if (profilePictureFile) {
+        console.log('=== STUDENT PROFILE PICTURE UPLOAD SECTION ===');
+        try {
+          const profilePicturePath = await uploadStudentProfilePicture(
+            profilePictureFile,
+            tenantId,
+            result.student_id
+          );
+
+          if (profilePicturePath) {
+            // Update student with profile picture URL
+            await prisma.student.update({
+              where: { student_id: result.student_id },
+              data: { 
+                profile_picture_url: profilePicturePath,
+                updated_by: effectiveUserId,
+                updated_ip: clientIp || null
+              }
+            });
+
+            // Add profile picture URL to result
+            result.profile_picture_url = profilePicturePath;
+            console.log('Profile picture uploaded successfully:', profilePicturePath);
+          }
+        } catch (error) {
+          console.error('Error uploading profile picture:', error);
+          // Don't fail student creation if profile picture upload fails
+          logger.warn('Failed to upload profile picture for student', {
+            studentId: result.student_id,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
 
       // Return the created student (without password_hash)
       const { password_hash, ...studentWithoutPassword } = result;
       return studentWithoutPassword;
     }, {
       context: {
-        tenantId: 1,
-        requestingUser: { id: 1, role: UserType.STUDENT, tenantId: 1 },
+        tenantId,
+        requestingUser: { 
+          id: requestingUser.id, 
+          role: requestingUser.user_type, 
+          tenantId: requestingUser.tenantId 
+        },
         username: data.username
       }
-      // context: {
-      //   tenantId,
-      //   requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId },
-      //   username: data.username
-      // }
     });
   }
 
@@ -469,13 +536,15 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
    * @param data Update data from validated DTO
    * @param requestingUser User requesting the update
    * @param clientIp IP address of the request
+   * @param profilePictureFile Optional profile picture file from multer
    * @returns Updated student
    */
   async updateStudent(
     studentId: number, 
     data: UpdateStudentDto, 
     requestingUser: TokenPayload, 
-    clientIp?: string
+    clientIp?: string,
+    profilePictureFile?: Express.Multer.File
   ) {
     return tryCatch(async () => {
       logger.debug('Updating student', {
@@ -612,6 +681,51 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
 
         return student;
       });
+
+      // Upload profile picture if provided
+      if (profilePictureFile) {
+        console.log('=== STUDENT PROFILE PICTURE UPDATE SECTION ===');
+        try {
+          // Delete old profile picture if exists
+          if (updatedStudent.profile_picture_url) {
+            console.log('Deleting old profile picture:', updatedStudent.profile_picture_url);
+            await deleteStudentProfilePicture(updatedStudent.profile_picture_url).catch(err => 
+              logger.warn('Failed to delete old profile picture', { error: err })
+            );
+          }
+
+          // Upload new profile picture
+          const profilePicturePath = await uploadStudentProfilePicture(
+            profilePictureFile,
+            updatedStudent.tenant_id,
+            studentId
+          );
+
+          if (profilePicturePath) {
+            // Update student with new profile picture URL
+            await prisma.student.update({
+              where: { student_id: studentId },
+              data: { 
+                profile_picture_url: profilePicturePath,
+                updated_by: requestingUser.id,
+                updated_ip: clientIp || null,
+                updated_at: new Date()
+              }
+            });
+
+            // Add profile picture URL to result
+            updatedStudent.profile_picture_url = profilePicturePath;
+            console.log('Profile picture updated successfully:', profilePicturePath);
+          }
+        } catch (error) {
+          console.error('Error updating profile picture:', error);
+          // Don't fail student update if profile picture upload fails
+          logger.warn('Failed to upload profile picture for student', {
+            studentId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
 
       // Return the updated student (without password_hash)
       const { password_hash, ...studentWithoutPassword } = updatedStudent;

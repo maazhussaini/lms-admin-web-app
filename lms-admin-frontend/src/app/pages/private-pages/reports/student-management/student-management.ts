@@ -101,6 +101,11 @@ export class StudentManagement implements OnInit, OnDestroy {
   isLoadingStates: boolean = false;
   isLoadingCities: boolean = false;
 
+  // Tenant dropdown (for SUPER_ADMIN)
+  tenants: any[] = [];
+  isLoadingTenants: boolean = false;
+  showTenantDropdown: boolean = false;
+
   canSaveStudent: boolean = false;
 
   private readonly documentClickListener = (event: Event): void => {
@@ -120,10 +125,25 @@ export class StudentManagement implements OnInit, OnDestroy {
   constructor(private httpRequests: HttpRequests) {}
 
   ngOnInit(): void {
+    console.log('🔍 ===== COMPONENT INIT START =====');
+    console.log('🔍 Checking localStorage...');
+    console.log('🔍 localStorage keys:', Object.keys(localStorage));
+    console.log('🔍 lms_user_data key exists?:', localStorage.getItem('lms_user_data') !== null);
+    console.log('🔍 lms_access_token key exists?:', localStorage.getItem('lms_access_token') !== null);
+    
     this.loadCurrentUser();
+    this.checkIfSuperAdmin();
+    
+    // Load tenants if SUPER_ADMIN
+    if (this.showTenantDropdown) {
+      this.loadTenants();
+    }
+    
     this.loadStudents();
     this.loadCountries();
+    
     document.addEventListener('click', this.documentClickListener);
+    console.log('🔍 ===== COMPONENT INIT COMPLETE =====');
   }
 
   ngOnDestroy(): void {
@@ -133,10 +153,82 @@ export class StudentManagement implements OnInit, OnDestroy {
   // ==================== Data Loading ====================
 
   loadCurrentUser(): void {
-    const userStr = localStorage.getItem('currentUser');
+    console.log('📂 Loading current user from localStorage...');
+    
+    // CORRECT KEY: Use 'lms_user_data' not 'currentUser'
+    const userStr = localStorage.getItem('lms_user_data');
+    console.log('📂 LocalStorage raw data (lms_user_data):', userStr);
+    
     if (userStr) {
       this.currentUser = JSON.parse(userStr);
       this.permissions = this.currentUser?.permissions || [];
+      console.log('✅ Current user loaded:', this.currentUser);
+    } else {
+      console.error('❌ No user found in localStorage!');
+      console.error('❌ Available keys:', Object.keys(localStorage));
+    }
+  }
+
+  checkIfSuperAdmin(): void {
+    // Check if user is SUPER_ADMIN
+    console.log('🔍 ===== CHECKING SUPER_ADMIN =====');
+    console.log('🔍 Current user object:', this.currentUser);
+    console.log('🔍 User type value:', this.currentUser?.user_type);
+    console.log('🔍 User type TYPE:', typeof this.currentUser?.user_type);
+    console.log('🔍 Comparing with:', 'SUPER_ADMIN');
+    console.log('🔍 Strict equality (===):', this.currentUser?.user_type === 'SUPER_ADMIN');
+    
+    // TEMPORARY: Force true for debugging if user exists
+    if (this.currentUser && this.currentUser.user_type) {
+      console.log('⚠️ TEMPORARY: Checking ALL possible user_type values...');
+      console.log('⚠️ user_type.trim():', this.currentUser.user_type.trim());
+      console.log('⚠️ user_type.toUpperCase():', this.currentUser.user_type.toUpperCase());
+      
+      // Try case-insensitive comparison
+      const userTypeUpper = (this.currentUser.user_type || '').toString().trim().toUpperCase();
+      console.log('⚠️ Normalized user_type:', userTypeUpper);
+      console.log('⚠️ Match with SUPER_ADMIN?:', userTypeUpper === 'SUPER_ADMIN');
+      
+      this.showTenantDropdown = userTypeUpper === 'SUPER_ADMIN';
+    } else {
+      this.showTenantDropdown = false;
+    }
+    
+    console.log('🔍 Final showTenantDropdown value:', this.showTenantDropdown);
+    console.log('🔍 ===== CHECK COMPLETE =====');
+  }
+
+  async loadTenants(): Promise<void> {
+    this.isLoadingTenants = true;
+    try {
+      console.log('📥 Loading tenants for SUPER_ADMIN...');
+      const response = await this.httpRequests.getAllTenants({
+        limit: 100 // ✅ FIXED: Backend max limit is 100, not 1000
+      });
+      console.log('📥 Tenants API response:', response);
+      console.log('📥 Response structure:', {
+        success: response.success,
+        dataType: typeof response.data,
+        hasItems: response.data?.items !== undefined,
+        itemsLength: response.data?.items?.length,
+        rawData: response.data
+      });
+      
+      if (response.success) {
+        this.tenants = response.data.items || [];
+        console.log('✅ Tenants loaded successfully:', this.tenants.length);
+        console.log('📋 Tenants array:', this.tenants);
+        console.log('📋 First tenant structure:', this.tenants[0]);
+      } else {
+        console.error('❌ Failed to load tenants:', response.message);
+        this.tenants = [];
+      }
+    } catch (error) {
+      console.error('❌ Error loading tenants:', error);
+      this.tenants = [];
+    } finally {
+      this.isLoadingTenants = false;
+      console.log('🏁 loadTenants completed. Final tenants count:', this.tenants.length);
     }
   }
 
@@ -188,9 +280,11 @@ export class StudentManagement implements OnInit, OnDestroy {
   async loadCountries(): Promise<void> {
     this.isLoadingCountries = true;
     try {
-      const response = await this.httpRequests.getAllCountries();
+      const response = await this.httpRequests.getAllCountries({
+        limit: 100 // ✅ FIXED: Backend max limit is 100
+      });
       if (response.success) {
-        this.countries = response.data || [];
+        this.countries = response.data.items || [];
       }
     } catch (error) {
       console.error('Error loading countries:', error);
@@ -205,9 +299,11 @@ export class StudentManagement implements OnInit, OnDestroy {
     this.cities = [];
     
     try {
-      const response = await this.httpRequests.getStatesByCountry(countryId);
+      const response = await this.httpRequests.getStatesByCountry(countryId, {
+        limit: 100 // ✅ FIXED: Backend max limit is 100
+      });
       if (response.success) {
-        this.states = response.data || [];
+        this.states = response.data.items || [];
       }
     } catch (error) {
       console.error('Error loading states:', error);
@@ -221,9 +317,11 @@ export class StudentManagement implements OnInit, OnDestroy {
     this.cities = [];
     
     try {
-      const response = await this.httpRequests.getCitiesByState(stateId);
+      const response = await this.httpRequests.getCitiesByState(stateId, {
+        limit: 100 // ✅ FIXED: Backend max limit is 100
+      });
       if (response.success) {
-        this.cities = response.data || [];
+        this.cities = response.data.items || [];
       }
     } catch (error) {
       console.error('Error loading cities:', error);
@@ -359,6 +457,32 @@ export class StudentManagement implements OnInit, OnDestroy {
   // ==================== CRUD Operations ====================
 
   openAddStudentOffcanvas(): void {
+    console.log('🚀 ===== OPENING ADD STUDENT FORM =====');
+    console.log('🚀 Current user:', this.currentUser);
+    console.log('🚀 User type:', this.currentUser?.user_type);
+    console.log('🚀 showTenantDropdown:', this.showTenantDropdown);
+    console.log('🚀 Tenants count:', this.tenants?.length || 0);
+    console.log('🚀 Tenants data:', this.tenants);
+    console.log('🚀 isLoadingTenants:', this.isLoadingTenants);
+    
+    // If SUPER_ADMIN and tenants not loaded yet, wait for them
+    if (this.showTenantDropdown && (!this.tenants || this.tenants.length === 0) && !this.isLoadingTenants) {
+      console.log('⚠️ Tenants not loaded yet. Loading now...');
+      this.loadTenants().then(() => {
+        console.log('✅ Tenants loaded. Opening form now with', this.tenants.length, 'tenants');
+        this.openFormAfterTenantCheck();
+      }).catch(error => {
+        console.error('❌ Failed to load tenants:', error);
+        this.openFormAfterTenantCheck(); // Open anyway, let user see the error
+      });
+    } else {
+      this.openFormAfterTenantCheck();
+    }
+  }
+
+  private openFormAfterTenantCheck(): void {
+    console.log('🚀 ===== FORM OPENING =====');
+    
     this.showAddStudentOffcanvas = true;
     this.isEditMode = false;
     this.isViewMode = false;

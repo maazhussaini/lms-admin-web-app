@@ -21,6 +21,7 @@ import studentProfileRoutes from './routes/student-profile.routes';
 import teacherRoutes from './routes/teacher.routes';
 import videoRoutes from './routes/video.routes';
 import instituteRoutes from './routes/institute.routes';
+import geographicRoutes from './routes/geographic.routes';
 
 // Create router
 const router = Router();
@@ -52,6 +53,9 @@ router.get('/', (_req, res) => {
         '/api/v1/student',
         '/api/v1/teachers',
         '/api/v1/institutes',
+        '/api/v1/countries',
+        '/api/v1/states',
+        '/api/v1/cities',
       ]
     },
     timestamp: new Date().toISOString(),
@@ -74,5 +78,6 @@ router.use('/students', studentRoutes);
 router.use('/student', studentProfileRoutes);
 router.use('/teachers', teacherRoutes);
 router.use('/institutes', instituteRoutes);
+router.use('/', geographicRoutes); // Geographic routes (countries, states, cities)
 
 export default router;

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 import { StudentController } from '@/controllers/student.controller';
 import { authenticate, authorize } from '@/middleware/auth.middleware';
 import { validate } from '@/middleware/validation.middleware';
@@ -13,6 +14,28 @@ import { UserType } from '@/types/enums.types';
 
 const router = Router();
 
+/**
+ * Multer configuration for student profile picture uploads
+ * Using memoryStorage to keep files in buffer for network share upload
+ */
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit for profile pictures
+    files: 1 // Only one file allowed
+  },
+  fileFilter: (_req, file, cb) => {
+    // Accept only image files
+    const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.'));
+    }
+  }
+});
+
 
 /**
  * Custom validation for SUPER_ADMIN tenant_id requirement
@@ -25,6 +48,12 @@ const validateTenantIdForSuperAdmin = [
     .isInt({ min: 1 })
     .withMessage('Tenant ID must be a positive integer')
     .toInt(),
+  
+  // For non-SUPER_ADMIN users, allow null/undefined tenant_id (will be set from header)
+  body('tenant_id')
+    .if((_value, { req }) => req['user']?.user_type !== UserType.SUPER_ADMIN)
+    .optional({ nullable: true })
+    .customSanitizer(() => undefined) // Remove it from body for non-SUPER_ADMIN
 ];
 
 
@@ -36,6 +65,7 @@ const validateTenantIdForSuperAdmin = [
 
 router.post(
   '/',
+  upload.single('profile_picture'),
   validate([
     ...validateTenantIdForSuperAdmin, 
     ...createStudentValidation,
@@ -87,6 +117,7 @@ router.get(
 router.patch(
   '/:studentId',
   authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]),
+  upload.single('profile_picture'),
   validate([
     param('studentId')
       .isInt({ min: 1 })

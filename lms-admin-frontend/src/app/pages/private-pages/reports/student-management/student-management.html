@@ -71,7 +71,7 @@
               <select class="filter-select" [(ngModel)]="filters.countryId">
                 <option value="">Select Country</option>
                 @for (country of countries; track country.country_id) {
-                  <option [value]="country.country_id">{{ country.country_name }}</option>
+                  <option [value]="country.country_id">{{ country.name }}</option>
                 }
               </select>
             </div>
@@ -266,6 +266,8 @@
     [countries]="countries"
     [states]="states"
     [cities]="cities"
+    [tenants]="tenants"
+    [showTenantDropdown]="showTenantDropdown"
     (formSubmit)="onStudentFormSubmit($event)"
     (formCancel)="closeAddStudentOffcanvas()"
     (countryChange)="onCountryChange($event)"

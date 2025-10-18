@@ -144,7 +144,7 @@ export const createStudentValidation: ValidationChain[] = [
     .isLength({ min: 1, max: 100 }).withMessage('Last name must be between 1 and 100 characters'),
 
   body('email_address')
-    .exists().withMessage('Email address is required')
+    .optional() // Make optional since emailAddresses array is the preferred way
     .isEmail().withMessage('Email address must be valid')
     .normalizeEmail()
     .trim()
@@ -156,7 +156,7 @@ export const createStudentValidation: ValidationChain[] = [
     .notEmpty().withMessage('Username cannot be empty')
     .trim()
     .isLength({ min: 3, max: 50 }).withMessage('Username must be between 3 and 50 characters')
-    .isAlphanumeric().withMessage('Username must contain only letters and numbers'),
+    .matches(/^[a-zA-Z0-9._-]+$/).withMessage('Username can only contain letters, numbers, dots, underscores, and hyphens'),
 
   body('password')
     .exists().withMessage('Password is required')
@@ -173,12 +173,12 @@ export const createStudentValidation: ValidationChain[] = [
     .toInt(),
 
   body('state_id')
-    .exists().withMessage('State ID is required')
+    .optional({ nullable: true })
     .isInt({ min: 1 }).withMessage('State ID must be a positive integer')
     .toInt(),
 
   body('city_id')
-    .exists().withMessage('City ID is required')
+    .optional({ nullable: true })
     .isInt({ min: 1 }).withMessage('City ID must be a positive integer')
     .toInt(),
 
@@ -484,18 +484,22 @@ export interface UpdateStudentEmailAddressDto {
  * Validation chains for phone numbers in create/update
  */
 export const studentPhoneNumberValidation: ValidationChain[] = [
-  body('phoneNumbers.*.dial_code')
+  body('phoneNumbers')
     .optional()
+    .isArray({ min: 1 }).withMessage('At least one phone number is required if provided'),
+
+  body('phoneNumbers.*.dial_code')
+    .if(body('phoneNumbers').exists())
+    .notEmpty().withMessage('Dial code is required')
     .isString().withMessage('Dial code must be a string')
-    .notEmpty().withMessage('Dial code cannot be empty')
     .trim()
     .isLength({ min: 1, max: 20 }).withMessage('Dial code must be between 1 and 20 characters')
     .matches(/^[+0-9]*$/).withMessage('Dial code can only contain digits and + symbol'),
 
   body('phoneNumbers.*.phone_number')
-    .optional()
+    .if(body('phoneNumbers').exists())
+    .notEmpty().withMessage('Phone number is required')
     .isString().withMessage('Phone number must be a string')
-    .notEmpty().withMessage('Phone number cannot be empty')
     .trim()
     .isLength({ min: 3, max: 20 }).withMessage('Phone number must be between 3 and 20 characters')
     .matches(/^[0-9\s\-()]*$/).withMessage('Phone number can only contain digits, spaces, -, and parentheses'),
@@ -517,8 +521,13 @@ export const studentPhoneNumberValidation: ValidationChain[] = [
  * Validation chains for email addresses in create/update
  */
 export const studentEmailAddressValidation: ValidationChain[] = [
-  body('emailAddresses.*.email_address')
+  body('emailAddresses')
     .optional()
+    .isArray({ min: 1 }).withMessage('At least one email address is required'),
+
+  body('emailAddresses.*.email_address')
+    .if(body('emailAddresses').exists())
+    .notEmpty().withMessage('Email address is required')
     .isEmail().withMessage('Email address must be valid')
     .normalizeEmail()
     .trim()

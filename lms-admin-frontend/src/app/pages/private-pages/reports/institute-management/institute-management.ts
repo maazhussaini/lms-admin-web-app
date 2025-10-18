@@ -101,7 +101,7 @@ export class InstituteManagement implements OnInit, OnDestroy {
   // ==================== Data Loading ====================
 
   loadCurrentUser(): void {
-    const userStr = localStorage.getItem('currentUser');
+    const userStr = localStorage.getItem('lms_user_data'); // ✅ FIXED: Use correct key
     if (userStr) {
       this.currentUser = JSON.parse(userStr);
       this.permissions = this.currentUser?.permissions || [];

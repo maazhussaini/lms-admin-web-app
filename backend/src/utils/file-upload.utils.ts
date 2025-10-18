@@ -946,3 +946,138 @@ export const deleteTenantFile = async (filePath: string): Promise<boolean> => {
     return false;
   }
 };
+
+/**
+ * ========================================
+ * STUDENT PROFILE PICTURE UPLOAD UTILITIES
+ * ========================================
+ */
+
+/**
+ * Uploads student profile picture to network share
+ * @param file Express Multer file
+ * @param tenantId Tenant ID
+ * @param studentId Student ID
+ * @returns Path to uploaded file or null if failed
+ */
+export const uploadStudentProfilePicture = async (
+  file: Express.Multer.File,
+  tenantId: number,
+  studentId: number
+): Promise<string | null> => {
+  try {
+    console.log('=== uploadStudentProfilePicture START ===', {
+      tenantId,
+      studentId,
+      hasFile: !!file,
+      hasBuffer: !!file?.buffer,
+      bufferLength: file?.buffer?.length,
+      originalname: file?.originalname
+    });
+
+    // Validate network path
+    if (!ensureNetworkPath()) {
+      console.error('Network path not accessible');
+      throw new InternalServerError(
+        'Network upload path is not accessible',
+        'NETWORK_PATH_ERROR'
+      );
+    }
+
+    // Create tenant/students directory structure
+    const studentsDir = NETWORK_UPLOAD_PATH + '\\' + tenantId + '\\students';
+    console.log('Creating students directory:', studentsDir);
+    
+    if (!fs.existsSync(studentsDir)) {
+      console.log('Students directory does not exist, creating...');
+      fs.mkdirSync(studentsDir, { recursive: true });
+      console.log('Students directory created');
+    }
+
+    // Determine file extension
+    const ext = path.extname(file.originalname);
+    const fileName = `profile_${studentId}${ext}`;
+
+    const targetPath = studentsDir + '\\' + fileName;
+    console.log('Target path:', targetPath);
+
+    // Write file from buffer (multer memoryStorage)
+    if (file.buffer) {
+      console.log('Writing profile picture from buffer, size:', file.buffer.length);
+      
+      // Delete old file if exists
+      if (fs.existsSync(targetPath)) {
+        console.log('Deleting existing profile picture:', targetPath);
+        fs.unlinkSync(targetPath);
+      }
+      
+      // Write buffer to file
+      try {
+        fs.writeFileSync(targetPath, file.buffer, { mode: 0o666 });
+        console.log('Profile picture written to disk');
+        
+        // Verify file
+        if (!fs.existsSync(targetPath)) {
+          throw new Error('File write verification failed');
+        }
+        
+        const stats = fs.statSync(targetPath);
+        console.log('File verification successful:', {
+          exists: true,
+          size: stats.size,
+          expectedSize: file.buffer.length
+        });
+        
+        if (stats.size !== file.buffer.length) {
+          throw new Error(`File size mismatch: written ${stats.size} bytes, expected ${file.buffer.length} bytes`);
+        }
+        
+        console.log('Profile picture written and verified successfully');
+      } catch (writeError) {
+        console.error('Profile picture write error:', writeError);
+        throw writeError;
+      }
+    } else if (file.path) {
+      console.log('Copying profile picture from path:', file.path);
+      if (fs.existsSync(targetPath)) {
+        fs.unlinkSync(targetPath);
+      }
+      
+      fs.copyFileSync(file.path, targetPath);
+      fs.unlinkSync(file.path);
+      console.log('Profile picture copied successfully');
+    } else {
+      console.error('Profile picture has no buffer or path!');
+      throw new Error('File has no buffer or path');
+    }
+
+    // Return network path
+    const finalPath = NETWORK_UPLOAD_PATH + '\\' + tenantId + '\\students\\' + fileName;
+    console.log('=== uploadStudentProfilePicture SUCCESS ===', finalPath);
+    return finalPath;
+  } catch (error) {
+    console.error(`Error uploading student profile picture:`, error);
+    throw new InternalServerError(
+      'Failed to upload student profile picture',
+      'PROFILE_PICTURE_UPLOAD_ERROR'
+    );
+  }
+};
+
+/**
+ * Deletes student profile picture from network share
+ * @param filePath Full file path to delete
+ */
+export const deleteStudentProfilePicture = async (filePath: string): Promise<boolean> => {
+  try {
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      console.log('Student profile picture deleted:', filePath);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error(`Error deleting student profile picture ${filePath}:`, error);
+    return false;
+  }
+};
