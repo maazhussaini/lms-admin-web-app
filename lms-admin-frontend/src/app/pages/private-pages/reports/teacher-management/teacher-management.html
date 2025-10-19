@@ -273,4 +273,58 @@
     (countryChange)="loadStatesByCountry($event)"
     (stateChange)="loadCitiesByState($event)"
   ></app-teacher-form>
+  
+  <!-- Footer Buttons -->
+  <div slot="footer-buttons" class="footer-button-group">
+    @if (!isViewMode) {
+      <!-- Previous Button -->
+      @if (currentFormStep > 1) {
+        <button 
+          class="btn-secondary" 
+          (click)="teacherFormComponent.previousStep()"
+          type="button">
+          <i class="fa-solid fa-arrow-left"></i>
+          Previous
+        </button>
+      }
+      
+      <!-- Cancel Button -->
+      <button 
+        class="btn-cancel" 
+        (click)="closeAddTeacherOffcanvas()"
+        type="button">
+        Cancel
+      </button>
+      
+      <!-- Next or Save Button -->
+      @if (currentFormStep < totalFormSteps) {
+        <button 
+          class="btn-primary" 
+          (click)="goToNextStepWithValidation()"
+          type="button">
+          Next
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      } @else {
+        <button 
+          class="btn-primary" 
+          (click)="saveTeacherWithValidation()"
+          [disabled]="isLoadingTeachers"
+          type="button">
+          @if (isLoadingTeachers) {
+            Saving...
+          } @else {
+            {{ isEditMode ? 'Update' : 'Save' }}
+          }
+        </button>
+      }
+    } @else {
+      <button 
+        class="btn-cancel" 
+        (click)="closeAddTeacherOffcanvas()"
+        type="button">
+        Close
+      </button>
+    }
+  </div>
 </app-off-canvas-wrapper>

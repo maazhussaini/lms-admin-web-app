@@ -256,8 +256,7 @@
 <!-- Add/Edit/View Student Off-Canvas -->
 <app-off-canvas-wrapper
   [isOpen]="showAddStudentOffcanvas"
-  [title]="isViewMode ? 'View Student' : isEditMode ? 'Edit Student' : 'Add Student'"
-  (close)="closeAddStudentOffcanvas()">
+  [title]="isViewMode ? 'View Student' : isEditMode ? 'Edit Student' : 'Add Student'">
   
   <app-student-form
     [student]="selectedStudent"
@@ -273,4 +272,56 @@
     (countryChange)="onCountryChange($event)"
     (stateChange)="onStateChange($event)"
   ></app-student-form>
+  
+  <!-- Footer Buttons with Step Navigation -->
+  <div slot="footer-buttons" class="footer-button-group">
+    @if (!isViewMode) {
+      <!-- Previous Button -->
+      @if (currentFormStep > 1) {
+        <button 
+          class="btn-secondary" 
+          (click)="studentFormComponent.goToPreviousStep()"
+          type="button">
+          Previous
+        </button>
+      }
+      
+      <!-- Cancel Button -->
+      <button 
+        class="btn-cancel" 
+        (click)="closeAddStudentOffcanvas()"
+        type="button">
+        Cancel
+      </button>
+      
+      <!-- Next or Save Button -->
+      @if (currentFormStep < totalFormSteps) {
+        <button 
+          class="btn-primary" 
+          (click)="goToNextStepWithValidation()"
+          type="button">
+          Next
+        </button>
+      } @else {
+        <button 
+          class="btn-primary" 
+          (click)="saveStudentWithValidation()"
+          [disabled]="isLoadingStudents"
+          type="button">
+          @if (isLoadingStudents) {
+            Saving...
+          } @else {
+            {{ isEditMode ? 'Update' : 'Save' }}
+          }
+        </button>
+      }
+    } @else {
+      <button 
+        class="btn-cancel" 
+        (click)="closeAddStudentOffcanvas()"
+        type="button">
+        Close
+      </button>
+    }
+  </div>
 </app-off-canvas-wrapper>

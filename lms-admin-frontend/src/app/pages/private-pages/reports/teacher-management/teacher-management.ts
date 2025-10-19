@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Paginator } from '../../../../components/widgets/paginator/paginator';
@@ -54,6 +54,9 @@ export interface Filters {
 })
 export class TeacherManagement implements OnInit, OnDestroy {
   
+  // ViewChild to access teacher form component
+  @ViewChild(TeacherFormComponent) teacherFormComponent!: TeacherFormComponent;
+  
   currentUser: any = null;
   permissions: string[] = [];
 
@@ -103,6 +106,19 @@ export class TeacherManagement implements OnInit, OnDestroy {
   isLoadingCities: boolean = false;
 
   canSaveTeacher: boolean = false;
+
+  // Getter methods for template access
+  get currentFormStep(): number {
+    return this.teacherFormComponent?.currentStep || 1;
+  }
+
+  get totalFormSteps(): number {
+    return this.teacherFormComponent?.totalSteps || 3;
+  }
+
+  get isFormValid(): boolean {
+    return this.teacherFormComponent?.isFormValid() || false;
+  }
 
   private readonly documentClickListener = (event: Event): void => {
     const target = event.target as HTMLElement;
@@ -467,6 +483,33 @@ export class TeacherManagement implements OnInit, OnDestroy {
   }
 
   // ==================== Form Events ====================
+
+  /**
+   * Go to next step with validation
+   */
+  goToNextStepWithValidation(): void {
+    if (this.teacherFormComponent) {
+      // Check if current step is valid before proceeding
+      if (this.teacherFormComponent.canProceedFromCurrentStep()) {
+        this.teacherFormComponent.nextStep();
+      }
+    }
+  }
+
+  /**
+   * Save teacher with validation
+   */
+  saveTeacherWithValidation(): void {
+    if (this.teacherFormComponent) {
+      // Trigger validation
+      this.teacherFormComponent.markAllFieldsAsTouched();
+      
+      // Check if form is valid before saving
+      if (this.canSaveTeacher || this.teacherFormComponent.isFormValid()) {
+        this.teacherFormComponent.submitForm();
+      }
+    }
+  }
 
   async onTeacherFormSave(teacherData: any): Promise<void> {
     try {

@@ -1142,4 +1142,65 @@
 .off-canvas-container{
   width: 531px !important;
 }
+
+// Footer button group styling
+.footer-button-group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 100%;
+
+  .btn-cancel,
+  .btn-secondary,
+  .btn-primary {
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: right;
+  }
+
+  .btn-cancel,
+  .btn-secondary {
+    background: white;
+    color: #6B7280;
+    border: 1px solid #E5E7EB;
+
+    &:hover {
+      background: #F9FAFB;
+      border-color: #D1D5DB;
+      color: #374151;
+    }
+
+    &:active {
+      transform: translateY(1px);
+    }
+  }
+
+  .btn-primary {
+    background: var(--primary-color, #8B5CF6);
+    color: white;
+    border: none;
+
+    &:hover:not(:disabled) {
+      background: var(--primary-dark, #7C3AED);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      background: #D1D5DB;
+      color: #9CA3AF;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+  }
+}
 }

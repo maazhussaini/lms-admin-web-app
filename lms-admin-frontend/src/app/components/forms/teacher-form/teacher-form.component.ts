@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 /**
- * Teacher Form Component - Handles create, edit and view modes for teacher data
+ * Multi-step Teacher Form Component
+ * Steps: 1) Personal Information, 2) Account Setup, 3) Location Information
  */
 @Component({
   selector: 'app-teacher-form',
@@ -29,6 +30,14 @@ export class TeacherFormComponent implements OnInit, OnChanges {
   @Output() countryChange = new EventEmitter<number>();
   @Output() stateChange = new EventEmitter<number>();
 
+  // Step identifiers
+  readonly STEP_PERSONAL = 1;
+  readonly STEP_ACCOUNT = 2;
+  readonly STEP_LOCATION = 3;
+
+  currentStep: number = 1;
+  totalSteps: number = 3;
+
   formData: any = {
     full_name: '',
     first_name: '',
@@ -53,14 +62,22 @@ export class TeacherFormComponent implements OnInit, OnChanges {
   };
 
   ngOnInit(): void {
-    if (this.teacherData && this.isEditMode) {
+    // Always start at step 1
+    this.currentStep = this.STEP_PERSONAL;
+    
+    if (this.teacherData && (this.isEditMode || this.isViewMode)) {
       this.loadTeacherData();
     }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['teacherData'] && this.teacherData && this.isEditMode) {
+    if (changes['teacherData'] && this.teacherData && (this.isEditMode || this.isViewMode)) {
       this.loadTeacherData();
+    }
+    
+    // Reset to step 1 when mode changes
+    if (changes['isEditMode'] || changes['isViewMode']) {
+      this.currentStep = this.STEP_PERSONAL;
     }
   }
 
@@ -92,6 +109,124 @@ export class TeacherFormComponent implements OnInit, OnChanges {
 
     this.checkFormValidity();
   }
+
+  // ==================== Step Navigation ====================
+
+  /**
+   * Navigate to a specific step
+   */
+  goToStep(step: number): void {
+    if (this.isViewMode) {
+      this.currentStep = step;
+      return;
+    }
+
+    // In edit/add mode, validate before allowing navigation
+    if (step < this.currentStep) {
+      // Allow going back without validation
+      this.currentStep = step;
+    } else if (step > this.currentStep) {
+      // Going forward requires validation
+      if (this.canProceedFromCurrentStep()) {
+        this.currentStep = step;
+      }
+    }
+  }
+
+  /**
+   * Go to next step
+   */
+  nextStep(): void {
+    if (this.currentStep < this.totalSteps && this.canProceedFromCurrentStep()) {
+      this.currentStep++;
+    }
+  }
+
+  /**
+   * Go to previous step
+   */
+  previousStep(): void {
+    if (this.currentStep > 1) {
+      this.currentStep--;
+    }
+  }
+
+  /**
+   * Check if current step is valid and can proceed
+   */
+  canProceedFromCurrentStep(): boolean {
+    switch (this.currentStep) {
+      case this.STEP_PERSONAL:
+        return this.isPersonalInfoValid();
+      case this.STEP_ACCOUNT:
+        return this.isAccountSetupValid();
+      case this.STEP_LOCATION:
+        return this.isLocationInfoValid();
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Check if step is completed
+   */
+  isStepCompleted(step: number): boolean {
+    if (step > this.currentStep) return false;
+
+    switch (step) {
+      case this.STEP_PERSONAL:
+        return this.isPersonalInfoValid();
+      case this.STEP_ACCOUNT:
+        return this.isAccountSetupValid();
+      case this.STEP_LOCATION:
+        return this.isLocationInfoValid();
+      default:
+        return false;
+    }
+  }
+
+  // ==================== Step Validation ====================
+
+  /**
+   * Validate Personal Information step
+   */
+  isPersonalInfoValid(): boolean {
+    return !!(
+      this.formData.full_name &&
+      this.formData.first_name &&
+      this.formData.last_name
+    );
+  }
+
+  /**
+   * Validate Account Setup step
+   */
+  isAccountSetupValid(): boolean {
+    const hasUsername = !!this.formData.username;
+    const hasPassword = this.isEditMode || !!this.formData.password;
+    const hasEmail = !!this.formData.email_address;
+    
+    return hasUsername && hasPassword && hasEmail;
+  }
+
+  /**
+   * Validate Location Information step
+   */
+  isLocationInfoValid(): boolean {
+    // Location is optional, so always return true
+    return true;
+  }
+
+  /**
+   * Check overall form validity
+   */
+  isFormValid(): boolean {
+    return this.isPersonalInfoValid() && 
+           this.isAccountSetupValid() && 
+           this.isLocationInfoValid();
+  }
+
+  // ==================== Form Handlers ====================
 
   onCountryChange(): void {
     if (this.formData.country_id) {
@@ -128,18 +263,14 @@ export class TeacherFormComponent implements OnInit, OnChanges {
   }
 
   checkFormValidity(): void {
-    const isValid = 
-      !!this.formData.full_name &&
-      !!this.formData.first_name &&
-      !!this.formData.last_name &&
-      !!this.formData.username &&
-      (this.isEditMode || !!this.formData.password) &&
-      !!this.formData.email_address;
-
+    const isValid = this.isFormValid();
     this.validityChange.emit(isValid);
   }
 
-  onSave(): void {
+  /**
+   * Public method to submit form - called from parent component
+   */
+  public submitForm(): void {
     if (this.isViewMode) return;
 
     const dataToSave = { ...this.formData };
@@ -154,6 +285,13 @@ export class TeacherFormComponent implements OnInit, OnChanges {
     }
 
     this.save.emit(dataToSave);
+  }
+
+  /**
+   * Mark all fields as touched to show validation errors
+   */
+  markAllFieldsAsTouched(): void {
+    // Template-driven form validation will show when fields are invalid
   }
 
   onCancel(): void {

@@ -6,55 +6,23 @@
   tabindex="0">
   
   <div class="off-canvas-container" (click)="$event.stopPropagation()">
-    <!-- Header with Close Button and Action Buttons -->
+    <!-- Header with Title Only (No Close Button) -->
     <div class="off-canvas-header">
-      <button 
-        class="close-button" 
-        (click)="closeCanvas()"
-        type="button"
-        aria-label="Close">
-        <i class="fa-solid fa-times"></i>
-      </button>
-      
-      <!-- Project content for action buttons (Next, Previous, Save) -->
-      <div class="header-actions">
-        <ng-content select="[slot=header-actions]"></ng-content>
-      </div>
+      @if (title) {
+        <h2 class="off-canvas-title">{{ title }}</h2>
+      }
     </div>
 
     <!-- Content -->
     <div class="off-canvas-content">
-      @if (title) {
-        <h2 class="off-canvas-title">{{ title }}</h2>
-      }
       <div class="form-content-wrapper">
         <ng-content></ng-content>
       </div>
     </div>
 
-    <!-- Footer with Save Button -->
-    @if (showSaveButton) {
-      <div class="off-canvas-footer">
-        <button 
-          class="btn-cancel" 
-          (click)="closeCanvas()"
-          type="button">
-          Cancel
-        </button>
-        <button 
-          class="btn-primary" 
-          (click)="saveForm()"
-          [disabled]="!canSave || isLoading"
-          type="button">
-          @if (isLoading) {
-            <i class="fas fa-spinner fa-spin"></i>
-            Saving...
-          } @else {
-            <i class="fas fa-save"></i>
-            {{ saveButtonText }}
-          }
-        </button>
-      </div>
-    }
+    <!-- Footer with Custom Buttons (using ng-content) -->
+    <div class="off-canvas-footer">
+      <ng-content select="[slot=footer-buttons]"></ng-content>
+    </div>
   </div>
 </div>

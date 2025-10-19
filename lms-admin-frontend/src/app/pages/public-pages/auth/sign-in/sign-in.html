@@ -82,27 +82,6 @@
       <div class="text-center mt-6">
         <a href="javascript:;" class="text-sm font-medium text-primary-light hover:underline">Privacy Policy</a>
       </div>
-      
-      <!-- User Info (for testing) -->
-      <div *ngIf="currentUser" class="user-info mt-5 p-5 bg-light rounded-lg border border-border">
-        <div class="user-welcome">
-          <h4 class="text-secondary mb-4 font-medium">Welcome, {{ currentUser.full_name }}!</h4>
-          <div class="user-details mb-4">
-            <p class="my-1 text-sm text-muted"><strong>Role:</strong> {{ currentUser.role.role_name }}</p>
-            <p class="my-1 text-sm text-muted"><strong>Email:</strong> {{ currentUser.email }}</p>
-            <p *ngIf="currentUser.tenant_id" class="my-1 text-sm text-muted"><strong>Tenant ID:</strong> {{ currentUser.tenant_id }}</p>
-          </div>
-          
-          <div *ngIf="permissions.length > 0" class="permissions mb-4">
-            <strong class="text-sm text-muted">Permissions:</strong>
-            <ul class="mt-2 ml-4">
-              <li *ngFor="let permission of permissions" class="text-xs text-muted my-0.5">{{ permission }}</li>
-            </ul>
-          </div>
-          
-          <p class="redirect-info text-primary-light font-medium text-sm text-center m-0">Redirecting to dashboard...</p>
-        </div>
-      </div>
     </div>
     
     <div class="flex-1 bg-surface bg-cover bg-center bg-no-repeat flex items-center justify-center p-0 max-w-half h-screen signin-bg">

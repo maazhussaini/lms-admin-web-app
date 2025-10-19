@@ -253,18 +253,44 @@
 <app-off-canvas-wrapper
   [isOpen]="showAddTenantOffcanvas"
   [title]="isViewMode ? 'View Tenant Information' : (isEditMode ? 'Edit Tenant' : 'Add Tenant')"
-  [saveButtonText]="isEditMode ? 'Update' : 'Save'"
-  [showSaveButton]="!isViewMode"
-  [canSave]="canSaveTenant"
-  [isLoading]="false"
-  (close)="closeAddTenantOffcanvas()"
-  (submit)="saveTenant()">
+  (close)="closeAddTenantOffcanvas()">
+  
   <app-basic-tenant-form 
     [formData]="newTenantData"
     [isViewMode]="isViewMode"
     (formDataChange)="onTenantFormDataChange($event)"
     (validityChange)="onTenantFormValidityChange($event)">
   </app-basic-tenant-form>
+  
+  <!-- Footer Buttons -->
+  <div slot="footer-buttons" class="footer-button-group">
+    @if (!isViewMode) {
+      <button 
+        class="btn-cancel" 
+        (click)="closeAddTenantOffcanvas()"
+        type="button">
+        Cancel
+      </button>
+      <button 
+        class="btn-primary" 
+        (click)="saveTenantWithValidation()"
+        [disabled]="isLoadingTenants"
+        type="button">
+        @if (isLoadingTenants) {
+          Saving...
+        } @else {
+          {{ isEditMode ? 'Update' : 'Save' }}
+        }
+      </button>
+    } @else {
+      <button 
+        class="btn-cancel" 
+        (click)="closeAddTenantOffcanvas()"
+        type="button">
+        Close
+      </button>
+    }
+  </div>
 </app-off-canvas-wrapper>
 
 <!-- View Tenant Details Modal -->

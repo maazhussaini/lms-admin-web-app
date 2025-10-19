@@ -1,24 +1,3 @@
-<!-- Action Buttons for Header -->
-<div slot="header-actions" class="form-header-actions">
-  @if (currentStep > 1) {
-    <button type="button" class="btn-previous" (click)="goToPreviousStep()">
-      Previous
-    </button>
-  }
-  
-  @if (currentStep < totalSteps) {
-    <button type="button" class="btn-next" (click)="goToNextStep()">
-      Next
-    </button>
-  }
-
-  @if (currentStep === totalSteps && !isViewMode) {
-    <button type="button" class="btn-save" (click)="onSubmit()" [disabled]="!studentForm.valid">
-      Save
-    </button>
-  }
-</div>
-
 <div class="student-form-container">
   <form [formGroup]="studentForm" class="student-form">
     

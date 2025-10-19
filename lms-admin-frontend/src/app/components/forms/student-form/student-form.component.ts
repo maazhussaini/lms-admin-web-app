@@ -509,6 +509,46 @@ export class StudentFormComponent implements OnInit, OnChanges {
     }
   }
 
+  /**
+   * Public method to trigger form submission from parent component
+   */
+  public submitForm(): void {
+    this.onSubmit();
+  }
+
+  /**
+   * Mark all fields in the form as touched to show validation errors
+   */
+  public markAllFieldsAsTouched(): void {
+    this.markFormGroupTouched(this.studentForm);
+  }
+
+  /**
+   * Mark current step fields as touched
+   */
+  public markCurrentStepAsTouched(): void {
+    if (this.currentStep === this.STEP_PERSONAL) {
+      // Personal Info step
+      ['first_name', 'last_name', 'tenant_id'].forEach(field => {
+        this.studentForm.get(field)?.markAsTouched();
+      });
+    } else if (this.currentStep === this.STEP_ACCOUNT) {
+      // Account Setup step
+      ['username', 'password', 'date_of_birth', 'gender'].forEach(field => {
+        this.studentForm.get(field)?.markAsTouched();
+      });
+      const emailsArray = this.studentForm.get('emails') as FormArray;
+      const phonesArray = this.studentForm.get('phones') as FormArray;
+      this.markFormGroupTouched(emailsArray);
+      this.markFormGroupTouched(phonesArray);
+    } else if (this.currentStep === this.STEP_LOCATION) {
+      // Location Info step
+      ['country_id', 'state_id', 'city_id', 'address_line_1', 'zip_code'].forEach(field => {
+        this.studentForm.get(field)?.markAsTouched();
+      });
+    }
+  }
+
   onCancel(): void {
     this.formCancel.emit();
   }

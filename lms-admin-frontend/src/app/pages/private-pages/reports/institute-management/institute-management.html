@@ -224,8 +224,7 @@
 <!-- Add/Edit/View Institute Off-Canvas -->
 <app-off-canvas-wrapper
   [isOpen]="showAddInstituteOffcanvas"
-  [title]="isViewMode ? 'View Institute' : isEditMode ? 'Edit Institute' : 'Add Institute'"
-  (close)="closeAddInstituteOffcanvas()">
+  [title]="isViewMode ? 'View Institute' : isEditMode ? 'Edit Institute' : 'Add Institute'">
   
   <div class="institute-form">
     <!-- Institute Name Field -->
@@ -277,15 +276,30 @@
           disabled>
       </div>
     }
-
-    <!-- Form Actions -->
+  </div>
+  
+  <!-- Footer Buttons -->
+  <div slot="footer-buttons" class="footer-button-group">
     @if (!isViewMode) {
-      <div class="form-actions">
-        <button class="btn-secondary" (click)="closeAddInstituteOffcanvas()">Cancel</button>
-        <button class="btn-primary" (click)="handleSave()">
-          {{ isEditMode ? 'Update' : 'Create' }}
-        </button>
-      </div>
+      <button 
+        class="btn-cancel" 
+        (click)="closeAddInstituteOffcanvas()"
+        type="button">
+        Cancel
+      </button>
+      <button 
+        class="btn-primary" 
+        (click)="handleSave()"
+        type="button">
+        {{ isEditMode ? 'Update' : 'Create' }}
+      </button>
+    } @else {
+      <button 
+        class="btn-cancel" 
+        (click)="closeAddInstituteOffcanvas()"
+        type="button">
+        Close
+      </button>
     }
   </div>
 </app-off-canvas-wrapper>

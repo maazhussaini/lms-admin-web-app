@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Paginator } from '../../../../components/widgets/paginator/paginator';
@@ -52,6 +52,9 @@ export interface Filters {
   styleUrl: './student-management.scss'
 })
 export class StudentManagement implements OnInit, OnDestroy {
+  
+  // ViewChild to access student form component
+  @ViewChild(StudentFormComponent) studentFormComponent!: StudentFormComponent;
   
   currentUser: any = null;
   permissions: string[] = [];
@@ -107,6 +110,19 @@ export class StudentManagement implements OnInit, OnDestroy {
   showTenantDropdown: boolean = false;
 
   canSaveStudent: boolean = false;
+
+  // Getter methods for template access
+  get currentFormStep(): number {
+    return this.studentFormComponent?.currentStep || 1;
+  }
+
+  get totalFormSteps(): number {
+    return this.studentFormComponent?.totalSteps || 3;
+  }
+
+  get isFormValid(): boolean {
+    return this.studentFormComponent?.studentForm?.valid || false;
+  }
 
   private readonly documentClickListener = (event: Event): void => {
     const target = event.target as HTMLElement;
@@ -536,6 +552,45 @@ export class StudentManagement implements OnInit, OnDestroy {
     }
     
     this.showAddStudentOffcanvas = true;
+  }
+
+  /**
+   * Trigger form submission from footer button
+   */
+  saveStudent(): void {
+    if (this.studentFormComponent) {
+      this.studentFormComponent.submitForm();
+    }
+  }
+
+  /**
+   * Go to next step with validation
+   */
+  goToNextStepWithValidation(): void {
+    if (this.studentFormComponent) {
+      // Mark all fields as touched to show validation errors
+      this.studentFormComponent.markCurrentStepAsTouched();
+      
+      // Check if current step is valid before proceeding
+      if (this.studentFormComponent.isCurrentStepValid()) {
+        this.studentFormComponent.goToNextStep();
+      }
+    }
+  }
+
+  /**
+   * Save student with validation
+   */
+  saveStudentWithValidation(): void {
+    if (this.studentFormComponent) {
+      // Mark all fields as touched to show validation errors
+      this.studentFormComponent.markAllFieldsAsTouched();
+      
+      // Check if form is valid before submitting
+      if (this.studentFormComponent.studentForm.valid) {
+        this.studentFormComponent.submitForm();
+      }
+    }
   }
 
   async onStudentFormSubmit(formData: any): Promise<void> {

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Paginator } from '../../../../components/widgets/paginator/paginator';
@@ -142,6 +142,9 @@ export class TenantManagement implements OnInit, OnDestroy {
   };
 
   canSaveTenant: boolean = false;
+
+  // ViewChild for tenant form
+  @ViewChild(BasicTenantForm) tenantFormComponent!: BasicTenantForm;
 
   private readonly documentClickListener = (event: Event): void => {
     const target = event.target as HTMLElement;
@@ -1054,6 +1057,23 @@ export class TenantManagement implements OnInit, OnDestroy {
     this.isViewMode = false;
     this.editingTenantId = null;
     this.resetNewTenantForm();
+  }
+
+  /**
+   * Save tenant with validation
+   */
+  async saveTenantWithValidation(): Promise<void> {
+    // Trigger validation on form
+    if (this.tenantFormComponent) {
+      this.tenantFormComponent.markAllFieldsAsTouched();
+    }
+
+    // Check if form is valid
+    if (!this.canSaveTenant) {
+      return;
+    }
+
+    await this.saveTenant();
   }
 
   async saveTenant(): Promise<void> {

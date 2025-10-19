@@ -1,123 +1,268 @@
-/* ===== TEACHER FORM - USING TENANT DESIGN SYSTEM ===== */
+/* ===== TEACHER FORM - MULTI-STEP DESIGN ===== */
 
+// ==================== Form Container ====================
 .teacher-form-container {
-  padding: 20px;
-  max-height: calc(100vh - 120px);
-  overflow-y: auto;
+  padding: 1.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
 
-  .teacher-form {
-    .form-section {
-      margin-bottom: 30px;
-      padding: 20px;
-      background: #F9FAFB;
-      border-radius: 12px;
+.teacher-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
 
-      .section-title {
-        font-size: 16px;
+// ==================== Step Indicator ====================
+.step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding: 0 1rem;
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    .step-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f3f4f6;
+      color: #9ca3af;
+      transition: all 0.3s ease;
+    }
+
+    .step-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #6b7280;
+      transition: color 0.3s ease;
+    }
+
+    &.active {
+      .step-icon {
+        background-color: #5b21b6;
+        color: white;
+      }
+
+      .step-label {
+        color: #5b21b6;
         font-weight: 600;
-        color: #111827;
-        margin-bottom: 20px;
-        padding-bottom: 12px;
-        border-bottom: 2px solid #8B5CF6;
-      }
-
-      .form-group {
-        margin-bottom: 16px;
-
-        .form-label {
-          display: block;
-          font-size: 13px;
-          font-weight: 500;
-          color: #374151;
-          margin-bottom: 8px;
-        }
-
-        .form-input {
-          width: 100%;
-          padding: 10px 12px;
-          border: 1px solid #E5E7EB;
-          border-radius: 8px;
-          background: white;
-          font-size: 14px;
-          color: #374151;
-          transition: all 0.2s ease;
-
-          &:focus {
-            outline: none;
-            border-color: #8B5CF6;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-          }
-
-          &:disabled {
-            background: #F3F4F6;
-            color: #9CA3AF;
-            cursor: not-allowed;
-          }
-
-          &::placeholder {
-            color: #9CA3AF;
-          }
-        }
-
-        select.form-input {
-          cursor: pointer;
-        }
-
-        textarea.form-input {
-          resize: vertical;
-          min-height: 80px;
-        }
-      }
-
-      .form-row {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 16px;
-        margin-bottom: 16px;
       }
     }
 
-    .form-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      padding-top: 20px;
-      border-top: 1px solid #E5E7EB;
-      margin-top: 20px;
-
-      .btn {
-        padding: 10px 24px;
-        border-radius: 8px;
-        border: none;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-
-        &.btn-cancel, &.btn-close {
-          background: white;
-          border: 1px solid #E5E7EB;
-          color: #374151;
-
-          &:hover {
-            background: #F9FAFB;
-          }
-        }
-
-        &.btn-save {
-          background: #8B5CF6;
-          color: white;
-
-          &:hover {
-            background: #7C3AED;
-          }
-
-          &:disabled {
-            background: #D1D5DB;
-            cursor: not-allowed;
-          }
-        }
+    &.completed {
+      .step-icon {
+        background-color: #10b981;
+        color: white;
       }
+
+      .step-label {
+        color: #10b981;
+      }
+    }
+  }
+
+  .step-line {
+    flex: 1;
+    height: 2px;
+    background-color: #e5e7eb;
+    transition: background-color 0.3s ease;
+
+    &.completed {
+      background-color: #10b981;
+    }
+  }
+}
+
+// ==================== Form Steps ====================
+.form-step {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.step-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 1.5rem;
+}
+
+// ==================== Form Elements ====================
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+
+  .form-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+
+    .required {
+      color: #ef4444;
+    }
+
+    .optional {
+      color: #ff9800;
+      font-weight: 400;
+      font-size: 0.75rem;
+    }
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+    background-color: white;
+
+    &:focus {
+      outline: none;
+      border-color: #5b21b6;
+      box-shadow: 0 0 0 3px rgba(91, 33, 182, 0.1);
+    }
+
+    &:disabled {
+      background-color: #f9fafb;
+      color: #6b7280;
+      cursor: not-allowed;
+    }
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+  }
+
+  textarea.form-input {
+    resize: vertical;
+    min-height: 100px;
+  }
+
+  select.form-input {
+    cursor: pointer;
+  }
+}
+
+// ==================== Step Navigation ====================
+.step-navigation {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+
+  .btn-prev,
+  .btn-next {
+    padding: 0.625rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+  }
+
+  .btn-prev {
+    background-color: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+
+    &:hover:not(:disabled) {
+      background-color: #e5e7eb;
+    }
+
+    i {
+      font-size: 0.875rem;
+    }
+  }
+
+  .btn-next {
+    background-color: #5b21b6;
+    color: white;
+    margin-left: auto;
+
+    &:hover:not(:disabled) {
+      background-color: #4c1d95;
+    }
+
+    i {
+      font-size: 0.875rem;
+    }
+  }
+}
+
+// ==================== Responsive Design ====================
+@media (max-width: 640px) {
+  .teacher-form-container {
+    padding: 1rem;
+  }
+
+  .step-indicator {
+    padding: 0;
+    
+    .step {
+      .step-icon {
+        width: 40px;
+        height: 40px;
+      }
+
+      .step-label {
+        font-size: 0.75rem;
+      }
+    }
+  }
+
+  .step-navigation {
+    flex-direction: column;
+
+    .btn-next {
+      margin-left: 0;
+      order: -1;
     }
   }
 }
