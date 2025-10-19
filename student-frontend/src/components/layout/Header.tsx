@@ -5,6 +5,7 @@ import { useApiItem } from '@/hooks/useApi';
 import { StudentProfileResponse } from '@/types/student-profile.types';
 import { getInstructorAvatarUrl } from '@shared/utils';
 import defaultProfilePicture from '@/assets/images/default_profile_picture.webp';
+import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
   heading?: string;
@@ -16,6 +17,7 @@ const Header: React.FC<HeaderProps> = ({
   onMobileMenuToggle 
 }) => {
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   // Fetch student profile data using dedicated API
   const { 
@@ -25,6 +27,11 @@ const Header: React.FC<HeaderProps> = ({
   } = useApiItem<StudentProfileResponse>('/student/profile', {
     immediate: isAuthenticated // Only fetch immediately when user is authenticated
   });
+
+  // Handle notification bell click
+  const handleNotificationClick = () => {
+    navigate('/notices');
+  };
 
   // Generate user avatar URL using the utility function
   const userAvatarUrl = studentProfile?.profile_picture_url || 
@@ -61,7 +68,11 @@ const Header: React.FC<HeaderProps> = ({
           {/* Right: Loading state */}
           <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 laptop:gap-4">
             <div className="flex gap-1 sm:gap-2">
-              <button className="rounded-2xl bg-primary-50 w-10 h-10 sm:w-12 sm:h-12 laptop:w-11 laptop:h-11 flex items-center justify-center transition hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-primary-500 relative">
+              <button 
+                onClick={handleNotificationClick}
+                className="rounded-2xl bg-primary-50 w-10 h-10 sm:w-12 sm:h-12 laptop:w-11 laptop:h-11 flex items-center justify-center transition hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-primary-500 relative cursor-pointer"
+                aria-label="View notifications"
+              >
                 <FiBell className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 laptop:w-5 laptop:h-5 text-neutral-500" />
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
               </button>
@@ -106,7 +117,11 @@ const Header: React.FC<HeaderProps> = ({
           {/* Right: Error state */}
           <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 laptop:gap-4">
             <div className="flex gap-1 sm:gap-2">
-              <button className="rounded-2xl bg-primary-50 w-10 h-10 sm:w-12 sm:h-12 laptop:w-11 laptop:h-11 flex items-center justify-center transition hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-primary-500 relative">
+              <button 
+                onClick={handleNotificationClick}
+                className="rounded-2xl bg-primary-50 w-10 h-10 sm:w-12 sm:h-12 laptop:w-11 laptop:h-11 flex items-center justify-center transition hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-primary-500 relative cursor-pointer"
+                aria-label="View notifications"
+              >
                 <FiBell className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 laptop:w-5 laptop:h-5 text-neutral-500" />
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
               </button>
@@ -157,7 +172,11 @@ const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 laptop:gap-4">
           {/* Action Icons */}
           <div className="flex gap-1 sm:gap-2">
-            <button className="rounded-2xl bg-primary-50 w-10 h-10 sm:w-12 sm:h-12 laptop:w-11 laptop:h-11 flex items-center justify-center transition hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-primary-500 relative">
+            <button 
+              onClick={handleNotificationClick}
+              className="rounded-2xl bg-primary-50 w-10 h-10 sm:w-12 sm:h-12 laptop:w-11 laptop:h-11 flex items-center justify-center transition hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-primary-500 relative cursor-pointer"
+              aria-label="View notifications"
+            >
               <FiBell className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 laptop:w-5 laptop:h-5 text-neutral-500" />
               {/* Notification indicator */}
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
