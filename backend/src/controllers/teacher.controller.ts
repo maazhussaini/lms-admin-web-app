@@ -27,15 +27,34 @@ export class TeacherController {
    */
   static createTeacherHandler = createRouteHandler(
     async (req: AuthenticatedRequest) => {
-      const tenant = await teacherService.getTenantFromDomain(req);
       const teacherData = req.validatedData as CreateTeacherDto;
-      let requestingUser:any = req.user || {};
+      let requestingUser: any = req.user || {};
 
-      if(requestingUser.user_type !== UserType.SUPER_ADMIN){
+      logger.info('🔍 ===== CONTROLLER: Creating teacher =====');
+      logger.info('🔍 Request User Object:', JSON.stringify(requestingUser, null, 2));
+      logger.info('🔍 User Type:', requestingUser.user_type);
+      logger.info('🔍 Teacher Data tenant_id:', teacherData.tenant_id);
+
+      // Handle tenant_id based on user type
+      if (requestingUser.user_type === UserType.SUPER_ADMIN) {
+        // SUPER_ADMIN: tenant_id must come from request body
+        if (!teacherData.tenant_id) {
+          throw new ApiError(
+            'Tenant ID is required for SUPER_ADMIN',
+            400,
+            'MISSING_TENANT_ID'
+          );
+        }
+        logger.info('✅ SUPER_ADMIN: Using tenant_id from request body:', teacherData.tenant_id);
+        // tenant_id already in teacherData.tenant_id from body
+      } else {
+        logger.info('👤 Non-SUPER_ADMIN detected: Getting tenant from domain/header');
+        // Non-SUPER_ADMIN: Get tenant from domain/header
+        const tenant = await teacherService.getTenantFromDomain(req);
         requestingUser.tenantId = tenant.tenant_id;
-      }
-      else{
+        // Ignore tenant_id from body for security
         teacherData.tenant_id = tenant.tenant_id;
+        logger.info('✅ Non-SUPER_ADMIN: Override tenant_id to:', teacherData.tenant_id);
       }
       
       return await teacherService.createTeacher(

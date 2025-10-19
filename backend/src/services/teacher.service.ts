@@ -290,6 +290,21 @@ export class TeacherService extends BaseListService<any, TeacherFilterDto> {
           });
         }
 
+        // Handle course assignments
+        if (data.courseIds && data.courseIds.length > 0) {
+          await tx.teacherCourse.createMany({
+            data: data.courseIds.map((courseId) => ({
+              teacher_id: newTeacher.teacher_id,
+              course_id: courseId,
+              tenant_id: tenantId,
+              created_ip: clientIp || null,
+              updated_ip: clientIp || null,
+              created_by: requestingUser.id,
+              updated_by: requestingUser.id
+            }))
+          });
+        }
+
         return newTeacher;
       });
 
@@ -355,6 +370,19 @@ export class TeacherService extends BaseListService<any, TeacherFilterDto> {
             select: {
               city_id: true,
               name: true
+            }
+          },
+          teacher_courses: {
+            where: { is_deleted: false },
+            include: {
+              course: {
+                select: {
+                  course_id: true,
+                  course_name: true,
+                  course_description: true,
+                  course_status: true
+                }
+              }
             }
           }
         }
@@ -489,6 +517,37 @@ export class TeacherService extends BaseListService<any, TeacherFilterDto> {
               updated_by: requestingUser.id
             }))
           });
+        }
+
+        // Handle course assignments update (soft delete old + insert new)
+        if (data.courseIds !== undefined) {
+          // Soft delete existing course assignments
+          await tx.teacherCourse.updateMany({
+            where: {
+              teacher_id: teacherId,
+              is_deleted: false
+            },
+            data: {
+              is_deleted: true,
+              deleted_at: new Date(),
+              deleted_by: requestingUser.id
+            }
+          });
+
+          // Insert new course assignments
+          if (data.courseIds.length > 0) {
+            await tx.teacherCourse.createMany({
+              data: data.courseIds.map((courseId) => ({
+                teacher_id: teacherId,
+                course_id: courseId,
+                tenant_id: existingTeacher.tenant_id,
+                created_ip: clientIp || null,
+                updated_ip: clientIp || null,
+                created_by: requestingUser.id,
+                updated_by: requestingUser.id
+              }))
+            });
+          }
         }
 
         return updatedTeacher;

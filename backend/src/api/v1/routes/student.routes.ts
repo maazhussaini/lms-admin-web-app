@@ -65,6 +65,8 @@ const validateTenantIdForSuperAdmin = [
 
 router.post(
   '/',
+  authenticate, // ✅ Add authentication middleware
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]), // ✅ Add authorization
   upload.single('profile_picture'),
   validate([
     ...validateTenantIdForSuperAdmin, 
@@ -75,7 +77,7 @@ router.post(
   StudentController.createStudentHandler
 );
 
-// Apply authentication to all routes
+// Apply authentication to all routes below (for backward compatibility)
 router.use(authenticate);
 
 

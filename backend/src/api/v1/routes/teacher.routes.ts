@@ -33,6 +33,8 @@ const validateTenantIdForSuperAdmin = [
  */
 router.post(
   '/',
+  authenticate, // ✅ Add authentication middleware
+  authorize([UserType.SUPER_ADMIN, UserType.TENANT_ADMIN]), // ✅ Add authorization
   validate([
     ...validateTenantIdForSuperAdmin, 
     ...createTeacherValidation,
@@ -42,7 +44,7 @@ router.post(
   TeacherController.createTeacherHandler
 );
 
-// Apply authentication to all routes
+// Apply authentication to all routes below (for backward compatibility)
 router.use(authenticate);
 
 /**

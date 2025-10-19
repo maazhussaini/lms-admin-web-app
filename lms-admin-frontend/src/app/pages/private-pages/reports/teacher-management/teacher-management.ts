@@ -101,9 +101,15 @@ export class TeacherManagement implements OnInit, OnDestroy {
   countries: any[] = [];
   states: any[] = [];
   cities: any[] = [];
+  tenants: any[] = [];
+  courses: any[] = [];
   isLoadingCountries: boolean = false;
   isLoadingStates: boolean = false;
   isLoadingCities: boolean = false;
+  isLoadingCourses: boolean = false;
+
+  // Tenant dropdown visibility
+  showTenantDropdown: boolean = false;
 
   canSaveTeacher: boolean = false;
 
@@ -140,6 +146,13 @@ export class TeacherManagement implements OnInit, OnDestroy {
     this.loadCurrentUser();
     this.loadTeachers();
     this.loadCountries();
+    this.loadCourses();
+    
+    // Load tenants only for SUPER_ADMIN (after loadCurrentUser sets showTenantDropdown)
+    if (this.showTenantDropdown) {
+      this.loadTenants();
+    }
+    
     document.addEventListener('click', this.documentClickListener);
   }
 
@@ -154,6 +167,17 @@ export class TeacherManagement implements OnInit, OnDestroy {
     if (userStr) {
       this.currentUser = JSON.parse(userStr);
       this.permissions = this.currentUser?.permissions || [];
+      
+      // Set tenant dropdown visibility for SUPER_ADMIN
+      if (this.currentUser && this.currentUser.user_type) {
+        const userTypeUpper = (this.currentUser.user_type || '').toString().trim().toUpperCase();
+        this.showTenantDropdown = userTypeUpper === 'SUPER_ADMIN';
+      } else {
+        this.showTenantDropdown = false;
+      }
+      
+      console.log('🔍 Current user role:', this.currentUser?.user_type);
+      console.log('🔍 Show tenant dropdown:', this.showTenantDropdown);
     }
   }
 
@@ -253,6 +277,37 @@ export class TeacherManagement implements OnInit, OnDestroy {
     } finally {
       this.isLoadingCities = false;
     }
+  }
+
+  async loadTenants(): Promise<void> {
+    try {
+      const response = await this.httpRequests.getAllTenants({
+        limit: 100
+      });
+      if (response.success) {
+        this.tenants = response.data.items || [];
+      }
+    } catch (error) {
+      console.error('Error loading tenants:', error);
+    }
+  }
+
+  async loadCourses(): Promise<void> {
+    this.isLoadingCourses = true;
+    try {
+      const response = await this.httpRequests.getAllCourses();
+      if (response.success) {
+        this.courses = response.data.items || response.data || [];
+      }
+    } catch (error) {
+      console.error('Error loading courses:', error);
+    } finally {
+      this.isLoadingCourses = false;
+    }
+  }
+
+  isSuperAdmin(): boolean {
+    return this.currentUser?.role === 'SUPER_ADMIN';
   }
 
   // ==================== Filtering & Pagination ====================

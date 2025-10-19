@@ -28,6 +28,18 @@
     gap: 0.5rem;
     cursor: pointer;
     transition: all 0.3s ease;
+    user-select: none;
+
+    &:hover:not(.active) {
+      .step-icon {
+        background-color: #e5e7eb;
+        transform: scale(1.05);
+      }
+
+      .step-label {
+        color: #374151;
+      }
+    }
 
     .step-icon {
       width: 48px;
@@ -175,6 +187,135 @@
   }
 }
 
+// ==================== Contact Section (Email & Phone) ====================
+.contact-section {
+  margin-bottom: 1.5rem;
+
+  .contact-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    .form-label {
+      margin-bottom: 0;
+    }
+
+    .btn-add-more {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background-color: transparent;
+      color: #5b21b6;
+      border: 1px solid #5b21b6;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: #5b21b6;
+        color: white;
+      }
+
+      i {
+        font-size: 0.75rem;
+      }
+    }
+  }
+
+  .contact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .contact-item-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .contact-item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: #d1d5db;
+    }
+
+    .email-input,
+    .phone-input {
+      flex: 1;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 0.625rem;
+      font-size: 0.875rem;
+
+      &:focus {
+        outline: none;
+        border-color: #5b21b6;
+        box-shadow: 0 0 0 3px rgba(91, 33, 182, 0.1);
+      }
+    }
+
+    .checkbox-label-inline {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+
+      input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+        accent-color: #5b21b6;
+      }
+
+      span {
+        font-size: 0.875rem;
+        color: #374151;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .btn-remove-contact {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background-color: #fee2e2;
+    color: #dc2626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+
+    &:hover {
+      background-color: #dc2626;
+      color: white;
+    }
+
+    i {
+      font-size: 1rem;
+    }
+  }
+}
+
 // ==================== Step Navigation ====================
 .step-navigation {
   display: flex;
@@ -233,6 +374,146 @@
     i {
       font-size: 0.875rem;
     }
+  }
+}
+
+// ==================== Course Assignment Styles ====================
+.course-selector {
+  margin-bottom: 1.5rem;
+}
+
+.assigned-courses-section {
+  margin-top: 1.5rem;
+
+  .section-subtitle {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1rem;
+  }
+}
+
+.assigned-courses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.assigned-course-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .course-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #5b21b6;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+  }
+
+  .course-details {
+    flex: 1;
+    min-width: 0;
+
+    .course-title {
+      font-weight: 500;
+      color: #1f2937;
+      margin-bottom: 0.25rem;
+    }
+
+    .course-subtitle {
+      font-size: 0.875rem;
+      color: #6b7280;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .course-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    flex-shrink: 0;
+
+    &.badge-active {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+
+    &.badge-draft {
+      background-color: #fef3c7;
+      color: #92400e;
+    }
+
+    &.badge-inactive {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+
+    &.badge-public {
+      background-color: #dbeafe;
+      color: #1e40af;
+    }
+  }
+
+  .btn-remove-course {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background-color: #fee2e2;
+    color: #dc2626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+
+    &:hover {
+      background-color: #dc2626;
+      color: white;
+    }
+
+    i {
+      font-size: 0.875rem;
+    }
+  }
+}
+
+.empty-message {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  color: #1e40af;
+  font-size: 0.875rem;
+
+  i {
+    font-size: 1.25rem;
   }
 }
 

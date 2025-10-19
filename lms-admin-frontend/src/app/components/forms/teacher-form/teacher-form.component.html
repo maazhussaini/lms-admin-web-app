@@ -2,63 +2,80 @@
   <form class="teacher-form">
     
     <!-- Step Progress Indicator -->
-    @if (!isViewMode) {
-      <div class="step-indicator">
-        <div class="step" 
-             [class.active]="currentStep === STEP_PERSONAL"
-             [class.completed]="isStepCompleted(STEP_PERSONAL)"
-             (click)="goToStep(STEP_PERSONAL)">
-          <div class="step-icon">
-            <i class="fa-solid fa-user"></i>
-          </div>
-          <span class="step-label">Personal Info</span>
+    <div class="step-indicator">
+      <div class="step" 
+           [class.active]="currentStep === STEP_PERSONAL"
+           [class.completed]="isStepCompleted(STEP_PERSONAL)"
+           (click)="goToStep(STEP_PERSONAL)">
+        <div class="step-icon">
+          <i class="fa-solid fa-user"></i>
         </div>
-
-        <div class="step-line" [class.completed]="currentStep > STEP_PERSONAL"></div>
-
-        <div class="step"
-             [class.active]="currentStep === STEP_ACCOUNT"
-             [class.completed]="isStepCompleted(STEP_ACCOUNT)"
-             (click)="goToStep(STEP_ACCOUNT)">
-          <div class="step-icon">
-            <i class="fa-solid fa-id-card"></i>
-          </div>
-          <span class="step-label">Account Setup</span>
-        </div>
-
-        <div class="step-line" [class.completed]="currentStep > STEP_ACCOUNT"></div>
-
-        <div class="step"
-             [class.active]="currentStep === STEP_LOCATION"
-             [class.completed]="isStepCompleted(STEP_LOCATION)"
-             (click)="goToStep(STEP_LOCATION)">
-          <div class="step-icon">
-            <i class="fa-solid fa-location-dot"></i>
-          </div>
-          <span class="step-label">Location Info</span>
-        </div>
+        <span class="step-label">Personal Info</span>
       </div>
-    }
+
+      <div class="step-line" [class.completed]="currentStep > STEP_PERSONAL"></div>
+
+      <div class="step"
+           [class.active]="currentStep === STEP_ACCOUNT"
+           [class.completed]="isStepCompleted(STEP_ACCOUNT)"
+           (click)="goToStep(STEP_ACCOUNT)">
+        <div class="step-icon">
+          <i class="fa-solid fa-id-card"></i>
+        </div>
+        <span class="step-label">Account Setup</span>
+      </div>
+
+      <div class="step-line" [class.completed]="currentStep > STEP_ACCOUNT"></div>
+
+      <div class="step"
+           [class.active]="currentStep === STEP_LOCATION"
+           [class.completed]="isStepCompleted(STEP_LOCATION)"
+           (click)="goToStep(STEP_LOCATION)">
+        <div class="step-icon">
+          <i class="fa-solid fa-location-dot"></i>
+        </div>
+        <span class="step-label">Location Info</span>
+      </div>
+
+      <div class="step-line" [class.completed]="currentStep > STEP_LOCATION"></div>
+
+      <div class="step"
+           [class.active]="currentStep === STEP_COURSE"
+           [class.completed]="isStepCompleted(STEP_COURSE)"
+           (click)="goToStep(STEP_COURSE)">
+        <div class="step-icon">
+          <i class="fa-solid fa-book"></i>
+        </div>
+        <span class="step-label">Course Info</span>
+      </div>
+    </div>
 
     <!-- Step 1: Personal Information -->
     @if (currentStep === STEP_PERSONAL) {
       <div class="form-step">
         <h3 class="step-title">Personal Information</h3>
         
-        <div class="form-group">
-          <label for="full_name" class="form-label">Full Name <span class="required">*</span></label>
-          <input
-            type="text"
-            id="full_name"
-            name="full_name"
-            class="form-input"
-            [(ngModel)]="formData.full_name"
-            (ngModelChange)="onFullNameChange()"
-            [disabled]="isViewMode"
-            required
-            placeholder="Enter full name"
-          />
-        </div>
+        <!-- Tenant Selection (SUPER_ADMIN only) -->
+        @if (showTenantDropdown) {
+          <div class="form-group">
+            <label for="tenant_id" class="form-label">Tenant <span class="required">*</span></label>
+            <select
+              id="tenant_id"
+              name="tenant_id"
+              class="form-input"
+              [(ngModel)]="formData.tenant_id"
+              [disabled]="isViewMode"
+            >
+              <option value="">{{ tenants && tenants.length > 0 ? 'Select Tenant' : 'Loading tenants...' }}</option>
+              @for (tenant of tenants; track tenant.tenant_id) {
+                <option [value]="tenant.tenant_id">{{ tenant.tenant_name }}</option>
+              }
+            </select>
+            @if (tenants && tenants.length === 0) {
+              <small class="text-muted">No tenants available. Please contact administrator.</small>
+            }
+          </div>
+        }
 
         <div class="form-row">
           <div class="form-group">
@@ -69,7 +86,7 @@
               name="first_name"
               class="form-input"
               [(ngModel)]="formData.first_name"
-              (ngModelChange)="onFormFieldChange()"
+              (ngModelChange)="onNameFieldChange()"
               [disabled]="isViewMode"
               required
               placeholder="First name"
@@ -84,6 +101,7 @@
               name="middle_name"
               class="form-input"
               [(ngModel)]="formData.middle_name"
+              (ngModelChange)="onNameFieldChange()"
               [disabled]="isViewMode"
               placeholder="Middle name"
             />
@@ -97,7 +115,7 @@
               name="last_name"
               class="form-input"
               [(ngModel)]="formData.last_name"
-              (ngModelChange)="onFormFieldChange()"
+              (ngModelChange)="onNameFieldChange()"
               [disabled]="isViewMode"
               required
               placeholder="Last name"
@@ -212,26 +230,112 @@
                 required
                 placeholder="Enter password"
               />
+              <small class="form-help-text">Must contain uppercase letter and special character</small>
             </div>
           }
+        </div>
 
-          <div class="form-group">
-            <label for="email_address" class="form-label">Email Address <span class="required">*</span></label>
-            <input
-              type="email"
-              id="email_address"
-              name="email_address"
-              class="form-input"
-              [(ngModel)]="formData.email_address"
-              (ngModelChange)="onFormFieldChange()"
-              [disabled]="isViewMode"
-              required
-              placeholder="Enter email"
-            />
+        <!-- Email Addresses Section -->
+        <div class="contact-section">
+          <div class="contact-header">
+            <label class="form-label">Email Address <span class="required">*</span></label>
+            @if (!isViewMode) {
+              <button type="button" class="btn-add-more" (click)="addEmailAddress()">
+                <i class="fa-solid fa-plus"></i> Add More
+              </button>
+            }
+          </div>
+
+          <div class="contact-list">
+            @for (email of emailAddresses; track $index) {
+              <div class="contact-item-wrapper">
+                <div class="contact-item email-item">
+                  <input
+                    type="email"
+                    class="form-input email-input"
+                    [(ngModel)]="email.email_address"
+                    [name]="'email_' + $index"
+                    placeholder="Enter Email Address"
+                    [disabled]="isViewMode"
+                    required
+                  />
+                  
+                  <label class="checkbox-label-inline">
+                    <input
+                      type="checkbox"
+                      [(ngModel)]="email.is_primary"
+                      [name]="'email_primary_' + $index"
+                      (change)="onEmailPrimaryChange($index)"
+                      [disabled]="isViewMode"
+                    />
+                    <span>Primary</span>
+                  </label>
+                </div>
+
+                @if (!isViewMode && emailAddresses.length > 1) {
+                  <button 
+                    type="button"
+                    class="btn-remove-contact" 
+                    (click)="removeEmailAddress($index)"
+                    title="Remove email">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                }
+              </div>
+            }
           </div>
         </div>
 
-        <!-- Navigation Buttons -->
+        <!-- Phone Numbers Section -->
+        <div class="contact-section">
+          <div class="contact-header">
+            <label class="form-label">Phone Number <span class="required">*</span></label>
+            @if (!isViewMode) {
+              <button type="button" class="btn-add-more" (click)="addPhoneNumber()">
+                <i class="fa-solid fa-plus"></i> Add More
+              </button>
+            }
+          </div>
+
+          <div class="contact-list">
+            @for (phone of phoneNumbers; track $index) {
+              <div class="contact-item-wrapper">
+                <div class="contact-item phone-item">
+                  <input
+                    type="tel"
+                    class="form-input phone-input"
+                    [(ngModel)]="phone.phone_number"
+                    [name]="'phone_' + $index"
+                    placeholder="+92-3001234567"
+                    [disabled]="isViewMode"
+                  />
+                  
+                  <label class="checkbox-label-inline">
+                    <input
+                      type="checkbox"
+                      [(ngModel)]="phone.is_primary"
+                      [name]="'phone_primary_' + $index"
+                      (change)="onPhonePrimaryChange($index)"
+                      [disabled]="isViewMode"
+                    />
+                    <span>Primary</span>
+                  </label>
+                </div>
+
+                @if (!isViewMode && phoneNumbers.length > 1) {
+                  <button 
+                    type="button"
+                    class="btn-remove-contact" 
+                    (click)="removePhoneNumber($index)"
+                    title="Remove phone">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
       </div>
     }
 
@@ -318,7 +422,87 @@
           />
         </div>
 
-        <!-- Navigation Buttons -->
+      </div>
+    }
+
+    <!-- Step 4: Course Information -->
+    @if (currentStep === STEP_COURSE) {
+      <div class="form-step">
+        <h3 class="step-title">Course Assignments</h3>
+        
+        <div class="form-group">
+          <label class="form-label">Assign Courses <span class="optional">(optional)</span></label>
+          <p class="form-help-text">Select one or more courses to assign to this teacher.</p>
+          
+          <div class="course-selection-container">
+            @if (isLoadingCourses) {
+              <div class="loading-state">
+                <i class="fa-solid fa-spinner fa-spin"></i> Loading courses...
+              </div>
+            } @else if (courses && courses.length > 0) {
+              <!-- Course Selection Dropdown -->
+              <div class="course-selector">
+                <select 
+                  class="form-input"
+                  [disabled]="isViewMode"
+                  (change)="onCourseSelect($any($event.target).value)">
+                  <option value="">Select a course to assign</option>
+                  @for (course of courses; track course.course_id) {
+                    @if (!isCourseSelected(course.course_id)) {
+                      <option [value]="course.course_id">
+                        {{ course.course_name }} - {{ course.course_status }}
+                      </option>
+                    }
+                  }
+                </select>
+              </div>
+
+              <!-- Assigned Courses List -->
+              @if (selectedCourseIds.length > 0) {
+                <div class="assigned-courses-section">
+                  <h4 class="section-subtitle">Assigned Courses</h4>
+                  <div class="assigned-courses-list">
+                    @for (courseId of selectedCourseIds; track courseId; let index = $index) {
+                      @if (getCourseById(courseId); as course) {
+                        <div class="assigned-course-item">
+                          <div class="course-number">{{ index + 1 }}</div>
+                          <div class="course-details">
+                            <div class="course-title">{{ course.course_name }}</div>
+                            @if (course.course_description) {
+                              <div class="course-subtitle">{{ course.course_description }}</div>
+                            }
+                          </div>
+                          <div class="course-badge" [class]="'badge-' + course.course_status?.toLowerCase()">
+                            {{ course.course_status }}
+                          </div>
+                          @if (!isViewMode) {
+                            <button 
+                              type="button"
+                              class="btn-remove-course"
+                              (click)="removeCourse(courseId)"
+                              title="Remove course">
+                              <i class="fa-solid fa-xmark"></i>
+                            </button>
+                          }
+                        </div>
+                      }
+                    }
+                  </div>
+                </div>
+              } @else {
+                <div class="empty-message">
+                  <i class="fa-solid fa-info-circle"></i>
+                  <span>No courses assigned yet. Select courses from the dropdown above.</span>
+                </div>
+              }
+            } @else {
+              <div class="empty-state">
+                <i class="fa-solid fa-book"></i>
+                <p>No courses available for assignment.</p>
+              </div>
+            }
+          </div>
+        </div>
 
       </div>
     }

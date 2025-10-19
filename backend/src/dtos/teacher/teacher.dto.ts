@@ -47,6 +47,8 @@ export interface CreateTeacherDto {
   // Multiple contact arrays
   phoneNumbers?: CreateTeacherPhoneNumberDto[];
   emailAddresses?: CreateTeacherEmailAddressDto[];
+  // Course assignments
+  courseIds?: number[];
 }
 
 /**
@@ -71,6 +73,8 @@ export interface UpdateTeacherDto {
   // Multiple contact arrays (soft delete + insert strategy)
   phoneNumbers?: CreateTeacherPhoneNumberDto[];
   emailAddresses?: CreateTeacherEmailAddressDto[];
+  // Course assignments (soft delete + insert strategy)
+  courseIds?: number[];
 }
 
 /**
@@ -287,7 +291,16 @@ export const createTeacherValidation: ValidationChain[] = [
   body('joining_date')
     .optional()
     .isISO8601().withMessage('Joining date must be a valid ISO8601 date (YYYY-MM-DD)')
-    .toDate()
+    .toDate(),
+
+  body('courseIds')
+    .optional()
+    .isArray().withMessage('Course IDs must be an array'),
+
+  body('courseIds.*')
+    .if(body('courseIds').exists())
+    .isInt({ min: 1 }).withMessage('Each course ID must be a positive integer')
+    .toInt()
 ];
 
 /**
@@ -387,7 +400,16 @@ export const updateTeacherValidation: ValidationChain[] = [
     .optional()
     .if(value => value !== null)
     .isISO8601().withMessage('Joining date must be a valid ISO8601 date (YYYY-MM-DD)')
-    .toDate()
+    .toDate(),
+
+  body('courseIds')
+    .optional()
+    .isArray().withMessage('Course IDs must be an array'),
+
+  body('courseIds.*')
+    .if(body('courseIds').exists())
+    .isInt({ min: 1 }).withMessage('Each course ID must be a positive integer')
+    .toInt()
 ];
 
 /**

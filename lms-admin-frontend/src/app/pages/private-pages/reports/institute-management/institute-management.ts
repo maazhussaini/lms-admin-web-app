@@ -69,8 +69,14 @@ export class InstituteManagement implements OnInit, OnDestroy {
   selectedInstitute: Institute | null = null;
   isLoadingInstituteDetails: boolean = false;
 
+  // Tenant data (for SUPER_ADMIN)
+  tenants: any[] = [];
+  isLoadingTenants: boolean = false;
+  showTenantDropdown: boolean = false;
+
   // Form data
   instituteName: string = '';
+  selectedTenantId: number | null = null;
 
   private readonly documentClickListener = (event: Event): void => {
     const target = event.target as HTMLElement;
@@ -91,6 +97,12 @@ export class InstituteManagement implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadCurrentUser();
     this.loadInstitutes();
+    
+    // Load tenants only for SUPER_ADMIN (after loadCurrentUser sets showTenantDropdown)
+    if (this.showTenantDropdown) {
+      this.loadTenants();
+    }
+    
     document.addEventListener('click', this.documentClickListener);
   }
 
@@ -105,6 +117,17 @@ export class InstituteManagement implements OnInit, OnDestroy {
     if (userStr) {
       this.currentUser = JSON.parse(userStr);
       this.permissions = this.currentUser?.permissions || [];
+      
+      // Set tenant dropdown visibility for SUPER_ADMIN
+      if (this.currentUser && this.currentUser.user_type) {
+        const userTypeUpper = (this.currentUser.user_type || '').toString().trim().toUpperCase();
+        this.showTenantDropdown = userTypeUpper === 'SUPER_ADMIN';
+      } else {
+        this.showTenantDropdown = false;
+      }
+      
+      console.log('🔍 [Institute Management] Current user role:', this.currentUser?.user_type);
+      console.log('🔍 [Institute Management] Show tenant dropdown:', this.showTenantDropdown);
     }
   }
 
@@ -146,6 +169,7 @@ export class InstituteManagement implements OnInit, OnDestroy {
         this.selectedInstitute = response.data;
         if (this.isEditMode && this.selectedInstitute) {
           this.instituteName = this.selectedInstitute.institute_name;
+          this.selectedTenantId = this.selectedInstitute.tenant_id;
         }
       } else {
         console.error('Failed to load institute details:', response);
@@ -154,6 +178,23 @@ export class InstituteManagement implements OnInit, OnDestroy {
       console.error('Error loading institute details:', error);
     } finally {
       this.isLoadingInstituteDetails = false;
+    }
+  }
+
+  async loadTenants(): Promise<void> {
+    this.isLoadingTenants = true;
+    try {
+      const response = await this.httpRequests.getAllTenants({
+        limit: 100
+      });
+      if (response.success) {
+        this.tenants = response.data.items || [];
+        console.log('✅ [Institute Management] Loaded tenants:', this.tenants.length);
+      }
+    } catch (error) {
+      console.error('Error loading tenants:', error);
+    } finally {
+      this.isLoadingTenants = false;
     }
   }
 
@@ -278,6 +319,7 @@ export class InstituteManagement implements OnInit, OnDestroy {
     this.editingInstituteId = null;
     this.selectedInstitute = null;
     this.instituteName = '';
+    this.selectedTenantId = null;
     this.showAddInstituteOffcanvas = true;
   }
 
@@ -333,16 +375,27 @@ export class InstituteManagement implements OnInit, OnDestroy {
       return;
     }
 
+    // Validate tenant_id for SUPER_ADMIN
+    if (this.showTenantDropdown && !this.selectedTenantId) {
+      alert('Please select a tenant');
+      return;
+    }
+
     try {
       let response;
+      const payload: any = {
+        institute_name: this.instituteName
+      };
+
+      // Add tenant_id for SUPER_ADMIN
+      if (this.showTenantDropdown && this.selectedTenantId) {
+        payload.tenant_id = this.selectedTenantId;
+      }
+
       if (this.isEditMode && this.editingInstituteId) {
-        response = await this.httpRequests.updateInstitute(this.editingInstituteId, {
-          institute_name: this.instituteName
-        });
+        response = await this.httpRequests.updateInstitute(this.editingInstituteId, payload);
       } else {
-        response = await this.httpRequests.createInstitute({
-          institute_name: this.instituteName
-        });
+        response = await this.httpRequests.createInstitute(payload);
       }
 
       if (response.success) {
@@ -365,6 +418,7 @@ export class InstituteManagement implements OnInit, OnDestroy {
     this.editingInstituteId = null;
     this.selectedInstitute = null;
     this.instituteName = '';
+    this.selectedTenantId = null;
   }
 
   // ==================== Selection Methods ====================

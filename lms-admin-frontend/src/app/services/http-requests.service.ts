@@ -91,11 +91,11 @@ export class HttpRequests {
   // ============= COURSE APIs =============
   
   async getAllCourses(): Promise<ApiResponse<any>> {
-    return this.apiMethods.get(`${this.baseUrl}/courses/getAllCourses`);
+    return this.apiMethods.get(`${this.baseUrl}/courses`);
   }
 
   async createCourse(courseData: any): Promise<ApiResponse<any>> {
-    return this.apiMethods.post(`${this.baseUrl}/courses/createCourse`, courseData);
+    return this.apiMethods.post(`${this.baseUrl}/courses`, courseData);
   }
 
   // ============= TENANT APIs =============

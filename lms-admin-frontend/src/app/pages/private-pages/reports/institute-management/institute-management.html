@@ -227,9 +227,31 @@
   [title]="isViewMode ? 'View Institute' : isEditMode ? 'Edit Institute' : 'Add Institute'">
   
   <div class="institute-form">
+    
+    <!-- Tenant Selection (SUPER_ADMIN only) -->
+    @if (showTenantDropdown && !isViewMode) {
+      <div class="form-group">
+        <label for="tenant_id" class="form-label">Tenant <span class="required">*</span></label>
+        <select
+          id="tenant_id"
+          name="tenant_id"
+          class="form-control"
+          [(ngModel)]="selectedTenantId"
+          [disabled]="isEditMode">
+          <option [value]="null">{{ tenants && tenants.length > 0 ? 'Select Tenant' : 'Loading tenants...' }}</option>
+          @for (tenant of tenants; track tenant.tenant_id) {
+            <option [value]="tenant.tenant_id">{{ tenant.tenant_name }}</option>
+          }
+        </select>
+        @if (tenants && tenants.length === 0) {
+          <small class="text-muted">No tenants available. Please contact administrator.</small>
+        }
+      </div>
+    }
+    
     <!-- Institute Name Field -->
     <div class="form-group">
-      <label for="instituteName" class="form-label">Institute Name</label>
+      <label for="instituteName" class="form-label">Institute Name <span class="required">*</span></label>
       <input 
         type="text" 
         id="instituteName" 
