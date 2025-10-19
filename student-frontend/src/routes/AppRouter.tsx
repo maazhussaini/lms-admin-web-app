@@ -28,6 +28,8 @@ const CdnTestPage = React.lazy(() => import('@/pages/CdnTestPage/CdnTestPage'));
 const MyCoursesPage = React.lazy(() => import('@/pages/MyCoursesPage').then(module => ({ default: module.MyCoursesPage })));
 const CourseDetailsPage = React.lazy(() => import('@/pages/CourseDetailsPage').then(module => ({ default: module.CourseDetailsPage })));
 const VideoPlayerPage = React.lazy(() => import('@/pages/VideoPlayerPage').then(module => ({ default: module.VideoPlayerPage })));
+const NoticeBoardPage = React.lazy(() => import('@/pages/NoticeBoardPage').then(module => ({ default: module.NoticeBoardPage })));
+const NoticeDetailPage = React.lazy(() => import('@/pages/NoticeDetailPage').then(module => ({ default: module.NoticeDetailPage })));
 
 // Loading component for Suspense fallback
 const PageLoader: React.FC<{ message?: string }> = ({ message = "Loading..." }) => (
@@ -160,6 +162,20 @@ const AppRouter: React.FC = () => {
                 <Route path=":courseId/modules/:moduleId/topics/:topicId/videos/:videoId" element={
                   <Suspense fallback={<PageLoader message="Loading video player..." />}>
                     <VideoPlayerPage />
+                  </Suspense>
+                } />
+              </Route>
+              
+              {/* Notice Board Routes */}
+              <Route path="/notices" element={<ProtectedRoutes />}>
+                <Route index element={
+                  <Suspense fallback={<PageLoader message="Loading notices..." />}>
+                    <NoticeBoardPage />
+                  </Suspense>
+                } />
+                <Route path=":noticeId" element={
+                  <Suspense fallback={<PageLoader message="Loading notice details..." />}>
+                    <NoticeDetailPage />
                   </Suspense>
                 } />
               </Route>

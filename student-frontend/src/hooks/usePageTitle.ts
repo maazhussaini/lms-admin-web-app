@@ -16,6 +16,7 @@ export const usePageTitle = (): string => {
     moduleId?: string;
     topicId?: string;
     videoId?: string;
+    noticeId?: string;
   }>();
 
   const pageTitle = useMemo(() => {
@@ -50,6 +51,11 @@ export const usePageTitle = (): string => {
 
     if (path === '/notifications') {
       return 'Notifications';
+    }
+
+    // Handle notice board pages
+    if (path === '/notices' || path.includes('/notices/')) {
+      return 'Notice Board';
     }
 
     // Default fallback
