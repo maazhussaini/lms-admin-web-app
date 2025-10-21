@@ -31,6 +31,10 @@ const VideoPlayerPage = React.lazy(() => import('@/pages/VideoPlayerPage').then(
 const NoticeBoardPage = React.lazy(() => import('@/pages/NoticeBoardPage').then(module => ({ default: module.NoticeBoardPage })));
 const NoticeDetailPage = React.lazy(() => import('@/pages/NoticeDetailPage').then(module => ({ default: module.NoticeDetailPage })));
 
+// Lazy load quiz pages
+const QuizAttemptPage = React.lazy(() => import('@/pages/QuizAttemptPage/QuizAttemptPage'));
+const QuizResultsPage = React.lazy(() => import('@/pages/QuizResultsPage/QuizResultsPage'));
+
 // Loading component for Suspense fallback
 const PageLoader: React.FC<{ message?: string }> = ({ message = "Loading..." }) => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -176,6 +180,20 @@ const AppRouter: React.FC = () => {
                 <Route path=":noticeId" element={
                   <Suspense fallback={<PageLoader message="Loading notice details..." />}>
                     <NoticeDetailPage />
+                  </Suspense>
+                } />
+              </Route>
+              
+              {/* Quiz Routes */}
+              <Route path="/quizzes" element={<ProtectedRoutes />}>
+                <Route path=":quizId/attempt" element={
+                  <Suspense fallback={<PageLoader message="Loading quiz..." />}>
+                    <QuizAttemptPage />
+                  </Suspense>
+                } />
+                <Route path=":quizId/results" element={
+                  <Suspense fallback={<PageLoader message="Loading results..." />}>
+                    <QuizResultsPage />
                   </Suspense>
                 } />
               </Route>
