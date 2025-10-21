@@ -1,12 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { HiOutlineDocumentText, HiOutlineCurrencyDollar, HiOutlineCheckCircle } from 'react-icons/hi2';
+import { HiOutlineDocumentText, HiOutlineCurrencyDollar } from 'react-icons/hi2';
 import clsx from 'clsx';
 
 /**
  * Course type filter options
  */
-export type CourseTypeFilter = 'all' | 'free' | 'paid' | 'purchased';
+export type CourseTypeFilter = 'all' | 'free' | 'paid';
 
 /**
  * Props for the CourseTypeFilterDropdown component
@@ -43,12 +43,6 @@ const FILTER_OPTIONS = [
     label: 'Paid Courses',
     icon: HiOutlineCurrencyDollar,
     description: 'Show only paid courses'
-  },
-  {
-    id: 'purchased' as CourseTypeFilter,
-    label: 'Purchased Courses',
-    icon: HiOutlineCheckCircle,
-    description: 'Show only purchased courses'
   }
 ];
 

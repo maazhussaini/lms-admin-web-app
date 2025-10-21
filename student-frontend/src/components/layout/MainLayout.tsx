@@ -61,7 +61,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         />
         
         {/* Main Content */}
-        <main className="flex-1 w-full px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 overflow-y-auto">
+        <main className="flex-1 w-full px-2 sm:px-4 lg:px-6 laptop:px-5 py-2 sm:py-3 lg:py-4 laptop:py-3 overflow-y-auto">
           {children || <Outlet />}
         </main>
       </div>

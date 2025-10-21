@@ -1,0 +1,354 @@
+// ===== POSITION UTILITIES ===== //
+
+// Position values
+.static { position: static; }
+.fixed { position: fixed; }
+.absolute { position: absolute; }
+.relative { position: relative; }
+.sticky { position: sticky; }
+
+// Top/right/bottom/left utilities
+.inset-0 { 
+  top: 0px; 
+  right: 0px; 
+  bottom: 0px; 
+  left: 0px; 
+}
+
+.inset-px { 
+  top: 1px; 
+  right: 1px; 
+  bottom: 1px; 
+  left: 1px; 
+}
+
+.inset-auto { 
+  top: auto; 
+  right: auto; 
+  bottom: auto; 
+  left: auto; 
+}
+
+@each $key, $value in $spacing-scale {
+  .inset-#{$key} { 
+    top: #{$value}; 
+    right: #{$value}; 
+    bottom: #{$value}; 
+    left: #{$value}; 
+  }
+  .-inset-#{$key} { 
+    top: -#{$value}; 
+    right: -#{$value}; 
+    bottom: -#{$value}; 
+    left: -#{$value}; 
+  }
+}
+
+// Inset X (horizontal)
+.inset-x-0 { 
+  left: 0px; 
+  right: 0px; 
+}
+
+.inset-x-px { 
+  left: 1px; 
+  right: 1px; 
+}
+
+.inset-x-auto { 
+  left: auto; 
+  right: auto; 
+}
+
+@each $key, $value in $spacing-scale {
+  .inset-x-#{$key} { 
+    left: #{$value}; 
+    right: #{$value}; 
+  }
+  .-inset-x-#{$key} { 
+    left: -#{$value}; 
+    right: -#{$value}; 
+  }
+}
+
+// Inset Y (vertical)
+.inset-y-0 { 
+  top: 0px; 
+  bottom: 0px; 
+}
+
+.inset-y-px { 
+  top: 1px; 
+  bottom: 1px; 
+}
+
+.inset-y-auto { 
+  top: auto; 
+  bottom: auto; 
+}
+
+@each $key, $value in $spacing-scale {
+  .inset-y-#{$key} { 
+    top: #{$value}; 
+    bottom: #{$value}; 
+  }
+  .-inset-y-#{$key} { 
+    top: -#{$value}; 
+    bottom: -#{$value}; 
+  }
+}
+
+// Individual positions
+.top-0 { top: 0px; }
+.top-px { top: 1px; }
+.top-auto { top: auto; }
+
+@each $key, $value in $spacing-scale {
+  .top-#{$key} { top: #{$value}; }
+  .-top-#{$key} { top: -#{$value}; }
+}
+
+.top-1\/2 { top: 50%; }
+.top-1\/3 { top: 33.333333%; }
+.top-2\/3 { top: 66.666667%; }
+.top-1\/4 { top: 25%; }
+.top-2\/4 { top: 50%; }
+.top-3\/4 { top: 75%; }
+.top-full { top: 100%; }
+.-top-1\/2 { top: -50%; }
+.-top-1\/3 { top: -33.333333%; }
+.-top-2\/3 { top: -66.666667%; }
+.-top-1\/4 { top: -25%; }
+.-top-2\/4 { top: -50%; }
+.-top-3\/4 { top: -75%; }
+.-top-full { top: -100%; }
+
+.right-0 { right: 0px; }
+.right-px { right: 1px; }
+.right-auto { right: auto; }
+
+@each $key, $value in $spacing-scale {
+  .right-#{$key} { right: #{$value}; }
+  .-right-#{$key} { right: -#{$value}; }
+}
+
+.right-1\/2 { right: 50%; }
+.right-1\/3 { right: 33.333333%; }
+.right-2\/3 { right: 66.666667%; }
+.right-1\/4 { right: 25%; }
+.right-2\/4 { right: 50%; }
+.right-3\/4 { right: 75%; }
+.right-full { right: 100%; }
+.-right-1\/2 { right: -50%; }
+.-right-1\/3 { right: -33.333333%; }
+.-right-2\/3 { right: -66.666667%; }
+.-right-1\/4 { right: -25%; }
+.-right-2\/4 { right: -50%; }
+.-right-3\/4 { right: -75%; }
+.-right-full { right: -100%; }
+
+.bottom-0 { bottom: 0px; }
+.bottom-px { bottom: 1px; }
+.bottom-auto { bottom: auto; }
+
+@each $key, $value in $spacing-scale {
+  .bottom-#{$key} { bottom: #{$value}; }
+  .-bottom-#{$key} { bottom: -#{$value}; }
+}
+
+.bottom-1\/2 { bottom: 50%; }
+.bottom-1\/3 { bottom: 33.333333%; }
+.bottom-2\/3 { bottom: 66.666667%; }
+.bottom-1\/4 { bottom: 25%; }
+.bottom-2\/4 { bottom: 50%; }
+.bottom-3\/4 { bottom: 75%; }
+.bottom-full { bottom: 100%; }
+.-bottom-1\/2 { bottom: -50%; }
+.-bottom-1\/3 { bottom: -33.333333%; }
+.-bottom-2\/3 { bottom: -66.666667%; }
+.-bottom-1\/4 { bottom: -25%; }
+.-bottom-2\/4 { bottom: -50%; }
+.-bottom-3\/4 { bottom: -75%; }
+.-bottom-full { bottom: -100%; }
+
+.left-0 { left: 0px; }
+.left-px { left: 1px; }
+.left-auto { left: auto; }
+
+@each $key, $value in $spacing-scale {
+  .left-#{$key} { left: #{$value}; }
+  .-left-#{$key} { left: -#{$value}; }
+}
+
+.left-1\/2 { left: 50%; }
+.left-1\/3 { left: 33.333333%; }
+.left-2\/3 { left: 66.666667%; }
+.left-1\/4 { left: 25%; }
+.left-2\/4 { left: 50%; }
+.left-3\/4 { left: 75%; }
+.left-full { left: 100%; }
+.-left-1\/2 { left: -50%; }
+.-left-1\/3 { left: -33.333333%; }
+.-left-2\/3 { left: -66.666667%; }
+.-left-1\/4 { left: -25%; }
+.-left-2\/4 { left: -50%; }
+.-left-3\/4 { left: -75%; }
+.-left-full { left: -100%; }
+
+// Z-index utilities
+.z-0 { z-index: 0; }
+.z-10 { z-index: 10; }
+.z-20 { z-index: 20; }
+.z-30 { z-index: 30; }
+.z-40 { z-index: 40; }
+.z-50 { z-index: 50; }
+.z-auto { z-index: auto; }
+
+@each $key, $value in $z-index-scale {
+  .z-#{$key} { z-index: #{$value}; }
+}
+
+// Responsive variants
+@include sm {
+  .sm\:static { position: static; }
+  .sm\:fixed { position: fixed; }
+  .sm\:absolute { position: absolute; }
+  .sm\:relative { position: relative; }
+  .sm\:sticky { position: sticky; }
+  
+  .sm\:inset-0 { top: 0px; right: 0px; bottom: 0px; left: 0px; }
+  .sm\:inset-auto { top: auto; right: auto; bottom: auto; left: auto; }
+  
+  @each $key, $value in $spacing-scale {
+    .sm\:inset-#{$key} { top: #{$value}; right: #{$value}; bottom: #{$value}; left: #{$value}; }
+    .sm\:-inset-#{$key} { top: -#{$value}; right: -#{$value}; bottom: -#{$value}; left: -#{$value}; }
+    .sm\:inset-x-#{$key} { left: #{$value}; right: #{$value}; }
+    .sm\:-inset-x-#{$key} { left: -#{$value}; right: -#{$value}; }
+    .sm\:inset-y-#{$key} { top: #{$value}; bottom: #{$value}; }
+    .sm\:-inset-y-#{$key} { top: -#{$value}; bottom: -#{$value}; }
+    .sm\:top-#{$key} { top: #{$value}; }
+    .sm\:-top-#{$key} { top: -#{$value}; }
+    .sm\:right-#{$key} { right: #{$value}; }
+    .sm\:-right-#{$key} { right: -#{$value}; }
+    .sm\:bottom-#{$key} { bottom: #{$value}; }
+    .sm\:-bottom-#{$key} { bottom: -#{$value}; }
+    .sm\:left-#{$key} { left: #{$value}; }
+    .sm\:-left-#{$key} { left: -#{$value}; }
+  }
+  
+  .sm\:z-0 { z-index: 0; }
+  .sm\:z-10 { z-index: 10; }
+  .sm\:z-20 { z-index: 20; }
+  .sm\:z-30 { z-index: 30; }
+  .sm\:z-40 { z-index: 40; }
+  .sm\:z-50 { z-index: 50; }
+  .sm\:z-auto { z-index: auto; }
+}
+
+@include md {
+  .md\:static { position: static; }
+  .md\:fixed { position: fixed; }
+  .md\:absolute { position: absolute; }
+  .md\:relative { position: relative; }
+  .md\:sticky { position: sticky; }
+  
+  .md\:inset-0 { top: 0px; right: 0px; bottom: 0px; left: 0px; }
+  .md\:inset-auto { top: auto; right: auto; bottom: auto; left: auto; }
+  
+  @each $key, $value in $spacing-scale {
+    .md\:inset-#{$key} { top: #{$value}; right: #{$value}; bottom: #{$value}; left: #{$value}; }
+    .md\:-inset-#{$key} { top: -#{$value}; right: -#{$value}; bottom: -#{$value}; left: -#{$value}; }
+    .md\:inset-x-#{$key} { left: #{$value}; right: #{$value}; }
+    .md\:-inset-x-#{$key} { left: -#{$value}; right: -#{$value}; }
+    .md\:inset-y-#{$key} { top: #{$value}; bottom: #{$value}; }
+    .md\:-inset-y-#{$key} { top: -#{$value}; bottom: -#{$value}; }
+    .md\:top-#{$key} { top: #{$value}; }
+    .md\:-top-#{$key} { top: -#{$value}; }
+    .md\:right-#{$key} { right: #{$value}; }
+    .md\:-right-#{$key} { right: -#{$value}; }
+    .md\:bottom-#{$key} { bottom: #{$value}; }
+    .md\:-bottom-#{$key} { bottom: -#{$value}; }
+    .md\:left-#{$key} { left: #{$value}; }
+    .md\:-left-#{$key} { left: -#{$value}; }
+  }
+  
+  .md\:z-0 { z-index: 0; }
+  .md\:z-10 { z-index: 10; }
+  .md\:z-20 { z-index: 20; }
+  .md\:z-30 { z-index: 30; }
+  .md\:z-40 { z-index: 40; }
+  .md\:z-50 { z-index: 50; }
+  .md\:z-auto { z-index: auto; }
+}
+
+@include lg {
+  .lg\:static { position: static; }
+  .lg\:fixed { position: fixed; }
+  .lg\:absolute { position: absolute; }
+  .lg\:relative { position: relative; }
+  .lg\:sticky { position: sticky; }
+  
+  .lg\:inset-0 { top: 0px; right: 0px; bottom: 0px; left: 0px; }
+  .lg\:inset-auto { top: auto; right: auto; bottom: auto; left: auto; }
+  
+  @each $key, $value in $spacing-scale {
+    .lg\:inset-#{$key} { top: #{$value}; right: #{$value}; bottom: #{$value}; left: #{$value}; }
+    .lg\:-inset-#{$key} { top: -#{$value}; right: -#{$value}; bottom: -#{$value}; left: -#{$value}; }
+    .lg\:inset-x-#{$key} { left: #{$value}; right: #{$value}; }
+    .lg\:-inset-x-#{$key} { left: -#{$value}; right: -#{$value}; }
+    .lg\:inset-y-#{$key} { top: #{$value}; bottom: #{$value}; }
+    .lg\:-inset-y-#{$key} { top: -#{$value}; bottom: -#{$value}; }
+    .lg\:top-#{$key} { top: #{$value}; }
+    .lg\:-top-#{$key} { top: -#{$value}; }
+    .lg\:right-#{$key} { right: #{$value}; }
+    .lg\:-right-#{$key} { right: -#{$value}; }
+    .lg\:bottom-#{$key} { bottom: #{$value}; }
+    .lg\:-bottom-#{$key} { bottom: -#{$value}; }
+    .lg\:left-#{$key} { left: #{$value}; }
+    .lg\:-left-#{$key} { left: -#{$value}; }
+  }
+  
+  .lg\:z-0 { z-index: 0; }
+  .lg\:z-10 { z-index: 10; }
+  .lg\:z-20 { z-index: 20; }
+  .lg\:z-30 { z-index: 30; }
+  .lg\:z-40 { z-index: 40; }
+  .lg\:z-50 { z-index: 50; }
+  .lg\:z-auto { z-index: auto; }
+}
+
+@include xl {
+  .xl\:static { position: static; }
+  .xl\:fixed { position: fixed; }
+  .xl\:absolute { position: absolute; }
+  .xl\:relative { position: relative; }
+  .xl\:sticky { position: sticky; }
+  
+  .xl\:inset-0 { top: 0px; right: 0px; bottom: 0px; left: 0px; }
+  .xl\:inset-auto { top: auto; right: auto; bottom: auto; left: auto; }
+  
+  @each $key, $value in $spacing-scale {
+    .xl\:inset-#{$key} { top: #{$value}; right: #{$value}; bottom: #{$value}; left: #{$value}; }
+    .xl\:-inset-#{$key} { top: -#{$value}; right: -#{$value}; bottom: -#{$value}; left: -#{$value}; }
+    .xl\:inset-x-#{$key} { left: #{$value}; right: #{$value}; }
+    .xl\:-inset-x-#{$key} { left: -#{$value}; right: -#{$value}; }
+    .xl\:inset-y-#{$key} { top: #{$value}; bottom: #{$value}; }
+    .xl\:-inset-y-#{$key} { top: -#{$value}; bottom: -#{$value}; }
+    .xl\:top-#{$key} { top: #{$value}; }
+    .xl\:-top-#{$key} { top: -#{$value}; }
+    .xl\:right-#{$key} { right: #{$value}; }
+    .xl\:-right-#{$key} { right: -#{$value}; }
+    .xl\:bottom-#{$key} { bottom: #{$value}; }
+    .xl\:-bottom-#{$key} { bottom: -#{$value}; }
+    .xl\:left-#{$key} { left: #{$value}; }
+    .xl\:-left-#{$key} { left: -#{$value}; }
+  }
+  
+  .xl\:z-0 { z-index: 0; }
+  .xl\:z-10 { z-index: 10; }
+  .xl\:z-20 { z-index: 20; }
+  .xl\:z-30 { z-index: 30; }
+  .xl\:z-40 { z-index: 40; }
+  .xl\:z-50 { z-index: 50; }
+  .xl\:z-auto { z-index: auto; }
+}

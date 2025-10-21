@@ -268,6 +268,14 @@ export function useApiList<T extends ApiData>(
   const abortControllerRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef(true);
 
+  // Sync internal params with external initialParams when they change
+  useEffect(() => {
+    // Deep comparison to avoid unnecessary updates
+    if (JSON.stringify(params) !== JSON.stringify(initialParams)) {
+      setParams(initialParams);
+    }
+  }, [initialParams]);
+
   const fetchData = useCallback(async (requestParams: ListParams = params): Promise<void> => {
     // Cancel previous request safely
     if (abortControllerRef.current) {

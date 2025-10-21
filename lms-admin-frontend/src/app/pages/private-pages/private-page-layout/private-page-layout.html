@@ -1,1 +1,15 @@
-<p>private-page-layout works!</p>
+<div class="private-layout">
+    <!-- Sidebar Navigation -->
+    <app-side-nav></app-side-nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Header -->
+        <app-header [pageTitle]="pageTitle" [currentUser]="currentUser"></app-header>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <router-outlet />
+        </div>
+    </div>
+</div>

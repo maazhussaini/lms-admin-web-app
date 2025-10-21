@@ -94,11 +94,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
 
     // Listen for auth events to stay in sync
-    const handleAuthError = () => {
+    const handleAuthError = async () => {
+      console.warn('Authentication error detected - clearing auth state and redirecting to login');
+      
+      // Clear all authentication state
       setIsAuthenticated(false);
       setUser(null);
       setPermissions([]);
-      setError('Authentication failed');
+      setError('Your session has expired. Please log in again.');
+      
+      // Clear stored auth data
+      await clearAuthData();
+      
+      // Redirect to login page after a short delay to let the user see the message
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 1500);
     };
 
     apiEvents.on(API_EVENTS.AUTH_ERROR, handleAuthError);

@@ -53,7 +53,7 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({
   return (
     <div 
       className={clsx(
-        'flex flex-col sm:flex-row bg-white rounded-[15px] p-1.5 w-full sm:w-[480px] shadow-sm border border-neutral-200 gap-1.5 sm:gap-0',
+        'flex flex-col sm:flex-row bg-white rounded-[15px] p-1.5 w-full sm:w-auto sm:min-w-[480px] laptop:min-w-[420px] xl:min-w-[540px] shadow-sm border border-neutral-200 gap-1.5 sm:gap-0 flex-shrink-0',
         className
       )}
       role="tablist"
@@ -70,7 +70,7 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({
             aria-controls={`${tab.key}-courses-panel`}
             onClick={() => onTabChange(tab.key)}
             className={clsx(
-              'relative flex-1 px-6 sm:px-8 py-3.5 sm:py-4 rounded-[15px] font-semibold text-sm sm:text-base transition-all duration-200 ease-in-out cursor-pointer',
+              'relative flex-1 px-6 sm:px-8 laptop:px-6 xl:px-10 py-3.5 sm:py-4 laptop:py-3 xl:py-5 rounded-[15px] font-semibold text-sm sm:text-base laptop:text-sm xl:text-lg transition-all duration-200 ease-in-out cursor-pointer',
               'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
               'hover:scale-[1.02] active:scale-[0.98]',
               {
@@ -94,14 +94,14 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({
             )}
             
             {/* Tab content */}
-            <span className="relative z-10 flex items-center justify-center gap-1.5 sm:gap-2.5 w-full">
+            <span className="relative z-10 flex items-center justify-center gap-1.5 sm:gap-2.5 laptop:gap-2 xl:gap-3 w-full">
               <span className="truncate font-medium">
                 <span className="sm:hidden">{tab.shortLabel}</span>
                 <span className="hidden sm:inline">{tab.label}</span>
               </span>
               <span 
                 className={clsx(
-                  'inline-flex items-center justify-center min-w-[22px] sm:min-w-[24px] h-5 sm:h-6 px-1.5 sm:px-2 rounded-full text-xs sm:text-sm font-bold flex-shrink-0',
+                  'inline-flex items-center justify-center min-w-[22px] sm:min-w-[24px] laptop:min-w-[22px] xl:min-w-[28px] h-5 sm:h-6 laptop:h-5 xl:h-7 px-1.5 sm:px-2 laptop:px-1.5 xl:px-2.5 rounded-full text-xs sm:text-sm laptop:text-xs xl:text-base font-bold flex-shrink-0',
                   {
                     'bg-white/20 text-white': isActive,
                     'bg-neutral-300 text-neutral-700': !isActive

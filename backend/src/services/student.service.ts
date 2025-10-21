@@ -14,16 +14,17 @@ import { NotFoundError, ConflictError, ForbiddenError, BadRequestError } from '@
 import { TokenPayload } from '@/utils/jwt.utils';
 import { tryCatch } from '@/utils/error-wrapper.utils';
 import { ExtendedPaginationWithFilters } from '@/utils/async-handler.utils';
-import { formatDateRangeShort, formatDecimalHours } from '@/utils/date-format.utils';
 import { 
   StudentStatus,
   Gender,
-  UserType
+  UserType,
+  EnrollmentStatus
 } from '@/types/enums.types';
 import logger from '@/config/logger';
 import { BaseListService, BaseListServiceConfig } from '@/utils/base-list.service';
 import { STUDENT_FIELD_MAPPINGS } from '@/utils/field-mapping.utils';
 import { hashPassword } from '@/utils/password.utils';
+import { env } from '@/config/environment';
 
 // Initialize Prisma client
 const prisma = new PrismaClient();
@@ -161,10 +162,12 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
     requestingUser: TokenPayload,
     clientIp?: string
   ) {
+   
+   
     // Validate that we have a requesting user
-    if (!requestingUser || !requestingUser.user_type) {
-      throw new BadRequestError('Invalid requesting user context');
-    }
+    // if (!requestingUser || !requestingUser.user_type) {
+    //   throw new BadRequestError('Invalid requesting user context');
+    // }
 
     // Determine tenant ID based on user type
     let tenantId: number;
@@ -175,7 +178,8 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
         throw new BadRequestError('Tenant ID is required when creating a student as SUPER_ADMIN', 'MISSING_TENANT_ID');
       }
       tenantId = data.tenant_id;
-    } else {
+    } 
+    else {
       // Regular admins use their own tenant
       if (!requestingUser.tenantId) {
         throw new BadRequestError('Tenant ID is required', 'MISSING_TENANT_ID');
@@ -183,23 +187,17 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       tenantId = requestingUser.tenantId;
       
       // Ignore tenant_id from body for non-SUPER_ADMIN users
-      if (data.tenant_id && data.tenant_id !== tenantId) {
-        logger.warn('Non-SUPER_ADMIN user attempted to specify different tenant_id', {
-          userId: requestingUser.id,
-          userType: requestingUser.user_type,
-          requestedTenantId: data.tenant_id,
-          userTenantId: tenantId
-        });
-      }
+      // if (data.tenant_id && data.tenant_id !== tenantId) {
+      //   logger.warn('Non-SUPER_ADMIN user attempted to specify different tenant_id', {
+      //     userId: requestingUser.id,
+      //     userType: requestingUser.user_type ?? UserType.STUDENT,
+      //     requestedTenantId: data.tenant_id,
+      //     userTenantId: tenantId
+      //   });
+      // }
     }
 
     return tryCatch(async () => {
-      logger.debug('Creating student', {
-        username: data.username,
-        tenantId,
-        requestingUserId: requestingUser.id,
-        userType: requestingUser.user_type
-      });
 
       // Check if username exists within tenant
       const existingUsername = await prisma.student.findFirst({
@@ -253,12 +251,10 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
             gender: data.gender || null,
             student_status: data.student_status || StudentStatus.ACTIVE,
             referral_type: data.referral_type || null,
-            is_active: true,
-            is_deleted: false,
-            created_by: requestingUser.id,
-            updated_by: requestingUser.id,
             created_ip: clientIp || null,
-            updated_ip: clientIp || null
+            updated_ip: clientIp || null,
+            created_by: requestingUser.id,
+            updated_by: requestingUser.id
           }
         });
 
@@ -269,12 +265,10 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
             tenant_id: tenantId,
             email_address: data.email_address,
             is_primary: true,
-            is_active: true,
-            is_deleted: false,
-            created_by: requestingUser.id,
-            updated_by: requestingUser.id,
             created_ip: clientIp || null,
-            updated_ip: clientIp || null
+            updated_ip: clientIp || null,
+            created_by: requestingUser.id || 0,
+            updated_by: requestingUser.id || 0
           }
         });
 
@@ -286,10 +280,15 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       return studentWithoutPassword;
     }, {
       context: {
-        tenantId,
-        requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId },
+        tenantId: 1,
+        requestingUser: { id: 1, role: UserType.STUDENT, tenantId: 1 },
         username: data.username
       }
+      // context: {
+      //   tenantId,
+      //   requestingUser: { id: requestingUser.id, role: requestingUser.user_type, tenantId: requestingUser.tenantId },
+      //   username: data.username
+      // }
     });
   }
 
@@ -707,28 +706,33 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
 
   /**
    * Get enrolled courses by student ID with pagination, sorting, and filtering
+   * Updated to match the SQL function behavior exactly
    * 
    * @param studentId Student identifier
    * @param requestingUser User requesting the data
    * @param params Pagination and filtering parameters
+   * @param enrollmentStatuses Array of enrollment statuses to filter by. If undefined, defaults to ACTIVE and COMPLETED
    * @returns List of enrolled courses with pagination metadata
    */
   async getEnrolledCoursesByStudentId(
     studentId: number,
     requestingUser: TokenPayload,
-    params: ExtendedPaginationWithFilters
+    params: ExtendedPaginationWithFilters,
+    enrollmentStatuses?: EnrollmentStatus[]
   ): Promise<{ items: any[]; pagination: any }> {
     return tryCatch(async () => {
       logger.debug('Getting enrolled courses by student ID', {
         studentId,
         paginationParams: params,
-        requestingUserId: requestingUser.id
+        requestingUserId: requestingUser.id,
+        enrollmentStatuses
       });
 
       // First, get the student's tenant ID and validate access
       const student = await prisma.student.findFirst({
         where: {
           student_id: studentId,
+          is_active: true,
           is_deleted: false
         },
         select: {
@@ -749,7 +753,8 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       }
 
       // Build search filter from pagination params
-      const searchQuery = params.filters?.['search'] || '';
+      // Note: The API parameter is 'search_query', but it's stored as 'search_query' in filters
+      const searchQuery = params.filters?.['search_query'] || params.filters?.['search'] || '';
       const searchFilter = searchQuery 
         ? {
             course_name: {
@@ -764,32 +769,58 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       const limit = params.limit || 10;
       const skip = params.skip ?? (page - 1) * limit;
 
-      // Build where clause for enrolled courses
+      // Build enrollment status filter
+      // If enrollmentStatuses array is provided, use it; otherwise default to ACTIVE and COMPLETED
+      let statusesToFilter: EnrollmentStatus[];
+      
+      if (enrollmentStatuses && enrollmentStatuses.length > 0) {
+        statusesToFilter = enrollmentStatuses;
+      } else {
+        // Default to ACTIVE and COMPLETED if no statuses provided
+        statusesToFilter = [EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED];
+        
+        logger.debug('Using default enrollment statuses', {
+          defaultStatuses: statusesToFilter,
+          reason: enrollmentStatuses ? 'Empty array provided' : 'No statuses provided'
+        });
+      }
+      
+      const enrollmentStatusFilter = { in: statusesToFilter };
+
+      // Build where clause for enrolled courses - matching SQL function exactly
       const whereClause = {
         student_id: studentId,
         is_active: true,
         is_deleted: false,
+        enrollment_status: enrollmentStatusFilter,
         course: {
           is_active: true,
           is_deleted: false,
           course_status: CourseStatus.PUBLIC,
           tenant_id: student.tenant_id,
           ...searchFilter
+        },
+        specialization_program: {
+          is_active: true,
+          is_deleted: false
         }
       };
 
-      // Get total count for pagination
-      const total = await prisma.enrollment.count({
-        where: whereClause
+      logger.debug('Built where clause for enrollment query', {
+        studentId,
+        enrollmentStatuses: statusesToFilter,
+        enrollmentStatusFilter,
+        searchQuery,
+        tenantId: student.tenant_id
       });
 
-      // Query enrolled courses with pagination
+      // Query enrolled courses with pagination - matching SQL structure
       const enrollments = await prisma.enrollment.findMany({
         where: whereClause,
         include: {
           course: {
             include: {
-              // Include teacher information
+              // Include teacher information - INNER JOIN in SQL
               teacher_courses: {
                 where: {
                   is_active: true,
@@ -806,7 +837,7 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
                 },
                 take: 1
               },
-              // Include course sessions for dates
+              // Include course sessions for dates - LEFT JOIN in SQL
               course_sessions: {
                 where: {
                   is_active: true,
@@ -820,41 +851,10 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
                   start_date: 'asc'
                 },
                 take: 1
-              },
-              // Include specialization and program information
-              course_specialization: {
-                where: {
-                  is_active: true,
-                  is_deleted: false
-                },
-                include: {
-                  specialization: {
-                    select: {
-                      specialization_id: true,
-                      specialization_name: true,
-                      specialization_program: {
-                        where: {
-                          is_active: true,
-                          is_deleted: false
-                        },
-                        include: {
-                          program: {
-                            select: {
-                              program_id: true,
-                              program_name: true
-                            }
-                          }
-                        },
-                        take: 1
-                      }
-                    }
-                  }
-                },
-                take: 1
               }
             }
           },
-          // Include specialization program for enrollment details
+          // Include specialization program for enrollment details - INNER JOIN in SQL
           specialization_program: {
             include: {
               specialization: {
@@ -879,7 +879,7 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
         take: limit
       });
 
-      // Get progress data for all courses
+      // Get progress data for all courses in the enrollments (INNER JOIN behavior)
       const courseIds = enrollments.map(enrollment => (enrollment as any).course.course_id);
       const progressData = await prisma.studentCourseProgress.findMany({
         where: {
@@ -900,63 +900,79 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
         progressMap.set(progress.course_id, progress.overall_progress_percentage);
       });
 
-      // Extract and format course objects with all required fields
-      const courses = enrollments.map(enrollment => {
+      // Filter out enrollments that don't have progress data (to match SQL INNER JOIN behavior)
+      const enrollmentsWithProgress = enrollments.filter(enrollment => 
+        progressMap.has((enrollment as any).course.course_id)
+      );
+
+      // Extract and format course objects to match SQL function output exactly
+      const courses = enrollmentsWithProgress.map(enrollment => {
         const course = (enrollment as any).course;
         const teacher = course.teacher_courses?.[0]?.teacher;
         const courseSession = course.course_sessions?.[0];
-        const courseSpecialization = course.course_specialization?.[0];
-        const specialization = courseSpecialization?.specialization;
-        const specializationProgram = specialization?.specialization_program?.[0];
-        const enrollmentSpecializationProgram = (enrollment as any).specialization_program;
-
-        // Format dates using utility function
-        const formattedDates = formatDateRangeShort(
-          courseSession?.start_date || null,
-          courseSession?.end_date || null
-        );
-
-        // Format hours using utility function
-        const formattedHours = formatDecimalHours(
-          course.course_total_hours ? course.course_total_hours.toNumber() : null
-        );
-
-        const progressPercentage = progressMap.get(course.course_id) || null;
+        const specializationProgram = (enrollment as any).specialization_program;
+        const progressPercentage = progressMap.get(course.course_id);
 
         return {
           enrollment_id: (enrollment as any).enrollment_id,
           specialization_program_id: (enrollment as any).specialization_program_id,
           course_id: course.course_id,
-          specialization_id: enrollmentSpecializationProgram?.specialization?.specialization_id || 
-                           specializationProgram?.specialization?.specialization_id || 
-                           specialization?.specialization_id || null,
-          program_id: enrollmentSpecializationProgram?.program?.program_id || 
-                     specializationProgram?.program?.program_id || null,
+          specialization_id: specializationProgram?.specialization?.specialization_id || null,
+          program_id: specializationProgram?.program?.program_id || null,
           course_name: course.course_name,
-          start_date: formattedDates.start_date,
-          end_date: formattedDates.end_date,
-          specialization_name: enrollmentSpecializationProgram?.specialization?.specialization_name || 
-                              specializationProgram?.specialization?.specialization_name || 
-                              specialization?.specialization_name || null,
-          program_name: enrollmentSpecializationProgram?.program?.program_name || 
-                       specializationProgram?.program?.program_name || null,
-          teacher_name: teacher?.full_name || 'Not Assigned',
-          profile_picture_url: teacher?.profile_picture_url || null,
-          teacher_qualification: teacher?.teacher_qualification || null,
-          course_total_hours: formattedHours,
-          overall_progress_percentage: progressPercentage
+          start_date: courseSession?.start_date || null,
+          end_date: courseSession?.end_date || null,
+          specialization_name: specializationProgram?.specialization?.specialization_name || null,
+          program_name: specializationProgram?.program?.program_name || null,
+          teacher_name: teacher?.full_name || null,
+          course_total_hours: course.course_total_hours ? Number(course.course_total_hours) : null,
+          overall_progress_percentage: progressPercentage ?? null
         };
       });
 
-      // Calculate pagination metadata
-      const totalPages = Math.ceil(total / limit);
+      // Calculate pagination metadata based on filtered results
+      // First get all enrollments that match our criteria
+      const allMatchingEnrollments = await prisma.enrollment.findMany({
+        where: whereClause,
+        select: {
+          enrollment_id: true,
+          course: {
+            select: {
+              course_id: true
+            }
+          }
+        }
+      });
+
+      // Get progress data for all matching enrollments
+      const allCourseIds = allMatchingEnrollments.map(e => (e as any).course.course_id);
+      const allProgressData = await prisma.studentCourseProgress.findMany({
+        where: {
+          student_id: studentId,
+          course_id: { in: allCourseIds },
+          is_active: true,
+          is_deleted: false
+        },
+        select: {
+          course_id: true
+        }
+      });
+
+      // Filter to only enrollments with progress (INNER JOIN behavior)
+      const progressCourseIds = new Set(allProgressData.map(p => p.course_id));
+      const enrollmentsWithProgressIds = allMatchingEnrollments
+        .filter(e => progressCourseIds.has((e as any).course.course_id))
+        .map(e => e.enrollment_id);
+
+      const totalWithProgress = enrollmentsWithProgressIds.length;
+      const totalPages = Math.ceil(totalWithProgress / limit);
       const hasNext = page < totalPages;
       const hasPrev = page > 1;
 
       const pagination = {
         page,
         limit,
-        total,
+        total: totalWithProgress,
         totalPages,
         hasNext,
         hasPrev
@@ -974,6 +990,53 @@ export class StudentService extends BaseListService<any, StudentFilterDto> {
       }
     });
   }
+
+
+  /**
+   * Extract domain from IIS headers and get tenant
+   * @param req Express request object with IIS headers
+   * @returns Tenant object or null
+   */
+  public async getTenantFromDomain(req: any): Promise<any | null> {
+    const originalHost = req?.headers['x-original-host'] as string || 
+                        req?.headers['x-forwarded-host'] as string || 
+                        req?.headers.host as string;
+
+    if (!originalHost) {
+      logger.warn('No domain found in request headers');
+      return null;
+    }
+
+    const domain = env.IS_DEVELOPMENT ? 'alphaacademy.com' : originalHost;
+    logger.info(`Extracting tenant for domain: ${domain}`);
+
+    
+    try {
+      // Use raw query to find tenant by domain since Prisma types might not be generated
+      const tenants = await this.prisma.$queryRaw`
+        SELECT * FROM tenants 
+        WHERE tenant_domain = ${domain} 
+        AND tenant_status IN ('ACTIVE', 'TRIAL')
+        AND is_active = true 
+        AND is_deleted = false 
+        LIMIT 1
+      ` as any[];
+      
+      const tenant = tenants.length > 0 ? tenants[0] : null;
+
+      if (tenant) {
+        logger.info(`Found tenant: ${tenant.tenant_name} (ID: ${tenant.tenant_id}) for domain: ${domain}`);
+      } else {
+        logger.warn(`No active tenant found for domain: ${domain}`);
+      }
+
+      return tenant;
+    } catch (error) {
+      logger.error('Error fetching tenant by domain:', { error, domain });
+      return null;
+    }
+  }
+
 }
 
 /**

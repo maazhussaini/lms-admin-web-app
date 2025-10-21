@@ -3,6 +3,9 @@ import { RouterModule, Routes } from '@angular/router';
 import { PublicPageLayout } from './public-page-layout/public-page-layout';
 import { SignIn } from './auth/sign-in/sign-in';
 import { SignUp } from './auth/sign-up/sign-up';
+import { VerifyOtp } from './auth/verify-otp/verify-otp';
+import { ResetPassword } from './auth/reset-password/reset-password';
+import { ForgotPassword } from './auth/forgot-password/forgot-password';
 
 const routes: Routes = [
   {
@@ -21,6 +24,22 @@ const routes: Routes = [
       {
         path: 'sign-up',
         component: SignUp
+      },
+      {
+        path: 'sign-up',
+        component: SignUp
+      },
+      {
+        path: 'forgot-password',
+        component: ForgotPassword
+      },
+      {
+        path: 'verify-otp',
+        component: VerifyOtp
+      },
+      {
+        path: 'reset-password',
+        component: ResetPassword
       }
     ]
   }

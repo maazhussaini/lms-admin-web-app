@@ -23,12 +23,14 @@ export interface EnrollmentItem {
   teacher_qualification: string | null;
   course_total_hours: string;
   overall_progress_percentage: number;
+  enrollment_status?: string; // Status like 'ACTIVE', 'DROPPED', 'COMPLETED', etc.
+  enrolled_at?: string;
 }
 
 // Request parameter types
 export interface EnrollmentParams {
   search_query?: string;
-  enrollment_status?: string;
+  enrollment_status?: string | string[]; // Can be single status or array of statuses (will be converted to comma-separated)
   include_progress?: boolean;
   page?: number;
   limit?: number;
@@ -45,7 +47,13 @@ export class EnrollmentService {
     const searchParams = new URLSearchParams();
     
     if (params.search_query) searchParams.append('search_query', params.search_query);
-    if (params.enrollment_status) searchParams.append('enrollment_status', params.enrollment_status);
+    if (params.enrollment_status) {
+      // Handle both string and array formats - convert array to comma-separated string
+      const statusValue = Array.isArray(params.enrollment_status) 
+        ? params.enrollment_status.join(',')
+        : params.enrollment_status;
+      searchParams.append('enrollment_status', statusValue);
+    }
     if (params.include_progress !== undefined) searchParams.append('include_progress', params.include_progress.toString());
     if (params.page) searchParams.append('page', params.page.toString());
     if (params.limit) searchParams.append('limit', params.limit.toString());

@@ -62,7 +62,7 @@ export interface CourseFilterState {
   searchQuery: string;
   selectedProgram: Program | null;
   selectedSpecialization: Specialization | null;
-  selectedCourseType: 'all' | 'free' | 'paid' | 'purchased';
+  selectedCourseType: 'all' | 'free' | 'paid';
 }
 
 /**

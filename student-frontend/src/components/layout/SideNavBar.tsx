@@ -5,38 +5,39 @@ import { useAuth } from '@/context/AuthContext';
 import CustomIcon from '@/components/common/CustomIcon';
 import { FiLogOut } from 'react-icons/fi';
 import orbedLogoPurple from '@/assets/images/orbed_logo_purple_bg.png';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 type NavIcon = {
   icon: React.ReactNode;
   label: string;
-  active: boolean;
-  href?: string;
+  href: string;
+  iconClass: string;
 };
 
 const navIcons: NavIcon[] = [
   {
-    icon: <CustomIcon iconClass="ic-3" size="lg" className="text-neutral-500 lg:text-2xl xl:text-3xl" aria-label="Calendar" />,
+    iconClass: "ic-3",
     label: "Calendar",
-    active: false,
     href: "/calendar",
+    icon: <CustomIcon iconClass="ic-3" size="lg" className="lg:text-2xl laptop:text-lg xl:text-3xl" aria-label="Calendar" />,
   },
   {
-    icon: <CustomIcon iconClass="ic-21" size="lg" className="text-neutral-500 lg:text-2xl xl:text-3xl" aria-label="Chat" />,
+    iconClass: "ic-21",
     label: "Notice Board",
-    active: false,
-    href: "/chat",
+    href: "/notices",
+    icon: <CustomIcon iconClass="ic-21" size="lg" className="lg:text-2xl laptop:text-lg xl:text-3xl" aria-label="Notice Board" />,
   },
   {
-    icon: <CustomIcon iconClass="ic-20" size="lg" className="text-primary-500 lg:text-2xl xl:text-3xl" aria-label="Courses" />,
+    iconClass: "ic-20",
     label: "Courses",
-    active: true,
     href: "/courses",
+    icon: <CustomIcon iconClass="ic-20" size="lg" className="lg:text-2xl laptop:text-lg xl:text-3xl" aria-label="Courses" />,
   },
   {
-    icon: <CustomIcon iconClass="ic-4" size="lg" className="text-neutral-500 lg:text-2xl xl:text-3xl" aria-label="Settings" />,
+    iconClass: "ic-4",
     label: "Settings",
-    active: false,
     href: "/settings",
+    icon: <CustomIcon iconClass="ic-4" size="lg" className="lg:text-2xl laptop:text-lg xl:text-3xl" aria-label="Settings" />,
   },
 ];
 
@@ -47,10 +48,18 @@ interface SideNavBarProps {
 
 const SideNavBar: React.FC<SideNavBarProps> = ({ isOpen = false, onClose }) => {
   const { logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check if a nav item is active based on current location
+  const isNavActive = (navHref: string): boolean => {
+    return location.pathname.startsWith(navHref);
+  };
 
   const handleNavClick = (nav: NavIcon) => {
-    // TODO: Implement navigation logic
-    console.log('Navigate to:', nav.href);
+    if (nav.href) {
+      navigate(nav.href);
+    }
     // Close mobile menu after navigation
     if (onClose) {
       onClose();
@@ -73,20 +82,25 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ isOpen = false, onClose }) => {
 
   // Desktop Navigation
   const DesktopNav = () => (
-    <aside className="hidden lg:flex h-full w-20 bg-white rounded-3xl flex-col items-center pt-3 pb-6 shadow-xl select-none">
+    <aside className="hidden lg:flex h-full w-20 laptop:w-16 bg-white rounded-3xl laptop:rounded-2xl flex-col items-center pt-3 laptop:pt-2 pb-6 laptop:pb-3 shadow-xl select-none">
       {/* Logo */}
-      <div className="mb-10">
+      <div className="mb-10 laptop:mb-5">
         <img
           src={orbedLogoPurple}
           alt="orb-Ed Logo"
-          className="w-16 h-16 object-contain rounded-full shadow-lg"
+          className="w-16 h-16 laptop:w-11 laptop:h-11 object-contain rounded-full shadow-lg"
         />
       </div>
       
       {/* Navigation Icons */}
-      <nav className="flex flex-col gap-14 flex-1 items-center justify-center">
+      <nav className="flex flex-col gap-14 laptop:gap-7 flex-1 items-center justify-center">
         {navIcons.map((nav) => (
-          <NavButton key={nav.label} nav={nav} onClick={() => handleNavClick(nav)} />
+          <NavButton 
+            key={nav.label} 
+            nav={nav} 
+            onClick={() => handleNavClick(nav)}
+            isActive={isNavActive(nav.href)}
+          />
         ))}
       </nav>
 
@@ -142,22 +156,32 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ isOpen = false, onClose }) => {
             {/* Navigation Links */}
             <nav className="flex-1 px-4 py-6">
               <div className="space-y-2">
-                {navIcons.map((nav) => (
-                  <button
-                    key={nav.label}
-                    onClick={() => handleNavClick(nav)}
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                      nav.active
-                        ? "bg-primary-50 border-2 border-primary-200 text-primary-700"
-                        : "hover:bg-neutral-50 text-neutral-600"
-                    }`}
-                  >
-                    <div className="flex-shrink-0">
-                      {nav.icon}
-                    </div>
-                    <span className="font-medium text-base">{nav.label}</span>
-                  </button>
-                ))}
+                {navIcons.map((nav) => {
+                  const isActive = isNavActive(nav.href);
+                  const iconColor = isActive ? 'text-primary-500' : 'text-neutral-500';
+                  
+                  return (
+                    <button
+                      key={nav.label}
+                      onClick={() => handleNavClick(nav)}
+                      className={`w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                        isActive
+                          ? "bg-primary-50 border-2 border-primary-200 text-primary-700"
+                          : "hover:bg-neutral-50 text-neutral-600"
+                      }`}
+                    >
+                      <div className="flex-shrink-0">
+                        <CustomIcon 
+                          iconClass={nav.iconClass} 
+                          size="lg" 
+                          className={`${iconColor} lg:text-2xl laptop:text-lg xl:text-3xl`} 
+                          aria-label={nav.label} 
+                        />
+                      </div>
+                      <span className="font-medium text-base">{nav.label}</span>
+                    </button>
+                  );
+                })}
                 
                 {/* Mobile Logout Button */}
                 <button
@@ -165,7 +189,7 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ isOpen = false, onClose }) => {
                   className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition focus:outline-none focus:ring-2 focus:ring-red-500 hover:bg-red-50 text-red-600 border-t border-neutral-200 mt-4 pt-6"
                 >
                   <div className="flex-shrink-0">
-                    <FiLogOut className="w-6 h-6 lg:w-7 lg:h-7" />
+                    <FiLogOut className="w-6 h-6 lg:w-7 lg:h-7 laptop:w-6 laptop:h-6" />
                   </div>
                   <span className="font-medium text-base">Logout</span>
                 </button>
@@ -196,34 +220,45 @@ const SideNavBar: React.FC<SideNavBarProps> = ({ isOpen = false, onClose }) => {
 interface NavButtonProps {
   nav: NavIcon;
   onClick: () => void;
+  isActive: boolean;
 }
 
-const NavButton: React.FC<NavButtonProps> = ({ nav, onClick }) => (
-  <div className="relative group flex items-center">
-    <button
-      onClick={onClick}
-      className={`rounded-2xl p-3 transition focus:outline-none flex items-center justify-center w-14 h-14 cursor-pointer focus:ring-2 focus:ring-primary-500 ${
-        nav.active
-          ? "border-2 border-[#4B2676] bg-[#F5F1FA]"
-          : "hover:bg-[#F5F1FA]"
-      }`}
-      aria-label={nav.label}
-      tabIndex={0}
-    >
-      {nav.icon}
-    </button>
-    
-    {/* Desktop Tooltip */}
-    <span
-      className="absolute left-full top-1/2 -translate-y-1/2 ml-4 px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-xl border border-primary-400 shadow-2xl opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 group-hover:translate-x-0 translate-x-2 transition-all duration-200 pointer-events-none whitespace-nowrap z-20 flex items-center gap-2 drop-shadow-lg"
-      style={{ transitionDelay: '80ms' }}
-      role="tooltip"
-    >
-      {nav.label}
-      <span className="absolute left-0 top-1/2 -translate-y-1/2 -ml-2 w-3 h-3 bg-primary-400 border border-primary-400 shadow -z-10 rotate-45"></span>
-    </span>
-  </div>
-);
+const NavButton: React.FC<NavButtonProps> = ({ nav, onClick, isActive }) => {
+  // Dynamically render icon with active state
+  const iconColor = isActive ? 'text-primary-500' : 'text-neutral-500';
+  
+  return (
+    <div className="relative group flex items-center">
+      <button
+        onClick={onClick}
+        className={`rounded-2xl laptop:rounded-xl p-3 laptop:p-1.5 transition focus:outline-none flex items-center justify-center w-14 h-14 laptop:w-10 laptop:h-10 cursor-pointer focus:ring-2 focus:ring-primary-500 ${
+          isActive
+            ? "border-2 laptop:border-[1.5px] border-[#4B2676] bg-[#F5F1FA]"
+            : "hover:bg-[#F5F1FA]"
+        }`}
+        aria-label={nav.label}
+        tabIndex={0}
+      >
+        <CustomIcon 
+          iconClass={nav.iconClass} 
+          size="lg" 
+          className={`${iconColor} lg:text-2xl laptop:text-lg xl:text-3xl`} 
+          aria-label={nav.label} 
+        />
+      </button>
+      
+      {/* Desktop Tooltip */}
+      <span
+        className="absolute left-full top-1/2 -translate-y-1/2 ml-4 laptop:ml-3 px-4 laptop:px-3 py-2 laptop:py-1.5 bg-primary-500 text-white text-sm laptop:text-xs font-semibold rounded-xl laptop:rounded-lg border border-primary-400 shadow-2xl opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 group-hover:translate-x-0 translate-x-2 transition-all duration-200 pointer-events-none whitespace-nowrap z-20 flex items-center gap-2 drop-shadow-lg"
+        style={{ transitionDelay: '80ms' }}
+        role="tooltip"
+      >
+        {nav.label}
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 -ml-2 laptop:-ml-1.5 w-3 h-3 laptop:w-2.5 laptop:h-2.5 bg-primary-400 border border-primary-400 shadow -z-10 rotate-45"></span>
+      </span>
+    </div>
+  );
+};
 
 // Logout Button Component for Desktop Navigation
 interface LogoutButtonProps {
@@ -234,21 +269,21 @@ const LogoutButton: React.FC<LogoutButtonProps> = ({ onClick }) => (
   <div className="relative group flex items-center">
     <button
       onClick={onClick}
-      className="rounded-2xl p-3 transition focus:outline-none flex items-center justify-center w-14 h-14 cursor-pointer focus:ring-2 focus:ring-red-500 hover:bg-red-50 text-red-600 border-2 border-transparent hover:border-red-200"
+      className="rounded-2xl laptop:rounded-xl p-3 laptop:p-1.5 transition focus:outline-none flex items-center justify-center w-14 h-14 laptop:w-10 laptop:h-10 cursor-pointer focus:ring-2 focus:ring-red-500 hover:bg-red-50 text-red-600 border-2 laptop:border-[1.5px] border-transparent hover:border-red-200"
       aria-label="Logout"
       tabIndex={0}
     >
-      <FiLogOut className="w-6 h-6 lg:w-7 lg:h-7" />
+      <FiLogOut className="w-6 h-6 lg:w-7 lg:h-7 laptop:w-[18px] laptop:h-[18px]" />
     </button>
     
     {/* Desktop Tooltip */}
     <span
-      className="absolute left-full top-1/2 -translate-y-1/2 ml-4 px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-xl border border-red-400 shadow-2xl opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 group-hover:translate-x-0 translate-x-2 transition-all duration-200 pointer-events-none whitespace-nowrap z-20 flex items-center gap-2 drop-shadow-lg"
+      className="absolute left-full top-1/2 -translate-y-1/2 ml-4 laptop:ml-3 px-4 laptop:px-3 py-2 laptop:py-1.5 bg-red-500 text-white text-sm laptop:text-xs font-semibold rounded-xl laptop:rounded-lg border border-red-400 shadow-2xl opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 group-hover:translate-x-0 translate-x-2 transition-all duration-200 pointer-events-none whitespace-nowrap z-20 flex items-center gap-2 drop-shadow-lg"
       style={{ transitionDelay: '80ms' }}
       role="tooltip"
     >
       Logout
-      <span className="absolute left-0 top-1/2 -translate-y-1/2 -ml-2 w-3 h-3 bg-red-400 border border-red-400 shadow -z-10 rotate-45"></span>
+      <span className="absolute left-0 top-1/2 -translate-y-1/2 -ml-2 laptop:-ml-1.5 w-3 h-3 laptop:w-2.5 laptop:h-2.5 bg-red-400 border border-red-400 shadow -z-10 rotate-45"></span>
     </span>
   </div>
 );

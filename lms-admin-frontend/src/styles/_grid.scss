@@ -1,0 +1,250 @@
+// ===== GRID UTILITIES ===== //
+
+// Grid display
+.grid { display: grid; }
+.inline-grid { display: inline-grid; }
+
+// Grid template columns
+@for $i from 1 through 12 {
+  .grid-cols-#{$i} { grid-template-columns: repeat(#{$i}, minmax(0, 1fr)); }
+}
+
+.grid-cols-none { grid-template-columns: none; }
+.grid-cols-subgrid { grid-template-columns: subgrid; }
+
+// Grid template rows
+@for $i from 1 through 6 {
+  .grid-rows-#{$i} { grid-template-rows: repeat(#{$i}, minmax(0, 1fr)); }
+}
+
+.grid-rows-none { grid-template-rows: none; }
+.grid-rows-subgrid { grid-template-rows: subgrid; }
+
+// Grid column start/end
+.col-auto { grid-column: auto; }
+.col-span-1 { grid-column: span 1 / span 1; }
+.col-span-2 { grid-column: span 2 / span 2; }
+.col-span-3 { grid-column: span 3 / span 3; }
+.col-span-4 { grid-column: span 4 / span 4; }
+.col-span-5 { grid-column: span 5 / span 5; }
+.col-span-6 { grid-column: span 6 / span 6; }
+.col-span-7 { grid-column: span 7 / span 7; }
+.col-span-8 { grid-column: span 8 / span 8; }
+.col-span-9 { grid-column: span 9 / span 9; }
+.col-span-10 { grid-column: span 10 / span 10; }
+.col-span-11 { grid-column: span 11 / span 11; }
+.col-span-12 { grid-column: span 12 / span 12; }
+.col-span-full { grid-column: 1 / -1; }
+
+@for $i from 1 through 13 {
+  .col-start-#{$i} { grid-column-start: #{$i}; }
+  .col-end-#{$i} { grid-column-end: #{$i}; }
+}
+
+.col-start-auto { grid-column-start: auto; }
+.col-end-auto { grid-column-end: auto; }
+
+// Grid row start/end
+.row-auto { grid-row: auto; }
+.row-span-1 { grid-row: span 1 / span 1; }
+.row-span-2 { grid-row: span 2 / span 2; }
+.row-span-3 { grid-row: span 3 / span 3; }
+.row-span-4 { grid-row: span 4 / span 4; }
+.row-span-5 { grid-row: span 5 / span 5; }
+.row-span-6 { grid-row: span 6 / span 6; }
+.row-span-full { grid-row: 1 / -1; }
+
+@for $i from 1 through 7 {
+  .row-start-#{$i} { grid-row-start: #{$i}; }
+  .row-end-#{$i} { grid-row-end: #{$i}; }
+}
+
+.row-start-auto { grid-row-start: auto; }
+.row-end-auto { grid-row-end: auto; }
+
+// Grid gaps
+.gap-0 { gap: 0px; }
+.gap-px { gap: 1px; }
+@each $key, $value in $spacing-scale {
+  .gap-#{$key} { gap: #{$value}; }
+}
+
+.gap-x-0 { column-gap: 0px; }
+.gap-x-px { column-gap: 1px; }
+@each $key, $value in $spacing-scale {
+  .gap-x-#{$key} { column-gap: #{$value}; }
+}
+
+.gap-y-0 { row-gap: 0px; }
+.gap-y-px { row-gap: 1px; }
+@each $key, $value in $spacing-scale {
+  .gap-y-#{$key} { row-gap: #{$value}; }
+}
+
+// Grid auto flow
+.grid-flow-row { grid-auto-flow: row; }
+.grid-flow-col { grid-auto-flow: column; }
+.grid-flow-dense { grid-auto-flow: dense; }
+.grid-flow-row-dense { grid-auto-flow: row dense; }
+.grid-flow-col-dense { grid-auto-flow: column dense; }
+
+// Grid auto columns
+.auto-cols-auto { grid-auto-columns: auto; }
+.auto-cols-min { grid-auto-columns: min-content; }
+.auto-cols-max { grid-auto-columns: max-content; }
+.auto-cols-fr { grid-auto-columns: minmax(0, 1fr); }
+
+// Grid auto rows
+.auto-rows-auto { grid-auto-rows: auto; }
+.auto-rows-min { grid-auto-rows: min-content; }
+.auto-rows-max { grid-auto-rows: max-content; }
+.auto-rows-fr { grid-auto-rows: minmax(0, 1fr); }
+
+// Responsive variants
+@include sm {
+  .sm\:grid { display: grid; }
+  .sm\:inline-grid { display: inline-grid; }
+  
+  @for $i from 1 through 12 {
+    .sm\:grid-cols-#{$i} { grid-template-columns: repeat(#{$i}, minmax(0, 1fr)); }
+  }
+  
+  .sm\:grid-cols-none { grid-template-columns: none; }
+  .sm\:grid-cols-subgrid { grid-template-columns: subgrid; }
+  
+  @for $i from 1 through 6 {
+    .sm\:grid-rows-#{$i} { grid-template-rows: repeat(#{$i}, minmax(0, 1fr)); }
+  }
+  
+  .sm\:col-auto { grid-column: auto; }
+  .sm\:col-span-1 { grid-column: span 1 / span 1; }
+  .sm\:col-span-2 { grid-column: span 2 / span 2; }
+  .sm\:col-span-3 { grid-column: span 3 / span 3; }
+  .sm\:col-span-4 { grid-column: span 4 / span 4; }
+  .sm\:col-span-5 { grid-column: span 5 / span 5; }
+  .sm\:col-span-6 { grid-column: span 6 / span 6; }
+  .sm\:col-span-7 { grid-column: span 7 / span 7; }
+  .sm\:col-span-8 { grid-column: span 8 / span 8; }
+  .sm\:col-span-9 { grid-column: span 9 / span 9; }
+  .sm\:col-span-10 { grid-column: span 10 / span 10; }
+  .sm\:col-span-11 { grid-column: span 11 / span 11; }
+  .sm\:col-span-12 { grid-column: span 12 / span 12; }
+  .sm\:col-span-full { grid-column: 1 / -1; }
+  
+  @each $key, $value in $spacing-scale {
+    .sm\:gap-#{$key} { gap: #{$value}; }
+    .sm\:gap-x-#{$key} { column-gap: #{$value}; }
+    .sm\:gap-y-#{$key} { row-gap: #{$value}; }
+  }
+}
+
+@include md {
+  .md\:grid { display: grid; }
+  .md\:inline-grid { display: inline-grid; }
+  
+  @for $i from 1 through 12 {
+    .md\:grid-cols-#{$i} { grid-template-columns: repeat(#{$i}, minmax(0, 1fr)); }
+  }
+  
+  .md\:grid-cols-none { grid-template-columns: none; }
+  .md\:grid-cols-subgrid { grid-template-columns: subgrid; }
+  
+  @for $i from 1 through 6 {
+    .md\:grid-rows-#{$i} { grid-template-rows: repeat(#{$i}, minmax(0, 1fr)); }
+  }
+  
+  .md\:col-auto { grid-column: auto; }
+  .md\:col-span-1 { grid-column: span 1 / span 1; }
+  .md\:col-span-2 { grid-column: span 2 / span 2; }
+  .md\:col-span-3 { grid-column: span 3 / span 3; }
+  .md\:col-span-4 { grid-column: span 4 / span 4; }
+  .md\:col-span-5 { grid-column: span 5 / span 5; }
+  .md\:col-span-6 { grid-column: span 6 / span 6; }
+  .md\:col-span-7 { grid-column: span 7 / span 7; }
+  .md\:col-span-8 { grid-column: span 8 / span 8; }
+  .md\:col-span-9 { grid-column: span 9 / span 9; }
+  .md\:col-span-10 { grid-column: span 10 / span 10; }
+  .md\:col-span-11 { grid-column: span 11 / span 11; }
+  .md\:col-span-12 { grid-column: span 12 / span 12; }
+  .md\:col-span-full { grid-column: 1 / -1; }
+  
+  @each $key, $value in $spacing-scale {
+    .md\:gap-#{$key} { gap: #{$value}; }
+    .md\:gap-x-#{$key} { column-gap: #{$value}; }
+    .md\:gap-y-#{$key} { row-gap: #{$value}; }
+  }
+}
+
+@include lg {
+  .lg\:grid { display: grid; }
+  .lg\:inline-grid { display: inline-grid; }
+  
+  @for $i from 1 through 12 {
+    .lg\:grid-cols-#{$i} { grid-template-columns: repeat(#{$i}, minmax(0, 1fr)); }
+  }
+  
+  .lg\:grid-cols-none { grid-template-columns: none; }
+  .lg\:grid-cols-subgrid { grid-template-columns: subgrid; }
+  
+  @for $i from 1 through 6 {
+    .lg\:grid-rows-#{$i} { grid-template-rows: repeat(#{$i}, minmax(0, 1fr)); }
+  }
+  
+  .lg\:col-auto { grid-column: auto; }
+  .lg\:col-span-1 { grid-column: span 1 / span 1; }
+  .lg\:col-span-2 { grid-column: span 2 / span 2; }
+  .lg\:col-span-3 { grid-column: span 3 / span 3; }
+  .lg\:col-span-4 { grid-column: span 4 / span 4; }
+  .lg\:col-span-5 { grid-column: span 5 / span 5; }
+  .lg\:col-span-6 { grid-column: span 6 / span 6; }
+  .lg\:col-span-7 { grid-column: span 7 / span 7; }
+  .lg\:col-span-8 { grid-column: span 8 / span 8; }
+  .lg\:col-span-9 { grid-column: span 9 / span 9; }
+  .lg\:col-span-10 { grid-column: span 10 / span 10; }
+  .lg\:col-span-11 { grid-column: span 11 / span 11; }
+  .lg\:col-span-12 { grid-column: span 12 / span 12; }
+  .lg\:col-span-full { grid-column: 1 / -1; }
+  
+  @each $key, $value in $spacing-scale {
+    .lg\:gap-#{$key} { gap: #{$value}; }
+    .lg\:gap-x-#{$key} { column-gap: #{$value}; }
+    .lg\:gap-y-#{$key} { row-gap: #{$value}; }
+  }
+}
+
+@include xl {
+  .xl\:grid { display: grid; }
+  .xl\:inline-grid { display: inline-grid; }
+  
+  @for $i from 1 through 12 {
+    .xl\:grid-cols-#{$i} { grid-template-columns: repeat(#{$i}, minmax(0, 1fr)); }
+  }
+  
+  .xl\:grid-cols-none { grid-template-columns: none; }
+  .xl\:grid-cols-subgrid { grid-template-columns: subgrid; }
+  
+  @for $i from 1 through 6 {
+    .xl\:grid-rows-#{$i} { grid-template-rows: repeat(#{$i}, minmax(0, 1fr)); }
+  }
+  
+  .xl\:col-auto { grid-column: auto; }
+  .xl\:col-span-1 { grid-column: span 1 / span 1; }
+  .xl\:col-span-2 { grid-column: span 2 / span 2; }
+  .xl\:col-span-3 { grid-column: span 3 / span 3; }
+  .xl\:col-span-4 { grid-column: span 4 / span 4; }
+  .xl\:col-span-5 { grid-column: span 5 / span 5; }
+  .xl\:col-span-6 { grid-column: span 6 / span 6; }
+  .xl\:col-span-7 { grid-column: span 7 / span 7; }
+  .xl\:col-span-8 { grid-column: span 8 / span 8; }
+  .xl\:col-span-9 { grid-column: span 9 / span 9; }
+  .xl\:col-span-10 { grid-column: span 10 / span 10; }
+  .xl\:col-span-11 { grid-column: span 11 / span 11; }
+  .xl\:col-span-12 { grid-column: span 12 / span 12; }
+  .xl\:col-span-full { grid-column: 1 / -1; }
+  
+  @each $key, $value in $spacing-scale {
+    .xl\:gap-#{$key} { gap: #{$value}; }
+    .xl\:gap-x-#{$key} { column-gap: #{$value}; }
+    .xl\:gap-y-#{$key} { row-gap: #{$value}; }
+  }
+}

@@ -35,13 +35,18 @@ const logPerformance = (operation: string, startTime: number, itemCount: number)
 };
 
 /**
- * Utility to parse course duration from various string formats
+ * Utility to parse course duration from various formats (string or number)
  */
-const parseCourseHours = (hoursString: string): number => {
-  if (!hoursString) return 0;
+const parseCourseHours = (hoursInput: string | number): number => {
+  if (!hoursInput) return 0;
   
-  // Handle different formats: "24 hrs", "24h", "24.5 hrs", etc.
-  const match = hoursString.match(/(\d+\.?\d*)/);
+  // If it's already a number, return it directly
+  if (typeof hoursInput === 'number') {
+    return hoursInput;
+  }
+  
+  // Handle string formats: "24 hrs", "24h", "24.5 hrs", etc.
+  const match = hoursInput.match(/(\d+\.?\d*)/);
   return match && match[1] ? parseFloat(match[1]) : 0;
 };
 
@@ -69,12 +74,12 @@ const createBaseCourse = (
   profilePictureUrl: string | null,
   startDate: string,
   endDate: string,
-  courseHoursString: string
+  courseHoursInput: string | number
 ): Omit<ExtendedCourse, 'course_description' | 'purchase_status' | 'is_purchased' | 'course_type' | 'course_price' | 'specialization_id'> => ({
   course_id: courseId,
   course_name: courseName,
   main_thumbnail_url: profilePictureUrl,
-  course_total_hours: parseCourseHours(courseHoursString),
+  course_total_hours: parseCourseHours(courseHoursInput),
   teacher_name: teacherName,
   teacher_qualification: teacherQualification,
   program_name: programName,

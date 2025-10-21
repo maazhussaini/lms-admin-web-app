@@ -27,7 +27,7 @@ model Student {
   is_deleted              Boolean                @default(false)
   created_at              DateTime               @default(now())
   updated_at              DateTime               @updatedAt
-  created_by              Int
+  created_by              Int?
   updated_by              Int?
   deleted_at              DateTime?
   deleted_by              Int?
@@ -51,7 +51,7 @@ model Student {
   quiz_attempts           QuizAttempt[]
   
   // Audit trail relationships with SystemUser
-  created_by_user   SystemUser        @relation("StudentCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  created_by_user   SystemUser?        @relation("StudentCreatedBy", fields: [created_by], references: [system_user_id], onDelete: SetNull)
   updated_by_user   SystemUser?       @relation("StudentUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
   deleted_by_user   SystemUser?       @relation("StudentDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
@@ -72,7 +72,7 @@ model StudentEmailAddress {
   is_deleted               Boolean   @default(false)
   created_at               DateTime  @default(now())
   updated_at               DateTime  @updatedAt
-  created_by               Int
+  created_by               Int?
   updated_by               Int?
   deleted_at               DateTime?
   deleted_by               Int?
@@ -84,7 +84,7 @@ model StudentEmailAddress {
   student                  Student  @relation(fields: [student_id], references: [student_id], onDelete: Cascade)
   
   // Audit trail relationships with SystemUser
-  created_by_user   SystemUser        @relation("StudentEmailAddressCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  created_by_user   SystemUser?       @relation("StudentEmailAddressCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user   SystemUser?       @relation("StudentEmailAddressUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
   deleted_by_user   SystemUser?       @relation("StudentEmailAddressDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
@@ -106,7 +106,7 @@ model StudentPhoneNumber {
   is_deleted               Boolean   @default(false)
   created_at               DateTime  @default(now())
   updated_at               DateTime  @updatedAt
-  created_by               Int
+  created_by               Int?
   updated_by               Int?
   deleted_at               DateTime?
   deleted_by               Int?
@@ -118,7 +118,7 @@ model StudentPhoneNumber {
   student                  Student  @relation(fields: [student_id], references: [student_id], onDelete: Cascade)
   
   // Audit trail relationships with SystemUser
-  created_by_user   SystemUser        @relation("StudentPhoneNumberCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  created_by_user   SystemUser?       @relation("StudentPhoneNumberCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user   SystemUser?       @relation("StudentPhoneNumberUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
   deleted_by_user   SystemUser?       @relation("StudentPhoneNumberDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 
@@ -142,7 +142,7 @@ model StudentDevice {
   is_deleted               Boolean   @default(false)
   created_at               DateTime  @default(now())
   updated_at               DateTime  @updatedAt
-  created_by               Int
+  created_by               Int?
   updated_by               Int?
   deleted_at               DateTime?
   deleted_by               Int?
@@ -154,7 +154,7 @@ model StudentDevice {
   student                  Student  @relation(fields: [student_id], references: [student_id], onDelete: Cascade)
   
   // Audit trail relationships with SystemUser
-  created_by_user   SystemUser        @relation("StudentDeviceCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
+  created_by_user   SystemUser?        @relation("StudentDeviceCreatedBy", fields: [created_by], references: [system_user_id], onDelete: Restrict)
   updated_by_user   SystemUser?       @relation("StudentDeviceUpdatedBy", fields: [updated_by], references: [system_user_id], onDelete: SetNull)
   deleted_by_user   SystemUser?       @relation("StudentDeviceDeletedBy", fields: [deleted_by], references: [system_user_id], onDelete: SetNull)
 

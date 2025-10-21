@@ -144,9 +144,9 @@ export function getProgressBarClass(percentage: number): string {
 /**
  * Format course dates for display
  * 
- * @param startDate - Course start date
- * @param endDate - Course end date
- * @returns Formatted date range string
+ * @param startDate - Course start date (ISO string)
+ * @param endDate - Course end date (ISO string)
+ * @returns Formatted date range string (e.g., "Nov 20, 2024 - Jan 9, 2025")
  */
 export function formatCourseDateRange(startDate?: string, endDate?: string): string {
   if (!startDate || !endDate) return 'Dates TBD';
@@ -154,8 +154,17 @@ export function formatCourseDateRange(startDate?: string, endDate?: string): str
   const start = new Date(startDate);
   const end = new Date(endDate);
   
+  // Check if dates are valid
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    return 'Invalid dates';
+  }
+  
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
   };
   
   return `${formatDate(start)} - ${formatDate(end)}`;

@@ -1,0 +1,33 @@
+/* ===== PRIVATE LAYOUT STYLES ===== */
+
+/* Main Layout */
+.private-layout {
+    display: flex;
+    background: #F7F3FF;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+}
+
+/* ===== MAIN CONTENT ===== */
+.main-content {
+    flex: 1;
+    margin-left: 64px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ===== STICKY HEADER ===== */
+.main-content app-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== CONTENT AREA ===== */
+.content-area {
+    padding: 32px;
+    background: #F7F3FF;
+    flex: 1;
+}

@@ -133,7 +133,7 @@ function ItemGrid<T>({
           >
             {/* Item Image */}
             <div className={clsx(
-              'relative w-16 h-16 rounded-2xl overflow-hidden transition-all duration-300',
+              'relative w-16 h-16 laptop:w-14 laptop:h-14 rounded-2xl laptop:rounded-xl overflow-hidden transition-all duration-300',
               {
                 [`ring-2 ${colorScheme.ring} ring-offset-2`]: isSelected,
                 'group-hover:shadow-lg': !isSelected,
@@ -150,8 +150,8 @@ function ItemGrid<T>({
                     const parent = target.parentElement;
                     if (parent) {
                       parent.innerHTML = `
-                        <div class="w-full h-full bg-gradient-to-br ${colorScheme.gradient} flex items-center justify-center rounded-2xl">
-                          <span class="text-2xl text-white">${colorScheme.fallbackEmoji}</span>
+                        <div class="w-full h-full bg-gradient-to-br ${colorScheme.gradient} flex items-center justify-center rounded-2xl laptop:rounded-xl">
+                          <span class="text-2xl laptop:text-xl text-white">${colorScheme.fallbackEmoji}</span>
                         </div>
                       `;
                     }
@@ -159,10 +159,10 @@ function ItemGrid<T>({
                 />
               ) : (
                 <div className={clsx(
-                  'w-full h-full bg-gradient-to-br flex items-center justify-center rounded-2xl',
+                  'w-full h-full bg-gradient-to-br flex items-center justify-center rounded-2xl laptop:rounded-xl',
                   colorScheme.gradient
                 )}>
-                  <span className="text-2xl text-white">{colorScheme.fallbackEmoji}</span>
+                  <span className="text-2xl laptop:text-xl text-white">{colorScheme.fallbackEmoji}</span>
                 </div>
               )}
               
@@ -185,9 +185,9 @@ function ItemGrid<T>({
             </div>
             
             {/* Item Name */}
-            <div className="mt-2 text-center px-1">
+            <div className="mt-2 laptop:mt-1.5 text-center px-1">
               <span className={clsx(
-                'text-sm font-regular leading-tight transition-colors duration-300',
+                'text-sm laptop:text-xs font-regular leading-tight transition-colors duration-300',
                 {
                   [colorScheme.text]: isSelected,
                   'text-gray-700 group-hover:text-gray-900': !isSelected,

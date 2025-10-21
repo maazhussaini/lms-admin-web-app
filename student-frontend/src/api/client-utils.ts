@@ -185,13 +185,39 @@ export const processResponseWithMeta = async <T>(response: Response): Promise<TA
  */
 export const handleAuthError = async (error: ApiError): Promise<boolean> => {
   const authProvider = dependencies.getAuthProvider();
-  if (authProvider && error.statusCode === 401 && error.errorCode === 'TOKEN_EXPIRED') {
+  
+  // Handle 401 Unauthorized errors
+  if (authProvider && error.statusCode === 401) {
     try {
-      return await authProvider.onAuthError(error);
-    } catch {
+      console.log('Attempting to refresh authentication token...');
+      const refreshSuccess = await authProvider.onAuthError(error);
+      
+      if (refreshSuccess) {
+        console.log('Token refresh successful - retrying request');
+        return true;
+      } else {
+        console.error('Token refresh failed - authentication required');
+        // Emit auth error event to trigger login redirect
+        apiEvents.emit(API_EVENTS.AUTH_ERROR, {
+          message: 'Authentication failed - please log in again',
+          statusCode: error.statusCode,
+          errorCode: error.errorCode,
+          timestamp: new Date().toISOString()
+        });
+        return false;
+      }
+    } catch (refreshError) {
+      console.error('Error during token refresh:', refreshError);
+      // Emit auth error event
+      apiEvents.emit(API_EVENTS.AUTH_ERROR, {
+        message: 'Authentication error',
+        error: refreshError,
+        timestamp: new Date().toISOString()
+      });
       return false;
     }
   }
+  
   return false;
 };
 
@@ -464,12 +490,21 @@ export const retryWithAuth = async <T>(
       return await apiCall();
     } catch (error) {
       if (error instanceof ApiError && retries < maxRetries) {
-        const shouldRetry = await handleAuthError(error);
-        if (shouldRetry) {
-          retries++;
-          continue;
+        // Only attempt to retry authentication errors
+        if (error.statusCode === 401) {
+          const shouldRetry = await handleAuthError(error);
+          if (shouldRetry) {
+            retries++;
+            console.log(`Retrying request after token refresh (attempt ${retries}/${maxRetries})`);
+            continue;
+          } else {
+            // Authentication failed completely - don't retry
+            console.error('Authentication failed - cannot retry request');
+            throw error;
+          }
         }
       }
+      // For all other errors or if max retries reached, throw immediately
       throw error;
     }
   }

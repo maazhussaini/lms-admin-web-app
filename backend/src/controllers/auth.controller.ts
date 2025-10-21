@@ -15,16 +15,17 @@ const prisma = new PrismaClient();
 const authService = new AuthService(prisma);
 
 export class AuthController {
+  
   /**
    * Handle universal login for admins and teachers
    * @route POST /api/v1/auth/login
    */
   static loginHandler = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const loginData = req.validatedData || req.body;
-    
     // Log domain information for debugging
     const domain = req.headers['x-original-host'] || req.headers['x-forwarded-host'] || req.headers.host;
     console.log(`Login attempt from domain: ${domain}`);
+    loginData.tenant_domain = domain as string;
     
     // Pass request object to auth service for domain extraction
     const authResponse = await authService.loginUser(loginData, req);

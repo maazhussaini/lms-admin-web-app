@@ -15,7 +15,7 @@ import {
 import { ApiError } from '@/utils/api-error.utils';
 import { PrismaClient } from '@prisma/client';
 import logger from '@/config/logger';
-import { UserType } from '@/types/enums.types';
+import { UserType, EnrollmentStatus } from '@/types/enums.types';
 
 // Get student service singleton instance
 const studentService = StudentService.getInstance();
@@ -30,18 +30,19 @@ export class StudentController {
    */
   static createStudentHandler = createRouteHandler(
     async (req: AuthenticatedRequest) => {
-      if (!req.user) {
-        throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
-      }
-
+      // if (!req.user) {
+      //   throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
+      // }
+      const tenant = await studentService.getTenantFromDomain(req);
       const studentData = req.validatedData as CreateStudentDto;
-      const requestingUser = req.user;
-      
-      logger.debug('Creating student', {
-        username: studentData.username,
-        userId: requestingUser.id,
-        role: requestingUser.user_type
-      });
+      let requestingUser:any = req.user || {};
+
+      if(requestingUser.user_type !== UserType.SUPER_ADMIN){
+        requestingUser.tenantId = tenant.tenant_id;
+      }
+      else{
+        studentData.tenant_id = tenant.tenant_id;
+      }
       
       return await studentService.createStudent(
         studentData, 
@@ -266,7 +267,7 @@ export class StudentController {
         throw new ApiError('Only students can access this endpoint', 403, 'FORBIDDEN');
       }
 
-      // Find the student record using the user's email (since student login uses email)
+      // Find the student record using the user's email
       const student = await prisma.student.findFirst({
         where: {
           is_active: true,
@@ -288,23 +289,30 @@ export class StudentController {
         throw new ApiError('Student profile not found', 404, 'STUDENT_NOT_FOUND');
       }
 
-      // Get query parameters for additional filtering
-      const enrollmentStatus = req.query['enrollment_status'] as string;
-      const includeProgress = req.query['include_progress'] === 'true';
+      // Parse enrollment status from query
+      const enrollmentStatusParam = req.query['enrollment_status'] as string;
+      let enrollmentStatuses: EnrollmentStatus[] | undefined;
       
-      logger.debug('Getting enrolled courses for current student profile', {
-        studentId: student.student_id,
-        paginationParams: params,
-        enrollmentStatus,
-        includeProgress,
-        requestingUserId: requestingUser.id,
-        userType: requestingUser.user_type
-      });
+      if (enrollmentStatusParam) {
+        enrollmentStatuses = enrollmentStatusParam
+          .split(',')
+          .map(s => s.trim().toUpperCase())
+          .map(s => {
+            // Map frontend values to backend enum
+            if (s === 'INACTIVE' || s === 'CANCELLED') return EnrollmentStatus.DROPPED;
+            return Object.values(EnrollmentStatus).includes(s as EnrollmentStatus) ? (s as EnrollmentStatus) : null;
+          })
+          .filter((s): s is EnrollmentStatus => s !== null);
+        
+        if (enrollmentStatuses.length === 0) enrollmentStatuses = undefined;
+      }
       
+      // Call service
       const result = await studentService.getEnrolledCoursesByStudentId(
         student.student_id,
         requestingUser,
-        params
+        params,
+        enrollmentStatuses
       );
 
       return {
