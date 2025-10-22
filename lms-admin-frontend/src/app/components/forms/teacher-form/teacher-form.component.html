@@ -298,35 +298,33 @@
           </div>
 
           <div class="contact-list">
-            @for (phone of phoneNumbers; track $index) {
+            @for (phone of getPhoneWidgetData(); track $index) {
               <div class="contact-item-wrapper">
                 <div class="contact-item phone-item">
-                  <input
-                    type="tel"
-                    class="form-input phone-input"
-                    [(ngModel)]="phone.phone_number"
-                    [name]="'phone_' + $index"
-                    placeholder="+92-3001234567"
+                  <app-phone-number
+                    [label]="''"
+                    [inputId]="'teacher-phone-' + $index"
+                    [(value)]="phone.widgetValue"
+                    (valueChange)="onPhoneWidgetChange($index, $event)"
                     [disabled]="isViewMode"
-                  />
+                  ></app-phone-number>
                   
                   <label class="checkbox-label-inline">
                     <input
                       type="checkbox"
-                      [(ngModel)]="phone.is_primary"
-                      [name]="'phone_primary_' + $index"
-                      (change)="onPhonePrimaryChange($index)"
+                      [checked]="phone.is_primary"
+                      (change)="togglePrimaryPhoneWidget($index)"
                       [disabled]="isViewMode"
                     />
                     <span>Primary</span>
                   </label>
                 </div>
 
-                @if (!isViewMode && phoneNumbers.length > 1) {
+                @if (!isViewMode && getPhoneWidgetData().length > 1) {
                   <button 
                     type="button"
                     class="btn-remove-contact" 
-                    (click)="removePhoneNumber($index)"
+                    (click)="removePhoneWidget($index)"
                     title="Remove phone">
                     <i class="fa-solid fa-xmark"></i>
                   </button>

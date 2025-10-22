@@ -1,0 +1,38 @@
+<div class="phone-number-widget" #phoneWidget>
+  <!-- Label -->
+  <label *ngIf="label" class="form-label" [attr.for]="uniqueId">
+    {{ label }}
+    <span *ngIf="required" class="text-danger">*</span>
+  </label>
+
+  <!-- Phone Input -->
+  <ngx-intl-tel-input
+    [cssClass]="cssClass"
+    [preferredCountries]="preferredCountries"
+    [enableAutoCountrySelect]="enableAutoCountrySelect"
+    [enablePlaceholder]="enablePlaceholder"
+    [searchCountryFlag]="searchCountryFlag"
+    [searchCountryField]="[SearchCountryField.Iso2, SearchCountryField.Name]"
+    [selectFirstCountry]="selectFirstCountry"
+    [selectedCountryISO]="selectedCountryISO"
+    [maxLength]="maxLength"
+    [phoneValidation]="phoneValidation"
+    [numberFormat]="PhoneNumberFormat.International"
+    [formControl]="phoneFormControl"
+    [separateDialCode]="true"
+    [inputId]="uniqueId"
+    (keypress)="onKeyPress($event)"
+    (paste)="onPaste($event)"
+  ></ngx-intl-tel-input>
+
+  <!-- Validation Message -->
+  <div *ngIf="phoneFormControl.touched && phoneFormControl.invalid" class="invalid-feedback d-block">
+    <span *ngIf="required">Phone number is required</span>
+    <span *ngIf="!required && phoneFormControl.value">Invalid phone number</span>
+  </div>
+
+  <!-- Helper Text -->
+  <!-- <small class="form-text text-muted">
+    Enter phone number without leading zero. Only digits allowed.
+  </small> -->
+</div>

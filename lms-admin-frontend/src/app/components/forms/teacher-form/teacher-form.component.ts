@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { PhoneNumber, PhoneNumberOutput } from '../../widgets/phone-number/phone-number';
 
 /**
  * Multi-step Teacher Form Component
@@ -9,7 +10,7 @@ import { FormsModule } from '@angular/forms';
 @Component({
   selector: 'app-teacher-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PhoneNumber],
   templateUrl: './teacher-form.component.html',
   styleUrl: './teacher-form.component.scss'
 })
@@ -51,7 +52,9 @@ export class TeacherFormComponent implements OnInit, OnChanges {
 
   // Phone numbers array
   phoneNumbers: Array<{
+    dial_code: string;
     phone_number: string;
+    iso_country_code: string;
     is_primary: boolean;
   }> = [];
 
@@ -142,7 +145,9 @@ export class TeacherFormComponent implements OnInit, OnChanges {
     // Load phone numbers
     if (this.teacherData.teacher_phone_numbers && this.teacherData.teacher_phone_numbers.length > 0) {
       this.phoneNumbers = this.teacherData.teacher_phone_numbers.map((phone: any) => ({
-        phone_number: phone.phone_number,
+        dial_code: phone.dial_code || '+92',
+        phone_number: phone.phone_number || '',
+        iso_country_code: phone.iso_country_code || 'PK',
         is_primary: phone.is_primary || false
       }));
     }
@@ -362,7 +367,9 @@ export class TeacherFormComponent implements OnInit, OnChanges {
    */
   addPhoneNumber(): void {
     this.phoneNumbers.push({
+      dial_code: '+92',
       phone_number: '',
+      iso_country_code: 'PK',
       is_primary: this.phoneNumbers.length === 0 // First phone is primary by default
     });
     this.checkFormValidity();
@@ -466,42 +473,15 @@ export class TeacherFormComponent implements OnInit, OnChanges {
       dataToSave.email_address = dataToSave.emailAddresses[0].email_address;
     }
 
-    // Add phone numbers with dial_code extracted from phone_number
+    // Add phone numbers - widget already provides proper format
     dataToSave.phoneNumbers = this.phoneNumbers
-      .filter(p => p.phone_number.trim() !== '')
-      .map(p => {
-        // Extract dial code and phone number
-        // Example: "+92-3433052211" or "3433052211"
-        const phoneStr = p.phone_number.trim();
-        let dial_code = '+92'; // Default Pakistan
-        let phone_number = phoneStr;
-
-        // Check if phone starts with +
-        if (phoneStr.startsWith('+')) {
-          const parts = phoneStr.split('-');
-          if (parts.length >= 2) {
-            dial_code = parts[0];
-            phone_number = parts.slice(1).join('');
-          } else {
-            // Try to extract first 2-4 digits as dial code
-            const match = phoneStr.match(/^\+(\d{1,4})(.*)/);
-            if (match) {
-              dial_code = '+' + match[1];
-              phone_number = match[2];
-            }
-          }
-        } else if (phoneStr.includes('-')) {
-          const parts = phoneStr.split('-');
-          dial_code = parts[0].startsWith('+') ? parts[0] : '+' + parts[0];
-          phone_number = parts.slice(1).join('');
-        }
-
-        return {
-          dial_code: dial_code,
-          phone_number: phone_number.replace(/\D/g, ''), // Remove non-digits
-          is_primary: p.is_primary
-        };
-      });
+      .filter(p => p.phone_number && p.phone_number.trim() !== '')
+      .map(p => ({
+        dial_code: p.dial_code,
+        phone_number: p.phone_number,
+        iso_country_code: p.iso_country_code,
+        is_primary: p.is_primary
+      }));
 
     // Add selected course IDs
     dataToSave.courseIds = this.selectedCourseIds;
@@ -551,5 +531,63 @@ export class TeacherFormComponent implements OnInit, OnChanges {
 
   onCancel(): void {
     this.cancel.emit();
+  }
+
+  // ==================== Phone Widget Integration ====================
+
+  /**
+   * Get phone widget data from phoneNumbers array
+   * Converts internal format (dial_code with +, uppercase country code) to widget format
+   */
+  getPhoneWidgetData(): any[] {
+    return this.phoneNumbers.map((phone, index) => {
+      const dialCode = phone.dial_code || '+92';
+      const phoneNumber = phone.phone_number || '';
+      const isoCountryCode = phone.iso_country_code || 'PK';
+      const isPrimary = phone.is_primary || false;
+
+      // Remove + from dial code for widget
+      const cleanDialCode = dialCode.replace('+', '');
+
+      return {
+        widgetValue: phoneNumber ? {
+          dialCode: cleanDialCode,
+          countryCode: isoCountryCode.toLowerCase(),
+          phoneNumber: phoneNumber
+        } : null,
+        is_primary: isPrimary,
+        formIndex: index
+      };
+    });
+  }
+
+  /**
+   * Handle phone widget value change
+   * Converts widget output to internal format (add +, uppercase country code)
+   */
+  onPhoneWidgetChange(index: number, output: PhoneNumberOutput): void {
+    if (index >= 0 && index < this.phoneNumbers.length) {
+      this.phoneNumbers[index] = {
+        dial_code: `+${output.dialCode}`,
+        phone_number: output.phoneNumber,
+        iso_country_code: output.countryCode.toUpperCase(),
+        is_primary: this.phoneNumbers[index].is_primary
+      };
+      this.checkFormValidity();
+    }
+  }
+
+  /**
+   * Toggle primary phone (wrapper for widget)
+   */
+  togglePrimaryPhoneWidget(index: number): void {
+    this.onPhonePrimaryChange(index);
+  }
+
+  /**
+   * Remove phone widget (wrapper)
+   */
+  removePhoneWidget(index: number): void {
+    this.removePhoneNumber(index);
   }
 }

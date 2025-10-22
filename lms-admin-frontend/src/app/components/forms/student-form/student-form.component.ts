@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormBuilder, Validators, FormArray, AbstractControl } from '@angular/forms';
+import { PhoneNumber, PhoneNumberOutput } from '../../widgets/phone-number/phone-number';
 
 /**
  * Multi-step Student Form Component
@@ -9,7 +10,7 @@ import { ReactiveFormsModule, FormGroup, FormBuilder, Validators, FormArray, Abs
 @Component({
   selector: 'app-student-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, PhoneNumber],
   templateUrl: './student-form.component.html',
   styleUrl: './student-form.component.scss'
 })
@@ -332,9 +333,14 @@ export class StudentFormComponent implements OnInit, OnChanges {
   }
 
   addPhoneNumber(phone?: any): void {
+    // Default values for new phone
+    const defaultDialCode = phone?.dial_code || '+92'; // Pakistan default
+    const defaultPhoneNumber = phone?.phone_number || '';
+    const defaultCountryCode = phone?.iso_country_code || 'PK';
+    
     const phoneGroup = this.fb.group({
       dial_code: [
-        phone?.dial_code || '+1', 
+        defaultDialCode, 
         [
           Validators.required,
           Validators.minLength(1),
@@ -343,17 +349,18 @@ export class StudentFormComponent implements OnInit, OnChanges {
         ]
       ],
       phone_number: [
-        phone?.phone_number || '', 
+        defaultPhoneNumber, 
         [
           Validators.required,
           Validators.minLength(3),
           Validators.maxLength(20),
-          Validators.pattern(/^[0-9\s\-()]*$/) // Match backend: digits, spaces, -, ()
+          Validators.pattern(/^[0-9]*$/) // Only digits for widget compatibility
         ]
       ],
       iso_country_code: [
-        phone?.iso_country_code || 'US',
+        defaultCountryCode,
         [
+          Validators.required,
           Validators.minLength(2),
           Validators.maxLength(2),
           Validators.pattern(/^[A-Z]{2}$/) // Uppercase 2 letters
@@ -699,6 +706,73 @@ export class StudentFormComponent implements OnInit, OnChanges {
         return this.isLocationInfoValid();
       default:
         return false;
+    }
+  }
+
+  // ==================== Phone Widget Integration ====================
+
+  /**
+   * Get phone data formatted for the widget
+   * Converts FormArray data to widget-compatible format
+   */
+  getPhoneWidgetData(): any[] {
+    const phones: any[] = [];
+    
+    for (let i = 0; i < this.phoneNumbers.length; i++) {
+      const phoneGroup = this.phoneNumbers.at(i);
+      const dialCode = phoneGroup.get('dial_code')?.value || '';
+      const phoneNumber = phoneGroup.get('phone_number')?.value || '';
+      const isoCountryCode = phoneGroup.get('iso_country_code')?.value || 'US';
+      const isPrimary = phoneGroup.get('is_primary')?.value || false;
+
+      // Remove '+' from dial code for widget (widget expects without +)
+      const cleanDialCode = dialCode.replace('+', '');
+
+      phones.push({
+        widgetValue: phoneNumber ? {
+          dialCode: cleanDialCode,
+          countryCode: isoCountryCode.toLowerCase(),
+          phoneNumber: phoneNumber
+        } : null,
+        is_primary: isPrimary,
+        formIndex: i
+      });
+    }
+
+    return phones;
+  }
+
+  /**
+   * Handle phone widget value change
+   * Updates FormArray when widget emits new value
+   */
+  onPhoneWidgetChange(index: number, output: PhoneNumberOutput): void {
+    console.log(`📞 Phone ${index} changed:`, output);
+    
+    const phoneControl = this.phoneNumbers.at(index);
+    if (phoneControl) {
+      // Update form with widget output
+      phoneControl.patchValue({
+        dial_code: `+${output.dialCode}`,
+        phone_number: output.phoneNumber,
+        iso_country_code: output.countryCode.toUpperCase()
+      }, { emitEvent: false });
+    }
+  }
+
+  /**
+   * Toggle primary phone via widget
+   */
+  togglePrimaryPhoneWidget(index: number): void {
+    this.ensureOnlyOnePrimaryPhone(index);
+  }
+
+  /**
+   * Remove phone via widget
+   */
+  removePhoneWidget(index: number): void {
+    if (this.phoneNumbers.length > 1) {
+      this.phoneNumbers.removeAt(index);
     }
   }
 }

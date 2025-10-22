@@ -3,7 +3,7 @@
  * @description Service for managing institutes with modern BaseListService pattern
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/config/database';
 import {
   CreateInstituteDto,
   UpdateInstituteDto,
@@ -18,7 +18,7 @@ import logger from '@/config/logger';
 import { BaseListService, BaseListServiceConfig } from '@/utils/base-list.service';
 
 // Initialize Prisma client
-const prisma = new PrismaClient();
+
 
 /**
  * Configuration for Institute service operations

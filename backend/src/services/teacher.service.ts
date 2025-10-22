@@ -3,7 +3,7 @@
  * @description Service for managing teachers with modern BaseListService pattern
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/config/database';
 import {
   CreateTeacherDto,
   UpdateTeacherDto,
@@ -22,7 +22,7 @@ import { BaseListService, BaseListServiceConfig } from '@/utils/base-list.servic
 import { hashPassword } from '@/utils/password.utils';
 
 // Initialize Prisma client
-const prisma = new PrismaClient();
+
 
 /**
  * Configuration for Teacher service operations

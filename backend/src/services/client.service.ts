@@ -3,7 +3,7 @@
  * @description Service for managing clients and their tenant associations
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/config/database';
 import {
   CreateClientDto,
   UpdateClientDto,
@@ -24,7 +24,7 @@ import { BaseServiceConfig } from '@/utils/service.types';
 import { CLIENT_FIELD_MAPPINGS } from '@/utils/field-mapping.utils';
 
 // Initialize Prisma client
-const prisma = new PrismaClient();
+
 
 /**
  * Configuration for Client service operations

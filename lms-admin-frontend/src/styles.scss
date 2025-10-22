@@ -1,4 +1,19 @@
-// ===== ORBED THEME SYSTEM - MAIN IMPORT =====
+// ===== BOOTSTRAP INTEGRATION (Import BEFORE Tailwind) =====
+// Define Bootstrap's border-radius variables explicitly to prevent Tailwind override
+$border-radius: 0.25rem;
+$border-radius-sm: 0.125rem;
+$border-radius-lg: 0.5rem;
+$border-radius-xl: 0.75rem;
+$border-radius-2xl: 1rem;
+$border-radius-pill: 50rem;
+
+// Import Bootstrap completely
+@import "bootstrap/scss/bootstrap";
+
+// Import ngx-bootstrap datepicker
+@import "ngx-bootstrap/datepicker/bs-datepicker";
+
+// ===== ORBED THEME SYSTEM - MAIN IMPORT (Tailwind comes AFTER Bootstrap) =====
 @import './styles/main.scss';
 
 // ===== APP-SPECIFIC OVERRIDES =====

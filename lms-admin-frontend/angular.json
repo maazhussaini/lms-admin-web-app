@@ -38,7 +38,8 @@
             ],
             "styles": [
               "src/styles.scss",
-              "src/assets/icons/style.css"
+              "src/assets/icons/style.css",
+              "node_modules/intl-tel-input/build/css/intlTelInput.css"
             ],
             "stylePreprocessorOptions": {
               "includePaths": [

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/config/database';
 import { Specialization } from '@shared/types/course.types';
 import { CreateSpecializationDto, UpdateSpecializationDto, SpecializationFilterDto } from '@/dtos/course/specialization.dto';
 import { ActiveSpecializationsByProgramResponse } from '@/dtos/course/active-specializations-by-program.dto';
@@ -22,7 +22,7 @@ import {
 import logger from '@/config/logger';
 
 // Initialize Prisma client
-const prisma = new PrismaClient();
+
 
 /**
  * Service for managing specializations with modern utility classes

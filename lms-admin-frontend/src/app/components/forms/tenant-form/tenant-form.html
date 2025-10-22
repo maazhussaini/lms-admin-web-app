@@ -14,7 +14,7 @@
 
   <!-- Email Address -->
   <div class="form-group">
-    <label class="form-label">Email Address</label>
+    <label class="form-label">Email AddressXXX</label>
     <input 
       type="email" 
       class="form-input" 
@@ -25,26 +25,18 @@
       required>
   </div>
 
-  <!-- Phone Number -->
+  <!-- Phone Number Widget with Two-Way Binding -->
   <div class="form-group">
-    <label class="form-label">Phone Number</label>
-    <div class="phone-input-group">
-      <div class="country-code">
-        <div class="flag-icon">🇵🇰</div>
-        <span>+92</span>
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-          <path d="M3 4.5L6 7.5L9 4.5" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <input 
-        type="tel" 
-        class="form-input phone-input" 
-        placeholder="(305) 760-1379"
-        [(ngModel)]="formData.phone"
-        name="phone"
-        (ngModelChange)="onFormChange()"
-        required>
-    </div>
+    <app-phone-number
+      label="Phone Number"
+      placeholder="Enter phone number"
+      [required]="true"
+      [(value)]="phoneNumberData"
+      (valueChange)="onPhoneChange($event)"
+      [selectedCountryISO]="CountryISO.Pakistan"
+      [preferredCountries]="[CountryISO.UnitedStates, CountryISO.Pakistan, CountryISO.UnitedKingdom]"
+      cssClass="form-input">
+    </app-phone-number>
   </div>
 
   <!-- Status -->

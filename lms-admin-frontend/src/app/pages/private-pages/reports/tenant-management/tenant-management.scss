@@ -1161,3 +1161,301 @@
     }
   }
 }
+
+// ============================================
+// Off-Canvas & Form Customization (ng-deep)
+// ============================================
+::ng-deep {
+  
+  // Off-Canvas Container Width
+  .off-canvas-container {
+    width: 650px !important; // Wide canvas for better form experience
+    max-width: 90vw;
+  }
+
+  // Phone Number Widget Customization
+  app-phone-number {
+    .phone-input-container {
+      margin-bottom: 0 !important;
+      
+      label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 6px;
+        display: block;
+        min-height: 18px; // Match other form labels
+        line-height: 18px;
+      }
+
+      .iti {
+        width: 100% !important;
+        
+        &__flag-container {
+          border-right: 1px solid #E5E7EB !important;
+          background: #F9FAFB !important;
+          
+          &:hover {
+            background: #F3F4F6 !important;
+          }
+        }
+
+        &__selected-flag {
+          padding: 0 12px !important;
+          
+          &:hover,
+          &:focus {
+            background: transparent !important;
+          }
+        }
+
+        &__country-list {
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+          border-radius: 8px !important;
+          border: 1px solid #E5E7EB !important;
+          max-height: 250px !important;
+        }
+
+        &__country {
+          padding: 8px 12px !important;
+          
+          &:hover,
+          &.iti__highlight {
+            background: #F3F4F6 !important;
+          }
+          
+          &.iti__active {
+            background: #EDE9FE !important;
+            color: #7C3AED !important;
+          }
+        }
+      }
+
+      input[type="tel"] {
+        height: 38px !important;
+        border: 1px solid #E5E7EB !important;
+        border-radius: 6px !important;
+        font-size: 13px !important;
+        padding: 8px 12px !important;
+        width: 100% !important;
+        
+        &:focus {
+          outline: none !important;
+          border-color: #8B5CF6 !important;
+          box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1) !important;
+        }
+
+        &:disabled {
+          background: #F9FAFB !important;
+          color: #9CA3AF !important;
+          cursor: not-allowed !important;
+        }
+      }
+
+      .error-message {
+        color: #DC2626 !important;
+        font-size: 12px !important;
+        margin-top: 4px !important;
+      }
+
+      .hint-text {
+        color: #6B7280 !important;
+        font-size: 12px !important;
+        margin-top: 4px !important;
+      }
+    }
+  }
+
+  // Form Group Styling inside Off-Canvas
+  .enhanced-tenant-form,
+  .tenant-form {
+    .form-group {
+      &.form-group-sm {
+        margin-bottom: 16px;
+        
+        &.flex-3 {
+          flex: 3;
+          min-width: 0;
+        }
+      }
+
+      // Checkbox group alignment fix
+      &.form-group-checkbox {
+        margin-bottom: 0; // No bottom margin for inline checkbox
+        padding-top: 24px; // Offset for label space (18px label + 6px margin-bottom)
+        
+        .checkbox-label {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin: 0;
+          cursor: pointer;
+          
+          input[type="checkbox"] {
+            margin: 0;
+            cursor: pointer;
+          }
+
+          span {
+            font-size: 13px;
+            color: #374151;
+            line-height: 18px;
+          }
+        }
+      }
+    }
+
+    .form-label,
+    .form-label-sm {
+      font-size: 13px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 6px;
+      display: block;
+      min-height: 18px; // Consistent label height for alignment
+      line-height: 18px;
+    }
+
+    .form-input,
+    .form-input-sm,
+    .form-select,
+    .form-select-sm {
+      height: 38px;
+      border: 1px solid #E5E7EB;
+      border-radius: 6px;
+      font-size: 13px;
+      padding: 8px 12px;
+      width: 100%;
+      
+      &:focus {
+        outline: none;
+        border-color: #8B5CF6;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+      }
+
+      &:disabled {
+        background: #F9FAFB;
+        color: #9CA3AF;
+        cursor: not-allowed;
+      }
+    }
+
+    // Contact Row Layout
+    .contact-row {
+      .contact-inputs {
+        display: flex;
+        gap: 12px;
+        align-items: flex-end; // Align items from bottom (where inputs are)
+        flex-wrap: wrap;
+
+        @media (max-width: 768px) {
+          flex-direction: column;
+          align-items: stretch; // Full width on mobile
+          gap: 16px;
+        }
+      }
+    }
+  }
+
+  // Section Headers
+  .form-section {
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+
+      .section-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #1F2937;
+      }
+
+      .btn-add-contact {
+        padding: 6px 14px;
+        font-size: 12px;
+        font-weight: 500;
+        background: #8B5CF6;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        &:hover {
+          background: #7C3AED;
+          transform: translateY(-1px);
+          box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+    }
+  }
+
+  // Footer Button Group
+  .footer-button-group {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    width: 100%;
+
+    .btn-cancel,
+    .btn-secondary,
+    .btn-primary {
+      padding: 6px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: right;
+    }
+
+    .btn-cancel,
+    .btn-secondary {
+      background: white;
+      color: #6B7280;
+      border: 1px solid #E5E7EB;
+
+      &:hover {
+        background: #F9FAFB;
+        border-color: #D1D5DB;
+        color: #374151;
+      }
+
+      &:active {
+        transform: translateY(1px);
+      }
+    }
+
+    .btn-primary {
+      background: var(--primary-color, #8B5CF6);
+      color: white;
+      border: none;
+
+      &:hover:not(:disabled) {
+        background: var(--primary-dark, #7C3AED);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      &:disabled {
+        background: #D1D5DB;
+        color: #9CA3AF;
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+    }
+  }
+}

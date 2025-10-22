@@ -3,7 +3,6 @@
  * @description Service for managing tenants and their contact information
  */
 
-import { PrismaClient } from '@prisma/client';
 import {
   CreateTenantDto,
   UpdateTenantDto,
@@ -42,9 +41,10 @@ import {
   mergeFilters
 } from '@/utils/filter-builders.utils';
 import { buildSorting } from '@/utils/field-mapping.utils';
+import prisma from '@/config/database';
 
-// Initialize Prisma client
-const prisma = new PrismaClient();
+// Note: Using centralized Prisma client from database.ts
+// This ensures middleware for soft deletes is automatically applied
 
 /**
  * Configuration for Tenant service operations
@@ -717,9 +717,10 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
           await tx.tenantPhoneNumber.updateMany({
             where: {
               tenant_id: tenantId,
-              deleted_at: null
+              is_deleted: false
             },
             data: {
+              is_deleted: true,
               deleted_at: new Date(),
               deleted_by: userId
             }
@@ -727,18 +728,26 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
 
           // Insert new phone numbers
           if (data.phoneNumbers.length > 0) {
+            // If only one phone number, make it primary automatically
+            const isSinglePhone = data.phoneNumbers.length === 1;
+            const phonesToCreate = data.phoneNumbers.map((phone) => ({
+              tenant_id: tenantId,
+              dial_code: phone.dial_code,
+              phone_number: phone.phone_number,
+              iso_country_code: phone.iso_country_code || null,
+              is_primary: isSinglePhone ? true : (phone.is_primary || false),
+              contact_type: phone.contact_type,
+              is_active: true,
+              is_deleted: false,
+              created_by: userId,
+              updated_by: userId,
+              created_at: new Date(),
+              created_ip: ip || null,
+              updated_ip: ip || null
+            }));
+
             await tx.tenantPhoneNumber.createMany({
-              data: data.phoneNumbers.map(phone => ({
-                tenant_id: tenantId,
-                dial_code: phone.dial_code,
-                phone_number: phone.phone_number,
-                iso_country_code: phone.iso_country_code || null,
-                is_primary: phone.is_primary,
-                contact_type: phone.contact_type,
-                created_by: userId,
-                created_at: new Date(),
-                created_ip: ip || null
-              }))
+              data: phonesToCreate
             });
           }
         }
@@ -749,9 +758,10 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
           await tx.tenantEmailAddress.updateMany({
             where: {
               tenant_id: tenantId,
-              deleted_at: null
+              is_deleted: false
             },
             data: {
+              is_deleted: true,
               deleted_at: new Date(),
               deleted_by: userId
             }
@@ -759,16 +769,24 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
 
           // Insert new email addresses
           if (data.emailAddresses.length > 0) {
+            // If only one email, make it primary automatically
+            const isSingleEmail = data.emailAddresses.length === 1;
+            const emailsToCreate = data.emailAddresses.map((email) => ({
+              tenant_id: tenantId,
+              email_address: email.email_address,
+              is_primary: isSingleEmail ? true : (email.is_primary || false),
+              contact_type: email.contact_type,
+              is_active: true,
+              is_deleted: false,
+              created_by: userId,
+              updated_by: userId,
+              created_at: new Date(),
+              created_ip: ip || null,
+              updated_ip: ip || null
+            }));
+
             await tx.tenantEmailAddress.createMany({
-              data: data.emailAddresses.map(email => ({
-                tenant_id: tenantId,
-                email_address: email.email_address,
-                is_primary: email.is_primary,
-                contact_type: email.contact_type,
-                created_by: userId,
-                created_at: new Date(),
-                created_ip: ip || null
-              }))
+              data: emailsToCreate
             });
           }
         }
@@ -800,15 +818,18 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
         userId
       });
 
-      // Check if tenant exists (including soft-deleted ones)
-      const existingTenant = await prisma.tenant.findUnique({
-        where: {
-          tenant_id: tenantId
-        }
-      });
+      // Check if tenant exists (bypass soft delete filter)
+      // By explicitly setting is_deleted to true/false in OR, 
+      // but we need to set it in where directly to override middleware
+      // So we use a workaround: query with is_deleted explicitly undefined
+      const existingTenant = await prisma.$queryRaw<any[]>`
+        SELECT * FROM tenants 
+        WHERE tenant_id = ${tenantId}
+        LIMIT 1
+      `.then(results => results[0] || null);
 
       if (!existingTenant) {
-        throw new NotFoundError('Tenant', tenantId.toString());
+        throw new NotFoundError('Tenant not found', 'TENANT_NOT_FOUND');
       }
 
       // If already deleted, return success (idempotent operation)
@@ -816,7 +837,8 @@ export class TenantService extends BaseListService<any, TenantFilterDto> {
         logger.info('Tenant is already deleted', { tenantId });
         return {
           message: 'Tenant is already deleted',
-          tenantId
+          tenant_id: tenantId,
+          deleted_at: existingTenant.deleted_at
         };
       }
 

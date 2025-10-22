@@ -1,11 +1,14 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { PhoneNumber, PhoneNumberOutput, PhoneNumberInput } from '../../widgets/phone-number/phone-number';
+import { CountryISO } from 'ngx-intl-tel-input-gg';
 
 export interface TenantPhoneInput {
   dialCode: string;
   phoneNumber: string;
-  isoCountryCode: string;
+  countryCode: string; // Alias for isoCountryCode (required by PhoneNumberInput)
+  isoCountryCode: string; // Backend uses this
   contactType: string;
   isPrimary: boolean;
 }
@@ -33,7 +36,7 @@ export interface BasicTenantFormData {
 @Component({
   selector: 'app-basic-tenant-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PhoneNumber],
   templateUrl: './basic-tenant-form.html',
   styleUrl: './basic-tenant-form.scss'
 })
@@ -51,6 +54,9 @@ export class BasicTenantForm implements OnInit {
 
   @Output() formDataChange = new EventEmitter<BasicTenantFormData>();
   @Output() validityChange = new EventEmitter<boolean>();
+
+  // Expose CountryISO enum to template
+  CountryISO = CountryISO;
 
   statusOptions = [
     { label: 'Active', value: 'ACTIVE' },
@@ -160,6 +166,7 @@ export class BasicTenantForm implements OnInit {
     this.formData.phoneNumbers.unshift({
       dialCode: '+92',
       phoneNumber: '',
+      countryCode: 'PK',
       isoCountryCode: 'PK',
       contactType: 'PRIMARY',
       isPrimary: this.formData.phoneNumbers.length === 0
@@ -187,6 +194,18 @@ export class BasicTenantForm implements OnInit {
       this.formData.phoneNumbers.forEach((p, i) => {
         p.isPrimary = i === index;
       });
+      this.onFormChange();
+    }
+  }
+
+  // Phone widget change handler
+  onPhoneChange(phoneData: PhoneNumberOutput, index: number) {
+    if (this.formData.phoneNumbers && this.formData.phoneNumbers[index]) {
+      this.formData.phoneNumbers[index].dialCode = phoneData.dialCode;
+      this.formData.phoneNumbers[index].phoneNumber = phoneData.phoneNumber;
+      this.formData.phoneNumbers[index].isoCountryCode = phoneData.countryCode;
+      // Store validation state
+      (this.formData.phoneNumbers[index] as any).isValid = phoneData.isValid;
       this.onFormChange();
     }
   }

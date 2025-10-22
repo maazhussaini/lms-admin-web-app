@@ -9,9 +9,9 @@ import { asyncHandler } from '@/utils/async-handler.utils';
 import { createSuccessResponse } from '@/utils/api-response.utils';
 import { extractTokenFromHeader } from '@/utils/jwt.utils';
 import { BadRequestError } from '@/utils/api-error.utils';
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/config/database';
 
-const prisma = new PrismaClient();
+
 const authService = new AuthService(prisma);
 
 export class AuthController {

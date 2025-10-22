@@ -3,7 +3,8 @@
  * @description Service for managing students with modern BaseListService pattern
  */
 
-import { PrismaClient, CourseStatus } from '@prisma/client';
+import {CourseStatus} from '@prisma/client';
+import prisma from '@/config/database';
 import {
   CreateStudentDto,
   UpdateStudentDto,
@@ -28,7 +29,7 @@ import { env } from '@/config/environment';
 import { uploadStudentProfilePicture, deleteStudentProfilePicture } from '@/utils/file-upload.utils';
 
 // Initialize Prisma client
-const prisma = new PrismaClient();
+
 
 /**
  * Configuration for Student service operations

@@ -83,11 +83,18 @@ export class ApiMethods {
   async delete<T>(url: string, headers?: HttpHeaders): Promise<ApiResponse<T>> {
     try {
       const data: any = await firstValueFrom(
-        this.http.delete<T>(url, { headers }).pipe(
+        this.http.delete<T>(url, { headers, observe: 'response' }).pipe(
           catchError(this.handleError)
         )
       );
-      return data;
+      
+      // Handle 204 No Content response (successful deletion)
+      if (data.status === 204) {
+        return new ApiResponse<T>(true, null as any, 'Resource deleted successfully', 204);
+      }
+      
+      // Handle other successful responses
+      return data.body || new ApiResponse<T>(true, null as any, 'Success', data.status);
     } catch (error: any) {
       return this.createErrorResponse<T>(error);
     }

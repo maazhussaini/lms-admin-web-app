@@ -3,7 +3,7 @@
  * @description Controller for geographic data (countries, states, cities)
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/config/database';
 import {
   createRouteHandler,
   createListHandler,
@@ -12,7 +12,7 @@ import {
 } from '@/utils/async-handler.utils';
 import { ApiError } from '@/utils/api-error.utils';
 
-const prisma = new PrismaClient();
+
 
 export class GeographicController {
   /**

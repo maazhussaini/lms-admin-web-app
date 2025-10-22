@@ -1,0 +1,173 @@
+.phone-number-widget {
+  width: 100%;
+  margin-bottom: 1rem;
+
+  .form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333;
+
+    .text-danger {
+      color: #dc3545;
+      margin-left: 2px;
+    }
+  }
+
+  // Override intl-tel-input styles
+  ::ng-deep {
+    .iti {
+      width: 100%;
+      
+      &__input {
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #495057;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+
+        &:focus {
+          color: #495057;
+          background-color: #fff;
+          border-color: #80bdff;
+          outline: 0;
+          box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        &:disabled {
+          background-color: #e9ecef;
+          opacity: 1;
+          cursor: not-allowed;
+        }
+
+        // Prevent number input spinners
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+
+        &[type=number] {
+          -moz-appearance: textfield;
+          appearance: textfield;
+        }
+      }
+
+      &__flag-container {
+        .iti__selected-flag {
+          padding: 0 0 0 8px;
+          
+          &:hover,
+          &:focus {
+            background-color: rgba(0, 0, 0, 0.05);
+          }
+        }
+      }
+
+      // Dropdown menu - ensure it hides when not active
+      .dropdown-menu {
+        display: none !important;
+        
+        &.show,
+        &.open {
+          display: block !important;
+        }
+      }
+      
+      // Also handle parent container
+      .iti__flag-container:not(.open) .dropdown-menu {
+        display: none !important;
+      }
+
+      &__country-list {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        max-height: 200px;
+        overflow-y: auto;
+
+        .iti__country {
+          padding: 8px 12px;
+
+          &:hover,
+          &.iti__highlight {
+            background-color: rgba(0, 123, 255, 0.1);
+          }
+
+          &.iti__active {
+            background-color: rgba(0, 123, 255, 0.2);
+          }
+        }
+      }
+
+      // Search input in dropdown - FIX TYPING ISSUE
+      &__search-input {
+        padding: 8px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        width: calc(100% - 24px);
+        margin: 8px 12px;
+        pointer-events: auto !important;  // ✅ Enable pointer events
+        user-select: text !important;     // ✅ Allow text selection
+        
+        &:focus {
+          outline: none;
+          border-color: #80bdff;
+          box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+      }
+    }
+
+    // Invalid state
+    .ng-invalid.ng-touched .iti__input {
+      border-color: #dc3545;
+
+      &:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+      }
+    }
+
+    // Valid state
+    .ng-valid.ng-touched .iti__input {
+      border-color: #28a745;
+
+      &:focus {
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+      }
+    }
+  }
+
+  .invalid-feedback {
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: #dc3545;
+  }
+
+  .form-text {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: #6c757d;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 576px) {
+  .phone-number-widget {
+    ::ng-deep {
+      .iti {
+        &__country-list {
+          max-height: 150px;
+        }
+      }
+    }
+  }
+}

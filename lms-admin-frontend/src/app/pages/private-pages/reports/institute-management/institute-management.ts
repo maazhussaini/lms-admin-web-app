@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Paginator } from '../../../../components/widgets/paginator/paginator';
 import { OffCanvasWrapper } from '../../../../components/widgets/off-canvas-wrapper/off-canvas-wrapper';
 import { HttpRequests } from '../../../../services/http-requests.service';
+import { PhoneNumberDemoComponent } from '../../../../components/widgets/phone-number/phone-number-demo.component';
+import { PhoneNumber } from "../../../../components/widgets/phone-number/phone-number";
 
 export interface Institute {
   institute_id: number;
@@ -25,7 +27,7 @@ export interface Filters {
 @Component({
   selector: 'app-institute-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, Paginator, OffCanvasWrapper],
+  imports: [CommonModule, FormsModule, Paginator, OffCanvasWrapper, PhoneNumberDemoComponent, PhoneNumber],
   templateUrl: './institute-management.html',
   styleUrl: './institute-management.scss'
 })

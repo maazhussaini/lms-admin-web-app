@@ -249,7 +249,7 @@
           </div>
         </div>
 
-        <!-- Phone Numbers -->
+        <!-- Phone Numbers with Widget -->
         <div class="form-group">
           <div class="contact-header">
             <label>Phone Number <span class="required">*</span></label>
@@ -260,54 +260,33 @@
             }
           </div>
 
-          <div formArrayName="phoneNumbers" class="contact-list">
-            @for (phone of phoneNumbers.controls; track $index) {
-              <div [formGroupName]="$index" class="contact-item phone-item">
-                <div class="phone-input-group">
-                  <select 
-                    class="form-control dial-code" 
-                    formControlName="dial_code"
-                    [disabled]="isViewMode"
-                    [class.invalid]="phone.get('dial_code')?.invalid && phone.get('dial_code')?.touched">
-                    <option value="+1">+1</option>
-                    <option value="+44">+44</option>
-                    <option value="+91">+91</option>
-                    <option value="+61">+61</option>
-                    <option value="+49">+49</option>
-                    <option value="+33">+33</option>
-                    <option value="+81">+81</option>
-                    <option value="+86">+86</option>
-                    <option value="+92">+92</option>
-                  </select>
-                  <input
-                    type="tel"
-                    class="form-control phone-number"
-                    formControlName="phone_number"
-                    placeholder="(305) 760-1379"
-                    [disabled]="isViewMode"
-                    [class.invalid]="phone.get('phone_number')?.invalid && phone.get('phone_number')?.touched"
-                  />
-                </div>
-                @if (phone.get('dial_code')?.invalid && phone.get('dial_code')?.touched) {
-                  <div class="error-message">{{ getPhoneErrorMessage($index, 'dial_code') }}</div>
-                }
-                @if (phone.get('phone_number')?.invalid && phone.get('phone_number')?.touched) {
-                  <div class="error-message">{{ getPhoneErrorMessage($index, 'phone_number') }}</div>
-                }
+          <div class="contact-list phone-widget-list">
+            @for (phone of getPhoneWidgetData(); track $index) {
+              <div class="contact-item phone-widget-item">
+                <app-phone-number
+                  [label]="'Phone ' + ($index + 1)"
+                  [inputId]="'student-phone-' + $index"
+                  [required]="$index === 0"
+                  [disabled]="isViewMode"
+                  [(value)]="phone.widgetValue"
+                  (valueChange)="onPhoneWidgetChange($index, $event)"
+                ></app-phone-number>
+
                 <label class="checkbox-label">
                   <input
                     type="checkbox"
-                    formControlName="is_primary"
-                    (change)="togglePrimaryPhone($index)"
+                    [checked]="phone.is_primary"
+                    (change)="togglePrimaryPhoneWidget($index)"
                     [disabled]="isViewMode"
                   />
                   <span>Primary</span>
                 </label>
-                @if (!isViewMode && phoneNumbers.length > 1) {
+
+                @if (!isViewMode && getPhoneWidgetData().length > 1) {
                   <button 
                     type="button" 
                     class="btn-remove-contact" 
-                    (click)="removePhoneNumber($index)"
+                    (click)="removePhoneWidget($index)"
                     title="Remove phone">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                       <path d="M4 6h8v6c0 1.1-.9 2-2 2H6c-1.1 0-2-.9-2-2V6zm2-3h4l1 1h2v1H3V4h2l1-1z"/>

@@ -1,4 +1,5 @@
-import { PrismaClient, CourseStatus, CourseType } from '@prisma/client';
+import { CourseStatus, CourseType } from '@prisma/client';
+import prisma from '@/config/database';
 import { CreateCourseDto, UpdateCourseDto, CourseFilterDto } from '@/dtos/course/course.dto';
 import { 
   GetCoursesByProgramsAndSpecializationDto,
@@ -42,7 +43,7 @@ import {
 } from '@/utils/tenant-isolation.utils';
 import logger from '@/config/logger';
 
-const prisma = new PrismaClient();
+
 
 export class CourseService extends BaseListService<any, CourseFilterDto> {
   private static instance: CourseService;

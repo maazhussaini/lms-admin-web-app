@@ -141,40 +141,22 @@
         @for (phone of formData.phoneNumbers; track trackByIndex($index)) {
           <div class="contact-row">
             <div class="contact-inputs">
-              <div class="form-group form-group-sm">
-                <label class="form-label-sm">Dial Code</label>
-                <input 
-                  type="text" 
-                  class="form-input-sm" 
-                  [(ngModel)]="phone.dialCode"
-                  [name]="'phoneDialCode' + $index"
+              <!-- Phone Number Widget with Two-Way Binding -->
+              <div class="form-group form-group-sm flex-3">
+                <app-phone-number
+                  label="Phone Number"
+                  [inputId]="'phone-' + $index"
+                  [(value)]="formData.phoneNumbers![$index]"
+                  (valueChange)="onPhoneChange($event, $index)"
+                  [required]="true"
                   [disabled]="isViewMode"
-                  (ngModelChange)="onFormChange()"
-                  placeholder="+92">
+                  [selectedCountryISO]="CountryISO.Pakistan"
+                  [preferredCountries]="[CountryISO.Pakistan, CountryISO.UnitedStates, CountryISO.UnitedKingdom]"
+                  cssClass="form-input-sm">
+                </app-phone-number>
               </div>
-              <div class="form-group form-group-sm flex-2">
-                <label class="form-label-sm">Phone Number</label>
-                <input 
-                  type="text" 
-                  class="form-input-sm" 
-                  [(ngModel)]="phone.phoneNumber"
-                  [name]="'phoneNumber' + $index"
-                  [disabled]="isViewMode"
-                  (ngModelChange)="onFormChange()"
-                  placeholder="3001234567">
-              </div>
-              <div class="form-group form-group-sm">
-                <label class="form-label-sm">Country</label>
-                <input 
-                  type="text" 
-                  class="form-input-sm" 
-                  [(ngModel)]="phone.isoCountryCode"
-                  [name]="'phoneCountry' + $index"
-                  [disabled]="isViewMode"
-                  (ngModelChange)="onFormChange()"
-                  placeholder="PK"
-                  maxlength="2">
-              </div>
+              
+              <!-- Contact Type -->
               <div class="form-group form-group-sm">
                 <label class="form-label-sm">Type</label>
                 <select 
@@ -188,8 +170,10 @@
                   }
                 </select>
               </div>
+              
+              <!-- Primary Checkbox -->
               <div class="form-group form-group-checkbox">
-                <label class="checkbox-label">
+                <label class="checkbox-label mt-3">
                   <input 
                     type="checkbox" 
                     [(ngModel)]="phone.isPrimary"
@@ -201,7 +185,7 @@
               </div>
             </div>
             @if (!isViewMode) {
-              <button type="button" class="btn-remove-contact" (click)="removePhoneNumber($index)" title="Delete phone number">
+              <button type="button" class="mt-4 btn-remove-contact" (click)="removePhoneNumber($index)" title="Delete phone number">
                 <i class="ic-delete"></i>
                 <span class="sr-only">Delete</span>
               </button>

@@ -13,13 +13,13 @@ import {
   AuthenticatedRequest
 } from '@/utils/async-handler.utils';
 import { ApiError } from '@/utils/api-error.utils';
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/config/database';
 import logger from '@/config/logger';
 import { UserType } from '@/types/enums.types';
 
 // Get student service singleton instance
 const studentService = StudentService.getInstance();
-const prisma = new PrismaClient();
+
 
 export class StudentController {
   /**

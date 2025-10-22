@@ -3,7 +3,7 @@
  * @description Service for managing academic programs with tenant isolation
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/config/database';
 import { CreateProgramDto, UpdateProgramDto, ProgramResponseDto, ProgramFilterDto } from '@/dtos/course/program.dto';
 import { ProgramsByTenantResponse } from '@/dtos/course/programs-by-tenant.dto';
 import { ApiError } from '@/utils/api-error.utils';
@@ -26,7 +26,7 @@ import {
 import logger from '@/config/logger';
 
 // Initialize Prisma client
-const prisma = new PrismaClient();
+
 
 export class ProgramService extends BaseListService<any, ProgramFilterDto> {
   private static instance: ProgramService;

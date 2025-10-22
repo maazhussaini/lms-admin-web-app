@@ -171,23 +171,33 @@ basePrisma.$use(async (params: Prisma.MiddlewareParams, next) => {
       return next(params);
     }
 
-    // For find operations, automatically filter out soft-deleted records
-    if (params.action === 'findUnique' || params.action === 'findFirst') {
-      if (params.args && params.args.where) {
-        // Add is_deleted filter if it doesn't exist
-        if (params.args.where[SOFT_DELETE_CONFIG.fields.isDeleted] === undefined) {
-          params.args.where[SOFT_DELETE_CONFIG.fields.isDeleted] = false;
-        }
-      }
-    }
-    
-    if (params.action === 'findMany') {
-      // Add is_deleted filter if it doesn't exist
+    // List of read operations that need soft delete filtering
+    const readOperations = [
+      'findUnique', 
+      'findFirst', 
+      'findMany', 
+      'count', 
+      'aggregate', 
+      'groupBy',
+      'findFirstOrThrow',
+      'findUniqueOrThrow'
+    ];
+
+    // For all read operations, automatically filter out soft-deleted records
+    if (readOperations.includes(params.action)) {
+      // Initialize args if not present
       if (!params.args) {
-        params.args = { where: { [SOFT_DELETE_CONFIG.fields.isDeleted]: false } };
-      } else if (!params.args.where) {
-        params.args.where = { [SOFT_DELETE_CONFIG.fields.isDeleted]: false };
-      } else if (params.args.where[SOFT_DELETE_CONFIG.fields.isDeleted] === undefined) {
+        params.args = {};
+      }
+      
+      // Initialize where clause if not present
+      if (!params.args.where) {
+        params.args.where = {};
+      }
+      
+      // Add is_deleted filter if it doesn't exist
+      // This allows explicit override by setting is_deleted to true
+      if (params.args.where[SOFT_DELETE_CONFIG.fields.isDeleted] === undefined) {
         params.args.where[SOFT_DELETE_CONFIG.fields.isDeleted] = false;
       }
     }

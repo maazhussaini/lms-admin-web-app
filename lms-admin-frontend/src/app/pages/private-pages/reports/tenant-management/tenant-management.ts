@@ -212,8 +212,14 @@ export class TenantManagement implements OnInit, OnDestroy {
       return false;
     }
 
+    // Check for explicit success property
     if (typeof response.success === 'boolean') {
       return response.success;
+    }
+
+    // Check for successful status codes (200-299, including 204 No Content)
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return true;
     }
 
     return false;
@@ -662,6 +668,7 @@ export class TenantManagement implements OnInit, OnDestroy {
           phoneNumbers: this.tenantPhoneNumbers.map(phone => ({
             dialCode: phone.dialCode,
             phoneNumber: phone.phoneNumber,
+            countryCode: phone.isoCountryCode || '',
             isoCountryCode: phone.isoCountryCode || '',
             isPrimary: phone.isPrimary,
             contactType: phone.contactType || 'PRIMARY'
@@ -839,6 +846,7 @@ export class TenantManagement implements OnInit, OnDestroy {
       
       if (this.isResponseSuccessful(response)) {
         await this.loadTenantContacts(this.selectedTenant.id);
+        await this.loadTenants(); // Refresh main tenant list
         this.showAddPhoneForm = false;
         this.resetPhoneForm();
       } else {
@@ -864,6 +872,7 @@ export class TenantManagement implements OnInit, OnDestroy {
       
       if (this.isResponseSuccessful(response)) {
         await this.loadTenantContacts(this.selectedTenant.id);
+        await this.loadTenants(); // Refresh main tenant list
         this.showAddEmailForm = false;
         this.resetEmailForm();
       } else {
@@ -884,6 +893,7 @@ export class TenantManagement implements OnInit, OnDestroy {
         
         if (this.isResponseSuccessful(response)) {
           await this.loadTenantContacts(this.selectedTenant.id);
+          await this.loadTenants(); // Refresh main tenant list
         } else {
           alert('Failed to delete phone number: ' + (response?.message || 'Unknown error'));
         }
@@ -903,6 +913,7 @@ export class TenantManagement implements OnInit, OnDestroy {
         
         if (this.isResponseSuccessful(response)) {
           await this.loadTenantContacts(this.selectedTenant.id);
+          await this.loadTenants(); // Refresh main tenant list
         } else {
           alert('Failed to delete email address: ' + (response?.message || 'Unknown error'));
         }
@@ -925,6 +936,7 @@ export class TenantManagement implements OnInit, OnDestroy {
       
       if (this.isResponseSuccessful(response)) {
         await this.loadTenantContacts(this.selectedTenant.id);
+        await this.loadTenants(); // Refresh main tenant list
       }
     } catch (error) {
       console.error('Error updating primary phone:', error);
@@ -943,6 +955,7 @@ export class TenantManagement implements OnInit, OnDestroy {
       
       if (this.isResponseSuccessful(response)) {
         await this.loadTenantContacts(this.selectedTenant.id);
+        await this.loadTenants(); // Refresh main tenant list
       }
     } catch (error) {
       console.error('Error updating primary email:', error);
@@ -991,6 +1004,7 @@ export class TenantManagement implements OnInit, OnDestroy {
       this.newTenantData.phoneNumbers = this.tenantPhoneNumbers.map(phone => ({
         dialCode: phone.dialCode || '+1',
         phoneNumber: phone.phoneNumber,
+        countryCode: phone.isoCountryCode || 'US',
         isoCountryCode: phone.isoCountryCode || 'US',
         contactType: phone.contactType || 'PRIMARY',
         isPrimary: phone.isPrimary
@@ -1013,21 +1027,27 @@ export class TenantManagement implements OnInit, OnDestroy {
     const tenant = this.allTenants.find(t => t.id === tenantId);
     const tenantName = tenant ? tenant.name : 'this tenant';
     
-    const confirmed = confirm(`Are you sure you want to delete "${tenantName}"? This action cannot be undone.`);
+    const confirmed = confirm(`Kya aap "${tenantName}" ko delete karna chahte hain? Ye action undo nahi ho sakta.`);
     
     if (confirmed) {
       try {
         const response = await this.httpRequests.deleteTenant(tenantId);
         
+        console.log('Delete tenant response:', response);
+        
         if (this.isResponseSuccessful(response)) {
           console.log('Tenant deleted successfully');
-          await this.loadTenants(); // Reload the list
+          alert('Tenant successfully delete ho gaya!');
+          await this.loadTenants(); // Reload the list to reflect changes
         } else {
-          alert('Failed to delete tenant. Please try again.');
+          const errorMsg = response?.message || 'Unknown error';
+          console.error('Failed to delete tenant:', errorMsg);
+          alert(`Tenant delete karne mein error: ${errorMsg}`);
         }
       } catch (error) {
         console.error('Error deleting tenant:', error);
-        alert('An error occurred while deleting the tenant.');
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        alert(`Tenant delete karne mein error aayi: ${errorMessage}`);
       }
     }
   }
